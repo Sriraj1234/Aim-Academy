@@ -188,16 +188,28 @@ export const ModernCarousel = () => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Reduced height for mobile: h-[360px] -> md:h-[400px] */}
-            <div className="relative h-[360px] md:h-[400px] rounded-[2rem] overflow-hidden shadow-xl group touch-pan-y">
-                <AnimatePresence initial={false} mode='popLayout'>
+            {/* Height auto on mobile to fit content, fixed on desktop */}
+            <div className="relative min-h-[480px] md:min-h-[400px] md:h-[400px] rounded-[2rem] overflow-hidden shadow-xl group touch-pan-ay">
+                <AnimatePresence initial={false} mode='popLayout' custom={0}>
                     <motion.div
                         key={current}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
-                        className={`absolute inset-0 ${slides[current].bgClass} p-6 md:p-12 flex flex-col md:flex-row items-center justify-between`}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.2}
+                        onDragEnd={(e, { offset, velocity }) => {
+                            const swipe = offset.x;
+
+                            if (swipe < -50) {
+                                nextSlide();
+                            } else if (swipe > 50) {
+                                prevSlide();
+                            }
+                        }}
+                        className={`absolute inset-0 ${slides[current].bgClass} p-5 md:p-12 flex flex-col md:flex-row items-center justify-between cursor-grab active:cursor-grabbing`}
                     >
                         {/* Background Decor */}
                         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -206,19 +218,19 @@ export const ModernCarousel = () => {
                         </div>
 
                         {/* Text Content */}
-                        <div className="relative z-10 w-full md:w-3/5 text-center md:text-left mt-4 md:mt-0">
+                        <div className="relative z-10 w-full md:w-3/5 text-center md:text-left mt-2 md:mt-0 px-2 md:px-0">
                             {renderContent(slides[current])}
                         </div>
 
-                        {/* Right Graphic / Icon Area */}
+                        {/* Right Graphic / Icon Area - Adjusted for mobile */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, rotate: 10 }}
                             animate={{ opacity: 1, scale: 1, rotate: 0 }}
                             transition={{ delay: 0.3, type: "spring" }}
-                            className="w-full md:w-2/5 flex justify-center mt-4 md:mt-0"
+                            className="w-full md:w-2/5 flex justify-center mt-6 md:mt-0"
                         >
-                            <div className="relative w-40 h-40 md:w-64 md:h-64 bg-white/10 backdrop-blur-xl rounded-[1.5rem] border border-white/20 shadow-2xl flex items-center justify-center transform rotate-3 group-hover:rotate-6 transition-transform duration-500">
-                                {React.createElement(slides[current].icon, { className: "text-white text-6xl md:text-8xl drop-shadow-lg" })}
+                            <div className="relative w-32 h-32 md:w-64 md:h-64 bg-white/10 backdrop-blur-xl rounded-[1.5rem] border border-white/20 shadow-2xl flex items-center justify-center transform rotate-3 group-hover:rotate-6 transition-transform duration-500">
+                                {React.createElement(slides[current].icon, { className: "text-white text-5xl md:text-8xl drop-shadow-lg" })}
                             </div>
                         </motion.div>
                     </motion.div>
