@@ -122,25 +122,25 @@ export const ModernCarousel = () => {
         // ... (Keep existing render logic, just ensuring classes are clean)
         if (slide.type === 'personal') {
             return (
-                <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full mb-3 md:mb-4">
-                        <span className="text-amber-300"><FaStar /></span>
-                        <span className="text-white text-[10px] md:text-xs font-bold tracking-wider uppercase">{streak} Day Streak</span>
+                <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center pt-2">
+                    <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/15 backdrop-blur-md rounded-full mb-2 md:mb-4">
+                        <span className="text-amber-300 text-[10px]"><FaStar /></span>
+                        <span className="text-white text-[9px] md:text-xs font-bold tracking-wider uppercase">{streak} Day Streak</span>
                     </div>
 
-                    <h1 className="text-2xl md:text-5xl font-black text-white leading-tight mb-2 md:mb-3 drop-shadow-md">
+                    <h1 className="text-xl md:text-5xl font-black text-white leading-tight mb-1 md:mb-3 drop-shadow-md">
                         Welcome Back,<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-200">{name}!</span>
                     </h1>
 
-                    <p className="text-indigo-100 text-sm md:text-lg font-medium mb-4 md:mb-6 max-w-xs md:max-w-lg leading-relaxed line-clamp-2 md:line-clamp-none">
-                        Continue your preparation with today's daily challenge and boost your rank!
+                    <p className="text-indigo-100 text-xs md:text-lg font-medium mb-3 md:mb-6 max-w-xs md:max-w-lg leading-relaxed line-clamp-1 md:line-clamp-none">
+                        Continue your preparation with today's challenge!
                     </p>
 
                     <Link href="/play/selection" className="w-full md:w-auto">
-                        <button className="w-full md:w-auto px-6 py-3 bg-white text-indigo-700 rounded-xl font-bold text-sm md:text-base shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 active:scale-95 group/btn">
-                            <span>Continue Practice</span>
-                            <FaArrowRight className="group-hover/btn:translate-x-1 transition-transform text-xs" />
+                        <button className="w-auto px-4 py-2 bg-white text-indigo-700 rounded-lg font-bold text-xs md:text-base shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 active:scale-95 group/btn mx-auto">
+                            <span>Practice</span>
+                            <FaArrowRight className="group-hover/btn:translate-x-1 transition-transform text-[10px]" />
                         </button>
                     </Link>
                 </div>
@@ -149,23 +149,23 @@ export const ModernCarousel = () => {
 
         // Standard Ad Slide Content
         return (
-            <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full mb-3 md:mb-4">
-                    <span className="text-white text-[10px] md:text-xs font-bold tracking-wider uppercase">{slide.subtitle}</span>
+            <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center pt-2">
+                <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/10 backdrop-blur-md rounded-full mb-2 md:mb-4">
+                    <span className="text-white text-[9px] md:text-xs font-bold tracking-wider uppercase">{slide.subtitle}</span>
                 </div>
 
-                <h1 className="text-2xl md:text-5xl font-black text-white leading-tight mb-2 md:mb-3 drop-shadow-md">
+                <h1 className="text-xl md:text-5xl font-black text-white leading-tight mb-1 md:mb-3 drop-shadow-md">
                     {slide.title}
                 </h1>
 
-                <p className="text-white/90 text-sm md:text-lg font-medium mb-4 md:mb-6 max-w-xs md:max-w-lg leading-relaxed line-clamp-2 md:line-clamp-none">
+                <p className="text-white/90 text-xs md:text-lg font-medium mb-3 md:mb-6 max-w-xs md:max-w-lg leading-relaxed line-clamp-1 md:line-clamp-none">
                     {slide.description}
                 </p>
 
                 <Link href={slide.ctaLink || '/'} className="w-full md:w-auto">
-                    <button className="w-full md:w-auto px-6 py-3 bg-white text-gray-900 rounded-xl font-bold text-sm md:text-base shadow-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2 active:scale-95 group/btn">
+                    <button className="w-auto px-4 py-2 bg-white text-gray-900 rounded-lg font-bold text-xs md:text-base shadow-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2 active:scale-95 group/btn mx-auto">
                         <span>{slide.ctaText}</span>
-                        <FaArrowRight className="group-hover/btn:translate-x-1 transition-transform text-xs" />
+                        <FaArrowRight className="group-hover/btn:translate-x-1 transition-transform text-[10px]" />
                     </button>
                 </Link>
             </div>
@@ -179,7 +179,8 @@ export const ModernCarousel = () => {
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Fixed Aspect Ratio Container for Stability */}
-            <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-xl bg-gray-900 group">
+            {/* Fixed Aspect Ratio Container for Stability */}
+            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-xl bg-gray-900 group">
                 <AnimatePresence initial={false} custom={direction} mode="popLayout">
                     <motion.div
                         key={current}
@@ -200,24 +201,24 @@ export const ModernCarousel = () => {
                             if (swipe < -50) nextSlide();
                             else if (swipe > 50) prevSlide();
                         }}
-                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-6 md:p-12 flex flex-col-reverse md:flex-row items-center justify-between cursor-grab active:cursor-grabbing`}
+                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-4 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing`}
                     >
+                        {/* Background Decor - Made subtler */}
+                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                            <div className="absolute -top-20 -right-20 w-40 h-40 md:w-60 md:h-60 bg-white opacity-5 rounded-full blur-[50px]" />
+                            <div className="absolute bottom-0 left-0 w-32 h-32 md:w-40 md:h-40 bg-black opacity-10 rounded-full blur-[40px]" />
+                        </div>
+
                         {/* Content Area */}
-                        <div className="relative z-10 w-full md:w-3/5 mt-4 md:mt-0">
+                        <div className="relative z-10 w-full md:w-3/5 text-center md:text-left flex flex-col items-center md:items-start justify-center h-full pb-4 md:pb-0">
                             {renderContent(slides[current])}
                         </div>
 
-                        {/* Graphic Area - Top on Mobile, Right on Desktop */}
-                        <div className="relative z-0 w-full md:w-2/5 flex justify-center items-center h-40 md:h-full">
-                            <div className="relative w-28 h-28 md:w-48 md:h-48 bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl flex items-center justify-center transform rotate-3 transition-transform duration-500">
-                                {React.createElement(slides[current].icon, { className: "text-white text-5xl md:text-8xl drop-shadow-lg" })}
+                        {/* Graphic Area - Hidden on small mobile to save space, visible on larger phones/desktop */}
+                        <div className="hidden sm:flex relative z-0 md:w-2/5 justify-center items-center">
+                            <div className="relative w-20 h-20 md:w-48 md:h-48 rounded-2xl flex items-center justify-center transform rotate-3 transition-transform duration-500">
+                                {React.createElement(slides[current].icon, { className: "text-white/20 md:text-white text-6xl md:text-8xl drop-shadow-lg" })}
                             </div>
-                        </div>
-
-                        {/* Background Decor */}
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                            <div className="absolute -top-20 -right-20 w-60 h-60 bg-white opacity-10 rounded-full blur-[60px]" />
-                            <div className="absolute bottom-0 left-0 w-40 h-40 bg-black opacity-10 rounded-full blur-[50px]" />
                         </div>
                     </motion.div>
                 </AnimatePresence>
@@ -232,8 +233,8 @@ export const ModernCarousel = () => {
                     </button>
                 </div>
 
-                {/* Indicators - Small dots */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                {/* Indicators - Moved to bottom edge, tiny dots */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
                     {slides.map((_, idx) => (
                         <button
                             key={idx}
@@ -241,7 +242,7 @@ export const ModernCarousel = () => {
                                 setDirection(idx > current ? 1 : -1);
                                 setCurrent(idx);
                             }}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 ${current === idx ? 'bg-white' : 'bg-white/30'}`}
+                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${current === idx ? 'bg-white' : 'bg-white/20'}`}
                         />
                     ))}
                 </div>
