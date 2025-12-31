@@ -68,7 +68,7 @@ export const TestimonialsSection = () => {
                         transition={{ delay: 0.2 }}
                         className="text-gray-500 text-lg max-w-2xl mx-auto"
                     >
-                        Join thousands of toppers who trust AIM Academy for their exam preparation.
+                        Join thousands of toppers who trust Padhaku for their exam preparation.
                     </motion.p>
                 </div>
 
