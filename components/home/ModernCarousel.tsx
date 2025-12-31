@@ -202,8 +202,8 @@ export const ModernCarousel = () => {
                         }}
                         className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-4 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing`}
                     >
-                        {/* Background Decor - Made subtler */}
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {/* Background Decor - Made subtler - Hidden on Mobile */}
+                        <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
                             <div className="absolute -top-20 -right-20 w-40 h-40 md:w-60 md:h-60 bg-white opacity-5 rounded-full blur-[50px]" />
                             <div className="absolute bottom-0 left-0 w-32 h-32 md:w-40 md:h-40 bg-black opacity-10 rounded-full blur-[40px]" />
                         </div>
@@ -232,8 +232,8 @@ export const ModernCarousel = () => {
                     </button>
                 </div>
 
-                {/* Indicators - Micro dots, minimal visibility */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                {/* Indicators - Micro dots, minimal visibility - Hidden on Mobile if causing issues */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 hidden md:flex gap-1.5 z-20">
                     {slides.map((_, idx) => (
                         <button
                             key={idx}
