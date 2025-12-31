@@ -263,7 +263,7 @@ export default function LobbyPage() {
                 </header>
 
                 {/* Players Grid - Stadium View */}
-                <div className="flex-1 bg-white/60 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 border border-white shadow-sm mb-24 md:mb-8 backdrop-blur-md relative overflow-y-auto max-h-[60vh] md:max-h-none">
+                <div className="flex-1 bg-white/60 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 border border-white shadow-sm mb-24 md:mb-8 backdrop-blur-md relative overflow-y-auto max-h-[60vh] md:max-h-none pb-32">
                     <p className="text-center text-gray-400 font-bold uppercase tracking-widest text-xs mb-8 bg-white/50 inline-block px-4 py-1 rounded-full border border-white mx-auto">Lobby Area</p>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
@@ -307,11 +307,11 @@ export default function LobbyPage() {
 
                         {/* Empty Slots */}
                         {Array.from({ length: Math.max(0, 5 - playersList.length) }).map((_, i) => (
-                            <div key={`empty-${i}`} className="border-2 border-dashed border-gray-200 hover:border-pw-indigo/20 rounded-[2rem] flex flex-col items-center justify-center opacity-40 hover:opacity-80 transition-all min-h-[180px] bg-white/30 hover:bg-white/60">
-                                <div className="w-12 h-12 rounded-full bg-gray-100 mb-3 flex items-center justify-center text-gray-300">
-                                    <FaUser size={20} />
+                            <div key={`empty-${i}`} className="border-2 border-dashed border-gray-200 hover:border-pw-indigo/20 rounded-[2rem] flex flex-col items-center justify-center opacity-40 hover:opacity-80 transition-all min-h-[120px] md:min-h-[180px] bg-white/30 hover:bg-white/60">
+                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 mb-2 md:mb-3 flex items-center justify-center text-gray-300">
+                                    <FaUser size={16} className="md:text-xl" />
                                 </div>
-                                <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Open Slot</span>
+                                <span className="text-gray-400 text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Open Slot</span>
                             </div>
                         ))}
                     </div>
