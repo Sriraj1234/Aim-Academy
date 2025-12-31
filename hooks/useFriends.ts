@@ -42,20 +42,34 @@ export const useFriends = () => {
 
         // Listen to Friends Collection
         const friendsRef = collection(db, 'users', user.uid, 'friends');
+
+        // Keep track of active RTDB listeners to unsubscribe later
+        const rtdbUnsubscribes: Record<string, () => void> = {};
+
         const unsubFriends = onSnapshot(friendsRef, (snapshot) => {
             const friendsList = snapshot.docs.map(doc => doc.data() as Friend);
             setFriends(friendsList);
 
-            // Listen to their online status
+            // 1. Clean up listeners for friends who are no longer in the list (optional optimization, but good fairness)
+            // For now, let's just re-subscribe or ensure we don't double subscribe.
+            // Actually, simplest valid way: Unsubscribe ALL previous RTDB listeners, then subscribe to NEW list.
+            Object.values(rtdbUnsubscribes).forEach(unsub => unsub());
+
+            // 2. Subscribe to new list
             friendsList.forEach(friend => {
+                if (!friend.uid) return;
                 const statusRef = ref(rtdb, `status/${friend.uid}`);
-                onValue(statusRef, (snap) => {
+
+                const unsub = onValue(statusRef, (snap) => {
                     const status = snap.val();
+                    // console.log(`[Presence] ${friend.displayName} is ${status?.state}`);
                     setOnlineUsers(prev => ({
                         ...prev,
                         [friend.uid]: status?.state === 'online'
                     }));
                 });
+
+                rtdbUnsubscribes[friend.uid] = unsub;
             });
         }, (error) => {
             console.error("Error fetching friends:", error);
@@ -85,6 +99,8 @@ export const useFriends = () => {
             unsubFriends();
             unsubRequests();
             unsubGameInvites();
+            // Cleanup RTDB listeners
+            Object.values(rtdbUnsubscribes).forEach(unsub => unsub());
         };
     }, [user]);
 
