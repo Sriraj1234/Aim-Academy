@@ -34,7 +34,8 @@ const DIFFICULTIES = [
 
 export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStartQuiz }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const { userProfile } = useAuth();
+    const { user: contextUser, userProfile } = useAuth();
+
     const [subject, setSubject] = useState('');
     const [topic, setTopic] = useState('');
     const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
@@ -43,9 +44,13 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
     const [loading, setLoading] = useState(false);
     const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
     const [error, setError] = useState('');
-    const router = useRouter(); // Import this
+    const router = useRouter();
 
     const generateQuestions = async () => {
+        if (!contextUser) {
+            setError('Please login to use AI features');
+            return;
+        }
         if (!subject) {
             setError('Please select a subject');
             return;
@@ -85,21 +90,21 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
     };
 
     const handleStartQuiz = () => {
-        if (questions.length > 0) {
-            // Save to localStorage
-            localStorage.setItem('ai_quiz_questions', JSON.stringify(questions));
-            localStorage.setItem('ai_quiz_meta', JSON.stringify({
+        if (questions.length > 0 && contextUser) {
+            // Save to localStorage with USER SPECIFIC KEY
+            localStorage.setItem(`ai_quiz_questions_${contextUser.uid}`, JSON.stringify(questions));
+            localStorage.setItem(`ai_quiz_meta_${contextUser.uid}`, JSON.stringify({
                 subject,
                 topic,
                 difficulty,
                 count,
-                language // Store language too
+                language
             }));
 
             if (onStartQuiz) {
                 onStartQuiz(questions);
             } else {
-                // Default behavior: navigate to quiz page
+                // Navigate to quiz page with User ID param (optional, or just rely on auth context there)
                 router.push('/play/quiz?mode=ai');
             }
             setIsOpen(false);
@@ -245,20 +250,20 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                                             </label>
                                             <div className="flex gap-2">
                                                 {[
-                                                    { id: 'english', label: 'English' },
-                                                    { id: 'hindi', label: 'Hindi' }, // Hindi option added
-                                                    { id: 'hinglish', label: 'Hinglish' }
+                                                    { id: 'english', label: 'English', icon: '🇬🇧' },
+                                                    { id: 'hindi', label: 'Hindi (हिंदी)', icon: '🇮🇳' },
+                                                    { id: 'hinglish', label: 'Hinglish', icon: '🗣️' }
                                                 ].map((l) => (
                                                     <button
                                                         key={l.id}
                                                         onClick={() => setLanguage(l.id as any)}
-                                                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${language === l.id
-                                                            ? 'bg-pink-600 text-white'
-                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'
+                                                        className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 border ${language === l.id
+                                                            ? 'bg-gradient-to-br from-pink-500 to-rose-600 text-white border-transparent shadow-lg shadow-pink-500/20 transform scale-105'
+                                                            : 'bg-white/5 text-white/60 hover:bg-white/10 border-white/5 hover:border-white/20'
                                                             }`}
                                                     >
-                                                        {l.id === 'hindi' && <span className="text-xs">अ</span>}
-                                                        {l.label}
+                                                        <span className="text-lg">{l.icon}</span>
+                                                        <span>{l.label}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -313,37 +318,46 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                                 ) : (
                                     /* Questions Preview */
                                     <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-green-400">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2 text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-lg border border-emerald-400/20">
                                                 <FaCheck />
-                                                <span className="font-bold text-sm">{questions.length} Questions Generated!</span>
+                                                <span className="font-bold text-sm">Generated Successfully!</span>
                                             </div>
-                                            <button
-                                                onClick={resetState}
-                                                className="text-xs text-white/40 hover:text-white/60"
-                                            >
-                                                Generate More
-                                            </button>
                                         </div>
 
-                                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                                        <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1">
                                             {questions.map((q, i) => (
-                                                <div key={q.id} className="bg-white/5 rounded-xl p-3 text-sm">
-                                                    <p className="text-white/80 line-clamp-2">
-                                                        <span className="text-purple-400 font-bold">Q{i + 1}. </span>
+                                                <div key={q.id} className="bg-white/5 rounded-xl p-4 text-sm border border-white/5 hover:bg-white/10 transition-colors">
+                                                    <p className="text-white/90 font-medium">
+                                                        <span className="text-purple-400 font-bold mr-2">Q{i + 1}.</span>
                                                         {q.question}
                                                     </p>
+                                                    <div className="mt-2 pl-6 grid grid-cols-2 gap-2">
+                                                        {q.options.slice(0, 2).map((opt, oi) => (
+                                                            <div key={oi} className="text-xs text-white/50 truncate">• {opt}</div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
 
-                                        <button
-                                            onClick={handleStartQuiz}
-                                            className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-green-500/30 transition-all"
-                                        >
-                                            <FaPlay />
-                                            <span>Start AI Quiz</span>
-                                        </button>
+                                        <div className="grid grid-cols-2 gap-3 pt-2">
+                                            <button
+                                                onClick={resetState}
+                                                className="py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-2 border border-white/10 transition-all"
+                                            >
+                                                <FaRobot />
+                                                <span>Regenerate</span>
+                                            </button>
+
+                                            <button
+                                                onClick={handleStartQuiz}
+                                                className="py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-green-500/20 hover:shadow-green-500/30 hover:-translate-y-0.5 transition-all"
+                                            >
+                                                <FaPlay />
+                                                <span>Start Quiz</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
