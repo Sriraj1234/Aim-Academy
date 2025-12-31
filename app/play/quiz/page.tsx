@@ -10,41 +10,48 @@ import { LiveLeaderboard } from '@/components/quiz/LiveLeaderboard'
 import { ModernTimer } from '@/components/quiz/ModernTimer'
 import { useQuiz } from '@/hooks/useQuiz'
 import { useTimer } from '@/hooks/useTimer'
+import { useAuth } from '@/hooks/useAuth'
 import { FaChevronLeft, FaPause, FaPlay, FaInfoCircle, FaBookmark, FaRegBookmark, FaStepForward, FaStepBackward } from 'react-icons/fa'
 
 export default function QuizPage() {
     const router = useRouter()
+    const { user } = useAuth(); // Need user for specific storage key
+    const [isAILoading, setIsAILoading] = useState(true); // Default true to prevent flash/redirect
     const { questions, currentQuestionIndex, submitAnswer, nextQuestion, prevQuestion, skipQuestion, toggleBookmark, bookmarks, isFinished, isLoading, answers, startAIQuiz } = useQuiz()
     const [selectedOption, setSelectedOption] = useState<number | null>(null)
     const [isLocked, setIsLocked] = useState(false)
-    const [isAILoading, setIsAILoading] = useState(false) // New local loading state for AI setup
 
     // Handle AI Mode Loading
     useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
         const mode = searchParams.get('mode');
 
-        if (mode === 'ai' && questions.length === 0) {
+        if (mode === 'ai') {
+            if (!user) return; // Wait for auth
+
             setIsAILoading(true);
-            const stored = localStorage.getItem('ai_quiz_questions');
+            const stored = localStorage.getItem(`ai_quiz_questions_${user.uid}`);
+
             if (stored) {
                 try {
                     const parsed = JSON.parse(stored);
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         startAIQuiz(parsed);
-                    } else {
-                        router.push('/');
+                        setIsAILoading(false);
+                        return;
                     }
                 } catch (e) {
                     console.error("Failed to load AI questions", e);
-                    router.push('/');
                 }
-            } else {
-                router.push('/'); // No questions found
             }
-            setIsAILoading(false);
+
+            // If we reached here, something failed
+            console.warn("No AI questions found for user");
+            router.push('/');
+        } else {
+            setIsAILoading(false); // Not AI mode
         }
-    }, [])
+    }, [user, questions.length]) // Re-run when user loads
 
     // Sync state when question changes
     useEffect(() => {
@@ -69,10 +76,10 @@ export default function QuizPage() {
 
     // Redirect if no questions
     useEffect(() => {
-        if (!isLoading && questions.length === 0) {
+        if (!isLoading && !isAILoading && questions.length === 0) {
             router.push('/')
         }
-    }, [questions, router, isLoading])
+    }, [questions, router, isLoading, isAILoading])
 
     useEffect(() => {
         if (isFinished) {
