@@ -47,43 +47,56 @@ export async function POST(request: NextRequest) {
         let languageInstruction = '';
         switch (language) {
             case 'hindi':
-                languageInstruction = 'Write everything in pure Hindi (Devanagari script).';
+                languageInstruction = 'STRICT RULE: Write EVERYTHING in Hindi (Devanagari script) ONLY. Do not use English words unless absolutely necessary for technical terms.';
                 break;
             case 'english':
-                languageInstruction = 'Write everything in simple, clear English.';
+                languageInstruction = 'STRICT RULE: Write EVERYTHING in English ONLY.';
                 break;
             case 'hinglish':
             default:
-                languageInstruction = 'You can mix Hindi and English naturally (Hinglish) for better understanding.';
+                languageInstruction = 'Write in a natural mix of Hindi and English (Hinglish) as spoken by Indian students.';
         }
 
-        const systemPrompt = `You are an expert question paper setter for Indian board exams (${body.board || 'CBSE/BSEB'}).
-Generate MCQ questions that are:
-- Accurate and factually correct
-- Age-appropriate for ${body.classLevel || 'Class 10'} students
-- ${difficulty === 'easy' ? 'Basic recall and understanding' : difficulty === 'medium' ? 'Application and analysis' : 'Higher-order thinking and evaluation'}
+        const classInstruction = body.classLevel
+            ? `STRICTLY generate questions appropriate for ${body.classLevel} level only. Do NOT generate questions for higher or lower classes.`
+            : 'Generate questions for Class 10 level.';
 
+
+        const systemPrompt = `You are an expert question paper setter for Indian board exams (${body.board || 'CBSE/BSEB'}).
+${classInstruction}
 ${languageInstruction}
 
-CRITICAL: Return ONLY valid JSON array, no other text. Each question must have exactly 4 options.`;
+Generate MCQ questions that are:
+- Accurate and factually correct
+- Conceptually clear and unambiguous
+- ${difficulty === 'easy' ? 'Basic' : difficulty === 'medium' ? 'Moderate' : 'Advanced/Challenging'} difficulty
+- RANDOM & UNIQUE: Ensure questions are diverse. Do not repeat standard textbook examples if possible. Use unique scenarios.
+
+CRITICAL: Return ONLY valid JSON array. Each question must have exactly 4 options.`;
+
+        // Inject random seed to force detailed uniqueness
+        const randomSeed = Math.random().toString(36).substring(7);
 
         const userPrompt = `Generate ${count} MCQ questions for:
 Subject: ${body.subject}
 ${body.chapter ? `Chapter: ${body.chapter}` : ''}
 ${body.topic ? `Topic: ${body.topic}` : ''}
 Difficulty: ${difficulty}
+seed: ${randomSeed}
+
+${language === 'hindi' ? 'REMEMBER: Output must be in HINDI.' : ''}
 
 Return as JSON array with this exact format:
 [
     {
-        "question": "Question text here?",
-        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "question": "Question text",
+        "options": ["A", "B", "C", "D"],
         "correctAnswer": 0,
-        "explanation": "Brief explanation why this is correct"
+        "explanation": "Brief explanation"
     }
 ]
 
-IMPORTANT: correctAnswer is 0-indexed (0=A, 1=B, 2=C, 3=D). Return ONLY the JSON array, no other text.`;
+IMPORTANT: correctAnswer is 0-indexed. Return ONLY the JSON array, no other text.`;
 
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
@@ -97,7 +110,7 @@ IMPORTANT: correctAnswer is 0-indexed (0=A, 1=B, 2=C, 3=D). Return ONLY the JSON
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
                 ],
-                temperature: 0.8,
+                temperature: 0.9, // Increased for maximum variety
                 max_tokens: 4000,
             }),
         });
