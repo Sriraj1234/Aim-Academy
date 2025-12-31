@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FaUserFriends, FaUserPlus, FaTimes, FaCheck, FaSearch, FaGamepad, FaEnvelope, FaShareAlt } from 'react-icons/fa'
 import { useFriends } from '@/hooks/useFriends'
 import { useAuth } from '@/context/AuthContext'
+import { LocalStudentsSection } from '@/components/home/LocalStudentsSection'
 
 interface FriendsDrawerProps {
     isOpen: boolean
@@ -15,7 +16,7 @@ interface FriendsDrawerProps {
 }
 
 export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: externalInviteLoading, onPlayWithFriend }: FriendsDrawerProps) => {
-    const { user } = useAuth();
+    const { user, userProfile } = useAuth();
     const { friends, requests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, loading, onlineUsers } = useFriends()
     const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'add'>('friends')
     const [email, setEmail] = useState('')
@@ -234,6 +235,35 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
 
                             {activeTab === 'add' && (
                                 <div className="space-y-6">
+                                    {/* Local Students Section */}
+                                    {userProfile?.pincode ? (
+                                        <LocalStudentsSection
+                                            currentUserId={user?.uid}
+                                            userPincode={userProfile.pincode}
+                                            existingFriendIds={friends.map(f => f.uid)}
+                                            onRequestSent={(uid: string) => {
+                                                // Optimistic update or just let the user know
+                                                // Ideally we'd add this ID to a 'success' set
+                                            }}
+                                            onSendRequest={async (uid: string, email: string) => {
+                                                try {
+                                                    await sendFriendRequest(email);
+                                                    setSuccess(`Request sent to ${email}!`);
+                                                    setTimeout(() => setSuccess(''), 3000);
+                                                } catch (e: any) {
+                                                    setError(e.message);
+                                                    setTimeout(() => setError(''), 3000);
+                                                }
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-yellow-800 text-sm">
+                                            <p className="font-bold mb-1">📍 Local Ranks Unavailable</p>
+                                            <p>Please update your PIN Code in profile to see top students near you.</p>
+                                        </div>
+                                    )}
+
+
                                     <div className="bg-white p-5 rounded-2xl shadow-pw-sm border border-pw-border">
                                         <div className="flex items-center gap-2 mb-3">
                                             <div className="p-1.5 bg-pw-indigo/10 rounded-lg text-pw-indigo">
