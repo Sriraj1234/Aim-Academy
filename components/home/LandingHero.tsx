@@ -32,7 +32,7 @@ export const LandingHero = () => {
                         <span className="text-pw-indigo text-xs font-bold tracking-wide uppercase">India's Most Loved Learning Platform</span>
                     </motion.div>
 
-                    <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-pw-violet mb-6 leading-tight">
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-pw-violet mb-6 leading-tight">
                         Master Your <br className="hidden lg:block" />
                         <span className="text-pw-indigo relative inline-block">
                             Exams
@@ -113,7 +113,7 @@ export const LandingHero = () => {
                         <motion.div
                             animate={{ y: [-10, 10, -10] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute top-10 right-10 p-4 bg-white/80 backdrop-blur-xl border border-pw-border rounded-2xl shadow-pw-lg"
+                            className="hidden sm:flex absolute top-10 right-10 p-4 bg-white/80 backdrop-blur-xl border border-pw-border rounded-2xl shadow-pw-lg"
                         >
                             <TbSum className="text-4xl text-pw-indigo" />
                         </motion.div>
@@ -121,7 +121,7 @@ export const LandingHero = () => {
                         <motion.div
                             animate={{ y: [10, -10, 10] }}
                             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                            className="absolute bottom-10 left-10 p-4 bg-white/80 backdrop-blur-xl border border-pw-border rounded-2xl shadow-pw-lg flex items-center gap-3"
+                            className="hidden sm:flex absolute bottom-10 left-10 p-4 bg-white/80 backdrop-blur-xl border border-pw-border rounded-2xl shadow-pw-lg items-center gap-3"
                         >
                             <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                                 <FaRocket className="text-red-500" />
