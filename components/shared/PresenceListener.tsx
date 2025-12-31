@@ -22,34 +22,28 @@ export const PresenceListener = () => {
         };
 
         const connectedRef = ref(rtdb, '.info/connected');
+        let onlineTimer: NodeJS.Timeout;
 
         const unsub = onValue(connectedRef, (snapshot) => {
-            // If we are not connected, we don't have to do anything.
             if (snapshot.val() === false) {
                 return;
             };
 
-            // If we are currently connected, we add this device to my connections list.
-            // When I disconnect, remove this device
+            // Setup disconnect handler first
             onDisconnect(myStatusRef).set(isOfflineForDatabase).then(() => {
-                // And set it to online
+                // Set Online immediately if connected.
+                // Debounce wasn't the main issue, the main issue was likely the cleanup 'set(offline)' running on re-renders.
+                // But we can keep a small delay just to be safe against rapid toggles, or just set it.
+                // Google's example sets it immediately. Let's try immediate first to be responsive.
                 set(myStatusRef, isOnlineForDatabase);
             });
         });
 
         return () => {
             unsub();
-            // We purposely do NOT set offline here on simple component unmount 
-            // because strict mode or navigations might trigger it.
-            // onDisconnect handles the actual connection loss (tab close, network fail).
-            // However, if the user LOGS OUT, we might want to set offline.
-            // But since this component is tied to 'user', if user becomes null, this effect cleans up.
-            // Let's set offline on cleanup IF user is still 'connected' technically, but practically onDisconnect is safer.
-            // For now, let's rely on onDisconnect for 'closing' and let the explicit 'offline' set happen if meaningful.
-            // Actually, for instant feedback, setting offline on unmount IS good if we are sure we are leaving.
-            // But nextjs navigations unmount/mount layouts? No, layout persists.
-            // So this is safe in Layout.
-            set(myStatusRef, isOfflineForDatabase);
+            // REMOVED: set(myStatusRef, isOfflineForDatabase);
+            // We rely on onDisconnect() to handle tab closes/refresh.
+            // Generous logic: It's better to show a user as "Online" for a timeout than "Offline" when they are actually there.
         };
     }, [user]);
 
