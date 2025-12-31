@@ -7,6 +7,9 @@ import { LanguageProvider } from '@/context/LanguageContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { GameInviteListener } from '@/components/shared/GameInviteListener'
 import { PresenceListener } from '@/components/shared/PresenceListener'
+import { InstallPrompt } from '@/components/shared/InstallPrompt'
+
+import { SoundProvider } from '@/context/SoundContext'
 
 const outfit = Outfit({
   variable: '--font-outfit',
@@ -29,12 +32,20 @@ const notoSans = Noto_Sans({
 export const metadata: Metadata = {
   title: 'Padhaku - Bihar Board Exam Practice',
   description: 'Master Bihar Board exams with interactive quizzes, detailed explanations, and live competitive battles on Padhaku.',
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Padhaku",
+  },
 }
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#7c3aed',
+  maximumScale: 1,
+  userScalable: false, // Ensure app-like feel
+  themeColor: '#4437B8',
 }
 
 export default function RootLayout({
@@ -58,9 +69,12 @@ export default function RootLayout({
           <ThemeProvider>
             <QuizProvider>
               <LanguageProvider>
-                <PresenceListener />
-                <GameInviteListener />
-                {children}
+                <SoundProvider>
+                  <PresenceListener />
+                  <GameInviteListener />
+                  <InstallPrompt />
+                  {children}
+                </SoundProvider>
               </LanguageProvider>
             </QuizProvider>
           </ThemeProvider>
