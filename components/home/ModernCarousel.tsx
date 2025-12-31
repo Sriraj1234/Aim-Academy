@@ -174,13 +174,12 @@ export const ModernCarousel = () => {
 
     return (
         <section
-            className="w-full max-w-7xl mx-auto mb-8 font-sans relative px-4 md:px-0"
+            className="w-[calc(100%+2rem)] -ml-4 md:w-full md:ml-0 max-w-7xl mx-auto mb-8 font-sans relative"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Fixed Aspect Ratio Container for Stability */}
-            {/* Fixed Aspect Ratio Container for Stability */}
-            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-xl bg-gray-900 group">
+            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] md:rounded-2xl overflow-hidden shadow-xl bg-gray-900 group">
                 <AnimatePresence initial={false} custom={direction} mode="popLayout">
                     <motion.div
                         key={current}
@@ -233,8 +232,8 @@ export const ModernCarousel = () => {
                     </button>
                 </div>
 
-                {/* Indicators - Moved to bottom edge, tiny dots */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                {/* Indicators - Micro dots, minimal visibility */}
+                <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1 z-20">
                     {slides.map((_, idx) => (
                         <button
                             key={idx}
@@ -242,7 +241,7 @@ export const ModernCarousel = () => {
                                 setDirection(idx > current ? 1 : -1);
                                 setCurrent(idx);
                             }}
-                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${current === idx ? 'bg-white' : 'bg-white/20'}`}
+                            className={`w-1 h-1 rounded-full transition-all duration-300 ${current === idx ? 'bg-white/80' : 'bg-white/10'}`}
                         />
                     ))}
                 </div>
