@@ -95,6 +95,7 @@ export interface UserProfile {
         rank: number;
     };
     gamification?: GamificationStats;
+    bookmarkedQuestions?: string[];
     coordinates?: {
         lat: number;
         lng: number;
@@ -152,3 +153,15 @@ export interface GameInvite {
 }
 
 export type Taxonomy = Record<string, CategoryData>;
+
+export interface Note {
+    id: string;
+    title: string;
+    subject: string;
+    chapter?: string;
+    class: string;
+    pdfUrl: string;
+    thumbnailUrl?: string;
+    uploadedAt: number;
+    downloadCount: number;
+}
