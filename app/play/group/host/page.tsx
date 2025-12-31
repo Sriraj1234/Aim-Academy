@@ -8,6 +8,9 @@ import { createRoom, updateRoomConfig } from '@/utils/roomService';
 import { FaBook, FaLayerGroup, FaPlay, FaSpinner, FaArrowLeft, FaCheckCircle, FaFlask, FaGlobeAmericas, FaLanguage, FaCalculator, FaTimes, FaSave, FaCrown } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
 
+// Force dynamic rendering to fix build error with useSearchParams
+export const dynamic = 'force-dynamic';
+
 interface CategoryData {
     subjects: string[]
     chapters: Record<string, { name: string; count: number }[]>
