@@ -9,6 +9,8 @@ import { GamificationCard } from '@/components/home/GamificationCard'
 import { AIChatWidget } from '@/components/shared/AIChatWidget'
 import { AIQuestionGenerator } from '@/components/home/AIQuestionGenerator'
 import { ChapterSummary } from '@/components/home/ChapterSummary'
+import { BookmarkedQuestionsSection } from '@/components/home/BookmarkedQuestionsSection'
+import { NotesSection } from '@/components/home/NotesSection'
 import Link from 'next/link'
 import { FaMicrophone } from 'react-icons/fa'
 
@@ -38,6 +40,12 @@ export default function DashboardPage() {
                                 </h3>
                                 <StatsOverview />
                             </div>
+
+                            {/* Bookmarked Questions Section */}
+                            <BookmarkedQuestionsSection />
+
+                            {/* Notes Section */}
+                            <NotesSection />
                         </div>
 
                         {/* Right Column: AI Tools - PW Style */}
@@ -71,3 +79,4 @@ export default function DashboardPage() {
         </div>
     )
 }
+
