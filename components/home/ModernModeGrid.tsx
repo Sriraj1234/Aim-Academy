@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { FaBookOpen, FaLayerGroup, FaUsers, FaArrowRight, FaHistory, FaClock, FaFire, FaStar } from 'react-icons/fa'
+import { FaBookOpen, FaLayerGroup, FaUsers, FaArrowRight, FaHistory, FaClock, FaFire, FaStar, FaExclamationTriangle } from 'react-icons/fa'
 import { useLanguage } from '@/context/LanguageContext'
 
 export const ModernModeGrid = () => {
@@ -20,6 +20,18 @@ export const ModernModeGrid = () => {
             badge: 'HOT',
             badgeColor: 'bg-pw-red',
             delay: 0.1
+        },
+        {
+            id: 'mistakes',
+            title: 'Mistake Notebook',
+            desc: 'Master your weak areas',
+            icon: FaExclamationTriangle,
+            gradient: 'from-orange-500 to-red-500',
+            shadow: 'shadow-orange-500/20',
+            bgGlow: 'bg-orange-500',
+            badge: 'NEW',
+            badgeColor: 'bg-red-500',
+            delay: 0.15
         },
         {
             id: 'subject',
@@ -64,9 +76,10 @@ export const ModernModeGrid = () => {
                     <Link
                         href={
                             mode.id === 'group' ? '/play/group' :
-                                mode.id === 'subject' ? '/play/selection?mode=subject' :
-                                    mode.id === 'chapter' ? '/play/selection?mode=chapter' :
-                                        '/play/selection'
+                                mode.id === 'mistakes' ? '/mistakes' : // NEW ROUTE
+                                    mode.id === 'subject' ? '/play/selection?mode=subject' :
+                                        mode.id === 'chapter' ? '/play/selection?mode=chapter' :
+                                            '/play/selection'
                         }
                         key={mode.id}
                     >
@@ -79,7 +92,7 @@ export const ModernModeGrid = () => {
                                 scale: 1.02,
                                 transition: { duration: 0.2 }
                             }}
-                            whileTap={{ scale: 0.98 }}
+                            whileTap={{ scale: 0.96 }}
                             className={`group relative h-full bg-white rounded-2xl p-5 hover:shadow-pw-lg transition-all overflow-hidden cursor-pointer border ${mode.id === 'group' ? 'border-pw-indigo shadow-pw-md bg-pw-surface/50' : 'border-pw-border hover:border-pw-indigo/30'}`}
                         >
                             {/* Special Ring for Group Mode */}
