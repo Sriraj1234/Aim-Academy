@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FriendsDrawer } from '@/components/home/FriendsDrawer';
 import { useFriends } from '@/hooks/useFriends';
 import { VoiceChatWidget } from '@/components/group/VoiceChatWidget';
+import { LobbyChat } from '@/components/play/LobbyChat';
 
 export default function LobbyPage() {
     const { roomId } = useParams();
@@ -262,58 +263,74 @@ export default function LobbyPage() {
                     </div>
                 </header>
 
-                {/* Players Grid - Stadium View */}
-                <div className="flex-1 bg-white/60 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 border border-white shadow-sm mb-24 md:mb-8 backdrop-blur-md relative overflow-y-auto max-h-[60vh] md:max-h-none pb-32">
-                    <p className="text-center text-gray-400 font-bold uppercase tracking-widest text-xs mb-8 bg-white/50 inline-block px-4 py-1 rounded-full border border-white mx-auto">Lobby Area</p>
+                {/* Main Content Area: Players & Chat */}
+                <div className="flex-1 flex flex-col lg:flex-row gap-6 mb-24 md:mb-8 overflow-hidden">
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                        <AnimatePresence>
-                            {playersList.map((p: any) => (
-                                <motion.div
-                                    key={p.id}
-                                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.5 }}
-                                    className="relative group perspective"
-                                >
-                                    <div className="bg-white p-6 rounded-[2rem] shadow-pw-md hover:shadow-pw-lg border border-pw-border hover:border-pw-indigo/30 transition-all flex flex-col items-center text-center relative z-10 h-full justify-between group-hover:-translate-y-1">
-                                        {p.id === room.hostId && (
-                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
-                                                <FaCrown size={10} /> Host
-                                            </div>
-                                        )}
+                    {/* Players Grid - Stadium View */}
+                    <div className="flex-1 bg-white/60 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 border border-white shadow-sm backdrop-blur-md relative overflow-y-auto pb-32 lg:pb-8">
+                        <p className="text-center text-gray-400 font-bold uppercase tracking-widest text-xs mb-8 bg-white/50 inline-block px-4 py-1 rounded-full border border-white mx-auto sticky top-0 z-20 backdrop-blur-md">Lobby Area</p>
 
-                                        <div className="relative mb-4">
-                                            {p.photoURL ? (
-                                                <img src={p.photoURL} className="w-20 h-20 rounded-2xl object-cover shadow-md group-hover:rotate-3 transition-transform duration-300 ring-4 ring-white" alt={p.name} referrerPolicy="no-referrer" />
-                                            ) : (
-                                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pw-indigo to-pw-violet flex items-center justify-center text-3xl font-bold text-white shadow-md group-hover:rotate-3 transition-transform duration-300 ring-4 ring-white">
-                                                    {(p.name || 'P')[0]}
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                            <AnimatePresence>
+                                {playersList.map((p: any) => (
+                                    <motion.div
+                                        key={p.id}
+                                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.5 }}
+                                        className="relative group perspective"
+                                    >
+                                        <div className="bg-white p-4 py-6 md:p-6 rounded-[2rem] shadow-pw-md hover:shadow-pw-lg border border-pw-border hover:border-pw-indigo/30 transition-all flex flex-col items-center text-center relative z-10 h-full justify-between group-hover:-translate-y-1">
+                                            {p.id === room.hostId && (
+                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
+                                                    <FaCrown size={10} /> Host
                                                 </div>
                                             )}
-                                            <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center text-white text-[10px] shadow-sm">
-                                                <FaCheckCircle />
+
+                                            <div className="relative mb-3 md:mb-4">
+                                                {p.photoURL ? (
+                                                    <img src={p.photoURL} className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover shadow-md group-hover:rotate-3 transition-transform duration-300 ring-4 ring-white" alt={p.name} referrerPolicy="no-referrer" />
+                                                ) : (
+                                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-pw-indigo to-pw-violet flex items-center justify-center text-2xl md:text-3xl font-bold text-white shadow-md group-hover:rotate-3 transition-transform duration-300 ring-4 ring-white">
+                                                        {(p.name || 'P')[0]}
+                                                    </div>
+                                                )}
+                                                <div className="absolute -bottom-2 -right-2 bg-green-500 w-5 h-5 md:w-6 md:h-6 rounded-full border-4 border-white flex items-center justify-center text-white text-[10px] shadow-sm">
+                                                    <FaCheckCircle />
+                                                </div>
+                                            </div>
+
+                                            <div className="w-full">
+                                                <h3 className="font-bold text-gray-800 truncate w-full mb-1 text-sm md:text-base">{p.name}</h3>
+                                                <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider bg-green-50 border border-green-100 px-2 py-1 rounded-lg inline-block">Ready</p>
                                             </div>
                                         </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
 
-                                        <div className="w-full">
-                                            <h3 className="font-bold text-gray-800 truncate w-full mb-1">{p.name}</h3>
-                                            <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider bg-green-50 border border-green-100 px-2 py-1 rounded-lg inline-block">Ready to Play</p>
-                                        </div>
+                            {/* Empty Slots */}
+                            {Array.from({ length: Math.max(0, 4 - playersList.length) }).map((_, i) => (
+                                <div key={`empty-${i}`} className="border-2 border-dashed border-gray-200 hover:border-pw-indigo/20 rounded-[2rem] flex flex-col items-center justify-center opacity-40 hover:opacity-80 transition-all min-h-[140px] bg-white/30 hover:bg-white/60">
+                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 mb-2 md:mb-3 flex items-center justify-center text-gray-300">
+                                        <FaUser size={16} className="md:text-xl" />
                                     </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-
-                        {/* Empty Slots */}
-                        {Array.from({ length: Math.max(0, 5 - playersList.length) }).map((_, i) => (
-                            <div key={`empty-${i}`} className="border-2 border-dashed border-gray-200 hover:border-pw-indigo/20 rounded-[2rem] flex flex-col items-center justify-center opacity-40 hover:opacity-80 transition-all min-h-[120px] md:min-h-[180px] bg-white/30 hover:bg-white/60">
-                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 mb-2 md:mb-3 flex items-center justify-center text-gray-300">
-                                    <FaUser size={16} className="md:text-xl" />
+                                    <span className="text-gray-400 text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Open Slot</span>
                                 </div>
-                                <span className="text-gray-400 text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Open Slot</span>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Chat Section */}
+                    <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
+                        {user && <LobbyChat
+                            roomId={roomId as string}
+                            currentUser={{
+                                uid: user.uid,
+                                displayName: user.displayName || 'Player',
+                                photoURL: user.photoURL || undefined
+                            }}
+                        />}
                     </div>
                 </div>
 
