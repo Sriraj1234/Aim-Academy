@@ -62,10 +62,23 @@ export const useFriends = () => {
 
                 const unsub = onValue(statusRef, (snap) => {
                     const status = snap.val();
-                    // console.log(`[Presence] ${friend.displayName} is ${status?.state}`);
+                    let isOnline = false;
+
+                    if (status) {
+                        // Support New "Connections" Pattern
+                        if (status.connections) {
+                            isOnline = Object.keys(status.connections).length > 0;
+                        }
+                        // Fallback to Old Pattern (direct state)
+                        else if (status.state === 'online') {
+                            isOnline = true;
+                        }
+                    }
+
+                    // console.log(`[Presence] ${friend.displayName} is ${isOnline ? 'Online' : 'Offline'}`);
                     setOnlineUsers(prev => ({
                         ...prev,
-                        [friend.uid]: status?.state === 'online'
+                        [friend.uid]: isOnline
                     }));
                 });
 
