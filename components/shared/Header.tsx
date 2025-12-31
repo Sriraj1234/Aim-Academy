@@ -16,10 +16,10 @@ export const Header = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pw-indigo to-pw-violet flex items-center justify-center text-white font-bold text-lg shadow-pw-md">
-                        A
+                        P
                     </div>
                     <span className="font-display font-bold text-xl text-pw-violet tracking-tight">
-                        AIM <span className="text-pw-indigo">Academy</span>
+                        Padhaku
                     </span>
                 </Link>
 
