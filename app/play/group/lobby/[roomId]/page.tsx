@@ -38,33 +38,52 @@ export default function LobbyPage() {
         }
     };
 
+    // 1. Initial Local Check & Navigation Lock
+    useEffect(() => {
+        if (!roomId) return;
+        const storedName = localStorage.getItem(`player_name_${roomId}`);
+        if (storedName) setHasJoined(true);
+    }, [roomId]);
+
+    // 2. Realtime Listener
     useEffect(() => {
         if (!roomId) return;
 
-        const storedName = localStorage.getItem(`player_name_${roomId}`);
-        if (storedName) setHasJoined(true);
+        console.log("Connecting to room:", roomId);
 
         const unsub = onSnapshot(doc(db, 'rooms', roomId as string), (docSnapshot) => {
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data();
                 setRoom(data);
 
+                // Auto-Detect Membership (Server Truth)
                 if (user && data.players) {
-                    const amIIn = Object.values(data.players).some((p: any) => p.userId === user.uid);
-                    if (amIIn) setHasJoined(true);
+                    const myPlayerEntry = Object.values(data.players).find((p: any) => p.userId === user.uid);
+
+                    if (myPlayerEntry) {
+                        setHasJoined(true);
+                        // Ensure LocalStorage is synced (in case of device switch or cache clear)
+                        localStorage.setItem(`player_name_${roomId}`, (myPlayerEntry as any).name);
+                        localStorage.setItem(`player_id_${roomId}`, (myPlayerEntry as any).id);
+                    }
                 }
 
-                if (data.status === 'in-progress' && hasJoined && !isNavigating) {
-                    setIsNavigating(true);
+                // Handle Game Start
+                if (data.status === 'in-progress') {
+                    // Use a ref or simple check to avoid loops, though router.push is safe
+                    console.log("Game started, navigating...", roomId);
                     router.push(`/play/group/game/${roomId}`);
                 }
             } else {
                 setError("Room deleted or invalid.");
             }
+        }, (error) => {
+            console.error("Lobby Snapshot Error:", error);
+            setError("Connection lost. Please refresh.");
         });
 
         return () => unsub();
-    }, [roomId, router, isNavigating, hasJoined, user]);
+    }, [roomId, user, router]);
 
     const handleJoin = async () => {
         if (!user) return;
