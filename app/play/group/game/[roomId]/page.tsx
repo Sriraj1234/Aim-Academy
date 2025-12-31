@@ -181,10 +181,10 @@ export default function GamePage() {
                 <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-green-400/10 rounded-full blur-[60px]" />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 h-screen flex flex-col md:flex-row gap-6">
+            <div className="relative z-10 max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-6 min-h-screen flex flex-col">
 
-                {/* Sidebar: Players (Floating Buddy List) */}
-                <aside className="w-full md:w-72 order-2 md:order-1 flex flex-col h-full md:justify-center">
+                {/* Sidebar: Players - Hidden on mobile, visible on md+ */}
+                <aside className="hidden md:flex w-72 flex-col h-full justify-center fixed left-4 top-1/2 -translate-y-1/2">
                     <div className="bg-white/60 backdrop-blur-md border border-white/50 rounded-[2rem] p-5 shadow-soft max-h-[200px] md:max-h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar">
                         <div className="flex items-center justify-between mb-4 px-2">
                             <h3 className="font-bold text-text-sub uppercase text-xs tracking-wider flex items-center gap-2">
@@ -245,27 +245,27 @@ export default function GamePage() {
                 </aside>
 
                 {/* Main Game Board */}
-                <main className="flex-1 order-1 md:order-2 flex flex-col h-full">
+                <main className="flex-1 flex flex-col">
 
                     {/* Floating Header */}
-                    <div className="flex justify-between items-center mb-6 px-2">
+                    <div className="flex justify-between items-center mb-4 md:mb-6">
                         {/* Question Counter & Voice Chat */}
                         <div className="flex items-center gap-2">
                             <VoiceChatWidget channelName={roomId as string} />
 
-                            <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-sm text-sm font-bold text-text-sub border border-white/50">
-                                Question <span className="text-brand-600 text-lg ml-1">{room.currentQuestionIndex + 1}</span>
-                                <span className="text-gray-400 mx-2">/</span>
+                            <div className="bg-white/80 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-sm text-xs md:text-sm font-bold text-text-sub border border-white/50">
+                                Q <span className="text-brand-600 text-sm md:text-lg">{room.currentQuestionIndex + 1}</span>
+                                <span className="text-gray-400 mx-1">/</span>
                                 {totalQuestions}
                             </div>
                         </div>
 
                         <div className={`
-                            flex items-center gap-2 px-5 py-2 rounded-full shadow-lg border-4 transition-all duration-500
+                            flex items-center gap-1.5 px-3 py-1.5 md:px-5 md:py-2 rounded-full shadow-lg border-2 md:border-4 transition-all duration-500
                             ${timeLeftDisplay <= 10 ? 'bg-red-50 border-red-100 text-red-600 animate-pulse' : 'bg-white border-brand-100 text-brand-600'}
                         `}>
-                            <FaClock className={timeLeftDisplay <= 10 ? 'animate-bounce' : ''} />
-                            <span className="font-mono font-black text-xl w-14 text-center">
+                            <FaClock size={12} className={timeLeftDisplay <= 10 ? 'animate-bounce' : ''} />
+                            <span className="font-mono font-black text-base md:text-xl w-10 md:w-14 text-center">
                                 {timeLeftDisplay}s
                             </span>
                         </div>
@@ -283,57 +283,38 @@ export default function GamePage() {
                                 className="w-full max-w-3xl mx-auto"
                             >
                                 {/* Question Text */}
-                                <div className="bg-white/90 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-12 shadow-card border border-white/50 mb-8 relative group hover:scale-[1.01] transition-transform duration-300">
-                                    <div className="absolute top-0 right-8 -translate-y-1/2 bg-gradient-to-r from-brand-500 to-accent-500 w-16 h-16 rounded-2xl rotate-12 shadow-lg flex items-center justify-center text-white text-2xl group-hover:rotate-45 transition-transform duration-500">
-                                        <FaShapes />
-                                    </div>
-
-                                    <h2 className="text-2xl md:text-3xl font-display font-bold text-text-main leading-tight mb-2">
+                                <div className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-[2.5rem] p-5 md:p-8 shadow-card border border-white/50 mb-4 md:mb-8 relative">
+                                    <h2 className="text-lg md:text-2xl font-display font-bold text-text-main leading-snug">
                                         {currentQ.question}
                                     </h2>
-                                    <div className="h-1 w-20 bg-brand-200 rounded-full mt-6" />
                                 </div>
 
                                 {/* Options Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-2 md:gap-4">
                                     {currentQ.options.map((opt: string, idx: number) => {
                                         const isSelected = selectedOption === idx;
-                                        // Colors for options (Cycle through them for fun)
-                                        const colors = [
-                                            'hover:border-blue-400 hover:bg-blue-50',
-                                            'hover:border-purple-400 hover:bg-purple-50',
-                                            'hover:border-green-400 hover:bg-green-50',
-                                            'hover:border-orange-400 hover:bg-orange-50'
-                                        ];
-                                        const hoverColor = colors[idx % colors.length];
-
                                         return (
                                             <button
                                                 key={idx}
                                                 onClick={() => handleAnswer(idx)}
                                                 disabled={isSubmitted}
                                                 className={`
-                                                    relative p-6 rounded-3xl text-left border-b-4 transition-all duration-200 group
+                                                    relative p-3 md:p-5 rounded-xl md:rounded-2xl text-left border-b-2 md:border-b-4 transition-all duration-200
                                                     ${isSelected
-                                                        ? 'bg-brand-600 border-brand-800 text-white shadow-brand-500/40 shadow-lg translate-y-[2px]'
-                                                        : `bg-white border-gray-200 text-text-main shadow-sm hover:-translate-y-1 hover:shadow-md ${isSubmitted ? 'opacity-50 cursor-not-allowed' : hoverColor}`}
+                                                        ? 'bg-brand-600 border-brand-800 text-white shadow-lg'
+                                                        : `bg-white border-gray-200 text-text-main shadow-sm ${isSubmitted ? 'opacity-50' : 'active:scale-[0.98]'}`}
                                                 `}
                                             >
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-3">
                                                     <div className={`
-                                                        w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
-                                                        ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-white group-hover:shadow-inner'}
+                                                        w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-lg flex-shrink-0
+                                                        ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}
                                                     `}>
                                                         {String.fromCharCode(65 + idx)}
                                                     </div>
-                                                    <span className="font-bold text-lg">{opt}</span>
+                                                    <span className="font-semibold text-sm md:text-base">{opt}</span>
                                                     {isSelected && (
-                                                        <motion.div
-                                                            layoutId="check"
-                                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-2xl"
-                                                        >
-                                                            <FaCheckCircle />
-                                                        </motion.div>
+                                                        <FaCheckCircle className="ml-auto text-white text-lg" />
                                                     )}
                                                 </div>
                                             </button>
@@ -348,14 +329,14 @@ export default function GamePage() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-black/80 backdrop-blur-md text-white py-3 px-6 rounded-full absolute bottom-8 left-1/2 -translate-x-1/2 shadow-2xl flex items-center gap-3 z-50 pointer-events-none"
+                            className="bg-black/80 backdrop-blur-md text-white py-2 px-4 rounded-full fixed bottom-4 left-1/2 -translate-x-1/2 shadow-2xl flex items-center gap-2 z-50 text-sm"
                         >
-                            <div className="typewriter">
-                                <span className="mr-2">Waiting for others...</span>
-                                <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce delay-100"></span>
-                                <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce delay-200 mx-1"></span>
-                                <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce delay-300"></span>
-                            </div>
+                            <span>Waiting...</span>
+                            <span className="flex gap-1">
+                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </span>
                         </motion.div>
                     )}
 
