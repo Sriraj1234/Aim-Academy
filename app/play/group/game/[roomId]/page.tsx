@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase';
 import { doc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { submitAnswer, nextQuestion, endGame } from '@/utils/roomService';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaUser, FaCheckCircle, FaClock, FaShapes, FaBolt, FaStar } from 'react-icons/fa';
+import { FaUser, FaCheckCircle, FaClock, FaShapes, FaBolt, FaStar, FaUsers, FaTimes, FaChevronDown } from 'react-icons/fa';
 import { VoiceChatWidget } from '@/components/group/VoiceChatWidget';
 
 export default function GamePage() {
@@ -15,6 +15,7 @@ export default function GamePage() {
     const [playerId, setPlayerId] = useState<string | null>(null);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [showMobilePlayers, setShowMobilePlayers] = useState(false);
 
     // Calculate generic time left for display
     const [timeLeftDisplay, setTimeLeftDisplay] = useState(30);
@@ -247,8 +248,51 @@ export default function GamePage() {
                 {/* Main Game Board */}
                 <main className="flex-1 flex flex-col">
 
+                    {/* Timer Progress Bar (Mobile & Desktop) */}
+                    <div className="w-full bg-gray-200 h-2 rounded-full mb-4 overflow-hidden relative">
+                        <motion.div
+                            initial={{ width: '100%' }}
+                            animate={{ width: `${(timeLeftDisplay / 30) * 100}%` }}
+                            transition={{ ease: "linear", duration: 0.5 }}
+                            className={`h-full ${timeLeftDisplay <= 10 ? 'bg-red-500' : 'bg-brand-500'}`}
+                        />
+                    </div>
+
+                    {/* Mobile Player Strip (Stories Style) - Always Visible */}
+                    <div className="md:hidden flex gap-3 overflow-x-auto pb-4 mb-2 custom-scrollbar no-scrollbar">
+                        {playersList.map((p) => {
+                            const hasAnswered = p.answers[room.currentQuestionIndex] !== undefined;
+                            const isMe = p.id === playerId;
+                            return (
+                                <div key={p.id} className="flex flex-col items-center gap-1 min-w-[3.5rem]">
+                                    <div className={`
+                                        w-12 h-12 rounded-full p-0.5 border-2 relative
+                                        ${hasAnswered ? 'border-green-500' : 'border-gray-200'}
+                                    `}>
+                                        <div className="w-full h-full rounded-full overflow-hidden bg-gray-100 relative">
+                                            {p.photoURL ? (
+                                                <img src={p.photoURL} alt={p.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">{(p.name?.[0] || 'U')}</div>
+                                            )}
+                                            {/* Status Badge */}
+                                            {hasAnswered && (
+                                                <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                                                    <FaCheckCircle className="text-white drop-shadow-md text-lg md:text-xl" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-medium text-gray-600 truncate w-14 text-center">
+                                        {isMe ? 'You' : p.name.split(' ')[0]}
+                                    </span>
+                                </div>
+                            )
+                        })}
+                    </div>
+
                     {/* Floating Header */}
-                    <div className="flex justify-between items-center mb-4 md:mb-6">
+                    <div className="flex justify-between items-center mb-2 md:mb-6">
                         {/* Question Counter & Voice Chat */}
                         <div className="flex items-center gap-2">
                             <VoiceChatWidget channelName={roomId as string} />
@@ -290,7 +334,22 @@ export default function GamePage() {
                                 </div>
 
                                 {/* Options Grid */}
-                                <div className="grid grid-cols-1 gap-2 md:gap-4">
+                                <div className="grid grid-cols-1 gap-2 md:gap-4 relative">
+                                    {/* Waiting Overlay - Covers options when submitted */}
+                                    {isSubmitted && (
+                                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 rounded-2xl flex flex-col items-center justify-center text-brand-700 animate-in fade-in duration-300">
+                                            <div className="bg-white p-4 rounded-2xl shadow-xl border border-brand-100 flex flex-col items-center">
+                                                <div className="flex gap-1 mb-2">
+                                                    <span className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                    <span className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                    <span className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                                </div>
+                                                <p className="font-bold text-sm">Waiting for others...</p>
+                                                <p className="text-xs text-brand-400 mt-1">{answeredCount}/{playersList.length} Answered</p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {currentQ.options.map((opt: string, idx: number) => {
                                         const isSelected = selectedOption === idx;
                                         return (
@@ -301,8 +360,8 @@ export default function GamePage() {
                                                 className={`
                                                     relative p-3 md:p-5 rounded-xl md:rounded-2xl text-left border-b-2 md:border-b-4 transition-all duration-200
                                                     ${isSelected
-                                                        ? 'bg-brand-600 border-brand-800 text-white shadow-lg'
-                                                        : `bg-white border-gray-200 text-text-main shadow-sm ${isSubmitted ? 'opacity-50' : 'active:scale-[0.98]'}`}
+                                                        ? 'bg-brand-600 border-brand-800 text-white shadow-lg z-10'
+                                                        : `bg-white border-gray-200 text-text-main shadow-sm ${isSubmitted ? 'opacity-40' : 'active:scale-[0.98]'}`}
                                                 `}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -324,21 +383,6 @@ export default function GamePage() {
                             </motion.div>
                         </AnimatePresence>
                     </div>
-
-                    {isSubmitted && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-black/80 backdrop-blur-md text-white py-2 px-4 rounded-full fixed bottom-4 left-1/2 -translate-x-1/2 shadow-2xl flex items-center gap-2 z-50 text-sm"
-                        >
-                            <span>Waiting...</span>
-                            <span className="flex gap-1">
-                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                            </span>
-                        </motion.div>
-                    )}
 
                 </main>
             </div>
