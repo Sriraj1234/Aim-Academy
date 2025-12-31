@@ -93,6 +93,8 @@ export interface UserProfile {
         quizzesTaken: number;
         avgScore: number;
         rank: number;
+        totalXP?: number;
+        questionsSolved?: number;
     };
     gamification?: GamificationStats;
     bookmarkedQuestions?: string[];
