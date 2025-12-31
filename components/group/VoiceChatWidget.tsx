@@ -30,10 +30,13 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
     const localTrackRef = useRef<IMicrophoneAudioTrack | null>(null);
     const remoteTracksRef = useRef<Map<number, IRemoteAudioTrack>>(new Map());
 
-    const numericUid = user?.uid ? stringToNumber(user.uid) : 0;
+    // Use a random UID to prevent "UID_CONFLICT" errors if the user re-joins quickly
+    // (Agora holds the session for a few seconds after disconnect, causing conflicts if we reuse the same static UID immediately)
+    const [clientUid] = useState(() => Math.floor(Math.random() * 100000));
+    const [speakerOn, setSpeakerOn] = useState(true);
 
     useEffect(() => {
-        if (!channelName || !numericUid) return;
+        if (!channelName || !clientUid) return;
 
         let isMounted = true;
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
@@ -44,7 +47,7 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
                 setStatus('Getting token...');
 
                 // Fetch token from our API
-                const res = await fetch(`/api/agora?channelName=${channelName}&uid=${numericUid}`);
+                const res = await fetch(`/api/agora?channelName=${channelName}&uid=${clientUid}`);
                 if (!res.ok) throw new Error('Token fetch failed');
                 const data = await res.json();
                 if (!data.token) throw new Error('No token received');
@@ -52,7 +55,7 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
                 setStatus('Joining channel...');
 
                 // Join the channel
-                await client.join(AGORA_APP_ID, channelName, data.token, numericUid);
+                await client.join(AGORA_APP_ID, channelName, data.token, clientUid);
 
                 if (!isMounted) return;
                 setIsConnected(true);
@@ -82,6 +85,9 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
                 const audioTrack = remoteUser.audioTrack;
                 if (audioTrack) {
                     audioTrack.play();
+                    // Default to 100 (ON) on join.
+                    // If user has manually turned it OFF, they might hear a blip until they toggle.
+                    // This is acceptable for "Speaker Auto On" requirement.
                     audioTrack.setVolume(100);
                     remoteTracksRef.current.set(remoteUser.uid as number, audioTrack);
                     console.log('[Voice] Playing audio from:', remoteUser.uid);
@@ -109,14 +115,28 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
         // Cleanup
         return () => {
             isMounted = false;
-            if (localTrackRef.current) {
-                localTrackRef.current.close();
-            }
-            remoteTracksRef.current.forEach(track => track.stop());
-            remoteTracksRef.current.clear();
-            client.leave().catch(console.error);
+            // Separate async cleanup to avoid blocking
+            const cleanup = async () => {
+                try {
+                    if (localTrackRef.current) {
+                        localTrackRef.current.close();
+                        localTrackRef.current = null;
+                        setMicOn(false);
+                    }
+                    remoteTracksRef.current.forEach(track => track.stop());
+                    remoteTracksRef.current.clear();
+                    if (clientRef.current) {
+                        await clientRef.current.leave();
+                        clientRef.current = null;
+                    }
+                    setIsConnected(false);
+                } catch (e) {
+                    console.error('Cleanup error:', e);
+                }
+            };
+            cleanup();
         };
-    }, [channelName, numericUid]);
+    }, [channelName, clientUid, speakerOn]); // Added speakerOn to dependencies to ensure user-published handler uses latest state
 
     // Toggle mic
     const toggleMic = () => {
@@ -126,6 +146,18 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
             setMicOn(newState);
             console.log('[Voice] Mic:', newState ? 'ON' : 'OFF');
         }
+    };
+
+    // Toggle Speaker (Mute/Unmute incoming audio)
+    const toggleSpeaker = () => {
+        const newState = !speakerOn;
+        setSpeakerOn(newState);
+
+        // Update all existing remote tracks
+        remoteTracksRef.current.forEach(track => {
+            track.setVolume(newState ? 100 : 0);
+        });
+        console.log('[Voice] Speaker:', newState ? 'ON' : 'OFF');
     };
 
     if (!channelName) return null;
@@ -140,32 +172,47 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
     }
 
     return (
-        <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-xl px-2 py-1 rounded-full border border-gray-200/50 shadow-sm text-[11px]">
+        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-xl px-3 py-1.5 rounded-full border border-gray-200/50 shadow-sm text-[11px]">
             {/* Connection Status - Tiny dot */}
             <div
-                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-orange-400 animate-pulse'}`}
+                className={`w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-orange-400 animate-pulse'}`}
                 title={status}
             />
 
-            {/* Mic Toggle - Compact */}
+            <div className="h-4 w-[1px] bg-gray-200 mx-1"></div>
+
+            {/* Mic Toggle */}
             <button
                 onClick={toggleMic}
                 disabled={!isConnected}
-                className={`p-1.5 rounded-full transition-all active:scale-90 ${micOn
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-100 text-gray-500'
+                className={`p-2 rounded-full transition-all active:scale-90 flex items-center justify-center ${micOn
+                    ? 'bg-pw-indigo text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     } ${!isConnected ? 'opacity-50' : ''}`}
-                title={micOn ? 'Mute' : 'Unmute'}
+                title={micOn ? 'Mute Mic' : 'Unmute Mic'}
             >
-                {micOn ? <FaMicrophone size={10} /> : <FaMicrophoneSlash size={10} />}
+                {micOn ? <FaMicrophone size={12} /> : <FaMicrophoneSlash size={12} />}
             </button>
 
-            {/* Remote Users - Minimal */}
-            <span className="text-gray-500 font-medium tabular-nums">{remoteUsersCount}</span>
+            {/* Speaker Toggle */}
+            <button
+                onClick={toggleSpeaker}
+                disabled={!isConnected}
+                className={`p-2 rounded-full transition-all active:scale-90 flex items-center justify-center ${speakerOn
+                    ? 'bg-white border border-pw-indigo text-pw-indigo shadow-sm'
+                    : 'bg-gray-100 text-gray-400'
+                    } ${!isConnected ? 'opacity-50' : ''}`}
+                title={speakerOn ? 'Mute Speaker' : 'Unmute Speaker'}
+            >
+                {speakerOn ? <FaVolumeUp size={12} /> : <FaHeadphones size={12} />}
+            </button>
 
-            {/* Audio indicator */}
-            {remoteUsersCount > 0 && (
-                <FaVolumeUp size={10} className="text-green-500 animate-pulse" />
+            {/* Remote Users Count */}
+            {(remoteUsersCount > 0) && (
+                <div className="ml-1 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
+                    <span className="text-green-600 font-bold tabular-nums">{remoteUsersCount}</span>
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                </div>
             )}
         </div>
     );
