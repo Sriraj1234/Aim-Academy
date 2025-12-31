@@ -1,0 +1,78 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // HELPER FUNCTIONS
+    // =========================================================================
+    
+    // Checks if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Checks if the user is an Admin
+    // This looks up the user's document in the 'users' collection 
+    // and checks if the 'role' field is set to 'admin'
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Checks if the user is accessing their own document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // =========================================================================
+    // COLLECTION RULES
+    // =========================================================================
+
+    // 1. USERS COLLECTION
+    // Authenticated users can read (needed for leaderboards/friends)
+    // Users can only write their own profile, admins can write any.
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // 2. QUESTIONS & METADATA (The Core Content)
+    // PUBLIC read access - anyone can view questions and metadata (for quizzes)
+    // Only ADMINS can WRITE (add/edit/delete questions).
+    match /questions/{questionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /metadata/{docId} {
+       allow read: if true;
+       allow write: if isAdmin();
+    }
+    
+    // 3. GAME ROOMS (Multiplayer)
+    // PUBLIC read access for joining games
+    // Authenticated users can create and update rooms
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // 4. GAME SESSIONS / RESULTS
+    // Students create their own game sessions.
+    match /game_sessions/{sessionId} {
+      allow create: if isAuthenticated();
+      allow read, update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Only admin can delete results if needed
+      allow delete: if isAdmin();
+    }
+
+    // Default deny for everything else not explicitly matched
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

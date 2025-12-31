@@ -1,0 +1,372 @@
+'use client'
+
+import React, { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+    HiAcademicCap,
+    HiBookOpen,
+    HiClock,
+    HiChevronRight,
+    HiRefresh,
+    HiX
+} from 'react-icons/hi'
+import { doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useAuth } from '@/hooks/useAuth'
+import { CategoryData, Taxonomy } from '@/data/types'
+import { useQuiz } from '@/hooks/useQuiz'
+import { Header } from '@/components/shared/Header'
+
+// Internal Component for Customization
+function CustomizeModal({
+    totalCount,
+    chapterName,
+    onConfirm,
+    onClose
+}: {
+    totalCount: number,
+    chapterName: string,
+    onConfirm: (count: number) => void,
+    onClose: () => void
+}) {
+    // Generate Options
+    const baseOptions = [20, 40, 60, 80, 100];
+    const options = baseOptions.filter(opt => opt < totalCount);
+    // Always append "All" (which is totalCount)
+    options.push(totalCount);
+    // Remove duplicates if totalCount matches a base option exactly
+    const uniqueOptions = Array.from(new Set(options));
+
+    const [selected, setSelected] = useState<number>(options[0] || totalCount);
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            >
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-900">Customize Quiz</h3>
+                        <p className="text-sm text-gray-500">{chapterName}</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400">
+                        <HiX size={20} />
+                    </button>
+                </div>
+
+                <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Number of Questions</label>
+                    <div className="grid grid-cols-3 gap-3">
+                        {uniqueOptions.map((opt) => (
+                            <button
+                                key={opt}
+                                onClick={() => setSelected(opt)}
+                                className={`
+                                    py-2 px-3 rounded-xl text-sm font-bold transition-all border-2
+                                    ${selected === opt
+                                        ? 'border-purple-600 bg-purple-50 text-purple-700'
+                                        : 'border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                                `}
+                            >
+                                {opt === totalCount ? `All (${opt})` : opt}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <button
+                    onClick={() => onConfirm(selected)}
+                    className="w-full py-3.5 rounded-xl bg-purple-600 text-white font-bold text-lg hover:bg-purple-700 transition-colors shadow-lg shadow-purple-600/30"
+                >
+                    Start Quiz
+                </button>
+            </motion.div>
+        </div>
+    )
+}
+
+function SelectionContent() {
+    const router = useRouter()
+    const { userProfile, loading: authLoading } = useAuth()
+    const { startQuiz } = useQuiz()
+    const searchParams = useSearchParams()
+
+    // Default mode is subject
+    const [activeCategories, setActiveCategories] = useState<CategoryData>({ subjects: [], chapters: {} })
+    const [loading, setLoading] = useState(true)
+    const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
+    const [mode, setMode] = useState<'subject' | 'chapter'>('subject') // derived from interactions
+
+    // Customization State
+    const [customizing, setCustomizing] = useState<{ name: string, count: number } | null>(null)
+
+    // ... (rest of useEffects remain same until handlers)
+
+    // Fetch Metadata based on User Profile
+    useEffect(() => {
+        // ... (existing metadata fetch logic, no changes needed inside)
+        const fetchCategories = async () => {
+            if (!userProfile) return
+            setLoading(true)
+            try {
+                const docRef = doc(db, 'metadata', 'taxonomy')
+                const docSnap = await getDoc(docRef)
+                if (docSnap.exists()) {
+                    const fullTaxonomy = docSnap.data() as Taxonomy
+                    const key = `${userProfile?.board || 'cbse'}_${userProfile?.class || '10'}`
+                    if (fullTaxonomy[key]) {
+                        setActiveCategories(fullTaxonomy[key])
+                    }
+                }
+            } catch (error) {
+                console.error(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        if (!authLoading && userProfile) fetchCategories()
+        else if (!authLoading && !userProfile) setLoading(false)
+    }, [userProfile, authLoading])
+
+    const [selectedScience, setSelectedScience] = useState(false)
+    const scienceSubjects = ['physics', 'chemistry', 'biology']
+    const displayedSubjects = activeCategories.subjects?.filter(
+        sub => !scienceSubjects.includes(sub.toLowerCase())
+    ) || []
+    const hasScience = activeCategories.subjects?.some(sub => scienceSubjects.includes(sub.toLowerCase()))
+
+    const subjects = displayedSubjects
+    const chapters = selectedSubject ? (activeCategories.chapters?.[selectedSubject] || []) : []
+
+    const handleSubjectClick = (sub: string) => {
+        if (sub.toLowerCase() === 'science') {
+            setSelectedScience(true)
+        } else {
+            setSelectedSubject(sub)
+            setSelectedScience(false)
+        }
+    }
+
+    const handleBack = () => {
+        if (selectedSubject) {
+            if (scienceSubjects.includes(selectedSubject.toLowerCase())) {
+                setSelectedSubject(null)
+                setSelectedScience(true)
+            } else {
+                setSelectedSubject(null)
+            }
+        } else if (selectedScience) {
+            setSelectedScience(false)
+        }
+    }
+
+    const handleChapterClick = (chap: string, count: number = 20) => {
+        // Trigger Modal instead of immediate start
+        setCustomizing({ name: chap, count: count })
+    }
+
+    const handleConfirmStart = (count: number) => {
+        if (customizing) {
+            startQuiz(selectedSubject!, count, customizing.name)
+            router.push('/play/quiz')
+        }
+    }
+
+    if (authLoading) return (
+        <div className="min-h-screen bg-pw-surface flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pw-indigo"></div>
+        </div>
+    )
+
+    return (
+        <div className="min-h-screen bg-pw-surface pb-20 font-sans">
+            <Header />
+
+            {/* Customization Modal - PW Style */}
+            <AnimatePresence>
+                {customizing && (
+                    <CustomizeModal
+                        totalCount={customizing.count}
+                        chapterName={customizing.name}
+                        onConfirm={handleConfirmStart}
+                        onClose={() => setCustomizing(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            <main className="pt-24 px-4 max-w-6xl mx-auto">
+                {/* Header Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8"
+                >
+                    {(selectedSubject || selectedScience) && (
+                        <button
+                            onClick={handleBack}
+                            className="flex items-center gap-2 text-sm text-pw-indigo font-bold mb-3 hover:text-pw-violet transition-colors group"
+                        >
+                            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+                            Back to {selectedSubject && scienceSubjects.includes(selectedSubject.toLowerCase()) ? 'Science' : 'Subjects'}
+                        </button>
+                    )}
+
+                    <h1 className="text-3xl md:text-4xl font-display font-black text-pw-violet capitalize mb-2 tracking-tight">
+                        {selectedSubject
+                            ? `${selectedSubject} Chapters`
+                            : selectedScience
+                                ? 'Select Branch'
+                                : `Practice Questions`}
+                    </h1>
+                    <p className="text-pw-indigo/80 font-medium">
+                        {selectedSubject
+                            ? `Select a chapter from ${selectedSubject} to practice.`
+                            : selectedScience
+                                ? 'Choose a science branch to continue.'
+                                : `Select a subject for ${userProfile?.board?.toUpperCase()} Class ${userProfile?.class}`}
+                    </p>
+                </motion.div>
+
+                {/* GRID Container */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    {loading ? (
+                        [...Array(6)].map((_, i) => (
+                            <div key={i} className="h-32 bg-white rounded-2xl shadow-pw-sm animate-pulse border border-pw-border" />
+                        ))
+                    ) : !selectedSubject && !selectedScience ? (
+                        /* MAIN SUBJECT VIEW */
+                        <>
+                            {subjects.length === 0 && !hasScience ? (
+                                <div className="col-span-full py-16 flex flex-col items-center justify-center text-center opacity-70">
+                                    <div className="text-gray-400 font-bold">Coming Soon</div>
+                                </div>
+                            ) : (
+                                <>
+                                    {hasScience && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            onClick={() => handleSubjectClick('Science')}
+                                            className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
+                                        >
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <HiAcademicCap className="text-8xl text-pw-indigo transform rotate-[-20deg]" />
+                                            </div>
+
+                                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                                <div className="p-3 rounded-xl bg-pw-indigo/10 text-pw-indigo group-hover:bg-pw-indigo group-hover:text-white transition-colors">
+                                                    <HiAcademicCap className="text-2xl" />
+                                                </div>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-pw-indigo px-2 py-1 rounded-lg border border-pw-indigo/10">Group</span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-pw-violet group-hover:text-pw-indigo transition-colors capitalize mb-1 relative z-10">Science</h3>
+                                            <p className="text-sm text-gray-500 relative z-10">Physics, Chemistry, Biology</p>
+                                        </motion.div>
+                                    )}
+                                    {subjects.map((sub, idx) => (
+                                        <motion.div
+                                            key={idx}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            onClick={() => handleSubjectClick(sub)}
+                                            className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
+                                        >
+                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                                <HiAcademicCap className="text-8xl text-pw-indigo transform rotate-[-20deg]" />
+                                            </div>
+
+                                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                                <div className="p-3 rounded-xl bg-pw-lavender/20 text-pw-indigo group-hover:bg-pw-indigo group-hover:text-white transition-colors">
+                                                    <HiAcademicCap className="text-2xl" />
+                                                </div>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-pw-indigo px-2 py-1 rounded-lg border border-pw-indigo/10">Subject</span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-pw-violet group-hover:text-pw-indigo transition-colors capitalize mb-1 relative z-10">{sub}</h3>
+                                            <p className="text-sm text-gray-500 relative z-10">{(activeCategories.chapters?.[sub] || []).length} Chapters</p>
+                                        </motion.div>
+                                    ))}
+                                </>
+                            )}
+                        </>
+                    ) : selectedScience && !selectedSubject ? (
+                        /* SCIENCE BRANCH VIEW */
+                        <>
+                            {activeCategories.subjects?.filter(s => scienceSubjects.includes(s.toLowerCase())).map((sub, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    onClick={() => handleSubjectClick(sub)}
+                                    className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
+                                >
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <HiAcademicCap className="text-8xl text-pw-indigo transform rotate-[-20deg]" />
+                                    </div>
+
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className="p-3 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                            <HiAcademicCap className="text-2xl" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-pw-violet group-hover:text-pw-indigo transition-colors capitalize mb-1 relative z-10">{sub}</h3>
+                                    <p className="text-sm text-gray-500 relative z-10">{(activeCategories.chapters?.[sub] || []).length} Chapters</p>
+                                </motion.div>
+                            ))}
+                        </>
+                    ) : (
+                        /* CHAPTER VIEW */
+                        <>
+                            {chapters.length === 0 ? (
+                                <div className="col-span-full py-12 text-center text-gray-400">
+                                    <p>No chapters found for this subject yet.</p>
+                                </div>
+                            ) : (
+                                chapters.map((item: any, idx) => {
+                                    const name = typeof item === 'string' ? item : item.name
+                                    const count = typeof item === 'string' ? 0 : item.count
+
+                                    return (
+                                        <motion.div
+                                            key={idx}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.03 }}
+                                            onClick={() => handleChapterClick(name, count)}
+                                            className="bg-white p-5 rounded-2xl border border-pw-border hover:border-pw-indigo hover:shadow-pw-sm cursor-pointer transition-all flex items-center justify-between group"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-full bg-pw-surface text-pw-indigo flex items-center justify-center group-hover:bg-pw-indigo group-hover:text-white Transition-all">
+                                                    <HiBookOpen />
+                                                </div>
+                                                <span className="font-bold text-pw-violet group-hover:text-pw-indigo transition-colors">{name}</span>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                {count > 0 && <span className="text-xs bg-pw-surface px-2 py-1 rounded text-gray-500 font-bold border border-pw-border">{count} Qs</span>}
+                                                <HiChevronRight className="text-gray-300 group-hover:text-pw-indigo" />
+                                            </div>
+                                        </motion.div>
+                                    )
+                                })
+                            )}
+                        </>
+                    )}
+                </div>
+            </main>
+        </div>
+    )
+}
+
+export default function SelectionPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+            <SelectionContent />
+        </Suspense>
+    )
+}

@@ -1,0 +1,344 @@
+'use client'
+
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { Question, CategoryData } from '@/data/types'
+import { mockQuestions } from '@/data/mock'
+import { db } from '@/lib/firebase'
+import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy } from 'firebase/firestore'
+import { useAuth } from '@/hooks/useAuth'
+
+interface QuizContextType {
+    questions: Question[]
+    currentQuestionIndex: number
+    answers: (number | null)[]
+    score: number
+    isFinished: boolean
+    isLoading: boolean
+    startTime: number
+    endTime: number
+    categories: CategoryData
+    startQuiz: (subject?: string, count?: number, chapter?: string) => Promise<void>
+    startAIQuiz: (questions: Question[]) => void
+    submitAnswer: (answerIndex: number | null) => void
+    nextQuestion: () => void
+    prevQuestion: () => void
+    skipQuestion: () => void
+    toggleBookmark: (questionId: string) => void
+    bookmarks: string[]
+    resetQuiz: () => void
+    calculateScore: () => number
+}
+
+const QuizContext = createContext<QuizContextType>({} as QuizContextType)
+
+export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
+    const { user, userProfile, updateProfile, addXP } = useAuth()
+    const [questions, setQuestions] = useState<Question[]>([])
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+    const [answers, setAnswers] = useState<(number | null)[]>([])
+    const [isFinished, setIsFinished] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [startTime, setStartTime] = useState<number>(0)
+    const [endTime, setEndTime] = useState<number>(0)
+
+    const [categories, setCategories] = useState<CategoryData>({ subjects: [], chapters: {} })
+
+    // Fetch metadata on mount
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            try {
+                const docRef = doc(db, 'metadata', 'taxonomy')
+                const docSnap = await getDoc(docRef)
+                if (docSnap.exists()) {
+                    setCategories(docSnap.data() as any)
+                }
+            } catch (e) {
+                console.error("Failed to fetch metadata", e)
+            }
+        }
+        fetchMetadata()
+    }, [])
+
+    const startQuiz = async (subject?: string, count: number = 20, chapter?: string) => {
+        setIsLoading(true)
+        setIsFinished(false)
+        setAnswers([])
+        setCurrentQuestionIndex(0)
+        setQuestions([])
+        setStartTime(Date.now())
+        setEndTime(0)
+
+        try {
+            const questionsRef = collection(db, 'questions')
+            // Remove hardcoded limit(50), use the requested count
+            const constraints: any[] = [limit(count)];
+
+            // Essential Filters: Board & Class (Isolation)
+            // Essential Filters: Board & Class (Isolation)
+            if (userProfile?.board) {
+                // Ensure case consistency (Uploads are lowercase usually)
+                constraints.push(where('board', '==', userProfile.board.toLowerCase()));
+            }
+            if (userProfile?.class) {
+                // Robust check: match both "10" (string) and 10 (number)
+                const cls = userProfile.class;
+                constraints.push(where('class', 'in', [cls.toString(), Number(cls)]));
+            }
+
+            // Subject & Chapter Filters
+            if (subject) {
+                constraints.push(where('subject', '==', subject.toLowerCase()));
+            }
+            if (chapter) {
+                constraints.push(where('chapter', '==', chapter));
+            }
+
+            // Note: Firestore requires composite indexes for multiple 'where' clauses.
+            // If this fails, we might need to filter client-side or create those indexes.
+            // For safety and strict isolation, server-side filtering is best.
+
+            console.log("Fetching questions with constraints:", {
+                board: userProfile?.board,
+                class: userProfile?.class,
+                subject,
+                chapter
+            });
+
+            const qQuery = query(questionsRef, ...constraints);
+
+            const snapshot = await getDocs(qQuery)
+            let q: Question[] = []
+
+            if (snapshot.empty) {
+                console.warn(`No questions found in DB for filter, checking mock`)
+                // Fallback to mock (and filter mock manually)
+                const mq = mockQuestions.filter(x => {
+                    let match = true;
+                    if (userProfile?.board) match = match && x.board === userProfile.board;
+                    // Mock data might not have board, so be careful. 
+                    // For now, if mock, we assume it's generic unless specified.
+                    if (subject) match = match && x.subject === subject.toLowerCase();
+                    if (chapter) match = match && x.chapter === chapter;
+                    return match;
+                })
+
+                if (mq.length === 0) {
+                    // Last resort: show generic available questions if specific ones not found?
+                    // No, "User requests STRICT isolation". Show empty is better than showing wrong board.
+                    console.warn("No matching questions found.");
+                }
+
+                setQuestions(mq.slice(0, count))
+                setAnswers(new Array(Math.min(mq.length, count)).fill(null))
+                return
+            }
+
+            snapshot.forEach(doc => {
+                q.push({ id: doc.id, ...doc.data() } as Question)
+            })
+
+            // Shuffle client side
+            q = q.sort(() => Math.random() - 0.5).slice(0, count)
+
+            setQuestions(q)
+            setAnswers(new Array(q.length).fill(null))
+
+        } catch (error) {
+            console.error("Failed to load questions", error)
+            // Fallback
+            let mq = mockQuestions
+            if (subject) mq = mq.filter(item => item.subject === subject)
+            setQuestions(mq.slice(0, count))
+            setAnswers(new Array(Math.min(mq.length, count)).fill(null))
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const submitAnswer = (answerIndex: number | null) => {
+        const newAnswers = [...answers]
+        newAnswers[currentQuestionIndex] = answerIndex
+        setAnswers(newAnswers)
+    }
+
+    const nextQuestion = () => {
+        if (currentQuestionIndex < questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1)
+        } else {
+            setEndTime(Date.now())
+            setIsFinished(true)
+            saveQuizResult()
+        }
+    }
+
+    const prevQuestion = () => {
+        if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex(prev => prev - 1)
+        }
+    }
+
+    // Skip is just next without saving answer (or keeping null)
+    const skipQuestion = () => {
+        nextQuestion()
+    }
+
+    const [bookmarks, setBookmarks] = useState<string[]>([])
+
+    const toggleBookmark = (questionId: string) => {
+        setBookmarks(prev =>
+            prev.includes(questionId)
+                ? prev.filter(id => id !== questionId)
+                : [...prev, questionId]
+        )
+    }
+
+    const resetQuiz = () => {
+        setCurrentQuestionIndex(0)
+        setAnswers(new Array(questions.length).fill(null))
+        setBookmarks([])
+        setIsFinished(false)
+    }
+
+    const calculateScore = () => {
+        let score = 0
+        questions.forEach((q, index) => {
+            if (answers[index] === q.correctAnswer) {
+                // Defensive check: ensure q.marks is a number, default to 1
+                score += (typeof q.marks === 'number' ? q.marks : 1)
+            }
+        })
+        return score
+    }
+
+    const saveQuizResult = async () => {
+        if (!user || questions.length === 0) return
+
+        const finalScore = calculateScore()
+        // Calculate correct answers count for XP logic
+        let correctAnswers = 0;
+        questions.forEach((q, index) => {
+            if (answers[index] === q.correctAnswer) {
+                correctAnswers++;
+            }
+        });
+        const totalMarks = questions.reduce((acc, q) => acc + q.marks, 0)
+        const percentage = Math.round((finalScore / totalMarks) * 100)
+
+        // Calculate XP: 2 XP per correct answer
+        const xpEarned = correctAnswers * 2
+
+        try {
+            // 1. Save detailed result to Firestore (with Limit)
+            const resultsRef = collection(db, 'users', user.uid, 'quiz_results');
+
+            // Add new result
+            await addDoc(resultsRef, {
+                score: finalScore,
+                totalMarks,
+                percentage,
+                totalQuestions: questions.length,
+                date: new Date().toISOString(),
+                subject: questions[0]?.subject || 'mixed',
+                duration: endTime - startTime,
+                xpEarned, // Save XP earned for display
+                questions,
+                answers
+            })
+
+            // Maintenance: Run asynchronously to not block UI
+            // Keep only last 50 results
+            const cleanUpHistory = async () => {
+                try {
+                    const q = query(resultsRef, orderBy('date', 'desc'));
+                    const snapshot = await getDocs(q);
+
+                    if (snapshot.size > 50) {
+                        const docsToDelete = snapshot.docs.slice(50);
+                        const deletePromises = docsToDelete.map(doc => deleteDoc(doc.ref));
+                        await Promise.all(deletePromises);
+                        console.log(`Cleaned up ${docsToDelete.length} old quiz results.`);
+                    }
+                } catch (e) {
+                    console.error("Cleanup failed", e);
+                }
+            }
+            cleanUpHistory(); // Fire and forget
+
+            // 2. Calculate new stats
+            const currentStats = userProfile?.stats || { quizzesTaken: 0, avgScore: 0, rank: 0 }
+
+            const newQuizzesTaken = (currentStats.quizzesTaken || 0) + 1
+            const oldTotalScore = (currentStats.avgScore || 0) * (currentStats.quizzesTaken || 0)
+            const newAvgScore = Math.round((oldTotalScore + percentage) / newQuizzesTaken)
+
+            // 3. Calculate Rank (Optimized Count Query)
+            const q = query(
+                collection(db, 'users'),
+                where('stats.avgScore', '>', newAvgScore)
+            )
+            const snapshot = await getCountFromServer(q)
+            const newRank = snapshot.data().count + 1
+
+            // 4. Update Profile
+            await updateProfile({
+                stats: {
+                    quizzesTaken: newQuizzesTaken,
+                    avgScore: newAvgScore,
+                    rank: newRank
+                }
+            })
+
+            // 5. Award XP (Gamification)
+            if (xpEarned > 0) {
+                await addXP(xpEarned)
+                console.log(`Awarded ${xpEarned} XP for ${correctAnswers} correct answers`)
+            }
+
+        } catch (error) {
+            console.error("Error saving quiz result:", error)
+        }
+    }
+
+    const startAIQuiz = (aiQuestions: Question[]) => {
+        setIsLoading(true)
+        setIsFinished(false)
+        setAnswers([])
+        setCurrentQuestionIndex(0)
+
+        // Randomize options for each question to ensure freshness if re-used (optional but good)
+        // Ensure IDs are unique if needed, but AI generator handles that.
+        setQuestions(aiQuestions)
+        setAnswers(new Array(aiQuestions.length).fill(null))
+        setStartTime(Date.now())
+        setEndTime(0)
+        setIsLoading(false)
+    }
+
+    return (
+        <QuizContext.Provider value={{
+            questions,
+            currentQuestionIndex,
+            answers,
+            score: calculateScore(),
+            isFinished,
+            isLoading,
+            startTime,
+            endTime,
+            categories,
+            startQuiz,
+            startAIQuiz,
+            submitAnswer,
+            nextQuestion,
+            prevQuestion,
+            skipQuestion,
+            toggleBookmark,
+            bookmarks,
+            resetQuiz,
+            calculateScore
+        }}>
+            {children}
+        </QuizContext.Provider>
+    )
+}
+
+export const useQuiz = () => useContext(QuizContext)

@@ -1,0 +1,336 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+/* ========================================
+   PHYSICS WALLAH INSPIRED THEME VARIABLES
+   ======================================== */
+
+:root {
+  /* PW Light mode colors */
+  --bg-primary: #F8F9FC;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #140D52;
+  --text-secondary: #4437B8;
+  --text-muted: #6B7280;
+  --border-color: #E5E7EB;
+  --card-bg: #ffffff;
+  --card-shadow: 0 4px 16px rgba(20, 13, 82, 0.1);
+
+  /* PW Accent colors */
+  --accent-primary: #4437B8;
+  --accent-secondary: #ABA3EC;
+  --accent-red: #B03B32;
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+}
+
+.dark,
+[data-theme="dark"] {
+  /* Dark mode colors (kept for toggle) */
+  --bg-primary: #140D52;
+  --bg-secondary: #1e1b4b;
+  --bg-tertiary: #2d2a5e;
+  --text-primary: #f1f5f9;
+  --text-secondary: #ABA3EC;
+  --text-muted: #94a3b8;
+  --border-color: #3d3a6e;
+  --card-bg: #1e1b4b;
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Apply PW Light Theme - Clean Background */
+body {
+  background: linear-gradient(180deg, #F8F9FC 0%, #EEF0F7 100%);
+  color: #140D52;
+  min-height: 100vh;
+}
+
+.dark body {
+  background: linear-gradient(180deg, #140D52 0%, #0d0725 100%);
+  color: #f1f5f9;
+}
+
+/* Dark mode component overrides */
+.dark .bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-gentle {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-100px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 15px rgba(124, 58, 237, 0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.3s ease-out;
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-confetti {
+  animation: confetti 1s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Correct answer celebration */
+.correct-answer {
+  animation: fadeInScale 0.3s ease-out, pulse-glow 0.5s ease-out;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+/* Wrong answer shake */
+.wrong-answer {
+  animation: shake 0.5s ease-in-out;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+
+/* Custom scrollbar - PW Light */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #EEF0F7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ABA3EC;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4437B8;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove spinner from number input */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.glass-dark {
+  background: rgba(30, 27, 75, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #7c3aed 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* PW Theme Utilities */
+.bg-pw-gradient {
+  background: linear-gradient(135deg, #F8F9FC 0%, #EEF0F7 100%);
+  position: relative;
+}
+
+.bg-pw-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30vh;
+  background: radial-gradient(circle at top center, rgba(68, 55, 184, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.text-pw-gradient {
+  background: linear-gradient(135deg, #4437B8 0%, #140D52 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* PW Card Style - Clean White with Soft Shadow */
+.pw-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 16px rgba(20, 13, 82, 0.08);
+  transition: all 0.2s ease;
+}
+
+.pw-card:hover {
+  box-shadow: 0 8px 24px rgba(20, 13, 82, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Legacy glass-card - now styled for light theme */
+.glass-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 16px rgba(20, 13, 82, 0.08);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20, 13, 82, 0.12);
+  transition: all 0.3s ease;
+}
+
+/* Base styles / Reset */
+/* Note: Tailwind v4 handles standard element resets internally or via @layer base if needed.
+   For now, keeping explicit transitions as per original globals.css */
+
+* {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+button {
+  font-family: inherit;
+}
+
+.shimmer {
+  /* Animation defined in theme now, using generic class connection */
+  animation: var(--animate-shimmer);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+}

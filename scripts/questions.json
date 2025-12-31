@@ -1,0 +1,52 @@
+[
+    {
+        "board": "bseb",
+        "language": "english",
+        "subject": "physics",
+        "class": "10",
+        "year": 2024,
+        "question": "Which particle has a negative charge?",
+        "options": [
+            "Proton",
+            "Neutron",
+            "Electron",
+            "Photon"
+        ],
+        "correctAnswer": 2,
+        "chapter": "Electricity",
+        "topic": "Charge",
+        "difficulty": "easy",
+        "marks": 1,
+        "questionType": "mcq",
+        "explanation": "Electrons carry a negative elementary charge.",
+        "tags": [
+            "Physics",
+            "Charge"
+        ]
+    },
+    {
+        "board": "bseb",
+        "language": "english",
+        "subject": "chemistry",
+        "class": "10",
+        "year": 2024,
+        "question": "What is the pH of pure water?",
+        "options": [
+            "0",
+            "7",
+            "14",
+            "1"
+        ],
+        "correctAnswer": 1,
+        "chapter": "Acids Bases",
+        "topic": "pH Scale",
+        "difficulty": "easy",
+        "marks": 1,
+        "questionType": "mcq",
+        "explanation": "Pure water is neutral with a pH of 7.",
+        "tags": [
+            "Chemistry",
+            "pH"
+        ]
+    }
+]
