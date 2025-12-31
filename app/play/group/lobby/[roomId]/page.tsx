@@ -24,6 +24,7 @@ export default function LobbyPage() {
     const [showFriends, setShowFriends] = useState(false);
     const { sendGameInvite } = useFriends();
     const [inviteLoading, setInviteLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'players' | 'chat'>('players');
 
     const handleInviteFriend = async (friendUid: string) => {
         setInviteLoading(true);
@@ -263,11 +264,27 @@ export default function LobbyPage() {
                     </div>
                 </header>
 
+                {/* Tab Switcher (Mobile Only) */}
+                <div className="flex lg:hidden gap-1 p-1 bg-white/60 backdrop-blur-md rounded-2xl border border-white mb-6 mx-auto w-full max-w-md shadow-sm">
+                    <button
+                        onClick={() => setActiveTab('players')}
+                        className={`flex-1 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all ${activeTab === 'players' ? 'bg-white text-pw-indigo shadow-sm' : 'text-gray-500 hover:bg-white/50'}`}
+                    >
+                        👥 Players
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('chat')}
+                        className={`flex-1 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all relative ${activeTab === 'chat' ? 'bg-white text-pw-indigo shadow-sm' : 'text-gray-500 hover:bg-white/50'}`}
+                    >
+                        💬 Chat
+                    </button>
+                </div>
+
                 {/* Main Content Area: Players & Chat */}
-                <div className="flex-1 flex flex-col lg:flex-row gap-6 mb-24 md:mb-8 overflow-hidden">
+                <div className="flex-1 flex flex-col lg:flex-row gap-6 mb-40 md:mb-8 overflow-hidden">
 
                     {/* Players Grid - Stadium View */}
-                    <div className="flex-1 bg-white/60 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 border border-white shadow-sm backdrop-blur-md relative overflow-y-auto pb-32 lg:pb-8">
+                    <div className={`flex-1 bg-white/60 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 border border-white shadow-sm backdrop-blur-md relative overflow-y-auto pb-32 lg:pb-8 ${activeTab === 'chat' ? 'hidden lg:block' : 'block'}`}>
                         <p className="text-center text-gray-400 font-bold uppercase tracking-widest text-xs mb-8 bg-white/50 inline-block px-4 py-1 rounded-full border border-white mx-auto sticky top-0 z-20 backdrop-blur-md">Lobby Area</p>
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -322,7 +339,7 @@ export default function LobbyPage() {
                     </div>
 
                     {/* Chat Section */}
-                    <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
+                    <div className={`w-full lg:w-80 xl:w-96 flex-shrink-0 ${activeTab === 'players' ? 'hidden lg:block' : 'block'}`}>
                         {user && <LobbyChat
                             roomId={roomId as string}
                             currentUser={{
@@ -330,6 +347,7 @@ export default function LobbyPage() {
                                 displayName: user.displayName || 'Player',
                                 photoURL: user.photoURL || undefined
                             }}
+                            className="h-[65vh] lg:h-[600px] w-full"
                         />}
                     </div>
                 </div>
