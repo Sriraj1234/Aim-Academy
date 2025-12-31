@@ -127,9 +127,9 @@ export default function QuizPage() {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => router.back()}
-                            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-pw-surface text-gray-500 transition-colors"
+                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl hover:bg-pw-surface text-gray-500 transition-colors"
                         >
-                            <FaChevronLeft />
+                            <FaChevronLeft className="text-sm md:text-base" />
                         </button>
                         <div>
                             <h1 className="font-bold text-lg text-pw-violet leading-tight capitalize">
@@ -141,8 +141,8 @@ export default function QuizPage() {
                         </div>
                     </div>
 
-                    {/* Centered Timer */}
-                    <div className="absolute left-1/2 -translate-x-1/2 hidden md:block w-48">
+                    {/* Centered Timer - Visible on all screens now with responsive width */}
+                    <div className="absolute left-1/2 -translate-x-1/2 w-40 md:w-48">
                         <ModernTimer duration={totalTime} current={timeLeft} className="w-full" />
                     </div>
 
@@ -158,10 +158,10 @@ export default function QuizPage() {
                         </button>
 
                         <button
-                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-pw-surface text-gray-600 hover:bg-pw-border transition-colors border border-pw-border"
+                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-pw-surface text-gray-600 hover:bg-pw-border transition-colors border border-pw-border"
                             onClick={isRunning ? pauseTimer : resumeTimer}
                         >
-                            {isRunning ? <FaPause /> : <FaPlay />}
+                            {isRunning ? <FaPause className="text-xs md:text-sm" /> : <FaPlay className="text-xs md:text-sm" />}
                         </button>
                     </div>
                 </div>
@@ -177,11 +177,7 @@ export default function QuizPage() {
                 </div>
             </header>
 
-            <main className="pt-28 px-4 max-w-3xl mx-auto relative z-10">
-                {/* Mobile Timer */}
-                <div className="md:hidden w-full max-w-xs mx-auto mb-6">
-                    <ModernTimer duration={totalTime} current={timeLeft} />
-                </div>
+            <main className="pt-24 px-4 max-w-3xl mx-auto relative z-10 pb-32">
                 {/* Stats Row */}
                 <div className="flex items-center justify-between mb-8 px-2">
                     <span className="text-sm font-bold text-pw-indigo uppercase tracking-widest bg-pw-indigo/5 px-3 py-1 rounded-lg">
@@ -258,9 +254,11 @@ export default function QuizPage() {
                     </div>
                 </div>
 
+
+
                 {/* Floating Bottom Bar */}
-                <div className="fixed bottom-6 left-4 right-4 z-40 max-w-3xl mx-auto">
-                    <div className="bg-white p-3 md:p-4 rounded-[1.5rem] shadow-pw-xl border border-pw-border flex items-center justify-between gap-3 md:gap-4">
+                <div className="fixed bottom-4 left-4 right-4 z-40 max-w-3xl mx-auto">
+                    <div className="bg-white/90 backdrop-blur-md p-2 md:p-4 rounded-[1.5rem] shadow-pw-xl border border-pw-border flex items-center justify-between gap-2 md:gap-4">
 
                         {/* Previous Button */}
                         <Button
@@ -307,8 +305,8 @@ export default function QuizPage() {
                         </Button>
                     </div>
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     )
 }
 
