@@ -21,7 +21,7 @@ export const translations = {
             createAccount: 'Create an account',
         },
         features: {
-            title: 'Why Choose AIM Academy?',
+            title: 'Why Choose Padhaku?',
             subtitle: 'Everything you need to top your exams.',
             live: { title: 'Live Classes', desc: 'Interactive sessions with expert teachers.' },
             practice: { title: 'Practice Quizzes', desc: 'Chapter-wise questions to test your knowledge.' },
@@ -111,7 +111,7 @@ export const translations = {
             createAccount: 'खाता बनाएं',
         },
         features: {
-            title: 'AIM Academy ही क्यों चुनें?',
+            title: 'Padhaku ही क्यों चुनें?',
             subtitle: 'परीक्षा में टॉप करने के लिए आपको जो कुछ भी चाहिए।',
             live: { title: 'लाइव कक्षाएं', desc: 'विशेषज्ञ शिक्षकों के साथ इंटरैक्टिव सत्र।' },
             practice: { title: 'अभ्यास क्विज़', desc: 'अपने ज्ञान का परीक्षण करने के लिए अध्याय-वार प्रश्न।' },
