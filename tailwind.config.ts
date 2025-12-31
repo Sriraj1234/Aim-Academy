@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -74,13 +75,13 @@ const config: Config = {
         },
         // Physics Wallah Inspired Colors
         pw: {
-          violet: '#140D52',      // Deep Violet - Primary
-          indigo: '#4437B8',      // Governor Bay - Secondary
+          violet: 'var(--text-primary)',      // Mapped to Main Text (Smart Switch)
+          indigo: '#4437B8',      // Governor Bay - Secondary (Keep Static for Brands/Buttons)
           lavender: '#ABA3EC',    // Biloba Flower - Accent
           red: '#B03B32',         // Medium Carmine - CTA/Alert
-          surface: '#F8F9FC',     // Light Background
-          card: '#FFFFFF',        // White Cards
-          border: '#E5E7EB',      // Light Gray Border
+          surface: 'var(--bg-primary)',     // Smart Background
+          card: 'var(--card-bg)',        // Smart Card
+          border: 'var(--pw-border)',      // Smart Border
         }
       },
       fontFamily: {
