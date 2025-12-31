@@ -60,8 +60,8 @@ export const LocalStudentsSection = ({
                     const isSent = sentRequests.has(student.uid);
                     return (
                         <div key={student.uid} className="flex items-center gap-3 p-3 border-b border-pw-border last:border-0 hover:bg-gray-50 transition-colors">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx < 3 ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'}`}>
-                                {idx + 1}
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${student.rank <= 3 ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'}`}>
+                                {student.rank}
                             </div>
                             <img
                                 src={student.photoURL || `https://ui-avatars.com/api/?name=${student.displayName}`}
@@ -71,8 +71,10 @@ export const LocalStudentsSection = ({
                             />
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-bold text-gray-800 truncate">{student.displayName}</p>
-                                <p className="text-[10px] text-gray-500 font-medium">
-                                    {student.stats?.avgScore ? `${student.stats.avgScore.toFixed(0)}% Accuracy` : 'New Student'}
+                                <p className="text-[10px] text-gray-500 font-medium flex items-center gap-2">
+                                    <span className={student.stats?.avgScore === 100 ? 'text-green-600' : ''}>{student.stats?.avgScore ? `${student.stats.avgScore.toFixed(0)}% Acc` : 'New'}</span>
+                                    {student.stats?.totalXP ? <span className="text-gray-300">•</span> : null}
+                                    {student.stats?.totalXP ? <span>{student.stats.totalXP} XP</span> : null}
                                 </p>
                             </div>
                             <button
