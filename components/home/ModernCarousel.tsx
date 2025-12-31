@@ -179,7 +179,7 @@ export const ModernCarousel = () => {
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Fixed Aspect Ratio Container for Stability */}
-            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] md:rounded-2xl overflow-hidden shadow-xl bg-gray-900 group">
+            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] md:rounded-2xl overflow-hidden md:border md:border-pw-border md:shadow-pw-md bg-gray-900 group">
                 <AnimatePresence initial={false} custom={direction} mode="popLayout">
                     <motion.div
                         key={current}
@@ -233,7 +233,7 @@ export const ModernCarousel = () => {
                 </div>
 
                 {/* Indicators - Micro dots, minimal visibility */}
-                <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1 z-20">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
                     {slides.map((_, idx) => (
                         <button
                             key={idx}
@@ -241,7 +241,7 @@ export const ModernCarousel = () => {
                                 setDirection(idx > current ? 1 : -1);
                                 setCurrent(idx);
                             }}
-                            className={`w-1 h-1 rounded-full transition-all duration-300 ${current === idx ? 'bg-white/80' : 'bg-white/10'}`}
+                            className={`w-1 h-1 rounded-full transition-all duration-300 ${current === idx ? 'bg-white shadow-lg scale-125' : 'bg-white/20'}`}
                         />
                     ))}
                 </div>
