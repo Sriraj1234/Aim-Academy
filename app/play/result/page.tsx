@@ -7,7 +7,7 @@ import { ScoreCircle } from '@/components/result/ScoreCircle'
 import { ReviewList } from '@/components/result/ReviewList'
 import { Button } from '@/components/shared/Button'
 import { Confetti } from '@/components/animations/Confetti'
-import { FaHome, FaChartBar, FaUser, FaGamepad, FaBullseye, FaCheckCircle, FaClock, FaArrowLeft, FaMinusCircle, FaSpinner } from 'react-icons/fa'
+import { FaHome, FaChartBar, FaUser, FaGamepad, FaBullseye, FaCheckCircle, FaClock, FaArrowLeft, FaMinusCircle, FaSpinner, FaWhatsapp } from 'react-icons/fa'
 import { useQuiz } from '@/hooks/useQuiz'
 import { useAuth } from '@/hooks/useAuth'
 import { db } from '@/lib/firebase'
@@ -328,6 +328,29 @@ const ResultPage = () => {
                                         PRACTICE AGAIN
                                     </Button>
                                 </Link>
+
+                                {/* Share on WhatsApp */}
+                                <Button
+                                    onClick={() => {
+                                        const shareText = `🏆 I just scored ${score}/${totalQuestions} (${accuracy}% accuracy) on AIM Academy! Can you beat me? 💪`;
+                                        const shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+
+                                        // Try native share first, fallback to WhatsApp link
+                                        if (navigator.share) {
+                                            navigator.share({
+                                                title: 'My Quiz Score',
+                                                text: shareText
+                                            }).catch(() => window.open(shareUrl, '_blank'));
+                                        } else {
+                                            window.open(shareUrl, '_blank');
+                                        }
+                                    }}
+                                    fullWidth
+                                    className="h-14 bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20 text-sm font-bold tracking-wide rounded-xl transform transition-transform active:scale-95 border-none"
+                                >
+                                    <FaWhatsapp className="mr-2 text-lg" />
+                                    SHARE ON WHATSAPP
+                                </Button>
                             </div>
                         </div>
                     </div>
