@@ -147,6 +147,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                             src={friend.photoURL || `https://ui-avatars.com/api/?name=${friend.displayName}`}
                                                             className="w-full h-full rounded-[10px] object-cover bg-white"
                                                             alt="avatar"
+                                                            referrerPolicy="no-referrer"
                                                         />
                                                     </div>
                                                     {/* Online Status Indicator */}
@@ -207,6 +208,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                         src={req.photoURL || `https://ui-avatars.com/api/?name=${req.displayName}`}
                                                         className="w-10 h-10 rounded-full object-cover bg-gray-100 border border-pw-border"
                                                         alt="avatar"
+                                                        referrerPolicy="no-referrer"
                                                     />
                                                     <div>
                                                         <h3 className="font-bold text-pw-violet">{req.displayName}</h3>
