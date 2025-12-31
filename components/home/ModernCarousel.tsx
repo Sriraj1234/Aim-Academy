@@ -179,7 +179,7 @@ export const ModernCarousel = () => {
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Fixed Aspect Ratio Container for Stability */}
-            <div className="relative w-full aspect-[4/5] md:aspect-[21/9] max-h-[500px] md:max-h-[400px] rounded-[2rem] overflow-hidden shadow-xl bg-gray-900 group">
+            <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-xl bg-gray-900 group">
                 <AnimatePresence initial={false} custom={direction} mode="popLayout">
                     <motion.div
                         key={current}
@@ -209,7 +209,7 @@ export const ModernCarousel = () => {
 
                         {/* Graphic Area - Top on Mobile, Right on Desktop */}
                         <div className="relative z-0 w-full md:w-2/5 flex justify-center items-center h-40 md:h-full">
-                            <div className="relative w-32 h-32 md:w-56 md:h-56 bg-white/10 backdrop-blur-xl rounded-[1.5rem] border border-white/20 shadow-2xl flex items-center justify-center transform rotate-3 transition-transform duration-500">
+                            <div className="relative w-28 h-28 md:w-48 md:h-48 bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl flex items-center justify-center transform rotate-3 transition-transform duration-500">
                                 {React.createElement(slides[current].icon, { className: "text-white text-5xl md:text-8xl drop-shadow-lg" })}
                             </div>
                         </div>
@@ -232,8 +232,8 @@ export const ModernCarousel = () => {
                     </button>
                 </div>
 
-                {/* Indicators */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                {/* Indicators - Small dots */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
                     {slides.map((_, idx) => (
                         <button
                             key={idx}
@@ -241,7 +241,7 @@ export const ModernCarousel = () => {
                                 setDirection(idx > current ? 1 : -1);
                                 setCurrent(idx);
                             }}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${current === idx ? 'w-6 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/60'}`}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${current === idx ? 'bg-white' : 'bg-white/30'}`}
                         />
                     ))}
                 </div>
