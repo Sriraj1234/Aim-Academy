@@ -196,7 +196,7 @@ export default function LobbyPage() {
 
     // Render Lobby
     return (
-        <div className="min-h-screen bg-pw-surface p-4 md:p-8 flex flex-col relative overflow-hidden font-sans">
+        <div className="min-h-screen bg-pw-surface p-4 md:p-8 flex flex-col relative font-sans overflow-x-hidden">
             {/* Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-pw-indigo/5 rounded-full blur-[100px]" />
@@ -263,7 +263,7 @@ export default function LobbyPage() {
                 </header>
 
                 {/* Players Grid - Stadium View */}
-                <div className="flex-1 bg-white/60 rounded-[3rem] p-8 border border-white shadow-sm mb-8 backdrop-blur-md overflow-hidden relative">
+                <div className="flex-1 bg-white/60 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 border border-white shadow-sm mb-24 md:mb-8 backdrop-blur-md relative overflow-y-auto max-h-[60vh] md:max-h-none">
                     <p className="text-center text-gray-400 font-bold uppercase tracking-widest text-xs mb-8 bg-white/50 inline-block px-4 py-1 rounded-full border border-white mx-auto">Lobby Area</p>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
@@ -318,7 +318,7 @@ export default function LobbyPage() {
                 </div>
 
                 {/* Footer Action */}
-                <div className="flex justify-center pb-8">
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-pw-border md:static md:bg-transparent md:border-0 md:p-0 flex justify-center z-50">
                     {isHost ? (
                         <div className="bg-white p-2 rounded-[2.5rem] shadow-pw-xl border border-pw-border flex items-center gap-4 animate-in slide-in-from-bottom duration-500 ring-4 ring-pw-surface">
                             {/* If room not configured yet */}
