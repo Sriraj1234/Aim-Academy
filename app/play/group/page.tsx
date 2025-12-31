@@ -41,7 +41,7 @@ export default function GroupPlayPage() {
                         <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-5xl md:text-7xl font-display font-black text-pw-violet mb-6 tracking-tight"
+                            className="text-4xl md:text-5xl lg:text-7xl font-display font-black text-pw-violet mb-6 tracking-tight"
                         >
                             Play with <span className="text-transparent bg-clip-text bg-gradient-to-r from-pw-indigo to-pw-violet">Friends</span>
                         </motion.h1>
