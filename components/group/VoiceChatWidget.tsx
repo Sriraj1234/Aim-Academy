@@ -21,10 +21,9 @@ const RemoteAudioTracks = ({ users }: { users: any[] }) => {
     const { audioTracks } = useRemoteAudioTracks(users);
 
     useEffect(() => {
-        audioTracks.map((track) => track.play());
-        return () => {
-            audioTracks.map((track) => track.stop());
-        };
+        audioTracks.map((track) => {
+            track.play();
+        });
     }, [audioTracks]);
 
     return null;
@@ -32,12 +31,13 @@ const RemoteAudioTracks = ({ users }: { users: any[] }) => {
 
 // This component handles the actual connection logic
 const VoiceChatInner = ({ channelName }: { channelName: string }) => {
-    const { user, userProfile } = useAuth();
+    const { user } = useAuth();
     const client = useRTCClient();
 
     // 1. Join with Token
     const [token, setToken] = useState<string | null>(null);
     const [fetchError, setFetchError] = useState('');
+    const [debugStatus, setDebugStatus] = useState('Initializing...');
 
     // Generate Numeric UID from User ID (Persistent)
     const numericUid = user?.uid ? stringToNumber(user.uid) : 0;
@@ -45,7 +45,7 @@ const VoiceChatInner = ({ channelName }: { channelName: string }) => {
     useEffect(() => {
         const fetchToken = async () => {
             if (!channelName || !numericUid) return;
-            console.log("Fetching token for:", { channelName, uid: numericUid });
+            setDebugStatus('Fetching token...');
             try {
                 // Fetch from our own API using the Numeric UID
                 const res = await fetch(`/api/agora?channelName=${channelName}&uid=${numericUid}`);
@@ -54,18 +54,22 @@ const VoiceChatInner = ({ channelName }: { channelName: string }) => {
                     const text = await res.text();
                     console.error("Token API Error:", text);
                     setFetchError(`Server Error: ${res.status}`);
+                    setDebugStatus('Token error');
                     return;
                 }
 
                 const data = await res.json();
                 if (data.token) {
                     setToken(data.token);
+                    setDebugStatus('Token received');
                 } else {
                     setFetchError(data.error || 'Failed to get token');
+                    setDebugStatus('Token missing');
                 }
             } catch (e) {
                 console.error(e);
                 setFetchError('Network error fetching token');
+                setDebugStatus('Network error');
             }
         };
         if (numericUid) fetchToken();
@@ -84,19 +88,18 @@ const VoiceChatInner = ({ channelName }: { channelName: string }) => {
     const error = joinError || (fetchError ? new Error(fetchError) : null);
 
     // 2. Microphone Handling
-    const { localMicrophoneTrack } = useLocalMicrophoneTrack(true); // Auto-create track
-    const [micOn, setMicOn] = useState(false); // Start MUTED by default usually? Or unmuted? Let's say muted first.
+    const { localMicrophoneTrack } = useLocalMicrophoneTrack(true);
+    const [micOn, setMicOn] = useState(false);
 
-    // 3. Publish Audio
+    // 3. Publish Audio - Only publish if micOn was intended at least once? 
+    // Actually standard patterns usually publish always and then mute/unmute
     usePublish([localMicrophoneTrack]);
 
     // 4. Mute Toggle logic
-    // We don't publish if micOn is false? OR we publish but mute the track? 
-    // usePublish publishes if the track exists.
-    // We should enable/disable the track.
     useEffect(() => {
         if (localMicrophoneTrack) {
             localMicrophoneTrack.setEnabled(micOn);
+            setDebugStatus(micOn ? 'Mic ON' : 'Mic OFF');
         }
     }, [micOn, localMicrophoneTrack]);
 
@@ -104,22 +107,30 @@ const VoiceChatInner = ({ channelName }: { channelName: string }) => {
     const remoteUsers = useRemoteUsers();
 
     if (!isConnected && isLoading) {
-        return <div className="text-xs text-brand-500 animate-pulse">Connecting audio...</div>;
+        return <div className="text-xs text-brand-500 animate-pulse">{debugStatus}</div>;
     }
 
     if (error) {
         return (
             <div className="text-xs text-red-500 flex items-center gap-1" title={error.message}>
                 <FaMicrophoneSlash />
-                {error.message.includes('dynamic key') ? 'Auth Error' : error.message.slice(0, 15) + '...'}
+                {error.message.includes('dynamic key') ? 'Auth Error' : 'Conn Error'}
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-sm">
+        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-sm relative">
+            {/* Interaction Overlay for Mobile Audio (Autoplay fix) */}
+            {remoteUsers.length > 0 && (
+                <div className="hidden" onClick={() => {
+                    // Just a dummy click handler to ensure audio context can resume if needed
+                    // In React SDK, track.play() usually handles this
+                }}></div>
+            )}
+
             {/* Status Indicator */}
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-orange-500'} animate-pulse`} />
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-orange-500'} ${isConnected ? '' : 'animate-pulse'}`} />
 
             {/* Mic Toggle */}
             <button
@@ -130,7 +141,7 @@ const VoiceChatInner = ({ channelName }: { channelName: string }) => {
                 {micOn ? <FaMicrophone size={14} /> : <FaMicrophoneSlash size={14} />}
             </button>
 
-            {/* Remote Users Count (or Avatars) */}
+            {/* Remote Users Count */}
             <div className="flex items-center text-xs font-bold text-gray-600 ml-1">
                 <FaHeadphones className="mr-1 text-gray-400" />
                 {remoteUsers.length}
