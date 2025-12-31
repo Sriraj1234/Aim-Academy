@@ -49,6 +49,7 @@ export const translations = {
             fullNameLabel: 'Full Name',
             joinUs: 'Join Us',
             createAccountTitle: 'Create Account',
+            createAccount: 'Create Account',
             createAccountSubtitle: 'Start your journey to success today.'
         },
         profile: {
@@ -139,6 +140,7 @@ export const translations = {
             fullNameLabel: 'पूरा नाम',
             joinUs: 'जुड़ें हमारे साथ',
             createAccountTitle: 'खाता बनाएं',
+            createAccount: 'खाता बनाएं',
             createAccountSubtitle: 'सफलता की ओर अपनी यात्रा आज ही शुरू करें।'
         },
         profile: {
