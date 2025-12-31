@@ -1,0 +1,19 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "notes",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "class",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "uploadedAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}
