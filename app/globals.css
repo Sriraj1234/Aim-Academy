@@ -63,75 +63,100 @@ body {
    ======================================== */
 
 :root {
-  /* PW Light mode colors */
-  --bg-primary: #F8F9FC;
+  /* PW Light Theme Variables */
+  --pw-bg-page: #F8F9FC;
+  --pw-bg-card: #ffffff;
+  --pw-text-main: #140D52;
+  --pw-text-sub: #4437B8;
+  --pw-text-muted: #6B7280;
+  --pw-border: #E5E7EB;
+
+  /* Brand Constants (Don't flip, but mapped for consistency) */
+  --pw-violet: #140D52;
+  --pw-indigo: #4437B8;
+
+  /* Semantic Mappings */
+  --bg-primary: var(--pw-bg-page);
   --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f5f9;
-  --text-primary: #140D52;
-  --text-secondary: #4437B8;
-  --text-muted: #6B7280;
-  --border-color: #E5E7EB;
-  --card-bg: #ffffff;
-  --card-shadow: 0 4px 16px rgba(20, 13, 82, 0.1);
-
-  /* PW Accent colors */
-  --accent-primary: #4437B8;
-  --accent-secondary: #ABA3EC;
-  --accent-red: #B03B32;
-  --success: #10b981;
-  --error: #ef4444;
-  --warning: #f59e0b;
+  --text-primary: var(--pw-text-main);
+  --card-bg: var(--pw-bg-card);
 }
 
-.dark,
-[data-theme="dark"] {
-  /* Dark mode colors (kept for toggle) */
-  --bg-primary: #140D52;
-  --bg-secondary: #1e1b4b;
-  --bg-tertiary: #2d2a5e;
-  --text-primary: #f1f5f9;
-  --text-secondary: #ABA3EC;
-  --text-muted: #94a3b8;
-  --border-color: #3d3a6e;
-  --card-bg: #1e1b4b;
-  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+[data-theme="dark"],
+.dark {
+  /* PW Dark Theme Variables */
+  --pw-bg-page: #0f172a;
+  /* Slate 900 */
+  --pw-bg-card: #1e293b;
+  /* Slate 800 */
+  --pw-text-main: #f8fafc;
+  /* Slate 50 */
+  --pw-text-sub: #818cf8;
+  /* Indigo 400 */
+  --pw-text-muted: #94a3b8;
+  /* Slate 400 */
+  --pw-border: #334155;
+  /* Slate 700 */
+
+  /* In dark mode, 'violet' text needs to be light. 
+     BUT we handle this by mapping semantic Tailwind colors to these vars, 
+     not by changing the brand color logic itself indiscriminately.
+     For strict text readability, we override the semantic variables. */
+
+  --bg-primary: var(--pw-bg-page);
+  --bg-secondary: #020617;
+  --text-primary: var(--pw-text-main);
+  --card-bg: var(--pw-bg-card);
 }
 
-/* Apply PW Light Theme - Clean Background */
+/* Apply Theme Defaults */
 body {
-  background: linear-gradient(180deg, #F8F9FC 0%, #EEF0F7 100%);
-  color: #140D52;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.dark body {
-  background: linear-gradient(180deg, #140D52 0%, #0d0725 100%);
-  color: #f1f5f9;
+/* Replaces old !important overrides with semantic class usage expectation
+   or minimal targeted fixes if needed. */
+.bg-white {
+  background-color: var(--pw-bg-card);
 }
 
-/* Dark mode component overrides */
-.dark .bg-white {
-  background-color: var(--card-bg) !important;
+.bg-gray-50,
+.bg-gray-100 {
+  background-color: var(--bg-primary);
 }
 
-.dark .bg-gray-50,
-.dark .bg-gray-100 {
-  background-color: var(--bg-tertiary) !important;
+.text-gray-900,
+.text-gray-800 {
+  color: var(--text-primary);
 }
 
-.dark .text-gray-900,
-.dark .text-gray-800 {
-  color: var(--text-primary) !important;
+.text-gray-600,
+.text-gray-500 {
+  color: var(--pw-text-sub);
+  /* Or muted */
 }
 
-.dark .text-gray-600,
-.dark .text-gray-500 {
-  color: var(--text-secondary) !important;
+.border-gray-100,
+.border-gray-200,
+.border-gray-300 {
+  border-color: var(--pw-border);
 }
 
-.dark .border-gray-100,
-.dark .border-gray-200 {
-  border-color: var(--border-color) !important;
+/* Specifically target PW classes to be dynamic if they aren't already */
+.text-pw-violet {
+  color: var(--text-primary);
+  /* Maps to Main text color (Dark Blue / White) */
+}
+
+.bg-pw-surface {
+  background-color: var(--bg-primary);
+}
+
+.bg-pw-card {
+  background-color: var(--card-bg);
 }
 
 /* ========================================
