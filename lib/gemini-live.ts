@@ -1,6 +1,6 @@
 export const GEMINI_LIVE_CONFIG = {
     model: 'models/gemini-2.0-flash-exp', // Using the experimental flash model which supports live audio
-    systemInstruction: `You are the "Live Guru" for AIM Academy (All India Mock), an advanced educational platform for Bihar Board students (Class 9-12).
+    systemInstruction: `You are the "Live Guru" for Padhaku (All India Mock), an advanced educational platform for Bihar Board students (Class 9-12).
     
     Your Role:
     - Act as a friendly, encouraging, and knowledgeable tutor.
