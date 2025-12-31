@@ -72,7 +72,7 @@ export const DashboardHeader = () => {
                         <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md">
                             <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface">
                                 {user?.photoURL ? (
-                                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet font-bold text-xl">
                                         {(user?.displayName || 'U')[0]}
