@@ -7,6 +7,7 @@ import { submitAnswer, nextQuestion, endGame } from '@/utils/roomService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaUser, FaCheckCircle, FaClock, FaShapes, FaBolt, FaStar, FaUsers, FaTimes, FaChevronDown } from 'react-icons/fa';
 import { VoiceChatWidget } from '@/components/group/VoiceChatWidget';
+import { useSound } from '@/context/SoundContext';
 
 export default function GamePage() {
     const { roomId } = useParams();
@@ -21,6 +22,7 @@ export default function GamePage() {
     const [timeLeftDisplay, setTimeLeftDisplay] = useState(30);
 
     const isHost = typeof window !== 'undefined' && localStorage.getItem(`room_host_${roomId}`) === 'true';
+    const { playSound } = useSound();
 
     useEffect(() => {
         if (!roomId) return;
@@ -98,10 +100,15 @@ export default function GamePage() {
 
     const handleAnswer = async (index: number) => {
         if (!room || isSubmitted || !currentQ || !playerId) return;
+
+        playSound('click');
         setSelectedOption(index);
         setIsSubmitted(true);
 
         const isCorrect = index === currentQ.correctAnswer;
+        if (isCorrect) playSound('correct'); // Immediate feedback for self (optional, or wait for reveal)
+        else playSound('wrong');
+
         await submitAnswer(roomId as string, playerId, room.currentQuestionIndex, index, isCorrect);
     };
 
@@ -138,8 +145,13 @@ export default function GamePage() {
         const interval = setInterval(() => {
             const elapsed = Date.now() - room.questionStartTime;
             const remaining = Math.max(0, Math.ceil((30000 - elapsed) / 1000));
+
+            if (remaining <= 5 && remaining > 0) {
+                playSound('tick');
+            }
+
             setTimeLeftDisplay(remaining);
-        }, 500);
+        }, 1000); // Changed to 1000 to avoid double ticks
         return () => clearInterval(interval);
     }, [room?.questionStartTime]);
 
