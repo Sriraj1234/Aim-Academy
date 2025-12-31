@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { CategoryData, Taxonomy } from '@/data/types'
 import { useQuiz } from '@/hooks/useQuiz'
 import { Header } from '@/components/shared/Header'
+import { ChapterSummary } from '@/components/home/ChapterSummary'
 
 // Internal Component for Customization
 function CustomizeModal({
@@ -229,6 +230,11 @@ function SelectionContent() {
                                 ? 'Choose a science branch to continue.'
                                 : `Select a subject for ${userProfile?.board?.toUpperCase()} Class ${userProfile?.class}`}
                     </p>
+
+                    {/* AI Revision Notes Integration */}
+                    <div className="mt-6 max-w-md">
+                        <ChapterSummary subject={selectedSubject || undefined} />
+                    </div>
                 </motion.div>
 
                 {/* GRID Container */}
