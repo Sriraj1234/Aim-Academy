@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import { Question, CategoryData } from '@/data/types'
 import { mockQuestions } from '@/data/mock'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId, setDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
 
 interface QuizContextType {
@@ -361,6 +361,33 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             if (xpEarned > 0) {
                 await addXP(xpEarned)
                 console.log(`Awarded ${xpEarned} XP for ${correctAnswers} correct answers`)
+            }
+
+            // 6. TRACK MISTAKES (Smart Notebook)
+            // Identify wrong answers and save them to 'mistakes' subcollection
+            const mistakes = questions.filter((q, i) => answers[i] !== null && answers[i] !== q.correctAnswer);
+
+            if (mistakes.length > 0) {
+                console.log(`Saving ${mistakes.length} mistakes to notebook...`);
+                const batchPromises = mistakes.map(async (q) => {
+                    const mistakeRef = doc(db, 'users', user.uid, 'mistakes', q.id);
+                    // Use setDoc with merge to update timestamp/count if it already exists
+                    // We can't use atomic increment easily with setDoc merge without getting deeper, 
+                    // so we'll just overwrite with new timestamp for "Last Made Mistake" sorting.
+                    await setDoc(mistakeRef, {
+                        question: q.question,
+                        options: q.options,
+                        correctAnswer: q.correctAnswer,
+                        userAnswer: answers[questions.indexOf(q)],
+                        subject: q.subject,
+                        chapter: q.chapter || 'General',
+                        timestamp: Date.now(),
+                        difficulty: q.difficulty || 'medium'
+                    }, { merge: true });
+                });
+
+                // Allow this to happen in background
+                Promise.all(batchPromises).then(() => console.log("Mistakes saved successfully."));
             }
 
         } catch (error) {
