@@ -54,10 +54,10 @@ export default function LandingPage() {
       <footer className="relative z-10 bg-white/80 backdrop-blur-md border-t border-pw-border py-12 text-center">
         <div className="max-w-7xl mx-auto px-4">
           <p className="font-display font-bold text-3xl mb-4 tracking-tight flex items-center justify-center gap-2">
-            <span className="text-pw-violet">AIM</span> <span className="text-pw-indigo">Academy</span>
+            <span className="text-pw-violet">Padhaku</span>
           </p>
           <p className="text-gray-500 mb-8 max-w-md mx-auto">Empowering Bihar Board Students to achieve excellence through royal education.</p>
-          <p className="text-gray-400 text-sm">© 2024 AIM Academy. Crafted for Toppers.</p>
+          <p className="text-gray-400 text-sm">© 2024 Padhaku. Crafted for Toppers.</p>
           <div className="mt-8 flex justify-center gap-6 opacity-60">
             {/* Social placeholders or links could go here */}
           </div>
