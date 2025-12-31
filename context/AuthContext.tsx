@@ -273,15 +273,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
+    // Helper: Parse any date format to milliseconds
+    const parseDate = (date: any): number | null => {
+        if (!date) return null
+        if (typeof date === 'number') return date
+        if (date.toMillis && typeof date.toMillis === 'function') return date.toMillis() // Firestore Timestamp
+        if (date instanceof Date) return date.getTime()
+        if (typeof date === 'string') return new Date(date).getTime()
+        return null
+    }
+
+    // Helper: Get start of day timestamp (local time)
+    const getStartOfDay = (timestamp: number) => {
+        const d = new Date(timestamp)
+        d.setHours(0, 0, 0, 0)
+        return d.getTime()
+    }
+
     const addXP = async (amount: number) => {
         if (!user || !userProfile?.gamification) return
 
         const currentGamification = { ...userProfile.gamification }
         const now = Date.now()
-        const today = new Date(now).setHours(0, 0, 0, 0)
-        const lastPractice = currentGamification.lastPracticeDate
-            ? new Date(currentGamification.lastPracticeDate).setHours(0, 0, 0, 0)
-            : null
+        const todayStart = getStartOfDay(now)
+
+        const lastPracticeMs = parseDate(currentGamification.lastPracticeDate)
+        const lastPracticeStart = lastPracticeMs ? getStartOfDay(lastPracticeMs) : null
 
         // XP Update
         const newXP = currentGamification.xp + amount
@@ -290,23 +307,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         currentGamification.xp = newXP
         currentGamification.level = newLevel
 
-        // Streak Logic: Increment only if first practice of the day
-        if (lastPractice !== today) {
-            // Check if this is a consecutive day
-            if (lastPractice) {
-                const diffTime = today - lastPractice
+        // Streak Logic
+        if (lastPracticeStart !== todayStart) {
+            // Not practiced today yet
+            if (lastPracticeStart) {
+                const diffTime = todayStart - lastPracticeStart
                 const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
                 if (diffDays === 1) {
-                    // Consecutive day - increment streak
-                    currentGamification.currentStreak += 1
+                    // Consecutive day
+                    currentGamification.currentStreak = (currentGamification.currentStreak || 0) + 1
                     console.log(`Streak incremented to ${currentGamification.currentStreak} 🔥`)
-                } else if (diffDays > 1) {
-                    // Missed days - reset streak to 1
+                } else {
+                    // Missed one or more days
                     currentGamification.currentStreak = 1
-                    console.log(`Streak reset to 1 (Missed ${diffDays - 1} days)`)
+                    console.log(`Streak reset to 1 (Missed ${diffDays} days)`)
                 }
-                // diffDays === 0 means same day - handled by outer condition
             } else {
                 // First ever practice
                 currentGamification.currentStreak = 1
