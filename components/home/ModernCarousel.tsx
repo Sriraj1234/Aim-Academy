@@ -123,7 +123,7 @@ export const ModernCarousel = () => {
         if (slide.type === 'personal') {
             return (
                 <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full border border-white/20 mb-3 md:mb-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full mb-3 md:mb-4">
                         <span className="text-amber-300"><FaStar /></span>
                         <span className="text-white text-[10px] md:text-xs font-bold tracking-wider uppercase">{streak} Day Streak</span>
                     </div>
@@ -150,7 +150,7 @@ export const ModernCarousel = () => {
         // Standard Ad Slide Content
         return (
             <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-3 md:mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full mb-3 md:mb-4">
                     <span className="text-white text-[10px] md:text-xs font-bold tracking-wider uppercase">{slide.subtitle}</span>
                 </div>
 
