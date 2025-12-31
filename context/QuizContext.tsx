@@ -221,11 +221,23 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 correctAnswers++;
             }
         });
-        const totalMarks = questions.reduce((acc, q) => acc + q.marks, 0)
-        const percentage = Math.round((finalScore / totalMarks) * 100)
+        const totalMarks = questions.reduce((acc, q) => acc + (typeof q.marks === 'number' ? q.marks : 1), 0)
+
+        let percentage = 0;
+        if (totalMarks > 0) {
+            percentage = Math.round((finalScore / totalMarks) * 100);
+        }
 
         // Calculate XP: 2 XP per correct answer
         const xpEarned = correctAnswers * 2
+
+        console.log("Saving Quiz Result:", {
+            finalScore,
+            totalMarks,
+            percentage,
+            correctAnswers,
+            xpEarned
+        });
 
         try {
             // 1. Save detailed result to Firestore (with Limit)
@@ -242,7 +254,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 duration: endTime - startTime,
                 xpEarned, // Save XP earned for display
                 questions,
-                answers
+                answers: answers.map(a => a ?? null) // Ensure no undefined
             })
 
             // Maintenance: Run asynchronously to not block UI
@@ -270,6 +282,14 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             const newQuizzesTaken = (currentStats.quizzesTaken || 0) + 1
             const oldTotalScore = (currentStats.avgScore || 0) * (currentStats.quizzesTaken || 0)
             const newAvgScore = Math.round((oldTotalScore + percentage) / newQuizzesTaken)
+
+            console.log("Updating Stats:", {
+                old: currentStats,
+                new: {
+                    quizzesTaken: newQuizzesTaken,
+                    avgScore: newAvgScore,
+                }
+            });
 
             // 3. Calculate Rank (Optimized Count Query)
             const q = query(
