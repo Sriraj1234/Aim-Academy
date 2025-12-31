@@ -1,8 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, getDocs, query, where, limit, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, doc, getDoc, orderBy, documentId } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { createRoom, updateRoomConfig } from '@/utils/roomService';
 import { FaBook, FaLayerGroup, FaPlay, FaSpinner, FaArrowLeft, FaCheckCircle, FaFlask, FaGlobeAmericas, FaLanguage, FaCalculator, FaTimes, FaSave, FaCrown } from 'react-icons/fa';
@@ -92,7 +92,8 @@ function CustomizeModal({
     )
 }
 
-export default function HostGamePage() {
+
+function HostGameContent() {
     const router = useRouter();
     const { user, userProfile } = useAuth();
     const [step, setStep] = useState<'subject' | 'chapter' | 'confirm'>('subject');
@@ -219,15 +220,38 @@ export default function HostGamePage() {
             const qRef = collection(db, 'questions');
             let q: any;
 
-            // Fetch ALL available questions first
+            // NEW: Randomize by picking a random start point
+            const randomId = doc(collection(db, 'questions')).id;
+            const constraints: any[] = [];
+
             if (selectedChapter) {
-                q = query(qRef, where('subject', '==', selectedSubject), where('chapter', '==', selectedChapter));
+                constraints.push(where('subject', '==', selectedSubject));
+                constraints.push(where('chapter', '==', selectedChapter));
             } else {
-                q = query(qRef, where('subject', '==', selectedSubject));
+                constraints.push(where('subject', '==', selectedSubject));
             }
 
+            // Add Random Cursor + Limit
+            const randomConstraints = [...constraints, where(documentId(), '>=', randomId), orderBy(documentId()), limit(selectedCount)];
+
+            q = query(qRef, ...randomConstraints);
             const snap = await getDocs(q);
             let questions = snap.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
+
+            // Wrap around if not enough
+            if (questions.length < selectedCount) {
+                const remaining = selectedCount - questions.length;
+                console.log(`Host Game: Hit end, wrapping for ${remaining}...`);
+                const wrapConstraints = [...constraints, where(documentId(), '>=', ' '), orderBy(documentId()), limit(remaining)];
+                const wrapQuery = query(qRef, ...wrapConstraints);
+                const wrapSnap = await getDocs(wrapQuery);
+
+                wrapSnap.forEach(d => {
+                    if (!questions.some(exist => exist.id === d.id)) {
+                        questions.push({ id: d.id, ...(d.data() as object) });
+                    }
+                });
+            }
 
             if (questions.length === 0) {
                 alert("No questions found for this selection!");
@@ -235,8 +259,8 @@ export default function HostGamePage() {
                 return;
             }
 
-            // Shuffle and Slice based on Customization
-            questions = questions.sort(() => 0.5 - Math.random()).slice(0, selectedCount);
+            // Shuffle client side
+            questions = questions.sort(() => 0.5 - Math.random());
 
             if (existingRoomId) {
                 // UPDATE Existing Room
@@ -504,5 +528,13 @@ export default function HostGamePage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function HostGamePage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-pw-surface flex items-center justify-center">Loading...</div>}>
+            <HostGameContent />
+        </Suspense>
     );
 }
