@@ -67,6 +67,7 @@ export const LocalStudentsSection = ({
                                 src={student.photoURL || `https://ui-avatars.com/api/?name=${student.displayName}`}
                                 alt={student.displayName}
                                 className="w-8 h-8 rounded-full bg-gray-200 object-cover"
+                                referrerPolicy="no-referrer"
                             />
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-bold text-gray-800 truncate">{student.displayName}</p>
@@ -78,8 +79,8 @@ export const LocalStudentsSection = ({
                                 onClick={() => handleSend(student.uid, student.email)}
                                 disabled={isSent || sendingId === student.uid}
                                 className={`p-2 rounded-lg text-xs transition-colors ${isSent
-                                        ? 'bg-green-100 text-green-600'
-                                        : 'bg-pw-surface text-pw-indigo hover:bg-pw-indigo hover:text-white'
+                                    ? 'bg-green-100 text-green-600'
+                                    : 'bg-pw-surface text-pw-indigo hover:bg-pw-indigo hover:text-white'
                                     }`}
                             >
                                 {isSent ? <FaCheck /> : (sendingId === student.uid ? <span className="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full" /> : <FaUserPlus />)}
