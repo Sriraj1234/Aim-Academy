@@ -21,9 +21,10 @@ interface LobbyChatProps {
         displayName: string
         photoURL?: string
     }
+    className?: string
 }
 
-export const LobbyChat = ({ roomId, currentUser }: LobbyChatProps) => {
+export const LobbyChat = ({ roomId, currentUser, className = "h-[400px]" }: LobbyChatProps) => {
     const [messages, setMessages] = useState<Message[]>([])
     const [newMessage, setNewMessage] = useState('')
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -67,7 +68,7 @@ export const LobbyChat = ({ roomId, currentUser }: LobbyChatProps) => {
     }
 
     return (
-        <div className="flex flex-col h-[400px] bg-white rounded-3xl border border-pw-border shadow-pw-sm overflow-hidden">
+        <div className={`flex flex-col bg-white rounded-3xl border border-pw-border shadow-pw-sm overflow-hidden ${className}`}>
             {/* Header */}
             <div className="p-4 border-b border-pw-border bg-pw-surface/50">
                 <h3 className="font-bold text-pw-violet flex items-center gap-2">
@@ -93,8 +94,8 @@ export const LobbyChat = ({ roomId, currentUser }: LobbyChatProps) => {
                                 className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                             >
                                 <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
-                                        ? 'bg-pw-indigo text-white rounded-br-none'
-                                        : 'bg-white border border-pw-border text-gray-800 rounded-bl-none'
+                                    ? 'bg-pw-indigo text-white rounded-br-none'
+                                    : 'bg-white border border-pw-border text-gray-800 rounded-bl-none'
                                     }`}>
                                     {!isMe && (
                                         <p className="text-[10px] font-bold opacity-60 mb-0.5">{msg.senderName}</p>
