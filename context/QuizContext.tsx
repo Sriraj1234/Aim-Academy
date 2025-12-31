@@ -184,12 +184,31 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [bookmarks, setBookmarks] = useState<string[]>([])
 
-    const toggleBookmark = (questionId: string) => {
-        setBookmarks(prev =>
-            prev.includes(questionId)
-                ? prev.filter(id => id !== questionId)
-                : [...prev, questionId]
-        )
+    // Sync bookmarks from profile on mount/update
+    useEffect(() => {
+        if (userProfile?.bookmarkedQuestions) {
+            setBookmarks(userProfile.bookmarkedQuestions)
+        }
+    }, [userProfile?.bookmarkedQuestions])
+
+    const toggleBookmark = async (questionId: string) => {
+        const isBookmarked = bookmarks.includes(questionId)
+        const newBookmarks = isBookmarked
+            ? bookmarks.filter(id => id !== questionId)
+            : [...bookmarks, questionId]
+
+        // precise local update for UI responsiveness
+        setBookmarks(newBookmarks)
+
+        // persist to profile (Firestore + AuthContext state)
+        if (user) {
+            try {
+                await updateProfile({ bookmarkedQuestions: newBookmarks })
+            } catch (e) {
+                console.error("Failed to save bookmark", e)
+                // optional: revert on failure?
+            }
+        }
     }
 
     const resetQuiz = () => {
