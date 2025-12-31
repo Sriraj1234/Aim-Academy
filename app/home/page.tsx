@@ -21,9 +21,7 @@ export default function DashboardPage() {
                 <DashboardHeader />
 
                 {/* Hero Carousel - PW Style */}
-                <div className="bg-white rounded-2xl overflow-hidden border border-pw-border shadow-pw-md">
-                    <ModernCarousel />
-                </div>
+                <ModernCarousel />
 
                 <div className="grid lg:grid-cols-3 gap-6">
                     {/* Left Column: Stats & Gamification */}
