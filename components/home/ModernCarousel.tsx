@@ -174,7 +174,7 @@ export const ModernCarousel = () => {
 
     return (
         <section
-            className="w-[calc(100%+2rem)] -ml-4 md:w-full md:ml-0 max-w-7xl mx-auto mb-8 font-sans relative"
+            className="w-full max-w-7xl mx-auto mb-8 font-sans relative"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
