@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import { Question, CategoryData } from '@/data/types'
 import { mockQuestions } from '@/data/mock'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
 
 interface QuizContextType {
@@ -97,34 +97,71 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             // If this fails, we might need to filter client-side or create those indexes.
             // For safety and strict isolation, server-side filtering is best.
 
+            // NEW: Randomize by picking a random start point
+            // Generate a random ID (20 chars alphanumeric, roughly mimics Firestore ID)
+            const randomId = doc(collection(db, 'questions')).id;
+
+            // Add Random Cursor to constraints
+            // We use 'orderBy' on documentId to ensure we can startAt or filter by it
+            // Note: If other filters are present (subject, chapter), we need to check index support.
+            // "where(field, ==, val)" + "orderBy(__name__)" usually works without composite index.
+
+            // Try Method A: where(documentId() >= randomId) + limit(count)
+            // This is efficient and supported.
+
+            const randomConstraints = [...constraints, where(documentId(), '>=', randomId), orderBy(documentId())];
+
             console.log("Fetching questions with constraints:", {
                 board: userProfile?.board,
                 class: userProfile?.class,
                 subject,
-                chapter
+                chapter,
+                randomStart: randomId
             });
 
-            const qQuery = query(questionsRef, ...constraints);
+            let qQuery = query(questionsRef, ...randomConstraints);
 
-            const snapshot = await getDocs(qQuery)
+            let snapshot = await getDocs(qQuery)
             let q: Question[] = []
 
-            if (snapshot.empty) {
+            // If we got fewer than requested (hit end of collection), wrap around
+            if (snapshot.size < count) {
+                const remaining = count - snapshot.size;
+                console.log(`Hit end of collection (got ${snapshot.size}), wrapping around for ${remaining} more...`);
+
+                // Wrap around: Query from start (documentId >= ' ')
+                // Reuse base constraints but reset random cursor
+                const wrapConstraints = [...constraints, where(documentId(), '>=', ' '), orderBy(documentId()), limit(remaining)];
+                const wrapQuery = query(questionsRef, ...wrapConstraints);
+                const wrapSnap = await getDocs(wrapQuery);
+
+                wrapSnap.forEach(doc => {
+                    // Dedup: Ensure we don't add duplicates if collection is smaller than count
+                    if (!snapshot.docs.some(existing => existing.id === doc.id)) {
+                        q.push({ id: doc.id, ...doc.data() } as Question)
+                    }
+                });
+            }
+
+            snapshot.forEach(doc => {
+                // Ensure we haven't already added it from wrap-around (unlikely order but safe)
+                if (!q.some(existing => existing.id === doc.id)) {
+                    q.push({ id: doc.id, ...doc.data() } as Question)
+                }
+            })
+
+            if (snapshot.empty && !q.length) {
                 console.warn(`No questions found in DB for filter, checking mock`)
                 // Fallback to mock (and filter mock manually)
                 const mq = mockQuestions.filter(x => {
                     let match = true;
                     if (userProfile?.board) match = match && x.board === userProfile.board;
-                    // Mock data might not have board, so be careful. 
-                    // For now, if mock, we assume it's generic unless specified.
                     if (subject) match = match && x.subject === subject.toLowerCase();
                     if (chapter) match = match && x.chapter === chapter;
                     return match;
                 })
 
                 if (mq.length === 0) {
-                    // Last resort: show generic available questions if specific ones not found?
-                    // No, "User requests STRICT isolation". Show empty is better than showing wrong board.
                     console.warn("No matching questions found.");
                 }
 
@@ -132,13 +169,6 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 setAnswers(new Array(Math.min(mq.length, count)).fill(null))
                 return
             }
-
-            snapshot.forEach(doc => {
-                q.push({ id: doc.id, ...doc.data() } as Question)
-            })
-
-            // Shuffle client side
-            q = q.sort(() => Math.random() - 0.5).slice(0, count)
 
             setQuestions(q)
             setAnswers(new Array(q.length).fill(null))
