@@ -27,8 +27,8 @@ const notoSans = Noto_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'AIM Academy - Bihar Board Exam Practice',
-  description: 'Master Bihar Board exams with interactive quizzes, detailed explanations, and live competitive battles.',
+  title: 'Padhaku - Bihar Board Exam Practice',
+  description: 'Master Bihar Board exams with interactive quizzes, detailed explanations, and live competitive battles on Padhaku.',
 }
 
 export const viewport = {
