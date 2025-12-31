@@ -215,7 +215,7 @@ function SelectionContent() {
                         </button>
                     )}
 
-                    <h1 className="text-3xl md:text-4xl font-display font-black text-pw-violet capitalize mb-2 tracking-tight">
+                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-black text-pw-violet capitalize mb-2 tracking-tight">
                         {selectedSubject
                             ? `${selectedSubject} Chapters`
                             : selectedScience
