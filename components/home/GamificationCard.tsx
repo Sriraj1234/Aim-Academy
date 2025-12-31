@@ -220,6 +220,14 @@ export const GamificationCard = () => {
                                 </p>
                             )}
                         </div>
+
+                        {/* Action Buttons */}
+                        <div className="mt-6 flex gap-3">
+                            <a href="/leaderboard" className="flex items-center gap-2 px-4 py-2 bg-yellow-50 text-yellow-700 rounded-xl font-bold text-sm border border-yellow-200 hover:bg-yellow-100 transition-all active:scale-95 transform">
+                                <FaCrown className="text-yellow-500" /> View Leaderboard
+                            </a>
+                        </div>
+
                     </div>
                 </div>
             </div>
