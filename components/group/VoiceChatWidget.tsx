@@ -17,13 +17,31 @@ import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 
 // Helper component to play remote audio
+// Helper component to play remote audio manually (More robust than the hook's auto-play)
 const RemoteAudioTracks = ({ users }: { users: any[] }) => {
     const { audioTracks } = useRemoteAudioTracks(users);
 
     useEffect(() => {
-        audioTracks.map((track) => {
-            track.play();
+        // Manually play each track and log it
+        audioTracks.forEach((track) => {
+            if (track) {
+                try {
+                    if (!track.isPlaying) {
+                        track.play();
+                        console.log("Boosting audio for user", track.getUserId());
+                    }
+                    // Increase volume to max
+                    track.setVolume(100);
+                } catch (e) {
+                    console.error("Audio Play Error:", e);
+                }
+            }
         });
+
+        return () => {
+            // Optional: stop on unmount, but often better to let Agora handle cleanup
+            // audioTracks.forEach(track => track.stop());
+        };
     }, [audioTracks]);
 
     return null;
@@ -91,15 +109,17 @@ const VoiceChatInner = ({ channelName }: { channelName: string }) => {
     const { localMicrophoneTrack } = useLocalMicrophoneTrack(true);
     const [micOn, setMicOn] = useState(false);
 
-    // 3. Publish Audio - Only publish if micOn was intended at least once? 
-    // Actually standard patterns usually publish always and then mute/unmute
+    // 3. Publish Audio - Ensure track exists and is enabled
+    // Note: usePublish automatically publishes when the track is ready and component mounts
+    // We only need to control mute/unmute via setEnabled
     usePublish([localMicrophoneTrack]);
 
     // 4. Mute Toggle logic
     useEffect(() => {
         if (localMicrophoneTrack) {
             localMicrophoneTrack.setEnabled(micOn);
-            setDebugStatus(micOn ? 'Mic ON' : 'Mic OFF');
+            setDebugStatus(micOn ? 'Mic LIVE' : 'Mic Muted');
+            console.log("Mic Status:", micOn ? "LIVE" : "MUTED");
         }
     }, [micOn, localMicrophoneTrack]);
 
@@ -107,45 +127,56 @@ const VoiceChatInner = ({ channelName }: { channelName: string }) => {
     const remoteUsers = useRemoteUsers();
 
     if (!isConnected && isLoading) {
-        return <div className="text-xs text-brand-500 animate-pulse">{debugStatus}</div>;
+        return <div className="text-[10px] md:text-xs text-brand-500 animate-pulse bg-white/50 px-2 py-1 rounded-full">{debugStatus}</div>;
     }
 
     if (error) {
         return (
-            <div className="text-xs text-red-500 flex items-center gap-1" title={error.message}>
+            <div className="text-[10px] md:text-xs text-red-500 flex items-center gap-1 bg-red-50 px-2 py-1 rounded-full border border-red-100" title={error.message}>
                 <FaMicrophoneSlash />
-                {error.message.includes('dynamic key') ? 'Auth Error' : 'Conn Error'}
+                {error.message.includes('dynamic key') ? 'Auth Err' : 'Net Err'}
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-sm relative">
-            {/* Interaction Overlay for Mobile Audio (Autoplay fix) */}
+        <div className="flex items-center gap-2 bg-white/20 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/30 shadow-lg relative transition-all">
+            {/* Interaction Overlay for Mobile Audio (Autoplay fix) - Covers explicitly ensuring audio context resumes */}
             {remoteUsers.length > 0 && (
-                <div className="hidden" onClick={() => {
-                    // Just a dummy click handler to ensure audio context can resume if needed
-                    // In React SDK, track.play() usually handles this
-                }}></div>
+                <button
+                    className="absolute inset-0 w-full h-full opacity-0 z-0"
+                    onClick={() => {
+                        // Dummy click to resume audio context if suspended
+                        console.log("Resuming Audio Context via user interaction");
+                    }}
+                />
             )}
 
             {/* Status Indicator */}
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-orange-500'} ${isConnected ? '' : 'animate-pulse'}`} />
+            <div className={`w-2 h-2 rounded-full relative z-10 ${isConnected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-orange-500 animate-pulse'}`} />
 
             {/* Mic Toggle */}
             <button
-                onClick={() => setMicOn(!micOn)}
-                className={`p-2 rounded-full transition-all active:scale-95 ${micOn ? 'bg-brand-100 text-brand-600' : 'bg-red-100 text-red-500'}`}
+                onClick={(e) => {
+                    e.stopPropagation(); // Prevent overlay click
+                    setMicOn(!micOn);
+                }}
+                className={`p-2 rounded-full transition-all active:scale-95 relative z-10 ${micOn ? 'bg-brand-500 text-white shadow-md' : 'bg-red-500/10 text-red-500'}`}
                 title={micOn ? "Mute Mic" : "Unmute Mic"}
             >
                 {micOn ? <FaMicrophone size={14} /> : <FaMicrophoneSlash size={14} />}
             </button>
 
             {/* Remote Users Count */}
-            <div className="flex items-center text-xs font-bold text-gray-600 ml-1">
-                <FaHeadphones className="mr-1 text-gray-400" />
+            <div className="flex items-center text-xs font-bold text-slate-700 ml-1 relative z-10">
+                <FaHeadphones className="mr-1 text-slate-500" />
                 {remoteUsers.length}
             </div>
+
+            {/* Debug Text for Mobile (Temporary) */}
+            {/* <div className="hidden md:block absolute -top-8 left-0 text-[10px] bg-black/80 text-white p-1 rounded whitespace-nowrap">
+                {remoteUsers.length} users, {isConnected ? 'conn' : 'dc'}
+            </div> */}
 
             {/* Hidden Audio Player */}
             <RemoteAudioTracks users={remoteUsers} />
