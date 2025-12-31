@@ -5,10 +5,12 @@ import { DashboardHeader } from '@/components/home/DashboardHeader'
 import { StatsOverview } from '@/components/home/StatsOverview'
 import { ModernModeGrid } from '@/components/home/ModernModeGrid'
 import { ModernCarousel } from '@/components/home/ModernCarousel'
+import { DailyChallengeCard } from '@/components/home/DailyChallengeCard'
 import { GamificationCard } from '@/components/home/GamificationCard'
 import { AIChatWidget } from '@/components/shared/AIChatWidget'
 import { AIQuestionGenerator } from '@/components/home/AIQuestionGenerator'
 import { ChapterSummary } from '@/components/home/ChapterSummary'
+import { AIFlashcardGenerator } from '@/components/home/AIFlashcardGenerator'
 import { BookmarkedQuestionsSection } from '@/components/home/BookmarkedQuestionsSection'
 import { NotesSection } from '@/components/home/NotesSection'
 import Link from 'next/link'
@@ -32,6 +34,7 @@ export default function DashboardPage() {
                     <div className="grid lg:grid-cols-3 gap-6">
                         {/* Left Column: Stats & Gamification */}
                         <div className="lg:col-span-2 space-y-6">
+                            <DailyChallengeCard />
                             <GamificationCard />
                             <AIPerformanceCard />
 
@@ -66,6 +69,7 @@ export default function DashboardPage() {
                                 </h3>
                                 <div className="space-y-3">
                                     <AIQuestionGenerator />
+                                    <AIFlashcardGenerator />
                                     <ChapterSummary />
                                 </div>
                             </div>
