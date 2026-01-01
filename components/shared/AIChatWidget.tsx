@@ -331,7 +331,19 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                                 : 'bg-white border border-pw-border text-gray-800 rounded-bl-md'
                                                 }`}
                                         >
-                                            {msg.content}
+                                            <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
+                                                {msg.content.split('\n').map((line, i) => (
+                                                    <p key={i} className="mb-1 last:mb-0 min-h-[1.2em]">
+                                                        {line.split(/(\*\*.*?\*\*)/).map((part, j) =>
+                                                            part.startsWith('**') && part.endsWith('**') ? (
+                                                                <strong key={j}>{part.slice(2, -2)}</strong>
+                                                            ) : (
+                                                                part
+                                                            )
+                                                        )}
+                                                    </p>
+                                                ))}
+                                            </div>
                                         </div>
                                         {msg.role === 'assistant' && ttsSupported && (
                                             <button
