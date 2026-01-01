@@ -49,39 +49,47 @@ export const GameInviteListener = () => {
                 initial={{ opacity: 0, y: -50, x: '-50%' }}
                 animate={{ opacity: 1, y: 0, x: '-50%' }}
                 exit={{ opacity: 0, y: -50, x: '-50%' }}
-                className="fixed top-4 left-1/2 z-[100] w-full max-w-sm"
+                className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-sm md:right-4 md:left-auto md:translate-x-0"
             >
-                <div className="bg-white/90 backdrop-blur-md border border-brand-100 shadow-2xl rounded-2xl p-4 mx-4 flex items-center gap-4">
-                    <div className="relative">
+                <div className="bg-white/95 backdrop-blur-md border border-pw-border shadow-pw-lg rounded-2xl p-4 flex items-center gap-3 md:gap-4 relative overflow-hidden">
+                    {/* Progress Bar */}
+                    <motion.div
+                        initial={{ width: '100%' }}
+                        animate={{ width: '0%' }}
+                        transition={{ duration: 60, ease: 'linear' }}
+                        className="absolute bottom-0 left-0 h-1 bg-pw-indigo"
+                    />
+
+                    <div className="relative shrink-0">
                         <img
                             src={currentInvite.fromPhoto || `https://ui-avatars.com/api/?name=${currentInvite.fromName}`}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                            className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white shadow-sm bg-gray-100"
                             alt="inviter"
                         />
-                        <div className="absolute -bottom-1 -right-1 bg-brand-500 text-white rounded-full p-1">
-                            <FaGamepad size={10} />
+                        <div className="absolute -bottom-1 -right-1 bg-pw-indigo text-white rounded-full p-1 border-2 border-white">
+                            <FaGamepad size={12} />
                         </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-gray-900 truncate">{currentInvite.fromName}</h4>
-                        <p className="text-xs text-gray-500">invited you to play!</p>
+                        <h4 className="font-bold text-pw-violet truncate text-sm md:text-base">{currentInvite.fromName}</h4>
+                        <p className="text-xs text-pw-indigo/80 font-medium truncate">is challenging you! ⚔️</p>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 shrink-0">
                         <button
                             onClick={handleAccept}
-                            className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-sm transition-colors"
+                            className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-md transition-transform active:scale-95 flex items-center justify-center"
                             title="Accept"
                         >
-                            <FaCheck size={14} />
+                            <FaCheck size={16} />
                         </button>
                         <button
                             onClick={handleReject}
-                            className="bg-red-100 hover:bg-red-200 text-red-500 p-2 rounded-full shadow-sm transition-colors"
+                            className="bg-red-100 hover:bg-red-200 text-red-500 p-3 rounded-full shadow-sm transition-transform active:scale-95 flex items-center justify-center"
                             title="Decline"
                         >
-                            <FaTimes size={14} />
+                            <FaTimes size={16} />
                         </button>
                     </div>
                 </div>
