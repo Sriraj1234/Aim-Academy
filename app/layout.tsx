@@ -10,6 +10,7 @@ import { PresenceListener } from '@/components/shared/PresenceListener'
 import { InstallPrompt } from '@/components/shared/InstallPrompt'
 
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from '@vercel/analytics/next'
 import { SoundProvider } from '@/context/SoundContext'
 
 const outfit = Outfit({
@@ -88,6 +89,7 @@ export default function RootLayout({
           </ThemeProvider>
         </AuthProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )
