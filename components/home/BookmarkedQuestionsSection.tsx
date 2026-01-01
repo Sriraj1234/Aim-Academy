@@ -63,7 +63,7 @@ export const BookmarkedQuestionsSection = () => {
         <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-6 shadow-pw-md border border-pw-border"
+            className="bg-white rounded-3xl p-4 md:p-6 shadow-pw-md border border-pw-border"
         >
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
