@@ -195,8 +195,8 @@ export const ModernCarousel = () => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Fixed Aspect Ratio Container for Stability */}
-            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] md:rounded-2xl overflow-hidden md:border md:border-pw-border md:shadow-pw-md bg-gray-900 group">
+            {/* Responsive Aspect Ratio: Taller on Mobile [4/5], Wider on Tablet [16/9], Ultrawide on Desktop [21/9] */}
+            <div className="relative w-full aspect-[4/5] sm:aspect-[16/9] md:aspect-[21/9] md:rounded-2xl overflow-hidden md:border md:border-pw-border md:shadow-pw-md bg-gray-900 group">
                 <AnimatePresence initial={false} custom={direction} mode="popLayout">
                     <motion.div
                         key={current}
@@ -217,12 +217,13 @@ export const ModernCarousel = () => {
                             if (swipe < -50) nextSlide();
                             else if (swipe > 50) prevSlide();
                         }}
-                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-4 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing`}
+                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-6 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing`}
                     >
                         {/* Special Background for New Year Slide */}
                         {slides[current].id === 5 && (
                             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                                <div className="absolute -right-10 top-10 text-[120px] md:text-[250px] font-black text-white/5 md:text-white/5 leading-none tracking-tighter select-none z-0">
+                                {/* Adjusted size for mobile */}
+                                <div className="absolute -right-4 top-10 text-[100px] sm:text-[150px] md:text-[250px] font-black text-white/5 md:text-white/5 leading-none tracking-tighter select-none z-0">
                                     2026
                                 </div>
                                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.3)_100%)]" />
@@ -262,7 +263,7 @@ export const ModernCarousel = () => {
                 </div>
 
                 {/* Indicators - Micro dots, minimal visibility - Hidden on Mobile if causing issues */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 hidden md:flex gap-1.5 z-20">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                     {slides.map((_, idx) => (
                         <button
                             key={idx}
@@ -270,7 +271,7 @@ export const ModernCarousel = () => {
                                 setDirection(idx > current ? 1 : -1);
                                 setCurrent(idx);
                             }}
-                            className={`w-1 h-1 rounded-full transition-all duration-300 ${current === idx ? 'bg-white shadow-lg scale-125' : 'bg-white/20'}`}
+                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${current === idx ? 'bg-white shadow-lg w-4' : 'bg-white/30 hover:bg-white/50'}`}
                         />
                     ))}
                 </div>
