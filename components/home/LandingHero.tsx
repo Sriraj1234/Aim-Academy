@@ -32,7 +32,7 @@ export const LandingHero = () => {
                         <span className="text-pw-indigo text-xs font-bold tracking-wide uppercase">India's Most Loved Learning Platform</span>
                     </motion.div>
 
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-pw-violet mb-6 leading-tight max-w-2xl lg:max-w-none">
+                    <h1 className="text-3xl sm:text-5xl lg:text-6xl font-display font-bold text-pw-violet mb-6 leading-tight max-w-2xl lg:max-w-none">
                         Master Your <br className="hidden lg:block" />
                         <span className="text-pw-indigo relative inline-block">
                             Exams
