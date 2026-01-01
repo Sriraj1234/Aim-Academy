@@ -5,7 +5,7 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export async function POST(req: NextRequest) {
     try {
-        const { topic, count = 8 } = await req.json();
+        const { topic, count = 8, classLevel = '10', board = 'CBSE' } = await req.json();
 
         if (!topic) {
             return NextResponse.json({ success: false, error: 'Topic is required' }, { status: 400 });
@@ -15,7 +15,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'AI service not configured' }, { status: 500 });
         }
 
-        const prompt = `You are an expert educator. Generate exactly ${count} flashcards for the topic: "${topic}".
+        const prompt = `You are an expert educator for Class ${classLevel} (${board} Board).
+Generate exactly ${count} flashcards for the topic: "${topic}".
+
+Context: The student is in Class ${classLevel}. Ensure the difficulty and depth matches this level.
+${classLevel === '12' ? 'Include advanced concepts and key formulas.' : 'Keep concepts clear and foundational.'}
 
 Each flashcard should have:
 - A "term" (short keyword, formula, or concept name)
