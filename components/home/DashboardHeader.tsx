@@ -27,9 +27,12 @@ export const DashboardHeader = () => {
     const emoji = new Date().getHours() < 12 ? '🌅' : new Date().getHours() < 18 ? '☀️' : '🌙'
 
     // Hooks for instant play
-    const { sendGameInvite } = useFriends()
+    const { sendGameInvite, requests } = useFriends()
     const router = useRouter()
     const [inviteLoading, setInviteLoading] = useState(false)
+
+    // Filter incoming requests
+    const incomingRequests = requests.filter(r => r.direction === 'received')
 
     const handlePlayWithFriend = async (friend: any) => {
         if (!user) return;
@@ -99,6 +102,11 @@ export const DashboardHeader = () => {
                         className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm"
                     >
                         <FaUserFriends className="text-xl" />
+                        {incomingRequests.length > 0 && (
+                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
+                                {incomingRequests.length}
+                            </span>
+                        )}
                     </button>
                     {/* Actions or Notifications can go here later */}
                 </div>
