@@ -23,7 +23,8 @@ export const useFriends = () => {
     const [requests, setRequests] = useState<FriendRequest[]>([]);
     const [activeInvites, setActiveInvites] = useState<GameInvite[]>([]);
     const [loading, setLoading] = useState(true);
-    const [onlineUsers, setOnlineUsers] = useState<Record<string, boolean>>({});
+    // Changed to string for detailed status ('online', 'in-lobby', 'playing') or null if offline
+    const [onlineUsers, setOnlineUsers] = useState<Record<string, string | null>>({});
 
     // Handle My Presence - MOVED TO PresenceListener.tsx
     // useFriends now only CONSUMES presence of others.
@@ -50,9 +51,6 @@ export const useFriends = () => {
             const friendsList = snapshot.docs.map(doc => doc.data() as Friend);
             setFriends(friendsList);
 
-            // 1. Clean up listeners for friends who are no longer in the list (optional optimization, but good fairness)
-            // For now, let's just re-subscribe or ensure we don't double subscribe.
-            // Actually, simplest valid way: Unsubscribe ALL previous RTDB listeners, then subscribe to NEW list.
             Object.values(rtdbUnsubscribes).forEach(unsub => unsub());
 
             // 2. Subscribe to new list
@@ -61,24 +59,31 @@ export const useFriends = () => {
                 const statusRef = ref(rtdb, `status/${friend.uid}`);
 
                 const unsub = onValue(statusRef, (snap) => {
-                    const status = snap.val();
-                    let isOnline = false;
+                    const statusVal = snap.val();
+                    let userStatus: string | null = null;
 
-                    if (status) {
+                    if (statusVal) {
                         // Support New "Connections" Pattern
-                        if (status.connections) {
-                            isOnline = Object.keys(status.connections).length > 0;
+                        if (statusVal.connections) {
+                            // Find the most relevant status from connections
+                            const connections = Object.values(statusVal.connections) as any[];
+                            if (connections.length > 0) {
+                                // Prioritize active states: playing > in-lobby > online
+                                const states = connections.map(c => c.state);
+                                if (states.includes('playing')) userStatus = 'playing';
+                                else if (states.includes('in-lobby')) userStatus = 'in-lobby';
+                                else userStatus = 'online';
+                            }
                         }
-                        // Fallback to Old Pattern (direct state)
-                        else if (status.state === 'online') {
-                            isOnline = true;
+                        // Fallback to Old Pattern
+                        else if (statusVal.state === 'online') {
+                            userStatus = 'online';
                         }
                     }
 
-                    // console.log(`[Presence] ${friend.displayName} is ${isOnline ? 'Online' : 'Offline'}`);
                     setOnlineUsers(prev => ({
                         ...prev,
-                        [friend.uid]: isOnline
+                        [friend.uid]: userStatus
                     }));
                 });
 
@@ -203,14 +208,6 @@ export const useFriends = () => {
         if (!user) return;
         // Delete requests from both sides
         await deleteDoc(doc(db, 'users', user.uid, 'friend_requests', requestUid));
-        // We might not have permission to delete from the other user's DB directly without Cloud Functions
-        // BUT, for now assuming client-side simplified model where we just delete our own 'received' copy.
-        // The sender will still see 'sent' unless we handle it. 
-        // Better implementation: The sender's 'sent' request should probably hang around or be deleted?
-        // Let's just delete BOTH if security rules allow, or just ours.
-        // NOTE: Security rules usually block writing to others' paths.
-        // Ideally we use a Cloud Function. For this demo, let's try to delete both (assuming lenient rules for now).
-        // If that fails, we just delete ours.
 
         try {
             await deleteDoc(doc(db, 'users', requestUid, 'friend_requests', user.uid));
@@ -223,15 +220,31 @@ export const useFriends = () => {
     const sendGameInvite = async (friendUid: string, roomId: string) => {
         if (!user || !userProfile) throw new Error("Not authenticated");
 
+        // Rate Limiting Check
+        const STORAGE_KEY = `last_invite_${friendUid}`;
+        const lastInviteTime = localStorage.getItem(STORAGE_KEY);
+        const now = Date.now();
+
+        if (lastInviteTime) {
+            const diff = now - parseInt(lastInviteTime);
+            if (diff < 60000) { // 60 seconds
+                const remaining = Math.ceil((60000 - diff) / 1000);
+                throw new Error(`Please wait ${remaining}s before sending another invite.`);
+            }
+        }
+
         const invite: Omit<GameInvite, 'id'> = {
             fromUid: user.uid,
             fromName: userProfile.displayName || 'Unknown',
             fromPhoto: userProfile.photoURL || '',
             roomId: roomId,
-            timestamp: Date.now()
+            timestamp: now
         };
 
         await setDoc(doc(collection(db, 'users', friendUid, 'game_invites')), invite);
+
+        // Update Local Storage
+        localStorage.setItem(STORAGE_KEY, now.toString());
     };
 
     const clearGameInvite = async (inviteId: string) => {
@@ -246,9 +259,6 @@ export const useFriends = () => {
         // Remove from my friends
         await deleteDoc(doc(db, 'users', user.uid, 'friends', friendUid));
 
-        // Remove from their friends (try to remove myself from their list)
-        // Note: Similar to reject, this requires permissive rules or Cloud Functions in a strict env.
-        // With our current "public" rules, this will work.
         try {
             await deleteDoc(doc(db, 'users', friendUid, 'friends', user.uid));
         } catch (error) {
