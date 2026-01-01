@@ -194,7 +194,7 @@ export default function GamePage() {
                 <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-green-400/10 rounded-full blur-[60px]" />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-6 min-h-screen flex flex-col">
+            <div className="relative z-10 max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-6 min-h-screen flex flex-col md:ml-80 lg:mx-auto">
 
                 {/* Sidebar: Players - Hidden on mobile, visible on md+ */}
                 <aside className="hidden md:flex w-72 flex-col h-full justify-center fixed left-4 top-1/2 -translate-y-1/2">
