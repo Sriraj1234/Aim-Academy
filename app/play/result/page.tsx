@@ -394,6 +394,7 @@ const ResultPage = () => {
                 </Link>
                 <Link href="/profile" className="flex flex-col items-center gap-1.5 text-gray-400 hover:text-pw-indigo transition-colors group">
                     <FaUser className="text-xl group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-bold tracking-wide">Profile</span>
                 </Link>
             </div>
 
