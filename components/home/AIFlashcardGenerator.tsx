@@ -151,7 +151,7 @@ export const AIFlashcardGenerator = () => {
                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
                             <div className="absolute top-6 left-6 text-white/40 font-bold text-xs tracking-[0.2em] uppercase">Flashcard</div>
 
-                            <h4 className="text-3xl md:text-4xl font-black text-center drop-shadow-lg leading-tight relative z-10 font-display">
+                            <h4 className="text-2xl md:text-3xl font-black text-center drop-shadow-lg leading-tight relative z-10 font-display">
                                 {card.term}
                             </h4>
 
@@ -164,14 +164,14 @@ export const AIFlashcardGenerator = () => {
 
                         {/* Back (Definition) */}
                         <div
-                            className={`absolute inset-0 bg-white rounded-[2rem] p-8 flex flex-col items-center justify-center text-gray-800 backface-hidden ${!isFlipped ? 'invisible' : ''} shadow-inner border-2 border-pw-border`}
+                            className={`absolute inset-0 bg-white rounded-[2rem] p-6 flex flex-col items-center justify-center text-gray-800 backface-hidden ${!isFlipped ? 'invisible' : ''} shadow-inner border-2 border-pw-border`}
                             style={{ transform: 'rotateY(180deg)' }}
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-emerald-50/50 rounded-[2rem]" />
-                            <span className="relative z-10 text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full mb-4">
+                            <span className="relative z-10 text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full mb-3">
                                 Definition
                             </span>
-                            <p className="relative z-10 text-lg md:text-xl font-medium text-center leading-relaxed text-gray-700">
+                            <p className="relative z-10 text-base font-medium text-center leading-relaxed text-gray-700 overflow-y-auto max-h-[70%] scrollbar-hide">
                                 {card.definition}
                             </p>
                         </div>
@@ -210,21 +210,21 @@ export const AIFlashcardGenerator = () => {
                 AI Flashcard Generator
             </h3>
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-6 relative z-10">
+            <div className="flex flex-col gap-3 mb-6 relative z-10">
                 <input
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="Enter topic (e.g., Quantum Physics)..."
-                    className="flex-1 px-5 py-4 border-2 border-gray-100 rounded-2xl text-gray-700 bg-gray-50/50 focus:bg-white focus:border-pw-indigo focus:ring-4 focus:ring-pw-indigo/10 transition-all outline-none font-medium placeholder-gray-400"
+                    className="w-full px-5 py-4 border-2 border-gray-100 rounded-2xl text-gray-700 bg-gray-50/50 focus:bg-white focus:border-pw-indigo focus:ring-4 focus:ring-pw-indigo/10 transition-all outline-none font-medium placeholder-gray-400"
                     onKeyDown={(e) => e.key === 'Enter' && generateFlashcards()}
                 />
                 <button
                     onClick={generateFlashcards}
                     disabled={loading || !topic.trim()}
-                    className="px-8 py-4 bg-pw-violet hover:bg-pw-indigo text-white rounded-2xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-pw-violet/20"
+                    className="w-full px-8 py-4 bg-pw-violet hover:bg-pw-indigo text-white rounded-2xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-pw-violet/20"
                 >
-                    {loading ? <FaSpinner className="animate-spin text-lg" /> : <>Generate <FaArrowRight className="text-sm" /></>}
+                    {loading ? <FaSpinner className="animate-spin text-lg" /> : <>Generate Flashcards <FaArrowRight className="text-sm" /></>}
                 </button>
             </div>
 
