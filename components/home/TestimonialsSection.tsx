@@ -81,7 +81,7 @@ export const TestimonialsSection = () => {
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
                             whileHover={{ y: -5 }}
-                            className="bg-white rounded-[2rem] p-8 relative shadow-pw-md hover:shadow-pw-xl border border-pw-border transition-all duration-300 flex flex-col h-full"
+                            className="bg-white rounded-[2rem] p-6 md:p-8 relative shadow-pw-md hover:shadow-pw-xl border border-pw-border transition-all duration-300 flex flex-col h-full"
                         >
                             <div className="absolute top-8 right-8 text-pw-indigo/10">
                                 <FaQuoteLeft className="text-5xl" />
