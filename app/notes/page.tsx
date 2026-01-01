@@ -1,29 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/shared/Header';
 import { FaFilePdf, FaFlask, FaProjectDiagram, FaBookOpen } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase'; // Assuming you have a firebase.ts file exporting 'db'
 
 type TabType = 'formulas' | 'mindmaps' | 'notes';
 
 export default function NotesPage() {
     const [activeTab, setActiveTab] = useState<TabType>('notes');
+    const [notes, setNotes] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock Data (Replace with Firestore later)
+    useEffect(() => {
+        const fetchNotes = async () => {
+            try {
+                // Fetch all notes for now (can add filters later)
+                const q = query(collection(db, 'notes'), orderBy('uploadedAt', 'desc'));
+                const snapshot = await getDocs(q);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const fetchedNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+                setNotes(fetchedNotes);
+            } catch (error) {
+                console.error("Error fetching notes:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNotes();
+    }, []);
+
     const resources = {
-        formulas: [
-            { id: 1, title: 'Physics Chapter 1 Formulas', size: '1.2 MB', date: '2 days ago', url: '#' },
-            { id: 2, title: 'Integration Cheat Sheet', size: '800 KB', date: '1 week ago', url: '#' },
-        ],
-        mindmaps: [
-            { id: 3, title: 'Organic Chemistry Roadmap', size: '2.5 MB', date: '3 days ago', url: '#' },
-            { id: 4, title: 'Indian History Timeline', size: '1.8 MB', date: 'Yesterday', url: '#' },
-        ],
-        notes: [
-            { id: 5, title: 'Electrostatics Full Notes', size: '5.0 MB', date: 'Just now', url: '#' },
-            { id: 6, title: 'Biology - Genetics', size: '3.2 MB', date: '1 month ago', url: '#' },
-        ]
+        formulas: notes.filter(n => n.title.toLowerCase().includes('formula')),
+        mindmaps: notes.filter(n => n.title.toLowerCase().includes('mind') || n.title.toLowerCase().includes('map')),
+        notes: notes.filter(n => !n.title.toLowerCase().includes('formula') && !n.title.toLowerCase().includes('mind') && !n.title.toLowerCase().includes('map'))
     };
 
     const tabs = [
@@ -59,53 +74,62 @@ export default function NotesPage() {
                 </div>
 
                 {/* Content Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <AnimatePresence mode="wait">
-                        {resources[activeTab].map((item, index) => (
-                            <motion.div
-                                key={item.id}
-                                onClick={() => {
-                                    if ((item as any).url) {
-                                        if ((item as any).url === '#') {
-                                            alert("This is a sample file. Real files will open directly once uploaded!");
+                {loading ? (
+                    <div className="text-center py-20 text-gray-400">Loading resources...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <AnimatePresence mode="wait">
+                            {resources[activeTab].map((item, index) => (
+                                <motion.div
+                                    key={item.id}
+                                    onClick={() => {
+                                        if (item.pdfUrl) {
+                                            window.open(item.pdfUrl, '_blank');
                                         } else {
-                                            window.open((item as any).url, '_blank');
+                                            alert("No PDF link attached.");
                                         }
-                                    }
-                                }}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="bg-white p-5 rounded-2xl border border-pw-border hover:shadow-pw-md transition-all group cursor-pointer relative overflow-hidden"
-                            >
-                                <div className={`absolute top-0 right-0 p-3 opacity-10 group-hover:scale-150 transition-transform duration-500 ${activeTab === 'formulas' ? 'text-purple-500' : activeTab === 'mindmaps' ? 'text-pink-500' : 'text-blue-500'
-                                    }`}>
-                                    <FaFilePdf size={60} />
-                                </div>
-
-                                <div className="flex items-start justify-between relative z-10">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${activeTab === 'formulas' ? 'bg-purple-100/50 text-purple-600' : activeTab === 'mindmaps' ? 'bg-pink-100/50 text-pink-600' : 'bg-blue-100/50 text-blue-600'
+                                    }}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="bg-white p-5 rounded-2xl border border-pw-border hover:shadow-pw-md transition-all group cursor-pointer relative overflow-hidden"
+                                >
+                                    <div className={`absolute top-0 right-0 p-3 opacity-10 group-hover:scale-150 transition-transform duration-500 ${activeTab === 'formulas' ? 'text-purple-500' : activeTab === 'mindmaps' ? 'text-pink-500' : 'text-blue-500'
                                         }`}>
-                                        <FaFilePdf className="text-xl" />
+                                        <FaFilePdf size={60} />
                                     </div>
-                                    <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
-                                        PDF
-                                    </span>
-                                </div>
 
-                                <h3 className="font-bold text-gray-800 mb-1 group-hover:text-pw-indigo transition-colors line-clamp-1">{item.title}</h3>
-                                <div className="flex items-center text-xs text-gray-500 gap-3">
-                                    <span>{item.size}</span>
-                                    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                                    <span>{item.date}</span>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                </div>
+                                    <div className="flex items-start justify-between relative z-10">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${activeTab === 'formulas' ? 'bg-purple-100/50 text-purple-600' : activeTab === 'mindmaps' ? 'bg-pink-100/50 text-pink-600' : 'bg-blue-100/50 text-blue-600'
+                                            }`}>
+                                            <FaFilePdf className="text-xl" />
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                                                PDF
+                                            </span>
+                                            {item.board && (
+                                                <span className="text-[10px] uppercase font-bold text-pw-indigo bg-pw-indigo/10 px-2 py-1 rounded-full">
+                                                    {item.board}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
 
-                {resources[activeTab].length === 0 && (
+                                    <h3 className="font-bold text-gray-800 mb-1 group-hover:text-pw-indigo transition-colors line-clamp-1">{item.title}</h3>
+                                    <div className="flex items-center text-xs text-gray-500 gap-3">
+                                        <span>Class {item.class}</span>
+                                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                        <span className="capitalize">{item.subject}</span>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                )}
+
+                {!loading && resources[activeTab].length === 0 && (
                     <div className="text-center py-20 text-gray-400">
                         <p>No resources found in this category yet.</p>
                     </div>
