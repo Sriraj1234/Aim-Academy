@@ -6,6 +6,7 @@ import { FaCheckCircle, FaTimesCircle, FaEye, FaTrash, FaLightbulb, FaFlask, FaC
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
+import { AIExplainButton } from '@/components/quiz/AIExplainButton';
 
 interface MistakeProps {
     id: string;
@@ -100,18 +101,29 @@ export const MistakeCard: React.FC<MistakeProps> = ({
             </div>
 
             {/* Footer Actions */}
-            <div className="bg-gray-50 p-3 border-t border-pw-border flex gap-3">
+            <div className="bg-gray-50 p-3 border-t border-pw-border flex flex-wrap gap-3">
                 <button
                     onClick={() => setRevealed(!revealed)}
-                    className="flex-1 py-2.5 rounded-xl bg-white border border-pw-border text-pw-violet font-bold text-sm hover:bg-pw-surface transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 min-w-[120px] py-2.5 rounded-xl bg-white border border-pw-border text-pw-violet font-bold text-sm hover:bg-pw-surface transition-colors flex items-center justify-center gap-2"
                 >
                     {revealed ? <><FaLightbulb /> Hide Answer</> : <><FaEye /> Reveal Answer</>}
                 </button>
 
+                {/* AI Explain Button */}
+                <div className="flex-1 min-w-[120px] flex justify-center">
+                    <AIExplainButton
+                        question={question}
+                        options={options}
+                        correctAnswer={correctAnswer}
+                        userAnswer={userAnswer}
+                        subject={subject}
+                    />
+                </div>
+
                 <button
                     onClick={handleMastered}
                     disabled={isDeleting}
-                    className="flex-1 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 border border-green-600 text-white font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]"
+                    className="flex-1 min-w-[120px] py-2.5 rounded-xl bg-green-500 hover:bg-green-600 border border-green-600 text-white font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]"
                 >
                     {isDeleting ? "Removing..." : <><FaCheckCircle /> Mastered It!</>}
                 </button>
