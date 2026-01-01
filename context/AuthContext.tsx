@@ -164,7 +164,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                                     if (gamification.xp === 0) {
                                         gamification.xp = totalXP;
-                                        gamification.level = Math.floor(totalXP / 100) + 1;
+                                        // New Formula: Level N requires N*100 XP. Quadratic sum.
+                                        gamification.level = Math.floor((1 + Math.sqrt(1 + 8 * (totalXP / 100))) / 2);
                                     }
 
                                     // Only update streak if it's 0 (overwrite)
@@ -302,7 +303,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // XP Update
         const newXP = currentGamification.xp + amount
-        const newLevel = Math.floor(newXP / 100) + 1
+        // New Formula: Level N requires N*100 XP. Quadratic sum.
+        // L = (1 + sqrt(1 + 8*XP/100)) / 2
+        const newLevel = Math.floor((1 + Math.sqrt(1 + 8 * (newXP / 100))) / 2);
 
         currentGamification.xp = newXP
         currentGamification.level = newLevel
