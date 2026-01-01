@@ -78,10 +78,10 @@ export const ModernModeGrid = () => {
                             mode.id === 'group' ? '/play/group' :
                                 mode.id === 'mistakes' ? '/mistakes' : // NEW ROUTE
                                     mode.id === 'subject' ? '/play/selection?mode=subject' :
-                                        mode.id === 'chapter' ? '/play/selection?mode=chapter' :
-                                            '/play/selection'
+                                        '/play/selection'
                         }
                         key={mode.id}
+                        className="block w-full"
                     >
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
