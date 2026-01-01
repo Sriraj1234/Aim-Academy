@@ -165,49 +165,59 @@ export default function OfflineTuitionsPage() {
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         layout
-                                        className="bg-white rounded-2xl p-5 border border-pw-border hover:border-pw-indigo/30 shadow-sm hover:shadow-pw-lg transition-all group"
+                                        className="bg-white rounded-2xl p-5 border border-pw-border hover:border-pw-indigo/30 shadow-sm hover:shadow-pw-lg transition-all group cursor-pointer relative overflow-hidden"
+                                        onClick={() => window.location.href = `/offline/${t.id}`}
                                     >
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold border border-purple-100">
-                                                    {t.tutorName.charAt(0)}
+                                                <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold border border-purple-100 overflow-hidden">
+                                                    {(t as any).profileImage ? (
+                                                        <img src={(t as any).profileImage} alt={t.tutorName} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        t.tutorName.charAt(0)
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-gray-800 text-lg leading-tight group-hover:text-pw-indigo transition-colors">
+                                                    <h3 className="font-bold text-gray-800 text-lg leading-tight group-hover:text-pw-indigo transition-colors line-clamp-1">
                                                         {t.centerName || t.tutorName}
                                                     </h3>
                                                     {t.centerName && (
-                                                        <p className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                                                        <p className="text-xs text-gray-500 font-medium flex items-center gap-1 line-clamp-1">
                                                             <FaUserTie className="text-[10px]" /> {t.tutorName}
                                                         </p>
                                                     )}
                                                 </div>
                                             </div>
-                                            <span className="text-xs font-bold bg-green-50 text-green-700 px-2 py-1 rounded-lg border border-green-100">
-                                                Active
-                                            </span>
+                                            {(t as any).rating > 0 && (
+                                                <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded text-xs font-bold text-yellow-700 border border-yellow-100">
+                                                    <span className="text-yellow-500">★</span> {(t as any).rating?.toFixed(1)}
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="space-y-3 mb-5">
                                             <div className="flex items-center gap-2 text-sm text-gray-600">
                                                 <FaBookOpen className="text-pw-violet" />
-                                                <span className="font-medium">{t.subject} (Cl {t.classLevel})</span>
+                                                <span className="font-medium truncate">{t.subject}</span>
                                             </div>
                                             <div className="flex items-start gap-2 text-sm text-gray-500">
                                                 <FaMapMarkerAlt className="text-red-400 mt-1 shrink-0" />
-                                                <span className="leading-snug line-clamp-2">{t.address}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                                <FaUniversity /> {t.board} Board
+                                                <span className="leading-snug line-clamp-2 text-xs">{t.address}</span>
                                             </div>
                                         </div>
 
-                                        <a
-                                            href={`tel:${t.contact}`}
-                                            className="block w-full py-3 bg-gray-50 hover:bg-pw-indigo text-gray-700 hover:text-white rounded-xl font-bold text-center transition-all border border-gray-100 flex items-center justify-center gap-2"
-                                        >
-                                            <FaPhoneAlt className="text-sm" /> Call Now
-                                        </a>
+                                        <div className="flex gap-2 mt-auto">
+                                            <button className="flex-1 py-2 bg-pw-indigo/5 text-pw-indigo hover:bg-pw-indigo hover:text-white rounded-lg font-bold text-sm transition-all border border-pw-indigo/10">
+                                                View Profile
+                                            </button>
+                                            <a
+                                                href={`tel:${t.contact}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="w-12 flex items-center justify-center bg-gray-50 hover:bg-green-500 hover:text-white text-gray-600 rounded-lg border border-gray-100 transition-all font-bold"
+                                            >
+                                                <FaPhoneAlt />
+                                            </a>
+                                        </div>
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
