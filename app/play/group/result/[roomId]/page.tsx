@@ -4,7 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { FaTrophy, FaHome, FaMedal, FaStar, FaCheckCircle, FaTimesCircle, FaChartPie, FaUser } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PlayerResult {
     id: string;
