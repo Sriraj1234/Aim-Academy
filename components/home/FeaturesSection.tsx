@@ -69,7 +69,7 @@ export const FeaturesSection = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
-                            className="bg-white rounded-2xl p-8 border border-pw-border shadow-pw-md hover:shadow-pw-lg hover:-translate-y-1 transition-all group"
+                            className="bg-white rounded-2xl p-6 md:p-8 border border-pw-border shadow-pw-md hover:shadow-pw-lg hover:-translate-y-1 transition-all group"
                         >
                             <div className={`w-14 h-14 rounded-xl ${feature.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border`}>
                                 <feature.icon className={`text-2xl ${feature.color}`} />
