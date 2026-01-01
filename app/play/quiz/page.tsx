@@ -17,7 +17,7 @@ export default function QuizPage() {
     const router = useRouter()
     const { user } = useAuth(); // Need user for specific storage key
     const [isAILoading, setIsAILoading] = useState(true); // Default true to prevent flash/redirect
-    const { questions, currentQuestionIndex, submitAnswer, nextQuestion, prevQuestion, skipQuestion, toggleBookmark, bookmarks, isFinished, isLoading, answers, startAIQuiz } = useQuiz()
+    const { questions, currentQuestionIndex, submitAnswer, nextQuestion, prevQuestion, skipQuestion, toggleBookmark, bookmarks, isFinished, isLoading, isSavingResult, answers, startAIQuiz } = useQuiz()
     const [selectedOption, setSelectedOption] = useState<number | null>(null)
     const [isLocked, setIsLocked] = useState(false)
 
@@ -87,10 +87,11 @@ export default function QuizPage() {
         }
     }, [isFinished, router])
 
-    if (isLoading || isAILoading) {
+    if (isLoading || isAILoading || isSavingResult) {
         return (
-            <div className="min-h-screen bg-pw-surface flex items-center justify-center">
+            <div className="min-h-screen bg-pw-surface flex items-center justify-center flex-col gap-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pw-indigo"></div>
+                {isSavingResult && <p className="text-pw-violet font-bold animate-pulse">Saving your progress...</p>}
             </div>
         )
     }
