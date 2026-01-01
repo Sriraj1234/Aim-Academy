@@ -14,6 +14,7 @@ import { AIFlashcardGenerator } from '@/components/home/AIFlashcardGenerator'
 import { BookmarkedQuestionsSection } from '@/components/home/BookmarkedQuestionsSection'
 import { NotesSection } from '@/components/home/NotesSection'
 import { AIPerformanceCard } from '@/components/home/AIPerformanceCard'
+import { OfflineTuitionCard } from '@/components/home/OfflineTuitionCard'
 
 export default function DashboardPage() {
     return (
@@ -56,8 +57,10 @@ export default function DashboardPage() {
                             <NotesSection />
                         </div>
 
-                        {/* Right Column: AI Tools */}
-                        <div className="space-y-4">
+                        {/* Right Column: AI Tools & Extras */}
+                        <div className="space-y-6">
+                            <OfflineTuitionCard />
+
                             <div className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-md">
                                 <h3 className="text-lg font-bold text-pw-violet mb-4 flex items-center gap-2">
                                     <span className="text-xl">🤖</span> AI Study Tools
