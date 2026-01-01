@@ -246,7 +246,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setIsOpen(true)}
-                        className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-[2rem] bg-pw-violet text-white shadow-pw-lg border-2 border-white flex items-center justify-center transform transition-all duration-300"
+                        className="fixed bottom-6 md:bottom-24 right-4 z-50 w-12 h-12 md:w-14 md:h-14 rounded-full md:rounded-[2rem] bg-pw-violet text-white shadow-pw-lg border-2 border-white flex items-center justify-center transform transition-all duration-300"
                     >
                         <FaRobot className="text-2xl" />
                         <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
