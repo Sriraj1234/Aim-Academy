@@ -73,6 +73,21 @@ export default function AdminDashboard() {
                         </div>
                     </Link>
 
+                    {/* Manage Tuitions Card */}
+                    <Link href="/admin/tuitions" className="group">
+                        <div className="bg-white p-8 rounded-[2rem] shadow-pw-lg border border-pw-border hover:border-pink-200 transition-all hover:-translate-y-1 group-hover:shadow-pw-xl relative overflow-hidden">
+                            <div className="absolute right-0 bottom-0 w-32 h-32 bg-pink-50 rounded-full blur-2xl -mr-8 -mb-8"></div>
+
+                            <div className="w-16 h-16 bg-pink-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:bg-pink-100 transition-colors">
+                                <span className="text-3xl">🏠</span>
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-800 mb-2 group-hover:text-pink-600 transition-colors">Manage Tuitions</h3>
+                            <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                                Verify, edit, and delete offline tuition listings.
+                            </p>
+                        </div>
+                    </Link>
+
                     {/* Manage Duplicates Card */}
                     <Link href="/admin/duplicates" className="group">
                         <div className="bg-white p-8 rounded-[2rem] shadow-pw-lg border border-pw-border hover:border-orange-200 transition-all hover:-translate-y-1 group-hover:shadow-pw-xl relative overflow-hidden">
