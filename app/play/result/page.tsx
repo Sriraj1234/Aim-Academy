@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ScoreCircle } from '@/components/result/ScoreCircle'
 import { ReviewList } from '@/components/result/ReviewList'
@@ -17,6 +18,7 @@ import { Question } from '@/data/types'
 const ResultPage = () => {
     const { questions: ctxQuestions, answers: ctxAnswers, calculateScore: ctxCalculateScore, startTime, endTime } = useQuiz()
     const { user } = useAuth()
+    const router = useRouter()
 
     const [loading, setLoading] = useState(true)
     const [showReview, setShowReview] = useState(false)
@@ -392,26 +394,24 @@ const ResultPage = () => {
                 </Link>
                 <Link href="/profile" className="flex flex-col items-center gap-1.5 text-gray-400 hover:text-pw-indigo transition-colors group">
                     <FaUser className="text-xl group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] font-bold tracking-wide">Profile</span>
                 </Link>
-            </Link>
-        </div>
-
-            {/* Exit Warning Toast */ }
-    <AnimatePresence>
-        {showExitWarning && (
-            <div id="exit-warning" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="bg-black/80 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-md font-bold text-sm tracking-wide border border-white/20 whitespace-nowrap"
-                >
-                    Press Back again to go home 🏠
-                </motion.div>
             </div>
-        )}
-    </AnimatePresence>
+
+            {/* Exit Warning Toast */}
+            <AnimatePresence>
+                {showExitWarning && (
+                    <div id="exit-warning" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="bg-black/80 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-md font-bold text-sm tracking-wide border border-white/20 whitespace-nowrap"
+                        >
+                            Press Back again to go home 🏠
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div >
     )
 }
