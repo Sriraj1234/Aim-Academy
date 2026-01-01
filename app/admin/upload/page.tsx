@@ -96,6 +96,7 @@ const UploadPage = () => {
                 subject: 'physics',
                 chapter: '',
                 class: '10',
+                board: 'CBSE',
                 pdfUrl: '',
             })
         } catch (error) {
