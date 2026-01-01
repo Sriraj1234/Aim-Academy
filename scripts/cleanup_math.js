@@ -100,31 +100,29 @@ async function cleanup() {
     let keptCount = 0;
     let renamedCount = 0;
     const unknownChapters = new Set();
+    const keptChapters = new Set();
 
     for (const doc of docs) {
         let chapter = doc.fields.chapter?.stringValue?.trim();
 
-        // Auto-Fix specific mismatches
-        // "और" vs "एवं"
-        if (chapter === "पृष्ठीय क्षेत्रफल और आयतन") {
-            const newName = "पृष्ठीय क्षेत्रफल एवं आयतन";
+        // --- RENAME RULES ---
+        let newName = null;
+
+        if (chapter === "पृष्ठीय क्षेत्रफल और आयतन") newName = "पृष्ठीय क्षेत्रफल एवं आयतन";
+        else if (chapter === "वृत्तों से संबंधित क्षेत्रफल") newName = "वृतों से संबंधित क्षेत्रफल";
+        else if (chapter === "त्रिकोणमिति के कुछ अनुप्रयोग") newName = "त्रिकोणमिति के प्रयोग";
+
+        if (newName) {
             console.log(`Renaming: [${chapter}] -> [${newName}]`);
-            // Helper handles full path via doc.name ? No, doc.name includes projects/...
-            // The helper I wrote uses /v1/${docName}. docName starts with projects/...
-            // Path becomes /v1/projects/... -> Correct.
-
-            // Wait, doc.name from runQuery is "projects/..."
-            // My helper: path: /v1/${docName}
-            // So: /v1/projects/...
-            // This is correct for Firestore REST API.
-
             await updateDocument(doc.name, {
                 chapter: { stringValue: newName }
             });
             renamedCount++;
             keptCount++;
+            keptChapters.add(newName);
             continue;
         }
+        // --------------------
 
         if (!chapter || !ALLOWED_CHAPTERS.includes(chapter)) {
             unknownChapters.add(chapter);
@@ -133,6 +131,7 @@ async function cleanup() {
             deletedCount++;
         } else {
             keptCount++;
+            keptChapters.add(chapter);
         }
     }
 
@@ -140,7 +139,8 @@ async function cleanup() {
     console.log(`Verified Safe: ${keptCount}`);
     console.log(`Renamed: ${renamedCount}`);
     console.log(`Deleted: ${deletedCount}`);
-    console.log("Removed Chapters:", Array.from(unknownChapters));
+    console.log("Deleted Chapters:", Array.from(unknownChapters));
+    console.log("Kept Chapters:", Array.from(keptChapters));
     console.log("----------------------");
 }
 
