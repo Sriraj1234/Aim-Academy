@@ -15,6 +15,7 @@ import { BookmarkedQuestionsSection } from '@/components/home/BookmarkedQuestion
 import { NotesSection } from '@/components/home/NotesSection'
 import { AIPerformanceCard } from '@/components/home/AIPerformanceCard'
 import { OfflineTuitionCard } from '@/components/home/OfflineTuitionCard'
+import { LiveGuruWidget } from '@/components/live/LiveGuruWidget'
 
 export default function DashboardPage() {
     return (
@@ -59,6 +60,7 @@ export default function DashboardPage() {
 
                         {/* Right Column: AI Tools & Extras */}
                         <div className="space-y-6">
+                            <LiveGuruWidget />
                             <OfflineTuitionCard />
 
                             <div className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-md">
@@ -80,5 +82,3 @@ export default function DashboardPage() {
         </div>
     )
 }
-
-
