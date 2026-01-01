@@ -151,46 +151,43 @@ export default function QuizPage() {
             </div>
 
             {/* Header - PW Style */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-pw-border shadow-pw-sm">
-                <div className="max-w-5xl mx-auto px-4 h-20 flex items-center justify-between relative">
-                    <div className="flex items-center gap-4">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-pw-border shadow-pw-sm font-sans">
+                <div className="max-w-5xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between relative">
+                    <div className="flex items-center gap-3 md:gap-4 relative z-10 bg-white/50 backdrop-blur-sm rounded-r-xl pr-2">
                         <button
                             onClick={() => router.back()}
                             className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl hover:bg-pw-surface text-gray-500 transition-colors"
                         >
                             <FaChevronLeft className="text-sm md:text-base" />
                         </button>
-                        <div>
-                            <h1 className="font-bold text-lg text-pw-violet leading-tight capitalize">
+                        <div className="flex flex-col">
+                            <h1 className="font-bold text-base md:text-lg text-pw-violet leading-tight capitalize truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">
                                 {question.subject}
                             </h1>
-                            <p className="text-xs text-pw-indigo font-medium uppercase tracking-wider">
+                            <p className="text-[10px] md:text-xs text-pw-indigo font-medium uppercase tracking-wider truncate max-w-[100px] md:max-w-none">
                                 {question.subSubject || 'General'}
                             </p>
                         </div>
                     </div>
 
                     {/* Centered Timer - Visible on all screens now with responsive width */}
-                    <div className="absolute left-1/2 -translate-x-1/2 w-40 md:w-48">
-                        <ModernTimer duration={totalTime} current={timeLeft} className="w-full" />
+                    <div className="absolute left-1/2 -translate-x-1/2 w-28 sm:w-32 md:w-48 top-1/2 -translate-y-1/2">
+                        <ModernTimer duration={totalTime} current={timeLeft} className="w-full scale-90 md:scale-100 origin-center" />
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="md:hidden">
-                            {/* Mobile Timer Icon only? Or small pill? For now let's just keep the buttons */}
-                        </div>
+                    <div className="flex items-center gap-2 md:gap-3 relative z-10 bg-white/50 backdrop-blur-sm rounded-l-xl pl-2">
                         <button
                             onClick={() => toggleBookmark(question.id)}
-                            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-colors ${bookmarks.includes(question.id) ? 'bg-pw-red/10 text-pw-red' : 'bg-pw-surface text-gray-400 hover:text-pw-indigo'}`}
+                            className={`w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl transition-colors ${bookmarks.includes(question.id) ? 'bg-pw-red/10 text-pw-red' : 'bg-pw-surface text-gray-400 hover:text-pw-indigo'}`}
                         >
-                            {bookmarks.includes(question.id) ? <FaBookmark /> : <FaRegBookmark />}
+                            {bookmarks.includes(question.id) ? <FaBookmark size={14} /> : <FaRegBookmark size={14} />}
                         </button>
 
                         <button
-                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-pw-surface text-gray-600 hover:bg-pw-border transition-colors border border-pw-border"
+                            className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-pw-surface text-gray-600 hover:bg-pw-border transition-colors border border-pw-border"
                             onClick={isRunning ? pauseTimer : resumeTimer}
                         >
-                            {isRunning ? <FaPause className="text-xs md:text-sm" /> : <FaPlay className="text-xs md:text-sm" />}
+                            {isRunning ? <FaPause className="text-[10px] md:text-xs" /> : <FaPlay className="text-[10px] md:text-xs" />}
                         </button>
                     </div>
                 </div>
@@ -206,23 +203,23 @@ export default function QuizPage() {
                 </div>
             </header>
 
-            <main className="pt-24 px-4 max-w-3xl mx-auto relative z-10 pb-32">
+            <main className="pt-20 md:pt-24 px-3 md:px-4 max-w-3xl mx-auto relative z-10 pb-36 md:pb-32">
                 {/* Stats Row */}
-                <div className="flex items-center justify-between mb-8 px-2">
-                    <span className="text-sm font-bold text-pw-indigo uppercase tracking-widest bg-pw-indigo/5 px-3 py-1 rounded-lg">
-                        Question {currentQuestionIndex + 1} <span className="text-gray-400">/ {questions.length}</span>
+                <div className="flex items-center justify-between mb-6 md:mb-8 px-1">
+                    <span className="text-xs md:text-sm font-bold text-pw-indigo uppercase tracking-widest bg-pw-indigo/5 px-2 md:px-3 py-1 rounded-lg">
+                        Ques {currentQuestionIndex + 1} <span className="text-gray-400">/ {questions.length}</span>
                     </span>
-                    <div className="flex items-center gap-3">
-                        <div className="px-3 py-1 rounded-lg bg-green-50 text-green-700 text-xs font-bold border border-green-200 shadow-sm">
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <div className="px-2 md:px-3 py-0.5 md:py-1 rounded-md md:rounded-lg bg-green-50 text-green-700 text-[10px] md:text-xs font-bold border border-green-200 shadow-sm">
                             +{question.marks}.0
                         </div>
-                        <div className="px-3 py-1 rounded-lg bg-red-50 text-red-700 text-xs font-bold border border-red-200 shadow-sm">
+                        <div className="px-2 md:px-3 py-0.5 md:py-1 rounded-md md:rounded-lg bg-red-50 text-red-700 text-[10px] md:text-xs font-bold border border-red-200 shadow-sm">
                             -0.25
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-3xl p-6 md:p-8 shadow-pw-lg border border-pw-border mb-32 relative overflow-hidden">
+                <div className="bg-white rounded-[1.5rem] md:rounded-3xl p-5 md:p-8 shadow-pw-lg border border-pw-border mb-8 relative overflow-hidden">
                     {/* Decorative Top Accent */}
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pw-indigo via-pw-violet to-pw-indigo opacity-50" />
 
@@ -231,25 +228,25 @@ export default function QuizPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         key={currentQuestionIndex + '-text'}
-                        className="mb-8"
+                        className="mb-6 md:mb-8"
                     >
-                        <h2 className="text-xl md:text-2xl font-display font-bold text-pw-violet leading-relaxed mb-6">
+                        <h2 className="text-lg md:text-2xl font-display font-bold text-pw-violet leading-relaxed mb-4 md:mb-6">
                             {question.question}
                         </h2>
 
                         {/* Question Meta Tags */}
                         <div className="flex flex-wrap gap-2 mb-2">
-                            <span className="px-3 py-1 bg-pw-surface border border-pw-border text-pw-indigo text-xs font-bold rounded-lg uppercase tracking-wider shadow-sm">
+                            <span className="px-2 md:px-3 py-1 bg-pw-surface border border-pw-border text-pw-indigo text-[10px] md:text-xs font-bold rounded-lg uppercase tracking-wider shadow-sm">
                                 {question.difficulty}
                             </span>
-                            <span className="px-3 py-1 bg-pw-surface border border-pw-border text-pw-indigo text-xs font-bold rounded-lg uppercase tracking-wider shadow-sm">
+                            <span className="px-2 md:px-3 py-1 bg-pw-surface border border-pw-border text-pw-indigo text-[10px] md:text-xs font-bold rounded-lg uppercase tracking-wider shadow-sm">
                                 {question.chapter}
                             </span>
                         </div>
                     </motion.div>
 
                     {/* Options Grid */}
-                    <div className="grid gap-3">
+                    <div className="grid gap-2 md:gap-3">
                         <AnimatePresence mode="wait">
                             {question.options.map((option, index) => {
                                 let correctState: boolean | null = null;
@@ -286,7 +283,7 @@ export default function QuizPage() {
 
 
                 {/* Floating Bottom Bar */}
-                <div className="fixed bottom-4 left-4 right-4 z-40 max-w-3xl mx-auto">
+                <div className="fixed bottom-2 md:bottom-4 left-2 right-2 md:left-4 md:right-4 z-40 max-w-3xl mx-auto">
                     <div className="bg-white/90 backdrop-blur-md p-2 md:p-4 rounded-[1.5rem] shadow-pw-xl border border-pw-border flex items-center justify-between gap-2 md:gap-4">
 
                         {/* Previous Button */}
