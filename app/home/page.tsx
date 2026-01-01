@@ -28,11 +28,11 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Hero Carousel - PW Style - Wrapped to prevent overflow */}
-                <div className="w-full max-w-[100vw] overflow-hidden">
+                <div className="w-full max-w-full overflow-hidden">
                     <ModernCarousel />
                 </div>
 
-                <div className="px-4 max-w-7xl mx-auto space-y-6">
+                <div className="px-5 max-w-7xl mx-auto space-y-6">
                     <div className="grid lg:grid-cols-3 gap-6">
                         {/* Left Column: Stats & Gamification - Wrapped with w-full for safety */}
                         <div className="lg:col-span-2 space-y-6 w-full min-w-0">
