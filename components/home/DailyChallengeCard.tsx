@@ -98,7 +98,7 @@ export const DailyChallengeCard = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
 
             <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between mb-4 gap-y-2">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm shadow-inner border border-white/20 shrink-0">
                             <FaFire className="text-yellow-400 text-lg md:text-xl animate-pulse" />
