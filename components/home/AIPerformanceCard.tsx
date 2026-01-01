@@ -99,16 +99,16 @@ export const AIPerformanceCard = () => {
     }
 
     return (
-        <div className="bg-white rounded-3xl p-6 border border-pw-border shadow-md mb-6 relative overflow-hidden group">
+        <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-pw-border shadow-md mb-6 relative overflow-hidden group">
             {/* Header / Loading Overlay */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                        <FaRobot />
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+                <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 shrink-0">
+                        <FaRobot className="text-sm md:text-base" />
                     </div>
                     <div>
-                        <h3 className="font-display font-bold text-gray-800 text-lg leading-tight">AI Coach</h3>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                        <h3 className="font-display font-bold text-gray-800 text-base md:text-lg leading-tight">AI Coach</h3>
+                        <p className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                             {loading ? 'Analyzing...' : 'Performance Insights'}
                         </p>
                     </div>
@@ -116,7 +116,7 @@ export const AIPerformanceCard = () => {
                 <button
                     onClick={fetchAnalysis}
                     disabled={loading}
-                    className={`w-8 h-8 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center hover:bg-indigo-100 transition-colors ${loading ? 'animate-spin' : ''}`}
+                    className={`w-7 h-7 md:w-8 md:h-8 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center hover:bg-indigo-100 transition-colors ${loading ? 'animate-spin' : ''}`}
                 >
                     <FaSync className="text-xs" />
                 </button>
@@ -132,24 +132,24 @@ export const AIPerformanceCard = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-4"
+                    className="space-y-3 md:space-y-4"
                 >
                     {/* Summary Bubble */}
-                    <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-100 relative">
-                        <div className="absolute top-0 left-4 -translate-y-1/2 bg-white text-indigo-600 px-2 py-0.5 rounded-full text-[10px] font-bold border border-indigo-100 shadow-sm uppercase">
+                    <div className="bg-indigo-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-indigo-100 relative">
+                        <div className="absolute top-0 left-4 -translate-y-1/2 bg-white text-indigo-600 px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold border border-indigo-100 shadow-sm uppercase">
                             Summary
                         </div>
-                        <p className="text-indigo-900 text-sm font-medium leading-relaxed">
+                        <p className="text-indigo-900 text-xs md:text-sm font-medium leading-relaxed mt-1">
                             "{insights.summary}"
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                         {/* Tip */}
                         <div className="bg-green-50 rounded-xl p-3 border border-green-100">
                             <div className="flex items-start gap-2 mb-1">
-                                <FaLightbulb className="text-green-500 mt-0.5" />
-                                <span className="text-green-700 font-bold text-xs uppercase">Study Tip</span>
+                                <FaLightbulb className="text-green-500 mt-0.5 text-xs md:text-sm" />
+                                <span className="text-green-700 font-bold text-[10px] md:text-xs uppercase">Study Tip</span>
                             </div>
                             <p className="text-green-800 text-xs leading-relaxed">
                                 {insights.tip}
@@ -160,8 +160,8 @@ export const AIPerformanceCard = () => {
                         {insights.weakAreas.length > 0 && (
                             <div className="bg-red-50 rounded-xl p-3 border border-red-100">
                                 <div className="flex items-start gap-2 mb-1">
-                                    <FaExclamationTriangle className="text-red-500 mt-0.5" />
-                                    <span className="text-red-700 font-bold text-xs uppercase">Focus On</span>
+                                    <FaExclamationTriangle className="text-red-500 mt-0.5 text-xs md:text-sm" />
+                                    <span className="text-red-700 font-bold text-[10px] md:text-xs uppercase">Focus On</span>
                                 </div>
                                 <p className="text-red-800 text-xs font-bold">
                                     {insights.weakAreas[0].subject} <span className="opacity-70 font-normal">({insights.weakAreas[0].accuracy}% Acc)</span>
@@ -172,7 +172,7 @@ export const AIPerformanceCard = () => {
 
                     {/* Motivation Footer */}
                     <div className="text-center pt-2 border-t border-gray-100">
-                        <p className="text-gray-400 text-xs italic">
+                        <p className="text-gray-400 text-[10px] md:text-xs italic">
                             {insights.motivation}
                         </p>
                     </div>
