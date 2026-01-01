@@ -9,6 +9,7 @@ import { GameInviteListener } from '@/components/shared/GameInviteListener'
 import { PresenceListener } from '@/components/shared/PresenceListener'
 import { InstallPrompt } from '@/components/shared/InstallPrompt'
 
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SoundProvider } from '@/context/SoundContext'
 
 const outfit = Outfit({
@@ -86,6 +87,7 @@ export default function RootLayout({
             </QuizProvider>
           </ThemeProvider>
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   )
