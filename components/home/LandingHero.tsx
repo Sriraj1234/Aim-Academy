@@ -13,14 +13,14 @@ export const LandingHero = () => {
 
     return (
         <section className="relative w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-10">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
                 {/* Text Content */}
                 <motion.div
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="text-center lg:text-left order-2 lg:order-1 relative z-10"
+                    className="flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 relative z-10"
                 >
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -32,7 +32,7 @@ export const LandingHero = () => {
                         <span className="text-pw-indigo text-xs font-bold tracking-wide uppercase">India's Most Loved Learning Platform</span>
                     </motion.div>
 
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-pw-violet mb-6 leading-tight">
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-pw-violet mb-6 leading-tight max-w-2xl lg:max-w-none">
                         Master Your <br className="hidden lg:block" />
                         <span className="text-pw-indigo relative inline-block">
                             Exams
@@ -47,21 +47,21 @@ export const LandingHero = () => {
                         Experience the new era of learning with interactive quizzes, real-time battles, and smart performance analysis.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
-                        <Link href="/login">
+                    <div className="flex flex-col w-full sm:w-auto sm:flex-row gap-5 justify-center lg:justify-start">
+                        <Link href="/login" className="w-full sm:w-auto">
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-pw-indigo to-pw-violet text-white font-bold text-lg rounded-xl shadow-pw-md hover:shadow-pw-lg flex items-center justify-center gap-3 relative overflow-hidden group transition-all"
+                                className="w-full px-8 py-4 bg-gradient-to-r from-pw-indigo to-pw-violet text-white font-bold text-lg rounded-xl shadow-pw-md hover:shadow-pw-lg flex items-center justify-center gap-3 relative overflow-hidden group transition-all"
                             >
                                 <span className="relative z-10 flex items-center gap-2">Start Practicing <HiArrowRight /></span>
                             </motion.button>
                         </Link>
-                        <Link href="/signup">
+                        <Link href="/signup" className="w-full sm:w-auto">
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="w-full sm:w-auto px-8 py-4 bg-white border border-pw-border text-pw-violet font-bold text-lg rounded-xl shadow-sm hover:bg-pw-surface transition-all"
+                                className="w-full px-8 py-4 bg-white border border-pw-border text-pw-violet font-bold text-lg rounded-xl shadow-sm hover:bg-pw-surface transition-all"
                             >
                                 Join for Free
                             </motion.button>
