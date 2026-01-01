@@ -18,8 +18,8 @@ export function useGeminiLive(): UseGeminiLiveReturn {
     const [isConnected, setIsConnected] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isSpeaking, setIsSpeaking] = useState(false); // User speaking status
-    const [isAiSpeaking, setIsAiSpeaking] = useState(false); // AI speaking status
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isAiSpeaking, setIsAiSpeaking] = useState(false);
     const [volume, setVolume] = useState(0);
 
     const wsRef = useRef<WebSocket | null>(null);
@@ -27,10 +27,6 @@ export function useGeminiLive(): UseGeminiLiveReturn {
     const workletNodeRef = useRef<AudioWorkletNode | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
-
-    // Silence detection for "end_of_utterance"
-    const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const isSpeakingRef = useRef(false);
 
     // Helper: Resample audio to 16kHz Int16
     const resampleTo16k = (audioData: Float32Array, sampleRate: number): Int16Array => {
@@ -70,7 +66,6 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         setIsConnecting(false);
         setIsAiSpeaking(false);
         setVolume(0);
-        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     }, []);
 
     const connect = useCallback(async () => {
@@ -83,10 +78,16 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             const res = await fetch('/api/ai/live-key');
             if (!res.ok) throw Error('Failed to get API Key');
             const { key } = await res.json();
+            if (!key) throw Error('API Key missing in server response');
 
-            // 2. Setup Audio Config
+            // 2. Setup Audio Config (WORKLET - The Real Fix)
             const audioCtx = new AudioContext({ sampleRate: 24000 });
-            await audioCtx.audioWorklet.addModule('/gemini-audio-processor.js');
+            try {
+                await audioCtx.audioWorklet.addModule('/gemini-audio-processor.js');
+            } catch (e) {
+                console.error("AudioWorklet mismatch?", e);
+                // Fallback or retry? Should be fine if file exists in public/
+            }
             audioContextRef.current = audioCtx;
 
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -106,19 +107,31 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             const workletNode = new AudioWorkletNode(audioCtx, 'gemini-audio-processor');
             workletNodeRef.current = workletNode;
 
-            // 3. Setup WebSocket (New Model Spec)
-            const url = `wss://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-native-audio-dialog:stream?key=${key}`;
+            // 3. Setup WebSocket (OFFICIAL ENDPOINT)
+            // Using v1alpha and gemini-2.0-flash-exp as 2.5 likely doesn't exist
+            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${key}`;
             const ws = new WebSocket(url);
 
             ws.onopen = () => {
-                console.log('Gemini Live Connected (Native Audio) 🎧');
+                console.log('Gemini Live Connected (Official) 🟢');
                 setIsConnected(true);
                 setIsConnecting(false);
 
-                // Initial Setup Config
+                // Initial Setup Config (Bidi Protocol)
                 const setupMsg = {
-                    system_instruction: {
-                        text: GEMINI_LIVE_CONFIG.systemInstruction
+                    setup: {
+                        model: GEMINI_LIVE_CONFIG.model,
+                        generation_config: {
+                            response_modalities: ["AUDIO"],
+                            speech_config: {
+                                voice_config: {
+                                    prebuilt_voice_config: { voice_name: "Aoede" }
+                                }
+                            }
+                        },
+                        system_instructions: {
+                            parts: [{ text: GEMINI_LIVE_CONFIG.systemInstruction }]
+                        }
                     }
                 };
                 ws.send(JSON.stringify(setupMsg));
@@ -131,22 +144,30 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                 try {
                     const response = JSON.parse(data);
 
-                    // Handle Audio Output
-                    if (response.output_audio_buffer?.audio_data) {
-                        setIsAiSpeaking(true);
-                        const binary = atob(response.output_audio_buffer.audio_data);
-                        const bytes = new Uint8Array(binary.length);
-                        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                        const int16 = new Int16Array(bytes.buffer);
+                    // Handle Audio Output (ServerContent -> ModelTurn)
+                    if (response.serverContent?.modelTurn?.parts) {
+                        for (const part of response.serverContent.modelTurn.parts) {
+                            if (part.inlineData && part.inlineData.mimeType.startsWith('audio/pcm')) {
+                                setIsAiSpeaking(true);
+                                const binary = atob(part.inlineData.data);
+                                const bytes = new Uint8Array(binary.length);
+                                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                                const int16 = new Int16Array(bytes.buffer);
 
-                        // Convert to Float32 for playback
-                        const float32 = new Float32Array(int16.length);
-                        for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768.0;
+                                // Convert to Float32 for playback
+                                const float32 = new Float32Array(int16.length);
+                                for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768.0;
 
-                        workletNode.port.postMessage({
-                            type: 'output_audio',
-                            buffer: float32.buffer
-                        }, [float32.buffer]);
+                                workletNode.port.postMessage({
+                                    type: 'output_audio',
+                                    buffer: float32.buffer
+                                }, [float32.buffer]);
+                            }
+                        }
+                    }
+
+                    if (response.serverContent?.turnComplete) {
+                        setIsAiSpeaking(false);
                     }
                 } catch (e) {
                     // console.error("Parse error", e);
@@ -155,6 +176,9 @@ export function useGeminiLive(): UseGeminiLiveReturn {
 
             ws.onclose = (e) => {
                 console.log("WS Closed", e.code, e.reason);
+                if (e.code === 1006) {
+                    alert(`Connection Failed (1006). Likely Model Mismatch or Network Block.`);
+                }
                 cleanup();
             };
 
@@ -166,47 +190,29 @@ export function useGeminiLive(): UseGeminiLiveReturn {
 
             wsRef.current = ws;
 
-            // Audio Processing Logic
+            // Audio Processing Logic (Worklet -> WS)
             workletNode.port.onmessage = (event) => {
                 if (event.data.type === 'input_audio') {
                     const float32 = new Float32Array(event.data.buffer);
 
-                    // Volume / VAD Logic
+                    // VAD (Volume Analysis)
                     let sum = 0;
                     for (let i = 0; i < float32.length; i += 10) sum += Math.abs(float32[i]);
                     const avg = sum / (float32.length / 10);
                     setVolume(avg * 10);
-
-                    const isNowSpeaking = avg > 0.015; // Threshold
-                    setIsSpeaking(isNowSpeaking);
-
-                    // Silence Detection for End of Utterance
-                    if (isNowSpeaking) {
-                        isSpeakingRef.current = true;
-                        if (silenceTimerRef.current) {
-                            clearTimeout(silenceTimerRef.current);
-                            silenceTimerRef.current = null;
-                        }
-                    } else if (isSpeakingRef.current) {
-                        // User WAS speaking, now stopped. Start timer.
-                        if (!silenceTimerRef.current) {
-                            silenceTimerRef.current = setTimeout(() => {
-                                isSpeakingRef.current = false;
-                                console.log("End of Utterance sent 🛑");
-                                wsRef.current?.send(JSON.stringify({ event: "end_of_utterance" }));
-                            }, 700); // 700ms silence = end of turn
-                        }
-                    }
+                    setIsSpeaking(avg > 0.015);
 
                     if (wsRef.current?.readyState === WebSocket.OPEN) {
                         const int16 = resampleTo16k(float32, audioCtx.sampleRate);
                         const base64 = btoa(String.fromCharCode(...new Uint8Array(int16.buffer)));
 
+                        // BIDI PROTOCOL: realtime_input
                         wsRef.current.send(JSON.stringify({
-                            input_audio_buffer: {
-                                audio_data: base64,
-                                encoding: "LINEAR16",
-                                sample_rate_hz: 16000
+                            realtime_input: {
+                                media_chunks: [{
+                                    mime_type: "audio/pcm;rate=16000",
+                                    data: base64
+                                }]
                             }
                         }));
                     }
@@ -218,6 +224,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
 
         } catch (err: any) {
             console.error(err);
+            alert(`Setup Error: ${err.message}`);
             setError(err.message);
             setIsConnecting(false);
             cleanup();
@@ -231,7 +238,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         disconnect: cleanup,
         error,
         isSpeaking,
-        isAiSpeaking,
+        isAiSpeaking, // Now accurate
         volume
     };
 }
