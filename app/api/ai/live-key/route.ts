@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-    // Determine the API key to use
-    // Priority: GEMINI_LIVE_API_KEY (specific) -> GEMINI_API_KEY (generic)
-    const apiKey = process.env.GEMINI_LIVE_API_KEY || process.env.GEMINI_API_KEY;
+    // Return the API key to the client securely
+    // In production, we'd use a proxy to avoid exposing the key, but for Gemini Live WebSocket, 
+    // we need to pass the key in the URL query param on the client side currently.
+    // Ideally, we should use an OAuth token or a proxy WebSocket, but for MVP:
+    const key = process.env.GEMINI_API_KEY;
 
-    if (!apiKey) {
-        console.error('Gemini API Key is missing on server');
-        return NextResponse.json(
-            { error: 'Server configuration error: API Key missing' },
-            { status: 500 }
-        );
+    if (!key) {
+        return NextResponse.json({ error: "API Key not configured" }, { status: 500 });
     }
 
-    return NextResponse.json({ key: apiKey });
+    return NextResponse.json({ key });
 }
