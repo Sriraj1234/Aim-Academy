@@ -38,12 +38,53 @@ export default function LobbyPage() {
         }
     };
 
-    // 1. Initial Local Check & Navigation Lock
+    // 0. Double-Tap Back Logic
+    const [showExitWarning, setShowExitWarning] = useState(false);
+
+    useEffect(() => {
+        // Push state to intercept back button
+        window.history.pushState(null, '', window.location.href);
+
+        const handlePopState = () => {
+            // Check if we should allow exit
+            const isWarningVisible = document.getElementById('exit-warning');
+
+            if (isWarningVisible) {
+                // Second tap: Allow exit (do nothing, let browser go back)
+                // Or explicitly route
+                router.push('/play/group');
+            } else {
+                // First tap: Prevent exit, show warning
+                window.history.pushState(null, '', window.location.href);
+                setShowExitWarning(true);
+                setTimeout(() => setShowExitWarning(false), 2000);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [router]);
+
+    // 1. Initial Check & Auto-Leave Cleanup
     useEffect(() => {
         if (!roomId) return;
         const storedName = localStorage.getItem(`player_name_${roomId}`);
         if (storedName) setHasJoined(true);
-    }, [roomId]);
+
+        // Auto-Leave on Component Unmount (Tab close, Back button, etc.)
+        return () => {
+            if (user && localStorage.getItem(`player_id_${roomId}`)) {
+                // Use Beacon for reliable background request on close
+                // Note: Firebase SDK handles basic offline/disconnect, but explicit leave helps
+                // We can't await here reliably, but we fire the promise.
+                const playerId = localStorage.getItem(`player_id_${roomId}`) || user.uid;
+                leaveRoom(roomId as string, playerId).catch(err => console.error("Auto-leave failed", err));
+            }
+        };
+    }, [roomId, user]);
 
     // 2. Realtime Listener
     useEffect(() => {
@@ -415,6 +456,22 @@ export default function LobbyPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Exit Warning Toast */}
+                <AnimatePresence>
+                    {showExitWarning && (
+                        <div id="exit-warning" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="bg-black/80 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-md font-bold text-sm tracking-wide border border-white/20 whitespace-nowrap"
+                            >
+                                Press Back again to leave lobby 🚪
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
 
             <FriendsDrawer
