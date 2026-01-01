@@ -82,12 +82,14 @@ export default function NotesPage() {
                                     key={item.id}
                                     onClick={() => {
                                         if (item.pdfUrl) {
-                                            // Ensure PDF is opened correctly.
-                                            // Cloudinary often serves PDFs as images if 'image/upload' is used.
-                                            // We'll trust the URL but add '_blank' and logs.
-                                            // Optionally, replace '/image/upload/' with '/raw/upload/' (sometimes safer for docs)
-                                            // or just ensure it opens.
-                                            window.open(item.pdfUrl, '_blank', 'noopener,noreferrer');
+                                            const getOptimizedUrl = (url: string) => {
+                                                if (!url) return '';
+                                                // Inject fl_inline to ensure browser tries to view it instead of failing or downloading
+                                                return url.replace('/image/upload/', '/image/upload/fl_inline/');
+                                            };
+
+                                            const viewUrl = getOptimizedUrl(item.pdfUrl);
+                                            window.open(viewUrl, '_blank', 'noopener,noreferrer');
                                         } else {
                                             alert("No PDF link attached.");
                                         }
@@ -101,6 +103,24 @@ export default function NotesPage() {
                                     <div className={`absolute top-0 right-0 p-3 opacity-10 group-hover:scale-150 transition-transform duration-500 ${activeTab === 'formulas' ? 'text-purple-500' : activeTab === 'mindmaps' ? 'text-pink-500' : 'text-blue-500'
                                         }`}>
                                         <FaFilePdf size={60} />
+                                    </div>
+
+                                    {/* Download Button (Fallback) */}
+                                    <div className="absolute top-2 right-2 z-20">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (item.pdfUrl) {
+                                                    // fl_attachment forces download
+                                                    const downloadUrl = item.pdfUrl.replace('/image/upload/', '/image/upload/fl_attachment/');
+                                                    window.open(downloadUrl, '_blank');
+                                                }
+                                            }}
+                                            className="p-2 bg-gray-100 hover:bg-pw-indigo hover:text-white rounded-full text-gray-400 transition-colors shadow-sm"
+                                            title="Download PDF"
+                                        >
+                                            <FaFilePdf className="text-xs" />
+                                        </button>
                                     </div>
 
                                     <div className="flex items-start justify-between relative z-10">
