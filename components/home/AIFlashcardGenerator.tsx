@@ -103,7 +103,7 @@ export const AIFlashcardGenerator = () => {
     if (!showGenerator && flashcards.length > 0) {
         const card = flashcards[currentIndex];
         return (
-            <div className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-md">
+            <div className="bg-white rounded-2xl p-4 md:p-5 border border-pw-border shadow-pw-md">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-pw-violet flex items-center gap-2">
                         <FaLightbulb className="text-yellow-500" /> {topic}
@@ -172,7 +172,7 @@ export const AIFlashcardGenerator = () => {
     }
 
     return (
-        <div className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-md">
+        <div className="bg-white rounded-2xl p-4 md:p-5 border border-pw-border shadow-pw-md">
             <h3 className="text-lg font-bold text-pw-violet mb-4 flex items-center gap-2">
                 <FaLightbulb className="text-yellow-500" /> AI Flashcard Generator
             </h3>
