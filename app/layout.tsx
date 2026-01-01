@@ -62,7 +62,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${outfit.variable} ${spaceGrotesk.variable} ${notoSans.variable} antialiased selection:bg-purple-500 selection:text-white`}
+        className={`${outfit.variable} ${spaceGrotesk.variable} ${notoSans.variable} antialiased selection:bg-purple-500 selection:text-white overflow-x-hidden w-full`}
         suppressHydrationWarning
       >
         <AuthProvider>
@@ -73,7 +73,9 @@ export default function RootLayout({
                   <PresenceListener />
                   <GameInviteListener />
                   <InstallPrompt />
-                  {children}
+                  <div className="relative w-full max-w-full overflow-x-hidden">
+                    {children}
+                  </div>
                 </SoundProvider>
               </LanguageProvider>
             </QuizProvider>
