@@ -25,10 +25,8 @@ export default function DashboardPage() {
                     <DashboardHeader />
                 </div>
 
-                {/* Hero Carousel */}
-                <div className="px-4 max-w-7xl mx-auto">
-                    <ModernCarousel />
-                </div>
+                {/* Hero Carousel - Edge to Edge */}
+                <ModernCarousel />
 
                 <div className="px-4 max-w-7xl mx-auto space-y-6 w-full overflow-x-hidden">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
