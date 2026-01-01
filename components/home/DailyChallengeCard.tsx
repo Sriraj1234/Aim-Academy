@@ -92,7 +92,7 @@ export const DailyChallengeCard = () => {
     return (
         <motion.div
             layout
-            className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-purple-900 rounded-2xl p-6 text-white shadow-xl border border-white/10"
+            className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-purple-900 rounded-2xl p-4 md:p-6 text-white shadow-xl border border-white/10"
         >
             {/* Ambient Background */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
@@ -100,12 +100,12 @@ export const DailyChallengeCard = () => {
             <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm shadow-inner border border-white/20">
-                            <FaFire className="text-yellow-400 text-xl animate-pulse" />
+                        <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm shadow-inner border border-white/20 shrink-0">
+                            <FaFire className="text-yellow-400 text-lg md:text-xl animate-pulse" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-lg leading-tight text-white drop-shadow-sm">Daily Challenge</h3>
-                            <p className="text-xs text-indigo-200 font-medium tracking-wide">Win 50 XP Reward!</p>
+                            <h3 className="font-bold text-base md:text-lg leading-tight text-white drop-shadow-sm">Daily Challenge</h3>
+                            <p className="text-[10px] md:text-xs text-indigo-200 font-medium tracking-wide">Win 50 XP Reward!</p>
                         </div>
                     </div>
                     {status === 'active' && !showQuestion && (
