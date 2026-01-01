@@ -13,16 +13,16 @@ export default function NotesPage() {
     // Mock Data (Replace with Firestore later)
     const resources = {
         formulas: [
-            { id: 1, title: 'Physics Chapter 1 Formulas', size: '1.2 MB', date: '2 days ago' },
-            { id: 2, title: 'Integration Cheat Sheet', size: '800 KB', date: '1 week ago' },
+            { id: 1, title: 'Physics Chapter 1 Formulas', size: '1.2 MB', date: '2 days ago', url: '#' },
+            { id: 2, title: 'Integration Cheat Sheet', size: '800 KB', date: '1 week ago', url: '#' },
         ],
         mindmaps: [
-            { id: 3, title: 'Organic Chemistry Roadmap', size: '2.5 MB', date: '3 days ago' },
-            { id: 4, title: 'Indian History Timeline', size: '1.8 MB', date: 'Yesterday' },
+            { id: 3, title: 'Organic Chemistry Roadmap', size: '2.5 MB', date: '3 days ago', url: '#' },
+            { id: 4, title: 'Indian History Timeline', size: '1.8 MB', date: 'Yesterday', url: '#' },
         ],
         notes: [
-            { id: 5, title: 'Electrostatics Full Notes', size: '5.0 MB', date: 'Just now' },
-            { id: 6, title: 'Biology - Genetics', size: '3.2 MB', date: '1 month ago' },
+            { id: 5, title: 'Electrostatics Full Notes', size: '5.0 MB', date: 'Just now', url: '#' },
+            { id: 6, title: 'Biology - Genetics', size: '3.2 MB', date: '1 month ago', url: '#' },
         ]
     };
 
@@ -48,8 +48,8 @@ export default function NotesPage() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as TabType)}
                             className={`flex items-center gap-2 px-5 py-3 rounded-xl transition-all font-bold whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-pw-indigo text-white shadow-md'
-                                    : 'hover:bg-pw-surface text-gray-500'
+                                ? 'bg-pw-indigo text-white shadow-md'
+                                : 'hover:bg-pw-surface text-gray-500'
                                 }`}
                         >
                             <tab.icon className={activeTab === tab.id ? 'text-white' : tab.color} />
@@ -64,6 +64,15 @@ export default function NotesPage() {
                         {resources[activeTab].map((item, index) => (
                             <motion.div
                                 key={item.id}
+                                onClick={() => {
+                                    if ((item as any).url) {
+                                        if ((item as any).url === '#') {
+                                            alert("This is a sample file. Real files will open directly once uploaded!");
+                                        } else {
+                                            window.open((item as any).url, '_blank');
+                                        }
+                                    }
+                                }}
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
