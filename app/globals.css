@@ -5,24 +5,16 @@
    MOBILE SAFETY & RESPONSIVENESS
    ======================================== */
 
-/* Prevent horizontal overflow on mobile */
+/* Prevent horizontal overflow on mobile - SIMPLE VERSION */
 html,
 body {
   overflow-x: hidden;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  position: relative;
-  /* Ensure no scroll chaining */
-  overscroll-behavior-x: none;
 }
 
-/* Ensure all containers respect viewport */
+/* Box sizing reset */
 *,
 *::before,
 *::after {
-  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -54,15 +46,6 @@ body {
   /* Ensure fixed elements don't overflow */
   .fixed {
     max-width: 100%;
-  }
-}
-
-/* Safe area insets for notched phones */
-@supports (padding: max(0px)) {
-  body {
-    padding-left: max(0px, env(safe-area-inset-left));
-    padding-right: max(0px, env(safe-area-inset-right));
-    padding-bottom: max(0px, env(safe-area-inset-bottom));
   }
 }
 
