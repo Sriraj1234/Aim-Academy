@@ -14,6 +14,7 @@ interface QuizContextType {
     score: number
     isFinished: boolean
     isLoading: boolean
+    isSavingResult: boolean
     startTime: number
     endTime: number
     categories: CategoryData
@@ -40,6 +41,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
     const [isLoading, setIsLoading] = useState(false)
     const [startTime, setStartTime] = useState<number>(0)
     const [endTime, setEndTime] = useState<number>(0)
+    const [isSavingResult, setIsSavingResult] = useState(false)
 
     const [categories, setCategories] = useState<CategoryData>({ subjects: [], chapters: {} })
 
@@ -62,6 +64,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
     const startQuiz = async (subject?: string, count: number = 20, chapter?: string) => {
         setIsLoading(true)
         setIsFinished(false)
+        setIsSavingResult(false)
         setAnswers([])
         setCurrentQuestionIndex(0)
         setQuestions([])
@@ -73,7 +76,6 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             // Remove hardcoded limit(50), use the requested count
             const constraints: any[] = [limit(count)];
 
-            // Essential Filters: Board & Class (Isolation)
             // Essential Filters: Board & Class (Isolation)
             if (userProfile?.board) {
                 // Ensure case consistency (Uploads are lowercase usually)
@@ -103,12 +105,6 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
             // Add Random Cursor to constraints
             // We use 'orderBy' on documentId to ensure we can startAt or filter by it
-            // Note: If other filters are present (subject, chapter), we need to check index support.
-            // "where(field, ==, val)" + "orderBy(__name__)" usually works without composite index.
-
-            // Try Method A: where(documentId() >= randomId) + limit(count)
-            // This is efficient and supported.
-
             const randomConstraints = [...constraints, where(documentId(), '>=', randomId), orderBy(documentId())];
 
             console.log("Fetching questions with constraints:", {
@@ -191,13 +187,21 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
         setAnswers(newAnswers)
     }
 
-    const nextQuestion = () => {
+    const nextQuestion = async () => {
         if (currentQuestionIndex < questions.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1)
         } else {
+            // FINISH QUIZ LOGIC
             setEndTime(Date.now())
-            setIsFinished(true)
-            saveQuizResult()
+            setIsSavingResult(true)
+            try {
+                await saveQuizResult()
+            } catch (err) {
+                console.error("Critical error saving result:", err)
+            } finally {
+                setIsSavingResult(false)
+                setIsFinished(true)
+            }
         }
     }
 
@@ -246,6 +250,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
         setAnswers(new Array(questions.length).fill(null))
         setBookmarks([])
         setIsFinished(false)
+        setIsSavingResult(false)
     }
 
     const calculateScore = () => {
@@ -300,7 +305,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 totalQuestions: questions.length,
                 date: new Date().toISOString(),
                 subject: questions[0]?.subject || 'mixed',
-                duration: endTime - startTime,
+                duration: endTime - startTime || 0,
                 xpEarned, // Save XP earned for display
                 questions,
                 answers: answers.map(a => a ?? null) // Ensure no undefined
@@ -369,11 +374,13 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
             if (mistakes.length > 0) {
                 console.log(`Saving ${mistakes.length} mistakes to notebook...`);
+                // Using map to create promises, but we MUST await them all here to ensure safety
                 const batchPromises = mistakes.map(async (q) => {
+                    // Sanity check for ID
+                    if (!q.id) return;
+
                     const mistakeRef = doc(db, 'users', user.uid, 'mistakes', q.id);
                     // Use setDoc with merge to update timestamp/count if it already exists
-                    // We can't use atomic increment easily with setDoc merge without getting deeper, 
-                    // so we'll just overwrite with new timestamp for "Last Made Mistake" sorting.
                     await setDoc(mistakeRef, {
                         question: q.question,
                         options: q.options,
@@ -386,18 +393,20 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                     }, { merge: true });
                 });
 
-                // Allow this to happen in background
-                Promise.all(batchPromises).then(() => console.log("Mistakes saved successfully."));
+                await Promise.all(batchPromises); // Explicitly await all mistake writes
+                console.log("Mistakes saved successfully.");
             }
 
         } catch (error) {
             console.error("Error saving quiz result:", error)
+            throw error; // Re-throw to be caught in nextQuestion
         }
     }
 
     const startAIQuiz = (aiQuestions: Question[]) => {
         setIsLoading(true)
         setIsFinished(false)
+        setIsSavingResult(false)
         setAnswers([])
         setCurrentQuestionIndex(0)
 
@@ -418,6 +427,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             score: calculateScore(),
             isFinished,
             isLoading,
+            isSavingResult,
             startTime,
             endTime,
             categories,
