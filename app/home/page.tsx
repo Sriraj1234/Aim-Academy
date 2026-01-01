@@ -54,8 +54,7 @@ export default function DashboardPage() {
                                 <ModernModeGrid />
                             </div>
 
-                            <BookmarkedQuestionsSection />
-                            <NotesSection />
+
                         </div>
 
                         {/* Right Column: AI Tools & Extras */}
@@ -72,6 +71,10 @@ export default function DashboardPage() {
                                     <ChapterSummary />
                                 </div>
                             </div>
+
+                            {/* Moved Sections for Compact View */}
+                            <BookmarkedQuestionsSection />
+                            <NotesSection />
                         </div>
                     </div>
                 </div>
