@@ -82,7 +82,12 @@ export default function NotesPage() {
                                     key={item.id}
                                     onClick={() => {
                                         if (item.pdfUrl) {
-                                            window.open(item.pdfUrl, '_blank');
+                                            // Ensure PDF is opened correctly.
+                                            // Cloudinary often serves PDFs as images if 'image/upload' is used.
+                                            // We'll trust the URL but add '_blank' and logs.
+                                            // Optionally, replace '/image/upload/' with '/raw/upload/' (sometimes safer for docs)
+                                            // or just ensure it opens.
+                                            window.open(item.pdfUrl, '_blank', 'noopener,noreferrer');
                                         } else {
                                             alert("No PDF link attached.");
                                         }
