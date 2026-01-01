@@ -58,6 +58,24 @@ function runQuery() {
     });
 }
 
+function updateDocument(docName, fields) {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'firestore.googleapis.com',
+            path: `/v1/${docName}?updateMask.fieldPaths=chapter`,
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' }
+        };
+        const body = JSON.stringify({ fields });
+        const req = https.request(options, (res) => {
+            res.on('end', resolve);
+        });
+        req.on('error', reject);
+        req.write(body);
+        req.end();
+    });
+}
+
 function deleteDocument(docName) {
     return new Promise((resolve, reject) => {
         const options = {
@@ -76,23 +94,41 @@ function deleteDocument(docName) {
 async function cleanup() {
     console.log("Fetching Mathematics questions...");
     const docs = await runQuery();
-    console.log(`checked ${docs.length} questions.`);
+    console.log(`Checking ${docs.length} questions.`);
 
     let deletedCount = 0;
     let keptCount = 0;
+    let renamedCount = 0;
     const unknownChapters = new Set();
 
     for (const doc of docs) {
-        const chapter = doc.fields.chapter?.stringValue?.trim();
+        let chapter = doc.fields.chapter?.stringValue?.trim();
+
+        // Auto-Fix specific mismatches
+        // "और" vs "एवं"
+        if (chapter === "पृष्ठीय क्षेत्रफल और आयतन") {
+            const newName = "पृष्ठीय क्षेत्रफल एवं आयतन";
+            console.log(`Renaming: [${chapter}] -> [${newName}]`);
+            // Helper handles full path via doc.name ? No, doc.name includes projects/...
+            // The helper I wrote uses /v1/${docName}. docName starts with projects/...
+            // Path becomes /v1/projects/... -> Correct.
+
+            // Wait, doc.name from runQuery is "projects/..."
+            // My helper: path: /v1/${docName}
+            // So: /v1/projects/...
+            // This is correct for Firestore REST API.
+
+            await updateDocument(doc.name, {
+                chapter: { stringValue: newName }
+            });
+            renamedCount++;
+            keptCount++;
+            continue;
+        }
 
         if (!chapter || !ALLOWED_CHAPTERS.includes(chapter)) {
-            // Check for minor whitespace issues or "General"
             unknownChapters.add(chapter);
             console.log(`Deleting: [${chapter}]`);
-            // Remove the "projects/..." prefix handled by helper, but doc.name is full path
-            // The helper expects full path relative to /v1/
-            // doc.name: "projects/aim-83922/databases/(default)/documents/questions/..."
-            // Helper path: /v1/projects/... -> Perfect.
             await deleteDocument(doc.name);
             deletedCount++;
         } else {
@@ -102,6 +138,7 @@ async function cleanup() {
 
     console.log("\n--- CLEANUP REPORT ---");
     console.log(`Verified Safe: ${keptCount}`);
+    console.log(`Renamed: ${renamedCount}`);
     console.log(`Deleted: ${deletedCount}`);
     console.log("Removed Chapters:", Array.from(unknownChapters));
     console.log("----------------------");
