@@ -195,8 +195,8 @@ export const ModernCarousel = () => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Fixed Aspect Ratio Container for Stability */}
-            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] md:rounded-2xl overflow-hidden md:border md:border-pw-border md:shadow-pw-md bg-gray-900 group">
+            {/* Flexible Height on Mobile, Fixed Aspect on Desktop */}
+            <div className="relative w-full min-h-[280px] h-auto md:h-full md:aspect-[21/9] rounded-2xl md:rounded-2xl overflow-hidden md:border md:border-pw-border md:shadow-pw-md bg-gray-900 group">
                 <AnimatePresence initial={false} custom={direction} mode="popLayout">
                     <motion.div
                         key={current}
