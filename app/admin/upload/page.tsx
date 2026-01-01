@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Header } from '@/components/shared/Header'
 import { MediaUploader } from '@/components/admin/MediaUploader'
-import { FaBook, FaSave, FaLock } from 'react-icons/fa'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore'
+import { FaBook, FaSave, FaLock, FaTrash } from 'react-icons/fa'
 import { useAuth } from '@/hooks/useAuth'
 
 const UploadPage = () => {
@@ -17,6 +17,7 @@ const UploadPage = () => {
         subject: 'physics',
         chapter: '',
         class: '10',
+        board: 'CBSE',
         pdfUrl: '',
     })
 
@@ -43,6 +44,34 @@ const UploadPage = () => {
         setFormData(prev => ({ ...prev, pdfUrl: url }))
     }
 
+    const [notes, setNotes] = useState<any[]>([])
+
+    // Fetch Notes on Load
+    useEffect(() => {
+        const fetchNotes = async () => {
+            try {
+                const q = query(collection(db, 'notes'), orderBy('uploadedAt', 'desc'))
+                const snapshot = await getDocs(q)
+                setNotes(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+            } catch (error) {
+                console.error("Error fetching notes:", error)
+            }
+        }
+        fetchNotes()
+    }, [])
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this note?')) return
+        try {
+            await deleteDoc(doc(db, 'notes', id))
+            setNotes(prev => prev.filter(note => note.id !== id))
+            alert('Note deleted!')
+        } catch (error) {
+            console.error("Error deleting note:", error)
+            alert('Failed to delete note.')
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!formData.pdfUrl) {
@@ -52,12 +81,16 @@ const UploadPage = () => {
 
         setLoading(true)
         try {
-            await addDoc(collection(db, 'notes'), {
+            const docRef = await addDoc(collection(db, 'notes'), {
                 ...formData,
                 uploadedAt: serverTimestamp(),
                 downloadCount: 0
             })
             alert('Note uploaded successfully!')
+
+            // Add to local list immediately
+            setNotes(prev => [{ id: docRef.id, ...formData, uploadedAt: new Date() }, ...prev])
+
             setFormData({
                 title: '',
                 subject: 'physics',
@@ -138,6 +171,20 @@ const UploadPage = () => {
                                     <option value="12">Class 12</option>
                                 </select>
                             </div>
+                            <div className="col-span-2">
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Board</label>
+                                <select
+                                    name="board"
+                                    value={formData.board}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-pw-indigo focus:ring-2 focus:ring-pw-indigo/20 transition-all outline-none bg-white"
+                                >
+                                    <option value="CBSE">CBSE</option>
+                                    <option value="Bihar Board">Bihar Board</option>
+                                    <option value="ICSE">ICSE</option>
+                                    <option value="State Board">Other State Board</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div>
@@ -178,6 +225,48 @@ const UploadPage = () => {
                         </button>
                     </form>
                 </motion.div>
+
+                {/* Manage Existing Notes */}
+                <div className="mt-12 mb-8">
+                    <h2 className="text-xl font-bold text-pw-violet mb-4">Manage Uploaded Notes</h2>
+                    <div className="bg-white rounded-3xl p-6 shadow-pw-sm border border-pw-border">
+                        {/* List Header */}
+                        <div className="grid grid-cols-12 gap-4 border-b border-gray-100 pb-4 mb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            <div className="col-span-1">#</div>
+                            <div className="col-span-4">Title</div>
+                            <div className="col-span-2">Class</div>
+                            <div className="col-span-2">Board</div>
+                            <div className="col-span-2">Subject</div>
+                            <div className="col-span-1 text-right">Action</div>
+                        </div>
+
+                        {/* List Items */}
+                        {notes.length === 0 ? (
+                            <p className="text-center text-gray-400 py-8">No notes found. Upload one above!</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {notes.map((note, index) => (
+                                    <div key={note.id} className="grid grid-cols-12 gap-4 items-center p-3 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-50 last:border-0">
+                                        <div className="col-span-1 text-gray-400 font-mono text-xs">{index + 1}</div>
+                                        <div className="col-span-4 font-bold text-gray-700 truncate" title={note.title}>{note.title}</div>
+                                        <div className="col-span-2 text-sm text-gray-500">Class {note.class}</div>
+                                        <div className="col-span-2 text-sm text-gray-500">{note.board || 'CBSE'}</div>
+                                        <div className="col-span-2 text-sm text-gray-500 capitalize">{note.subject}</div>
+                                        <div className="col-span-1 text-right">
+                                            <button
+                                                onClick={() => handleDelete(note.id)}
+                                                className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-all"
+                                                title="Delete Note"
+                                            >
+                                                <FaTrash />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     )
