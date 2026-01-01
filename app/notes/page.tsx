@@ -6,8 +6,6 @@ import { FaFilePdf, FaFlask, FaProjectDiagram, FaBookOpen } from 'react-icons/fa
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase'; // Assuming you have a firebase.ts file exporting 'db'
 
 type TabType = 'formulas' | 'mindmaps' | 'notes';
 
