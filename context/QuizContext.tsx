@@ -298,6 +298,9 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             const resultsRef = collection(db, 'users', user.uid, 'quiz_results');
 
             // Add new result
+            // Ensure answers are serialized (Firestore doesn't like undefined in arrays sometimes)
+            const serializedAnswers = answers.map(a => (a === undefined || a === null) ? null : a)
+
             await addDoc(resultsRef, {
                 score: finalScore,
                 totalMarks,
@@ -305,14 +308,13 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 totalQuestions: questions.length,
                 date: new Date().toISOString(),
                 subject: questions[0]?.subject || 'mixed',
-                duration: endTime - startTime || 0,
-                xpEarned, // Save XP earned for display
+                duration: (endTime || Date.now()) - startTime || 0, // Fallback if endTime is missing
+                xpEarned,
                 questions,
-                answers: answers.map(a => a ?? null) // Ensure no undefined
+                answers: serializedAnswers
             })
 
             // Maintenance: Run asynchronously to not block UI
-            // Keep only last 50 results
             const cleanUpHistory = async () => {
                 try {
                     const q = query(resultsRef, orderBy('date', 'desc'));
@@ -322,7 +324,6 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                         const docsToDelete = snapshot.docs.slice(50);
                         const deletePromises = docsToDelete.map(doc => deleteDoc(doc.ref));
                         await Promise.all(deletePromises);
-                        console.log(`Cleaned up ${docsToDelete.length} old quiz results.`);
                     }
                 } catch (e) {
                     console.error("Cleanup failed", e);
@@ -332,20 +333,11 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
             // 2. Calculate new stats
             const currentStats = userProfile?.stats || { quizzesTaken: 0, avgScore: 0, rank: 0 }
-
             const newQuizzesTaken = (currentStats.quizzesTaken || 0) + 1
             const oldTotalScore = (currentStats.avgScore || 0) * (currentStats.quizzesTaken || 0)
             const newAvgScore = Math.round((oldTotalScore + percentage) / newQuizzesTaken)
 
-            console.log("Updating Stats:", {
-                old: currentStats,
-                new: {
-                    quizzesTaken: newQuizzesTaken,
-                    avgScore: newAvgScore,
-                }
-            });
-
-            // 3. Calculate Rank (Optimized Count Query)
+            // 3. Calculate Rank
             const q = query(
                 collection(db, 'users'),
                 where('stats.avgScore', '>', newAvgScore)
@@ -365,41 +357,35 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             // 5. Award XP (Gamification)
             if (xpEarned > 0) {
                 await addXP(xpEarned)
-                console.log(`Awarded ${xpEarned} XP for ${correctAnswers} correct answers`)
             }
 
             // 6. TRACK MISTAKES (Smart Notebook)
-            // Identify wrong answers and save them to 'mistakes' subcollection
+            // Identify wrong answers and save them. Skips (null) are NOT saved as mistakes currently.
+            // If user wants skips to be mistakes, change condition to: answers[i] !== q.correctAnswer
             const mistakes = questions.filter((q, i) => answers[i] !== null && answers[i] !== q.correctAnswer);
 
             if (mistakes.length > 0) {
-                console.log(`Saving ${mistakes.length} mistakes to notebook...`);
-                // Using map to create promises, but we MUST await them all here to ensure safety
                 const batchPromises = mistakes.map(async (q) => {
-                    // Sanity check for ID
                     if (!q.id) return;
-
                     const mistakeRef = doc(db, 'users', user.uid, 'mistakes', q.id);
-                    // Use setDoc with merge to update timestamp/count if it already exists
                     await setDoc(mistakeRef, {
                         question: q.question,
                         options: q.options,
                         correctAnswer: q.correctAnswer,
-                        userAnswer: answers[questions.indexOf(q)],
+                        userAnswer: answers[questions.indexOf(q)] ?? null,
                         subject: q.subject,
                         chapter: q.chapter || 'General',
                         timestamp: Date.now(),
                         difficulty: q.difficulty || 'medium'
                     }, { merge: true });
                 });
-
-                await Promise.all(batchPromises); // Explicitly await all mistake writes
-                console.log("Mistakes saved successfully.");
+                await Promise.all(batchPromises);
             }
 
         } catch (error) {
             console.error("Error saving quiz result:", error)
-            throw error; // Re-throw to be caught in nextQuestion
+            // Don't re-throw. We want to allow the UI to finish even if saving fails.
+            // The user will see locally calculated results (from Context) even if Firestore fails.
         }
     }
 
