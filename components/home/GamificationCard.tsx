@@ -29,14 +29,17 @@ export const GamificationCard = () => {
         achievements: rawGamification?.achievements || []
     };
 
-    // Level Logic
-    const calculatedLevel = Math.floor(stats.xp / 100) + 1
-    const xpForThisLevel = (calculatedLevel - 1) * 100
+    // Level Logic: Quadratic Progression
+    // Level L requires total XP = 50 * L * (L-1) to REACH (start of level L)
+    // XP needed to pass Level L = L * 100.
+    const calculatedLevel = Math.floor((1 + Math.sqrt(1 + 8 * (stats.xp / 100))) / 2);
 
-    // Progress within current level
-    const xpInCurrentLevel = stats.xp - xpForThisLevel
-    const progress = Math.min(100, Math.max(0, (xpInCurrentLevel / 100) * 100))
-    const xpNeeded = 100 - xpInCurrentLevel
+    const xpStartOfCurrentLevel = 50 * (calculatedLevel - 1) * calculatedLevel;
+    const xpRequiredForNextLevel = calculatedLevel * 100; // Requirement implies L * 100 to pass
+
+    const xpInCurrentLevel = stats.xp - xpStartOfCurrentLevel;
+    const xpNeeded = xpRequiredForNextLevel - xpInCurrentLevel;
+    const progress = Math.min(100, Math.max(0, (xpInCurrentLevel / xpRequiredForNextLevel) * 100));
 
     // Fetch AI Insights
     useEffect(() => {
