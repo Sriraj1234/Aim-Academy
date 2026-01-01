@@ -34,9 +34,9 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-pw-surface flex flex-col text-gray-900 font-sans selection:bg-pw-indigo selection:text-white overflow-x-hidden">
 
-      {/* Ambient Glows - PW Light Theme */}
-      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] bg-pw-indigo/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
-      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-pw-violet/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      {/* Ambient Glows - Hidden on mobile to prevent content squeeze */}
+      <div className="hidden md:block fixed top-[-20%] left-[-10%] w-[40%] h-[40%] bg-pw-indigo/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      <div className="hidden md:block fixed bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-pw-violet/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
       <main className="relative pt-16 z-10 space-y-24 pb-24">
 
