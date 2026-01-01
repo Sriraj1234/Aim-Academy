@@ -1,0 +1,16 @@
+=== DATABASE REPORT ===
+Total Questions: 13151
+--------------------------
+mathematics          : 4658
+hindi                : 1728
+geography            : 1666
+history              : 1185
+biology              : 1066
+economics            : 824
+chemistry            : 604
+physics              : 495
+political science    : 487
+disaster management  : 381
+social science       : 53
+social studies       : 4
+==========================
