@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { FaTrash, FaCheckCircle, FaTimesCircle, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
+import Link from 'next/link';
+import { FaTrash, FaCheckCircle, FaTimesCircle, FaMapMarkerAlt, FaPhone, FaPlus } from 'react-icons/fa';
 import { Header } from '@/components/shared/Header';
 
 interface Tuition {
@@ -71,8 +72,16 @@ export default function ManageTuitionsPage() {
                         <h1 className="text-3xl font-display font-bold text-pw-violet mb-1">Manage Tuitions</h1>
                         <p className="text-gray-500 font-medium">Verify and manage offline tuition listings.</p>
                     </div>
-                    <div className="bg-white px-4 py-2 rounded-xl shadow-sm border font-bold text-pw-indigo">
-                        Total: {tuitions.length}
+                    <div className="flex items-center gap-3">
+                        <div className="bg-white px-4 py-2 rounded-xl shadow-sm border font-bold text-pw-indigo">
+                            Total: {tuitions.length}
+                        </div>
+                        <Link
+                            href="/admin/tuitions/add"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-pw-indigo text-white rounded-xl font-bold hover:bg-pw-violet transition-colors shadow-md"
+                        >
+                            <FaPlus /> Add New
+                        </Link>
                     </div>
                 </div>
 
