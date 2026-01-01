@@ -216,19 +216,25 @@ function SelectionContent() {
                         </button>
                     )}
 
-                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-black text-pw-violet capitalize mb-2 tracking-tight">
-                        {selectedSubject
-                            ? `${selectedSubject} Chapters`
-                            : selectedScience
-                                ? 'Select Branch'
-                                : `Practice Questions`}
-                    </h1>
+                    <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-black text-pw-violet capitalize tracking-tight">
+                            {selectedSubject
+                                ? `${selectedSubject} Chapters`
+                                : selectedScience
+                                    ? 'Select Branch'
+                                    : `Practice Questions`}
+                        </h1>
+                        <span className="px-2 py-1 bg-pw-surface border border-pw-border rounded text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            {userProfile?.board || 'CBSE'} {userProfile?.class || '10'}
+                        </span>
+                    </div>
+
                     <p className="text-pw-indigo/80 font-medium">
                         {selectedSubject
                             ? `Select a chapter from ${selectedSubject} to practice.`
                             : selectedScience
                                 ? 'Choose a science branch to continue.'
-                                : `Select a subject for ${userProfile?.board?.toUpperCase()} Class ${userProfile?.class}`}
+                                : `Select a subject for ${userProfile?.board?.toUpperCase() || 'CBSE'} Class ${userProfile?.class || '10'}`}
                     </p>
 
                     {/* AI Revision Notes Integration */}
