@@ -61,12 +61,22 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
                 setIsConnected(true);
                 setStatus('Connected');
 
-                // Create and publish local mic track
-                const micTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                // Enable Active Speaker Detection (helps with switching on some devices)
+                client.enableAudioVolumeIndicator();
+
+                // Create and publish local mic track with OPTIMIZED config for Mobile
+                // "speech_standard" = 32 kHz, 18 Kbps mono. (Default is often higher)
+                // This significantly reduces bandwidth/CPU usage for 4+ users.
+                const micTrack = await AgoraRTC.createMicrophoneAudioTrack({
+                    encoderConfig: "speech_standard",
+                    aec: true, // Echo Cancellation
+                    ans: true  // Noise Suppression
+                });
+
                 localTrackRef.current = micTrack;
                 micTrack.setEnabled(false); // Start muted
                 await client.publish(micTrack);
-                console.log('[Voice] Local mic published');
+                console.log('[Voice] Local mic published (Speech Mode)');
 
             } catch (err: any) {
                 console.error('[Voice] Init Error:', err);
