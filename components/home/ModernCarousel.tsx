@@ -222,7 +222,7 @@ export const ModernCarousel = () => {
                         {/* Special Background for New Year Slide */}
                         {slides[current].id === 5 && (
                             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                                <div className="absolute -right-10 top-10 text-[120px] md:text-[250px] font-black text-white/5 md:text-white/5 leading-none tracking-tighter select-none z-0">
+                                <div className="hidden md:block absolute -right-10 top-10 text-[120px] md:text-[250px] font-black text-white/5 md:text-white/5 leading-none tracking-tighter select-none z-0">
                                     2026
                                 </div>
                                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.3)_100%)]" />
