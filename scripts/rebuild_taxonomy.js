@@ -3,8 +3,13 @@ const https = require('https');
 const PROJECT_ID = "aim-83922";
 const DATABASE_PATH = `/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
-function runQuery() {
-    return new Promise((resolve, reject) => {
+async function getAllQuestions() {
+    let allDocs = [];
+    let offset = 0;
+    const LIMIT = 5000;
+
+    while (true) {
+        console.log(`Fetching batch at offset ${offset}...`);
         const query = {
             structuredQuery: {
                 from: [{ collectionId: 'questions' }],
@@ -17,29 +22,47 @@ function runQuery() {
                         ]
                     }
                 },
-                limit: 5000 // Grab enough to cover most
+                limit: LIMIT,
+                offset: offset
             }
         };
 
-        const options = {
-            hostname: 'firestore.googleapis.com',
-            path: `${DATABASE_PATH}:runQuery`,
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        };
+        const batch = await new Promise((resolve, reject) => {
+            const options = {
+                hostname: 'firestore.googleapis.com',
+                path: `${DATABASE_PATH}:runQuery`,
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            };
 
-        const req = https.request(options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                const results = JSON.parse(data);
-                const docs = results.filter(r => r.document).map(r => r.document);
-                resolve(docs);
+            const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    const results = JSON.parse(data);
+                    if (!Array.isArray(results)) {
+                        console.error("Query Error or Empty:", results);
+                        resolve([]);
+                        return;
+                    }
+                    const docs = results.filter(r => r.document).map(r => r.document);
+                    resolve(docs);
+                });
             });
+            req.write(JSON.stringify(query));
+            req.end();
         });
-        req.write(JSON.stringify(query));
-        req.end();
-    });
+
+        if (batch.length === 0) break;
+
+        allDocs = allDocs.concat(batch);
+        offset += LIMIT;
+        console.log(`Received ${batch.length} docs. Total so far: ${allDocs.length}`);
+
+        if (batch.length < LIMIT) break; // End of collection
+    }
+
+    return allDocs;
 }
 
 function updateTaxonomy(data) {
@@ -59,11 +82,12 @@ function updateTaxonomy(data) {
 }
 
 async function rebuild() {
-    console.log("Fetching ALL BSEB 10 questions...");
-    const docs = await runQuery();
-    console.log(`Fetched ${docs.length} questions.`);
+    console.log("Fetching ALL BSEB 10 questions (Paginated)...");
+    const docs = await getAllQuestions();
+    console.log(`Total Fetched Questions: ${docs.length}`);
 
-    const taxonomy = {}; // subject -> { chapter -> count }
+    const taxonomy = {};
+    const debugSubjects = new Set();
 
     docs.forEach(doc => {
         const fields = doc.fields;
@@ -73,15 +97,22 @@ async function rebuild() {
         if (subject === 'math') subject = 'mathematics';
         if (subject.includes('social')) subject = 'social science';
 
+        // Normalize spaces
+        subject = subject.trim();
+        debugSubjects.add(subject);
+
         let chapter = fields.chapter?.stringValue || 'General';
 
         if (!taxonomy[subject]) taxonomy[subject] = {};
         taxonomy[subject][chapter] = (taxonomy[subject][chapter] || 0) + 1;
     });
 
-    console.log("Calculated Taxonomy:", JSON.stringify(taxonomy, null, 2));
+    console.log("Found Subjects:", Array.from(debugSubjects));
+    console.log("Calculated Taxonomy Stats:");
+    Object.keys(taxonomy).forEach(s => {
+        console.log(`  ${s}: ${Object.keys(taxonomy[s]).length} chapters, ${Object.values(taxonomy[s]).reduce((a, b) => a + b, 0)} Qs`);
+    });
 
-    // Construct Firestore Update
     const subjectsList = Object.keys(taxonomy);
     const existingChaptersMap = {};
 
@@ -120,7 +151,7 @@ async function rebuild() {
 
     console.log("Updating Firestore...");
     await updateTaxonomy(updatePayload);
-    console.log("DONE!");
+    console.log("DONE! Taxonomy fully synchronized.");
 }
 
 rebuild();
