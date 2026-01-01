@@ -23,17 +23,17 @@ export default function DashboardPage() {
             <Header />
 
             <main className="pt-20 pb-20 space-y-6">
-                <div className="px-4 max-w-7xl mx-auto">
+                <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                     <DashboardHeader />
                 </div>
 
                 {/* Hero Carousel - PW Style - Wrapped to prevent overflow */}
-                <div className="w-full max-w-full">
+                <div className="w-full max-w-full flex justify-center">
                     <ModernCarousel />
                 </div>
 
-                <div className="px-4 md:px-5 max-w-7xl mx-auto space-y-6 overflow-x-hidden">
-                    <div className="grid lg:grid-cols-3 gap-6">
+                <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 overflow-x-hidden w-full flex flex-col items-center">
+                    <div className="w-full grid lg:grid-cols-3 gap-6">
                         {/* Left Column: Stats & Gamification - Wrapped with w-full for safety */}
                         <div className="lg:col-span-2 space-y-6 w-full min-w-0">
                             <DailyChallengeCard />
