@@ -101,7 +101,7 @@ export const AIPerformanceCard = () => {
     return (
         <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-pw-border shadow-md mb-6 relative overflow-hidden group">
             {/* Header / Loading Overlay */}
-            <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="flex flex-wrap items-center justify-between mb-3 md:mb-4 gap-y-2">
                 <div className="flex items-center gap-2 md:gap-3">
                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 shrink-0">
                         <FaRobot className="text-sm md:text-base" />
