@@ -164,7 +164,7 @@ export const GamificationCard = () => {
 
                     {/* XP & Level Info (Right) - Ensure min-w-0 for flex child truncation */}
                     <div className="flex-1 w-full min-w-0">
-                        <div className="flex justify-between items-end mb-2 md:mb-3">
+                        <div className="flex flex-wrap justify-between items-end mb-2 md:mb-3 gap-y-2">
                             <div>
                                 <p className="text-2xl md:text-3xl font-black text-pw-violet flex items-center gap-2">
                                     {stats.xp} <span className="text-xs md:text-sm font-bold text-gray-500 self-end mb-1">Total XP</span>
