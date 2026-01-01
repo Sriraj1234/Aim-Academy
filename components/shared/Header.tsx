@@ -23,7 +23,7 @@ export const Header = () => {
                     </span>
                 </Link>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                     {/* Theme & Sound Toggles Removed as per request */}
 
                     {user ? (
@@ -31,20 +31,20 @@ export const Header = () => {
                             <motion.div
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-pw-surface hover:bg-pw-lavender/20 border border-pw-border transition-all cursor-pointer"
+                                className="flex items-center gap-2 px-2 py-1 md:px-3 md:py-1.5 rounded-full bg-pw-surface hover:bg-pw-lavender/20 border border-pw-border transition-all cursor-pointer"
                             >
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pw-indigo to-pw-violet text-white flex items-center justify-center text-sm font-bold shadow-pw-sm">
+                                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-pw-indigo to-pw-violet text-white flex items-center justify-center text-xs md:text-sm font-bold shadow-pw-sm">
                                     {user.email?.[0].toUpperCase() || <FaUserCircle />}
                                 </div>
                             </motion.div>
                         </Link>
                     ) : (
                         <>
-                            <Link href="/login">
+                            <Link href="/login" className="hidden sm:block">
                                 <Button variant="ghost" size="sm" className="text-pw-violet hover:bg-pw-lavender/20">Login</Button>
                             </Link>
                             <Link href="/onboarding">
-                                <Button size="sm" className="bg-pw-indigo hover:bg-pw-violet text-white border-0 shadow-pw-md">Get Started</Button>
+                                <Button size="sm" className="bg-pw-indigo hover:bg-pw-violet text-white border-0 shadow-pw-md text-xs md:text-sm px-3 md:px-4">Get Started</Button>
                             </Link>
                         </>
                     )}
