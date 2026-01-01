@@ -96,48 +96,48 @@ export const GamificationCard = () => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full relative z-10 group p-6 md:p-8 bg-white rounded-2xl border border-pw-border shadow-pw-md"
+            className="w-full relative z-10 group p-4 md:p-8 bg-white rounded-2xl border border-pw-border shadow-pw-md overflow-hidden"
         >
             {/* Subtle Accent Gradient Top */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pw-lavender via-pw-indigo to-pw-violet rounded-t-2xl" />
 
             <div className="relative z-10">
                 {/* Header Row */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-wrap items-center justify-between mb-4 md:mb-6 gap-3">
                     <div>
-                        <h3 className="text-2xl font-display font-bold text-pw-violet leading-tight">Your Progress</h3>
-                        <p className="text-pw-indigo font-medium">Keep climbing, {user?.displayName?.split(' ')[0] || 'Champion'}! 🚀</p>
+                        <h3 className="text-xl md:text-2xl font-display font-bold text-pw-violet leading-tight">Your Progress</h3>
+                        <p className="text-sm md:text-base text-pw-indigo font-medium line-clamp-1">Keep climbing, {user?.displayName?.split(' ')[0] || 'Champion'}! 🚀</p>
                     </div>
 
                     {/* Streak Badge - PW Style */}
-                    <div className="relative group/streak cursor-pointer">
-                        <div className="relative bg-gradient-to-r from-orange-500 to-pw-red text-white px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-pw-md hover:shadow-pw-lg transition-shadow">
-                            <FaFire className={`text-xl ${stats.currentStreak > 0 ? 'animate-pulse' : 'opacity-50'}`} />
+                    <div className="relative group/streak cursor-pointer shrink-0">
+                        <div className="relative bg-gradient-to-r from-orange-500 to-pw-red text-white px-3 py-2 md:px-5 md:py-2.5 rounded-xl flex items-center gap-2 shadow-pw-md hover:shadow-pw-lg transition-shadow">
+                            <FaFire className={`text-sm md:text-xl ${stats.currentStreak > 0 ? 'animate-pulse' : 'opacity-50'}`} />
                             <div className="flex flex-col leading-none">
-                                <span className="text-lg font-bold">{stats.currentStreak}</span>
-                                <span className="text-[10px] uppercase tracking-wider opacity-80 font-bold">Day Streak</span>
+                                <span className="text-sm md:text-lg font-bold">{stats.currentStreak}</span>
+                                <span className="text-[8px] md:text-[10px] uppercase tracking-wider opacity-80 font-bold">Day Streak</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Main Stats Area */}
-                <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-8">
 
                     {/* Level Circular Progress (Left) */}
-                    <div className="relative w-32 h-32 flex-shrink-0">
+                    <div className="relative w-24 h-24 md:w-32 md:h-32 flex-shrink-0">
                         {/* SVG Circle - PW Colors */}
                         <svg className="w-full h-full transform -rotate-90">
                             {/* Track */}
-                            <circle cx="64" cy="64" r="58" className="stroke-pw-surface" strokeWidth="8" fill="transparent" />
+                            <circle cx="50%" cy="50%" r="45%" className="stroke-pw-surface" strokeWidth="8" fill="transparent" />
                             {/* Progress */}
                             <circle
-                                cx="64" cy="64" r="58"
+                                cx="50%" cy="50%" r="45%"
                                 strokeWidth="8"
                                 fill="transparent"
                                 strokeLinecap="round"
-                                strokeDasharray={364}
-                                strokeDashoffset={364 - (364 * progress) / 100}
+                                strokeDasharray="282"
+                                strokeDashoffset={`calc(282 - (282 * ${progress}) / 100)`}
                                 style={{ transition: "stroke-dashoffset 1s ease-out", stroke: "url(#pwGradient)" }}
                             />
                             <defs>
@@ -150,34 +150,34 @@ export const GamificationCard = () => {
 
                         {/* Inner Content */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                            <span className="text-xs font-bold uppercase text-pw-indigo tracking-wider">Level</span>
-                            <span className="text-4xl font-black text-pw-violet font-display">
+                            <span className="text-[10px] md:text-xs font-bold uppercase text-pw-indigo tracking-wider">Level</span>
+                            <span className="text-2xl md:text-4xl font-black text-pw-violet font-display">
                                 {calculatedLevel}
                             </span>
                         </div>
 
                         {/* Floating Crown Icon */}
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-br from-pw-indigo to-pw-violet text-white p-1.5 rounded-full shadow-pw-md border-2 border-white text-xs z-20">
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-gradient-to-br from-pw-indigo to-pw-violet text-white p-1 md:p-1.5 rounded-full shadow-pw-md border-2 border-white text-[10px] md:text-xs z-20">
                             <FaCrown />
                         </div>
                     </div>
 
-                    {/* XP & Level Info (Right) */}
-                    <div className="flex-1 w-full">
-                        <div className="flex justify-between items-end mb-3">
+                    {/* XP & Level Info (Right) - Ensure min-w-0 for flex child truncation */}
+                    <div className="flex-1 w-full min-w-0">
+                        <div className="flex justify-between items-end mb-2 md:mb-3">
                             <div>
-                                <p className="text-3xl font-black text-pw-violet flex items-center gap-2">
-                                    {stats.xp} <span className="text-sm font-bold text-gray-500 self-end mb-1">Total XP</span>
+                                <p className="text-2xl md:text-3xl font-black text-pw-violet flex items-center gap-2">
+                                    {stats.xp} <span className="text-xs md:text-sm font-bold text-gray-500 self-end mb-1">Total XP</span>
                                 </p>
                             </div>
-                            <div className="text-right">
-                                <p className="text-sm font-bold text-pw-indigo">{xpNeeded} XP</p>
-                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">To Level {calculatedLevel + 1}</p>
+                            <div className="text-right shrink-0">
+                                <p className="text-xs md:text-sm font-bold text-pw-indigo">{xpNeeded} XP</p>
+                                <p className="text-[10px] md:text-xs text-gray-500 font-medium uppercase tracking-wide">To Level {calculatedLevel + 1}</p>
                             </div>
                         </div>
 
                         {/* Custom Progress Bar - PW Style */}
-                        <div className="h-3 w-full bg-pw-surface rounded-full overflow-hidden border border-pw-border">
+                        <div className="h-2 md:h-3 w-full bg-pw-surface rounded-full overflow-hidden border border-pw-border">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${progress}%` }}
@@ -190,31 +190,31 @@ export const GamificationCard = () => {
                         </div>
 
                         {/* AI Insights Section - PW Style */}
-                        <div className="mt-5">
+                        <div className="mt-4 md:mt-5">
                             {loadingInsights ? (
-                                <div className="flex items-center gap-2 text-sm text-pw-indigo bg-pw-surface inline-flex px-3 py-1.5 rounded-lg border border-pw-border">
+                                <div className="flex items-center gap-2 text-xs md:text-sm text-pw-indigo bg-pw-surface inline-flex px-3 py-1.5 rounded-lg border border-pw-border">
                                     <FaSpinner className="animate-spin text-pw-indigo" />
-                                    <span>AI analyzing your progress...</span>
+                                    <span>AI analyzing...</span>
                                 </div>
                             ) : aiInsights ? (
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-3 text-sm bg-pw-lavender/10 px-4 py-3 rounded-xl border border-pw-lavender/30">
-                                        <div className="p-1.5 bg-pw-indigo/10 rounded-lg">
-                                            <FaRobot className="text-pw-indigo shrink-0" />
+                                <div className="space-y-2 md:space-y-3">
+                                    <div className="flex items-start gap-2 md:gap-3 text-xs md:text-sm bg-pw-lavender/10 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-pw-lavender/30">
+                                        <div className="p-1 md:p-1.5 bg-pw-indigo/10 rounded-lg shrink-0">
+                                            <FaRobot className="text-pw-indigo" />
                                         </div>
                                         <span className="text-gray-700 leading-relaxed">{aiInsights.summary}</span>
                                     </div>
                                     {aiInsights.tip && (
-                                        <div className="flex items-start gap-3 text-sm bg-orange-50 px-4 py-3 rounded-xl border border-orange-200">
-                                            <div className="p-1.5 bg-orange-100 rounded-lg">
-                                                <FaLightbulb className="text-orange-500 shrink-0" />
+                                        <div className="flex items-start gap-2 md:gap-3 text-xs md:text-sm bg-orange-50 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-orange-200">
+                                            <div className="p-1 md:p-1.5 bg-orange-100 rounded-lg shrink-0">
+                                                <FaLightbulb className="text-orange-500" />
                                             </div>
                                             <span className="text-gray-700 leading-relaxed">{aiInsights.tip}</span>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-sm text-gray-600 font-medium flex items-center gap-2 bg-pw-surface inline-block px-4 py-2 rounded-xl border border-pw-border hover:bg-pw-lavender/10 transition-colors">
+                                <p className="text-xs md:text-sm text-gray-600 font-medium flex items-center gap-2 bg-pw-surface inline-block px-3 py-1.5 md:px-4 md:py-2 rounded-xl border border-pw-border hover:bg-pw-lavender/10 transition-colors">
                                     <FaBolt className="text-pw-indigo" />
                                     <span>You are doing great! Keep solving quizzes to level up.</span>
                                 </p>
@@ -222,8 +222,8 @@ export const GamificationCard = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="mt-6 flex gap-3">
-                            <a href="/leaderboard" className="flex items-center gap-2 px-4 py-2 bg-yellow-50 text-yellow-700 rounded-xl font-bold text-sm border border-yellow-200 hover:bg-yellow-100 transition-all active:scale-95 transform">
+                        <div className="mt-4 md:mt-6 flex gap-3">
+                            <a href="/leaderboard" className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-yellow-50 text-yellow-700 rounded-xl font-bold text-xs md:text-sm border border-yellow-200 hover:bg-yellow-100 transition-all active:scale-95 transform">
                                 <FaCrown className="text-yellow-500" /> View Leaderboard
                             </a>
                         </div>
