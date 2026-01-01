@@ -150,29 +150,26 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                             referrerPolicy="no-referrer"
                                                         />
                                                     </div>
-                                                    </div>
                                                     {/* Online Status Indicator */}
-                                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white rounded-full flex items-center justify-center ${
-                                                        onlineUsers[friend.uid] === 'playing' ? 'bg-orange-500' :
+                                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white rounded-full flex items-center justify-center ${onlineUsers[friend.uid] === 'playing' ? 'bg-orange-500' :
                                                         onlineUsers[friend.uid] === 'in-lobby' ? 'bg-blue-500' :
-                                                        onlineUsers[friend.uid] === 'online' ? 'bg-green-500' :
-                                                        'bg-gray-400'
-                                                    }`}>
+                                                            onlineUsers[friend.uid] === 'online' ? 'bg-green-500' :
+                                                                'bg-gray-400'
+                                                        }`}>
                                                         {onlineUsers[friend.uid] && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="font-bold text-pw-violet truncate">{friend.displayName}</h3>
-                                                    <p className={`text-xs font-bold ${
-                                                        onlineUsers[friend.uid] === 'playing' ? 'text-orange-500' :
+                                                    <p className={`text-xs font-bold ${onlineUsers[friend.uid] === 'playing' ? 'text-orange-500' :
                                                         onlineUsers[friend.uid] === 'in-lobby' ? 'text-blue-500' :
-                                                        onlineUsers[friend.uid] === 'online' ? 'text-green-600' :
-                                                        'text-gray-400'
-                                                    }`}>
+                                                            onlineUsers[friend.uid] === 'online' ? 'text-green-600' :
+                                                                'text-gray-400'
+                                                        }`}>
                                                         {onlineUsers[friend.uid] === 'playing' ? 'Playing Quiz 🎮' :
-                                                         onlineUsers[friend.uid] === 'in-lobby' ? 'In Lobby ⏳' :
-                                                         onlineUsers[friend.uid] === 'online' ? 'Online' : 
-                                                         'Offline'}
+                                                            onlineUsers[friend.uid] === 'in-lobby' ? 'In Lobby ⏳' :
+                                                                onlineUsers[friend.uid] === 'online' ? 'Online' :
+                                                                    'Offline'}
                                                     </p>
                                                 </div>
                                                 <div className="flex gap-2">
@@ -196,156 +193,156 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                     )}
                                                 </div>
                                             </motion.div>
-                            ))
+                                        ))
                                     )}
-                        </div>
+                                </div>
                             )}
 
-                        {activeTab === 'requests' && (
-                            <div className="space-y-3">
-                                {incomingRequests.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-64 text-center p-6 opacity-60">
-                                        <FaEnvelope className="text-4xl text-gray-300 mb-3" />
-                                        <p className="text-gray-500 font-medium">No pending requests</p>
-                                    </div>
-                                ) : (
-                                    incomingRequests.map((req, idx) => (
-                                        <motion.div
-                                            key={req.uid}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            className="bg-white p-4 rounded-2xl shadow-pw-sm border border-pw-border"
-                                        >
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <img
-                                                    src={req.photoURL || `https://ui-avatars.com/api/?name=${req.displayName}`}
-                                                    className="w-10 h-10 rounded-full object-cover bg-gray-100 border border-pw-border"
-                                                    alt="avatar"
-                                                    referrerPolicy="no-referrer"
-                                                />
-                                                <div>
-                                                    <h3 className="font-bold text-pw-violet">{req.displayName}</h3>
-                                                    <p className="text-xs text-pw-indigo font-medium">Wants to be your friend</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => acceptFriendRequest(req.uid)}
-                                                    className="flex-1 bg-pw-indigo text-white py-2.5 rounded-xl text-sm font-bold shadow-pw-md hover:bg-pw-violet transition-all flex items-center justify-center gap-2 active:scale-95"
-                                                >
-                                                    <FaCheck /> Accept
-                                                </button>
-                                                <button
-                                                    onClick={() => rejectFriendRequest(req.uid)}
-                                                    className="flex-1 bg-pw-surface text-gray-600 py-2.5 rounded-xl text-sm font-bold border border-pw-border hover:bg-white hover:text-pw-red transition-all flex items-center justify-center gap-2 active:scale-95"
-                                                >
-                                                    <FaTimes /> Reject
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    ))
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'add' && (
-                            <div className="space-y-6">
-                                {/* Local Students Section */}
-                                {userProfile?.pincode ? (
-                                    <LocalStudentsSection
-                                        currentUserId={user?.uid}
-                                        userPincode={userProfile.pincode}
-                                        existingFriendIds={friends.map(f => f.uid)}
-                                        onRequestSent={(uid: string) => {
-                                            // Optimistic update or just let the user know
-                                            // Ideally we'd add this ID to a 'success' set
-                                        }}
-                                        onSendRequest={async (uid: string, email: string) => {
-                                            try {
-                                                await sendFriendRequest(email);
-                                                setSuccess(`Request sent to ${email}!`);
-                                                setTimeout(() => setSuccess(''), 3000);
-                                            } catch (e: any) {
-                                                setError(e.message);
-                                                setTimeout(() => setError(''), 3000);
-                                            }
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-yellow-800 text-sm">
-                                        <p className="font-bold mb-1">📍 Local Ranks Unavailable</p>
-                                        <p>Please update your PIN Code in profile to see top students near you.</p>
-                                    </div>
-                                )}
-
-
-                                <div className="bg-white p-5 rounded-2xl shadow-pw-sm border border-pw-border">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="p-1.5 bg-pw-indigo/10 rounded-lg text-pw-indigo">
-                                            <FaSearch />
+                            {activeTab === 'requests' && (
+                                <div className="space-y-3">
+                                    {incomingRequests.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center h-64 text-center p-6 opacity-60">
+                                            <FaEnvelope className="text-4xl text-gray-300 mb-3" />
+                                            <p className="text-gray-500 font-medium">No pending requests</p>
                                         </div>
-                                        <label className="text-sm font-bold text-pw-violet">Add by Email</label>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="email"
-                                            placeholder="friend@example.com"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            className="flex-1 bg-pw-surface border border-pw-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-pw-indigo/20 focus:border-pw-indigo outline-none transition-all placeholder-gray-400 text-pw-violet"
-                                        />
-                                        <button
-                                            onClick={handleSendRequest}
-                                            disabled={inviteLoading || !email}
-                                            className="bg-pw-indigo text-white px-5 py-2 rounded-xl hover:bg-pw-violet disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-pw-md font-bold"
-                                        >
-                                            {inviteLoading ? (
-                                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-                                            ) : <FaUserPlus />}
-                                        </button>
-                                    </div>
-                                    {error && <p className="text-pw-red text-xs mt-3 bg-red-50 p-2 rounded-lg border border-red-100 flex items-center gap-1"><FaTimes className="shrink-0" /> {error}</p>}
-                                    {success && <p className="text-green-600 text-xs mt-3 bg-green-50 p-2 rounded-lg border border-green-100 flex items-center gap-1"><FaCheck className="shrink-0" /> {success}</p>}
-                                </div>
-
-                                <div className="relative overflow-hidden bg-gradient-to-br from-pw-indigo to-pw-violet p-6 rounded-2xl shadow-pw-lg text-white">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-10 translate-x-10 pointer-events-none" />
-
-                                    <div className="relative z-10">
-                                        <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
-                                            <FaShareAlt className="text-pw-lavender" />
-                                            Invite Friends
-                                        </h4>
-                                        <p className="text-sm text-white/80 mb-4 leading-relaxed">
-                                            Share your email with friends so they can add you directly.
-                                        </p>
-
-                                        <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 flex items-center justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <p className="text-[10px] text-pw-lavender uppercase font-bold tracking-wider mb-0.5">Your Email</p>
-                                                <p className="text-sm font-bold truncate pr-2">{user?.email}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(user?.email || '')
-                                                    setSuccess('Email copied to clipboard!')
-                                                    setTimeout(() => setSuccess(''), 2000)
-                                                }}
-                                                className="px-3 py-1.5 bg-white text-pw-indigo rounded-lg text-xs font-bold hover:bg-pw-lavender transition-colors"
+                                    ) : (
+                                        incomingRequests.map((req, idx) => (
+                                            <motion.div
+                                                key={req.uid}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: idx * 0.05 }}
+                                                className="bg-white p-4 rounded-2xl shadow-pw-sm border border-pw-border"
                                             >
-                                                Copy
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <img
+                                                        src={req.photoURL || `https://ui-avatars.com/api/?name=${req.displayName}`}
+                                                        className="w-10 h-10 rounded-full object-cover bg-gray-100 border border-pw-border"
+                                                        alt="avatar"
+                                                        referrerPolicy="no-referrer"
+                                                    />
+                                                    <div>
+                                                        <h3 className="font-bold text-pw-violet">{req.displayName}</h3>
+                                                        <p className="text-xs text-pw-indigo font-medium">Wants to be your friend</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => acceptFriendRequest(req.uid)}
+                                                        className="flex-1 bg-pw-indigo text-white py-2.5 rounded-xl text-sm font-bold shadow-pw-md hover:bg-pw-violet transition-all flex items-center justify-center gap-2 active:scale-95"
+                                                    >
+                                                        <FaCheck /> Accept
+                                                    </button>
+                                                    <button
+                                                        onClick={() => rejectFriendRequest(req.uid)}
+                                                        className="flex-1 bg-pw-surface text-gray-600 py-2.5 rounded-xl text-sm font-bold border border-pw-border hover:bg-white hover:text-pw-red transition-all flex items-center justify-center gap-2 active:scale-95"
+                                                    >
+                                                        <FaTimes /> Reject
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'add' && (
+                                <div className="space-y-6">
+                                    {/* Local Students Section */}
+                                    {userProfile?.pincode ? (
+                                        <LocalStudentsSection
+                                            currentUserId={user?.uid}
+                                            userPincode={userProfile.pincode}
+                                            existingFriendIds={friends.map(f => f.uid)}
+                                            onRequestSent={(uid: string) => {
+                                                // Optimistic update or just let the user know
+                                                // Ideally we'd add this ID to a 'success' set
+                                            }}
+                                            onSendRequest={async (uid: string, email: string) => {
+                                                try {
+                                                    await sendFriendRequest(email);
+                                                    setSuccess(`Request sent to ${email}!`);
+                                                    setTimeout(() => setSuccess(''), 3000);
+                                                } catch (e: any) {
+                                                    setError(e.message);
+                                                    setTimeout(() => setError(''), 3000);
+                                                }
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-yellow-800 text-sm">
+                                            <p className="font-bold mb-1">📍 Local Ranks Unavailable</p>
+                                            <p>Please update your PIN Code in profile to see top students near you.</p>
+                                        </div>
+                                    )}
+
+
+                                    <div className="bg-white p-5 rounded-2xl shadow-pw-sm border border-pw-border">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 bg-pw-indigo/10 rounded-lg text-pw-indigo">
+                                                <FaSearch />
+                                            </div>
+                                            <label className="text-sm font-bold text-pw-violet">Add by Email</label>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="email"
+                                                placeholder="friend@example.com"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                className="flex-1 bg-pw-surface border border-pw-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-pw-indigo/20 focus:border-pw-indigo outline-none transition-all placeholder-gray-400 text-pw-violet"
+                                            />
+                                            <button
+                                                onClick={handleSendRequest}
+                                                disabled={inviteLoading || !email}
+                                                className="bg-pw-indigo text-white px-5 py-2 rounded-xl hover:bg-pw-violet disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-pw-md font-bold"
+                                            >
+                                                {inviteLoading ? (
+                                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                                                ) : <FaUserPlus />}
                                             </button>
                                         </div>
+                                        {error && <p className="text-pw-red text-xs mt-3 bg-red-50 p-2 rounded-lg border border-red-100 flex items-center gap-1"><FaTimes className="shrink-0" /> {error}</p>}
+                                        {success && <p className="text-green-600 text-xs mt-3 bg-green-50 p-2 rounded-lg border border-green-100 flex items-center gap-1"><FaCheck className="shrink-0" /> {success}</p>}
+                                    </div>
+
+                                    <div className="relative overflow-hidden bg-gradient-to-br from-pw-indigo to-pw-violet p-6 rounded-2xl shadow-pw-lg text-white">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-10 translate-x-10 pointer-events-none" />
+
+                                        <div className="relative z-10">
+                                            <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
+                                                <FaShareAlt className="text-pw-lavender" />
+                                                Invite Friends
+                                            </h4>
+                                            <p className="text-sm text-white/80 mb-4 leading-relaxed">
+                                                Share your email with friends so they can add you directly.
+                                            </p>
+
+                                            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 flex items-center justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] text-pw-lavender uppercase font-bold tracking-wider mb-0.5">Your Email</p>
+                                                    <p className="text-sm font-bold truncate pr-2">{user?.email}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(user?.email || '')
+                                                        setSuccess('Email copied to clipboard!')
+                                                        setTimeout(() => setSuccess(''), 2000)
+                                                    }}
+                                                    className="px-3 py-1.5 bg-white text-pw-indigo rounded-lg text-xs font-bold hover:bg-pw-lavender transition-colors"
+                                                >
+                                                    Copy
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </motion.div>
-        </>
-    )
-}
-        </AnimatePresence >
+                </>
+            )}
+        </AnimatePresence>
     )
 }
