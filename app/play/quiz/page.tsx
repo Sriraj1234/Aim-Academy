@@ -121,6 +121,27 @@ export default function QuizPage() {
         }, delay)
     }
 
+    // Double-Tap Back Logic
+    const [showExitWarning, setShowExitWarning] = useState(false);
+
+    useEffect(() => {
+        window.history.pushState(null, '', window.location.href);
+
+        const handlePopState = () => {
+            const isWarningVisible = document.getElementById('exit-warning');
+            if (isWarningVisible) {
+                router.push('/');
+            } else {
+                window.history.pushState(null, '', window.location.href);
+                setShowExitWarning(true);
+                setTimeout(() => setShowExitWarning(false), 2000);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [router]);
+
     return (
         <div className="min-h-screen bg-pw-surface pb-32 font-sans selection:bg-pw-indigo selection:text-white">
             {/* Ambient Background Glow - Royal PW Theme */}
@@ -314,6 +335,22 @@ export default function QuizPage() {
                     </div>
                 </div>
             </main >
+
+            {/* Exit Warning Toast */}
+            <AnimatePresence>
+                {showExitWarning && (
+                    <div id="exit-warning" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="bg-black/80 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-md font-bold text-sm tracking-wide border border-white/20 whitespace-nowrap"
+                        >
+                            Press Back again to exit quiz 🚪
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div >
     )
 }
