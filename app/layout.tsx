@@ -33,6 +33,11 @@ export const metadata: Metadata = {
   title: 'Padhaku - Bihar Board Exam Practice',
   description: 'Master Bihar Board exams with interactive quizzes, detailed explanations, and live competitive battles on Padhaku.',
   manifest: "/manifest.json",
+  icons: {
+    icon: '/padhaku-192.png',
+    apple: '/padhaku-192.png',
+    shortcut: '/padhaku-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
