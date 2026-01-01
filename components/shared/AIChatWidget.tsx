@@ -11,6 +11,8 @@ import { HiSparkles, HiLightningBolt } from 'react-icons/hi';
 import { useSpeech, isHindiText } from '@/hooks/useSpeech';
 import { useSound } from '@/hooks/useSound';
 import { useAuth } from '@/context/AuthContext';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
     id: string;
@@ -332,17 +334,31 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                                 }`}
                                         >
                                             <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
-                                                {msg.content.split('\n').map((line, i) => (
-                                                    <p key={i} className="mb-1 last:mb-0 min-h-[1.2em]">
-                                                        {line.split(/(\*\*.*?\*\*)/).map((part, j) =>
-                                                            part.startsWith('**') && part.endsWith('**') ? (
-                                                                <strong key={j}>{part.slice(2, -2)}</strong>
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    components={{
+                                                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                        ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-1" {...props} />,
+                                                        ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-1" {...props} />,
+                                                        li: ({ node, ...props }) => <li className="" {...props} />,
+                                                        code: ({ node, className, children, ...props }: any) => {
+                                                            const match = /language-(\w+)/.exec(className || '')
+                                                            return match ? (
+                                                                <div className="rounded-md overflow-hidden my-2 bg-gray-800 text-white p-2 text-xs">
+                                                                    <code className={className} {...props}>
+                                                                        {children}
+                                                                    </code>
+                                                                </div>
                                                             ) : (
-                                                                part
+                                                                <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-red-500" {...props}>
+                                                                    {children}
+                                                                </code>
                                                             )
-                                                        )}
-                                                    </p>
-                                                ))}
+                                                        }
+                                                    }}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
                                             </div>
                                         </div>
                                         {msg.role === 'assistant' && ttsSupported && (
