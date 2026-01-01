@@ -146,14 +146,14 @@ function processRow(row) {
     try {
         const TARGET_BOARD = 'bseb';
         const TARGET_CLASS = '10';
-        const TARGET_SUBJECT = 'math'; // Explicitly Math
+        const TARGET_SUBJECT = 'mathematics'; // Standardized to match types.ts
 
-        // Get options
+        // Get options - Enhanced with Hindi support
         let options = [];
-        const valA = getValue(row, ['Option A', 'A', '(A)', 'a']);
-        const valB = getValue(row, ['Option B', 'B', '(B)', 'b']);
-        const valC = getValue(row, ['Option C', 'C', '(C)', 'c']);
-        const valD = getValue(row, ['Option D', 'D', '(D)', 'd']);
+        const valA = getValue(row, ['Option A', 'A', '(A)', 'a', 'विकल्प A', 'A.']);
+        const valB = getValue(row, ['Option B', 'B', '(B)', 'b', 'विकल्प B', 'B.']);
+        const valC = getValue(row, ['Option C', 'C', '(C)', 'c', 'विकल्प C', 'C.']);
+        const valD = getValue(row, ['Option D', 'D', '(D)', 'd', 'विकल्प D', 'D.']);
 
         if (valA) options.push(String(valA).trim());
         if (valB) options.push(String(valB).trim());
@@ -162,15 +162,12 @@ function processRow(row) {
         if (options.length === 0) options = ['A', 'B', 'C', 'D'];
 
         // Parse correct answer
-        const rawCorrect = getValue(row, ['Correct Answer', 'Answer', 'Ans', 'Correct']);
+        const rawCorrect = getValue(row, ['Correct Answer', 'Answer', 'Ans', 'Correct', 'उत्तर', 'Answer Key']);
         const correctAns = parseCorrectAnswer(rawCorrect, options);
 
-        // Get subject - Override with Math if missing or generic, but allow row to specify specific sub-topics if needed
-        // For now, force 'math' as main subject
-
-        // Get chapter - Flexible matching
+        // Get chapter - Flexible matching including Hindi
         let chapter = getValue(row, [
-            'Chapter', 'Chap', 'Chapter Name', 'Topic'
+            'Chapter', 'Chap', 'Chapter Name', 'Topic', 'Lesson', 'Unit', 'पाठ', 'अध्याय'
         ]);
         chapter = (chapter || 'General').trim();
 
@@ -179,7 +176,7 @@ function processRow(row) {
         const toFsBool = (bool) => ({ booleanValue: bool });
         const toFsArray = (arr) => ({ arrayValue: { values: arr.map(toFsString) } });
 
-        const qText = getValue(row, ['Question', 'Q', 'text', 'Question Text']);
+        const qText = getValue(row, ['Question', 'Q', 'text', 'Question Text', 'प्रश्न']);
         if (!qText) return null;
 
         return {
