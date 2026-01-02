@@ -145,7 +145,8 @@ export default function ResultPage() {
                         </h1>
 
                         {/* Podium (Top 3) */}
-                        <div className="flex items-end justify-center gap-4 md:gap-8 mb-16 w-full max-w-2xl px-4 h-64">
+                        {/* Podium (Top 3) - Mobile Optimized */}
+                        <div className="flex items-end justify-center gap-2 md:gap-8 mb-12 md:mb-16 w-full max-w-2xl px-2 md:px-4 h-48 md:h-64">
                             {/* 2nd Place */}
                             {leaderboard[1] && (
                                 <motion.div
@@ -153,15 +154,15 @@ export default function ResultPage() {
                                     animate={{ height: "60%" }}
                                     className="flex-1 flex flex-col justify-end items-center"
                                 >
-                                    <div className="mb-4 text-center">
-                                        <div className="w-16 h-16 rounded-full border-4 border-gray-300 overflow-hidden mx-auto mb-2 shadow-lg">
-                                            {leaderboard[1].photoURL ? <img src={leaderboard[1].photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200 flex items-center justify-center"><FaUser /></div>}
+                                    <div className="mb-2 md:mb-4 text-center">
+                                        <div className="w-10 h-10 md:w-16 md:h-16 rounded-full border-2 md:border-4 border-gray-300 overflow-hidden mx-auto mb-1 md:mb-2 shadow-lg">
+                                            {leaderboard[1].photoURL ? <img src={leaderboard[1].photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs md:text-base"><FaUser /></div>}
                                         </div>
-                                        <p className="font-bold text-gray-600 text-sm truncate w-24 text-center mx-auto">{leaderboard[1].name}</p>
-                                        <p className="font-bold text-gray-500 text-xs">{leaderboard[1].score} pts</p>
+                                        <p className="font-bold text-gray-600 text-[10px] md:text-sm truncate w-16 md:w-24 text-center mx-auto">{leaderboard[1].name}</p>
+                                        <p className="font-bold text-gray-500 text-[9px] md:text-xs">{leaderboard[1].score}</p>
                                     </div>
-                                    <div className="w-full h-full bg-gradient-to-t from-gray-300 to-gray-100 rounded-t-2xl shadow-xl flex items-start justify-center pt-4 relative border-t border-white/50">
-                                        <span className="text-4xl font-bold text-gray-400/50">2</span>
+                                    <div className="w-full h-full bg-gradient-to-t from-gray-300 to-gray-100 rounded-t-xl md:rounded-t-2xl shadow-xl flex items-start justify-center pt-2 md:pt-4 relative border-t border-white/50">
+                                        <span className="text-2xl md:text-4xl font-bold text-gray-400/50">2</span>
                                     </div>
                                 </motion.div>
                             )}
@@ -173,16 +174,16 @@ export default function ResultPage() {
                                     animate={{ height: "80%" }}
                                     className="flex-1 flex flex-col justify-end items-center z-10"
                                 >
-                                    <div className="mb-4 text-center relative">
-                                        <FaMedal className="text-yellow-400 text-4xl absolute -top-10 left-1/2 -translate-x-1/2 animate-bounce" />
-                                        <div className="w-20 h-20 rounded-full border-4 border-yellow-400 overflow-hidden mx-auto mb-2 shadow-yellow-500/30 shadow-xl">
-                                            {leaderboard[0].photoURL ? <img src={leaderboard[0].photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-yellow-100 flex items-center justify-center text-yellow-600"><FaUser /></div>}
+                                    <div className="mb-2 md:mb-4 text-center relative">
+                                        <FaMedal className="text-yellow-400 text-2xl md:text-4xl absolute -top-8 md:-top-10 left-1/2 -translate-x-1/2 animate-bounce" />
+                                        <div className="w-14 h-14 md:w-20 md:h-20 rounded-full border-2 md:border-4 border-yellow-400 overflow-hidden mx-auto mb-1 md:mb-2 shadow-yellow-500/30 shadow-xl">
+                                            {leaderboard[0].photoURL ? <img src={leaderboard[0].photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-sm md:text-base"><FaUser /></div>}
                                         </div>
-                                        <p className="font-bold text-brand-900 text-base truncate w-28 text-center mx-auto">{leaderboard[0].name}</p>
-                                        <p className="font-bold text-brand-600 text-sm">{leaderboard[0].score} pts</p>
+                                        <p className="font-bold text-brand-900 text-xs md:text-base truncate w-20 md:w-28 text-center mx-auto">{leaderboard[0].name}</p>
+                                        <p className="font-bold text-brand-600 text-[10px] md:text-sm">{leaderboard[0].score}</p>
                                     </div>
-                                    <div className="w-full h-full bg-gradient-to-t from-yellow-400 to-yellow-200 rounded-t-2xl shadow-xl flex items-start justify-center pt-4 relative border-t border-white/50">
-                                        <span className="text-5xl font-bold text-yellow-600/50">1</span>
+                                    <div className="w-full h-full bg-gradient-to-t from-yellow-400 to-yellow-200 rounded-t-xl md:rounded-t-2xl shadow-xl flex items-start justify-center pt-2 md:pt-4 relative border-t border-white/50">
+                                        <span className="text-3xl md:text-5xl font-bold text-yellow-600/50">1</span>
                                     </div>
                                 </motion.div>
                             )}
@@ -194,15 +195,15 @@ export default function ResultPage() {
                                     animate={{ height: "50%" }}
                                     className="flex-1 flex flex-col justify-end items-center"
                                 >
-                                    <div className="mb-4 text-center">
-                                        <div className="w-16 h-16 rounded-full border-4 border-orange-300 overflow-hidden mx-auto mb-2 shadow-lg">
-                                            {leaderboard[2].photoURL ? <img src={leaderboard[2].photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-orange-100 flex items-center justify-center text-orange-600"><FaUser /></div>}
+                                    <div className="mb-2 md:mb-4 text-center">
+                                        <div className="w-10 h-10 md:w-16 md:h-16 rounded-full border-2 md:border-4 border-orange-300 overflow-hidden mx-auto mb-1 md:mb-2 shadow-lg">
+                                            {leaderboard[2].photoURL ? <img src={leaderboard[2].photoURL} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-orange-100 flex items-center justify-center text-orange-600 text-xs md:text-base"><FaUser /></div>}
                                         </div>
-                                        <p className="font-bold text-orange-800 text-sm truncate w-24 text-center mx-auto">{leaderboard[2].name}</p>
-                                        <p className="font-bold text-orange-600 text-xs">{leaderboard[2].score} pts</p>
+                                        <p className="font-bold text-orange-800 text-[10px] md:text-sm truncate w-16 md:w-24 text-center mx-auto">{leaderboard[2].name}</p>
+                                        <p className="font-bold text-orange-600 text-[9px] md:text-xs">{leaderboard[2].score}</p>
                                     </div>
-                                    <div className="w-full h-full bg-gradient-to-t from-orange-300 to-orange-100 rounded-t-2xl shadow-xl flex items-start justify-center pt-4 relative border-t border-white/50">
-                                        <span className="text-4xl font-bold text-orange-600/40">3</span>
+                                    <div className="w-full h-full bg-gradient-to-t from-orange-300 to-orange-100 rounded-t-xl md:rounded-t-2xl shadow-xl flex items-start justify-center pt-2 md:pt-4 relative border-t border-white/50">
+                                        <span className="text-2xl md:text-4xl font-bold text-orange-600/40">3</span>
                                     </div>
                                 </motion.div>
                             )}
