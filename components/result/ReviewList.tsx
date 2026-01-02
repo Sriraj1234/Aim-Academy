@@ -40,8 +40,8 @@ export const ReviewList: React.FC<ReviewListProps> = ({ questions, answers }) =>
     // Calculate Stats
     const total = questions.length;
     const correctCount = questions.filter((q, i) => answers[i] === q.correctAnswer).length;
-    const skippedCount = answers.filter(a => a === null).length;
-    const incorrectCount = total - correctCount - skippedCount;
+    const skippedCount = answers.filter((a, i) => i < questions.length && (a === null || a === undefined)).length;
+    const incorrectCount = Math.max(0, total - correctCount - skippedCount);
 
     const filteredQuestions = questions.map((q, i) => ({ ...q, index: i, userAnswer: answers[i] }))
         .filter(item => {
