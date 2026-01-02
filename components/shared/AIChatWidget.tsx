@@ -97,7 +97,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
     // Focus input when opened
     useEffect(() => {
         if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 100);
+            setTimeout(() => textareaRef.current?.focus(), 100);
         }
     }, [isOpen]);
 
