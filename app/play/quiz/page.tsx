@@ -180,7 +180,7 @@ export default function QuizPage() {
                                 {question.subject}
                             </h1>
                             <p className="text-[10px] md:text-xs text-pw-indigo font-medium uppercase tracking-wider truncate max-w-[100px] md:max-w-none">
-                                {question.subSubject || 'General'}
+                                {question.mainSubject || question.subSubject || 'General'}
                             </p>
                         </div>
                     </div>
