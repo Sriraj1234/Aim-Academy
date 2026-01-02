@@ -9,8 +9,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FriendsDrawer } from '@/components/home/FriendsDrawer';
 import { useFriends } from '@/hooks/useFriends';
-import { VoiceChatWidget } from '@/components/group/VoiceChatWidget';
 import { LobbyChat } from '@/components/play/LobbyChat';
+import dynamic from 'next/dynamic';
+
+const VoiceChatWidget = dynamic(
+    () => import('@/components/group/VoiceChatWidget').then((mod) => mod.VoiceChatWidget),
+    { ssr: false }
+);
 
 export default function LobbyPage() {
     const { roomId } = useParams();
@@ -85,6 +90,30 @@ export default function LobbyPage() {
                 leaveRoom(roomId as string, playerId).catch(err => console.error("Auto-leave failed", err));
             }
         };
+    }, [roomId, user]);
+
+    // 1.5 Ensure Presence (Fix for React StrictMode & Persistence)
+    // This re-adds the user if StrictMode cleanup removed them, or if manual refresh happened
+    useEffect(() => {
+        if (!roomId || !user) return;
+
+        const ensurePresence = async () => {
+            const storedName = localStorage.getItem(`player_name_${roomId}`);
+            // Only auto-join if we have local record (meaning we joined/created before)
+            if (storedName) {
+                try {
+                    console.log("Verifying room presence...");
+                    await joinRoom(roomId as string, storedName, user.uid, user.photoURL || undefined);
+                    setHasJoined(true);
+                } catch (e) {
+                    console.error("Auto-join verification failed", e);
+                    // If room expired or full, handle error? 
+                    // Usually logic in onSnapshot handles "Room deleted"
+                }
+            }
+        };
+
+        ensurePresence();
     }, [roomId, user]);
 
     // 2. Realtime Listener
