@@ -298,61 +298,78 @@ export default function LobbyPage() {
 
             <div className="max-w-7xl mx-auto w-full relative z-10 flex-1 flex flex-col">
                 {/* Header Bar */}
-                <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 md:mb-12 bg-white/80 backdrop-blur-xl p-4 rounded-[2rem] border border-pw-border shadow-pw-sm">
-                    <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                        <button
-                            onClick={handleLeave}
-                            className="w-10 h-10 md:w-12 md:h-12 bg-white hover:bg-red-50 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm border border-pw-border shrink-0"
-                            title="Leave Room"
-                        >
-                            <FaSignOutAlt className={isHost ? "rotate-180" : ""} />
-                        </button>
-                        <div className="text-right md:text-left overflow-hidden">
-                            <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Subject</p>
-                            <h2 className="text-lg md:text-xl font-bold text-pw-violet capitalize flex items-center justify-end md:justify-start gap-2 truncate">
-                                <span className="truncate">{room.subject}</span>
-                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0"></span>
-                                <span className="text-gray-500 font-medium text-sm md:text-base shrink-0">{room.chapter}</span>
-                            </h2>
+                {/* Header Bar - Mobile Optimized */}
+                <header className="flex flex-col gap-4 mb-6 md:mb-12 bg-white/80 backdrop-blur-xl p-4 md:p-6 rounded-[2rem] border border-pw-border shadow-pw-sm">
+                    {/* Top Row: Back Button + Subject Info */}
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                            <button
+                                onClick={handleLeave}
+                                className="w-10 h-10 md:w-12 md:h-12 bg-white hover:bg-red-50 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm border border-pw-border shrink-0"
+                                title="Leave Room"
+                            >
+                                <FaSignOutAlt className={isHost ? "rotate-180" : ""} />
+                            </button>
+                            <div className="overflow-hidden">
+                                <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Subject</p>
+                                <h2 className="text-lg md:text-xl font-bold text-pw-violet capitalize flex flex-col md:flex-row md:items-center justify-start gap-0.5 md:gap-2 truncate leading-tight">
+                                    <span className="truncate">{room.subject}</span>
+                                    <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0"></span>
+                                    <span className="text-gray-500 font-medium text-xs md:text-base shrink-0 truncate">{room.chapter}</span>
+                                </h2>
+                            </div>
+                        </div>
+
+                        {/* Connection Status / Voice for Mobile */}
+                        <div className="md:hidden">
+                            <VoiceChatWidget channelName={roomId as string} />
                         </div>
                     </div>
 
-                    {/* Room Code Badge - Mobile: Full Width, Desktop: Auto */}
-                    <div onClick={copyCode} className="cursor-pointer group relative w-full md:w-auto">
-                        <div className="absolute inset-0 bg-pw-indigo rounded-xl blur opacity-10 group-hover:opacity-20 transition-opacity"></div>
-                        <div className="relative bg-white border border-pw-border group-hover:border-pw-indigo/30 px-6 py-2 rounded-xl flex items-center justify-between md:justify-start gap-3 transition-colors">
-                            <div className="text-left">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Room Code</p>
-                                <p className="font-mono text-2xl font-bold text-pw-indigo tracking-wider leading-none">{roomId}</p>
-                            </div>
-                            <div className="w-8 h-8 rounded-lg bg-pw-surface flex items-center justify-center text-pw-indigo group-hover:scale-110 transition-transform">
-                                <FaCopy size={12} />
+                    <div className="h-px bg-gray-100 w-full md:hidden" />
+
+                    {/* Bottom Row: Room Code + Players + Desktop Actions */}
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
+                        {/* Room Code Badge */}
+                        <div onClick={copyCode} className="cursor-pointer group relative w-full md:w-auto">
+                            <div className="absolute inset-0 bg-pw-indigo rounded-xl blur opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                            <div className="relative bg-white border border-pw-border group-hover:border-pw-indigo/30 px-4 md:px-6 py-2 rounded-xl flex items-center justify-between md:justify-start gap-3 transition-colors">
+                                <div className="text-left">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Room Code</p>
+                                    <p className="font-mono text-xl md:text-2xl font-bold text-pw-indigo tracking-wider leading-none">{roomId}</p>
+                                </div>
+                                <div className="w-8 h-8 rounded-lg bg-pw-surface flex items-center justify-center text-pw-indigo group-hover:scale-110 transition-transform">
+                                    <FaCopy size={12} />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
-                        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border border-pw-border shadow-sm">
-                            <div className="flex -space-x-2">
-                                {playersList.slice(0, 3).map((p: any) => (
-                                    <div key={p.id} className="w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden">
-                                        {p.photoURL ? <img src={p.photoURL} referrerPolicy="no-referrer" /> : <div className="w-full h-full flex items-center justify-center text-[10px] md:text-xs font-bold text-gray-500">{p.name[0]}</div>}
-                                    </div>
-                                ))}
+                        {/* Players & Actions */}
+                        <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+                            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border border-pw-border shadow-sm ml-auto md:ml-0">
+                                <div className="flex -space-x-2">
+                                    {playersList.slice(0, 3).map((p: any) => (
+                                        <div key={p.id} className="w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden">
+                                            {p.photoURL ? <img src={p.photoURL} referrerPolicy="no-referrer" /> : <div className="w-full h-full flex items-center justify-center text-[10px] md:text-xs font-bold text-gray-500">{p.name[0]}</div>}
+                                        </div>
+                                    ))}
+                                </div>
+                                <span className="font-bold text-gray-700 ml-1 text-xs md:text-sm">{playersList.length} <span className="text-gray-400 font-normal hidden sm:inline">Joined</span></span>
                             </div>
-                            <span className="font-bold text-gray-700 ml-1 text-xs md:text-sm">{playersList.length} <span className="text-gray-400 font-normal hidden sm:inline">Joined</span></span>
+
+                            {/* Desktop Voice Chat */}
+                            <div className="hidden md:block">
+                                <VoiceChatWidget channelName={roomId as string} />
+                            </div>
+
+                            <button
+                                onClick={() => setShowFriends(true)}
+                                className="bg-pw-indigo/10 hover:bg-pw-indigo/20 text-pw-indigo w-10 h-10 rounded-full flex items-center justify-center transition-colors shrink-0"
+                                title="Invite Friends"
+                            >
+                                <FaUserPlus />
+                            </button>
                         </div>
-
-                        {/* Voice Chat */}
-                        <VoiceChatWidget channelName={roomId as string} />
-
-                        <button
-                            onClick={() => setShowFriends(true)}
-                            className="bg-pw-indigo/10 hover:bg-pw-indigo/20 text-pw-indigo w-10 h-10 rounded-full flex items-center justify-center transition-colors shrink-0"
-                            title="Invite Friends"
-                        >
-                            <FaUserPlus />
-                        </button>
                     </div>
                 </header>
 
@@ -479,7 +496,7 @@ export default function LobbyPage() {
                                             isNavigatingRef.current = true; // Prevent auto-leave on game start
                                             handleStart();
                                         }}
-                                        className="bg-gradient-to-r from-pw-indigo to-pw-violet hover:shadow-pw-lg text-white px-12 py-4 rounded-[2rem] text-xl font-bold shadow-pw-md transition-all flex items-center gap-3 active:scale-95 hover:-translate-y-0.5"
+                                        className="w-full md:w-auto bg-gradient-to-r from-pw-indigo to-pw-violet hover:shadow-pw-lg text-white px-8 md:px-12 py-3 md:py-4 rounded-[2rem] text-lg md:text-xl font-bold shadow-pw-md transition-all flex items-center justify-center gap-3 active:scale-95 hover:-translate-y-0.5"
                                     >
                                         <FaPlay /> START MATCH
                                     </button>
