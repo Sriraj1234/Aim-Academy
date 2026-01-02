@@ -217,43 +217,42 @@ export default function StudyHubAdmin() {
 
                         {formData.hasQuiz && (
                             <div className="ml-7 animate-in fade-in slide-in-from-top-2">
-                                <label className="text-xs font-bold text-purple-700 mb-1 block uppercase tracking-wider">Select Available Quiz Chapter</label>
-
-                                {availableChapters.length > 0 ? (
-                                    <select
-                                        name="linkedQuizChapter"
-                                        value={formData.linkedQuizChapter}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-purple-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-purple-500/20 outline-none"
-                                    >
-                                        <option value="">-- Select Matching Quiz --</option>
-                                        {availableChapters.map((chap, idx) => (
-                                            <option key={idx} value={chap.name}>
-                                                {chap.name} ({chap.count} Qs)
-                                            </option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <div className="text-sm text-red-500 bg-red-50 p-2 rounded border border-red-100 mb-2">
-                                        No quizzes found for <b>{formData.subject}</b> via auto-search.
-                                        Please ensure questions exist in the database for this Board/Class/Subject.
-                                    </div>
-                                )}
-
-                                {/* Manual Override Input */}
-                                <div className="mt-2">
-                                    <label className="text-[10px] text-gray-400 font-bold block mb-1">MANUAL OVERRIDE (If dropdown is empty or incorrect)</label>
+                                {/* Manual Entry First - Full Control */}
+                                <div className="mb-2">
+                                    <label className="text-[10px] text-gray-500 font-bold block mb-1">ENTER EXACT QUIZ CHAPTER NAME</label>
                                     <input
                                         name="linkedQuizChapter"
                                         value={formData.linkedQuizChapter}
                                         onChange={handleChange}
-                                        placeholder="Type Exact Quiz Chapter Name..."
-                                        className="w-full p-2 border border-dashed border-gray-300 rounded-lg bg-gray-50 text-sm focus:bg-white transition-colors outline-none"
+                                        placeholder="Type name exactly as in Question Bank..."
+                                        className="w-full p-2 border border-purple-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-purple-500/20 outline-none font-bold text-gray-700"
                                     />
                                 </div>
 
-                                <p className="text-[10px] text-gray-500 mt-1">
-                                    This name must match EXACTLY with a chapter in the Question Bank.
+                                {availableChapters.length > 0 && (
+                                    <div className="mb-2">
+                                        <label className="text-[10px] text-gray-400 block mb-1">Or pick from available chapters:</label>
+                                        <select
+                                            onChange={(e) => {
+                                                if (e.target.value) {
+                                                    setFormData({ ...formData, linkedQuizChapter: e.target.value });
+                                                }
+                                            }}
+                                            className="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-xs text-gray-600 outline-none cursor-pointer hover:bg-white transition-colors"
+                                            value=""
+                                        >
+                                            <option value="">-- Helper List (Click to Auto-Fill) --</option>
+                                            {availableChapters.map((chap, idx) => (
+                                                <option key={idx} value={chap.name}>
+                                                    {chap.name} ({chap.count} Qs)
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <p className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
+                                    <span className="text-purple-600 font-bold">Note:</span> This must match the Chapter Name in your Question Bank exactly.
                                 </p>
                             </div>
                         )}
