@@ -229,7 +229,7 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                 </div>
-                                {formData.class === '12' && (
+                                {['11', '12'].includes(formData.class) && (
                                     <div>
                                         <label className="text-xs font-bold text-pw-indigo uppercase tracking-wider ml-1 mb-1 block">{t('profile.streamLabel')}</label>
                                         <div className="relative">
@@ -287,7 +287,7 @@ export default function ProfilePage() {
                                             Class {userProfile.class}
                                         </span>
                                     )}
-                                    {userProfile?.stream && (
+                                    {userProfile?.stream && ['11', '12'].includes(userProfile.class) && (
                                         <span className="px-3 py-1 rounded-lg bg-cyan-50 border border-cyan-100 text-xs font-bold text-cyan-600 uppercase tracking-wide">
                                             {userProfile.stream}
                                         </span>
