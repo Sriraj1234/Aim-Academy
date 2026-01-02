@@ -26,7 +26,8 @@ export default function StudyHubAdmin() {
         teacherName: '',
         channelName: '',
         hasQuiz: false,
-        linkedQuizChapter: ''
+        linkedQuizChapter: '',
+        views: 0
     });
 
     // YouTube Parser
@@ -290,8 +291,9 @@ export default function StudyHubAdmin() {
                                             title: data.title || '',
                                             channelName: data.channelName || '',
                                             teacherName: data.channelName || '', // Default teacher to channel
+                                            views: data.views || 0 // Set initial views from YouTube
                                         }));
-                                        toast.success('Details Found!', { id: toastId });
+                                        toast.success(`Found: ${data.views?.toLocaleString()} views!`, { id: toastId });
                                     } catch (err) {
                                         toast.error('Could not fetch details', { id: toastId });
                                     }
