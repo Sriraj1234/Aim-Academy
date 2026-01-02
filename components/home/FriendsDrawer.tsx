@@ -1,4 +1,5 @@
-'use client'
+'use client'; // Fix syntax error closing tag
+
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
