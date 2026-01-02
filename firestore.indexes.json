@@ -1,5 +1,15 @@
 {
     "indexes": [
+    {
+      "collectionGroup": "video_resources",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "board", "order": "ASCENDING" },
+        { "fieldPath": "classLevel", "order": "ASCENDING" },
+        { "fieldPath": "views", "order": "DESCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
         {
             "collectionGroup": "notes",
             "queryScope": "COLLECTION",
