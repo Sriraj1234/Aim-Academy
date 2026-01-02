@@ -34,6 +34,7 @@ const PAGE_SIZE = 20
 // Extend Domain Question with Firestore specific fields
 interface Question extends DomainQuestion {
     createdAt: number
+    mainSubject?: string // Added for bulk uploads
 }
 
 export default function QuestionsPage() {
@@ -69,7 +70,6 @@ export default function QuestionsPage() {
             if (filterChapter) { constraints.push(where('chapter', '==', filterChapter)); hasFilters = true; }
 
             // Only sort by creation date if we are just browsing (no filters)
-            // Or if you eventually add indexes, you can uncomment this.
             if (!hasFilters) {
                 constraints.unshift(orderBy('createdAt', 'desc'))
             }
@@ -98,9 +98,8 @@ export default function QuestionsPage() {
             }
         } catch (error) {
             console.error("Error fetching questions:", error)
-            // Fallback for missing index error - simplified query
             if (isNew) setQuestions([])
-            alert("Error fetching (Check Console - likely missing index)")
+            alert("Error fetching (Check Console)")
         } finally {
             setLoading(false)
         }
@@ -130,32 +129,24 @@ export default function QuestionsPage() {
     // Derive Dropdowns based on Filters
     useEffect(() => {
         if (!taxonomy) return
-
-        // 1. Get Subjects
-        // If Board/Class selected, get specific subjects. Else get all unique subjects.
         const subjects = new Set<string>()
         const taxKey = `${filterBoard}_${filterClass}`
 
         if (filterBoard !== 'all' && filterClass !== 'all' && taxonomy[taxKey]) {
             taxonomy[taxKey].subjects?.forEach((s: string) => subjects.add(s))
         } else {
-            // Aggregate all
             Object.values(taxonomy).forEach((val: any) => {
                 if (val.subjects) val.subjects.forEach((s: string) => subjects.add(s))
             })
         }
         setAvailableSubjects(Array.from(subjects).sort())
 
-        // 2. Get Chapters
-        // Needs Subject + (Board/Class optional but recommended for precision)
         const chapters = new Set<string>()
         if (filterSubject) {
             if (filterBoard !== 'all' && filterClass !== 'all' && taxonomy[taxKey]) {
-                // Specific
                 const chapList = taxonomy[taxKey].chapters?.[filterSubject]
                 if (chapList) chapList.forEach((c: any) => chapters.add(c.name))
             } else {
-                // Aggregate all chapters for this subject across all boards
                 Object.values(taxonomy).forEach((val: any) => {
                     const chapList = val.chapters?.[filterSubject]
                     if (chapList) chapList.forEach((c: any) => chapters.add(c.name))
@@ -171,6 +162,7 @@ export default function QuestionsPage() {
         setLastDoc(null)
         setHasMore(true)
         fetchQuestions(true)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filterBoard, filterClass, filterSubject, filterChapter])
 
     const handleDelete = async (id: string) => {
@@ -190,14 +182,13 @@ export default function QuestionsPage() {
     }
 
     const handleCreate = () => {
-        // Pre-fill with current filters if selected
         const newQ: Partial<Question> = {
             options: ['', '', '', ''],
             correctAnswer: 0,
         }
         if (filterBoard !== 'all') newQ.board = filterBoard
         if (filterClass !== 'all') newQ.class = filterClass
-        if (filterSubject) newQ.subject = filterSubject as any // Cast for now or import Subject type
+        if (filterSubject) newQ.subject = filterSubject as any
         if (filterChapter) newQ.chapter = filterChapter
 
         setEditingQuestion(newQ as Question)
@@ -207,39 +198,30 @@ export default function QuestionsPage() {
     const handleUpdate = async (id: string | undefined, data: Partial<Question>) => {
         try {
             if (id) {
-                // Update existing
                 const qRef = doc(db, 'questions', id)
                 await updateDoc(qRef, data)
                 setQuestions(prev => prev.map(q => (q.id === id ? { ...q, ...data } : q)))
             } else {
-                // Create new
-                // Check if duplicate
                 const newId = generateQuestionId(data.question || '', data.board || 'other', data.class || 'other', data.subject || 'general')
                 const docRef = doc(db, 'questions', newId)
-
-                // Check existence
                 const docSnap = await getDoc(docRef)
                 if (docSnap.exists()) {
-                    alert("A question with this text already exists in this category.")
+                    alert("A question with this text already exists.")
                     throw new Error("Duplicate question")
                 }
-
                 const newDoc = {
                     ...data,
                     createdAt: Date.now(),
                     active: true
                 }
                 await setDoc(docRef, newDoc)
-
-                // Refresh list if it matches filters
-                // Simplified: just add to top if no strict sorting, or refetch
                 fetchQuestions(true)
             }
             setIsEditModalOpen(false)
         } catch (error) {
             console.error("Save failed", error)
             alert("Save failed")
-            throw error // Propagate to modal to stop closing
+            throw error
         }
     }
 
@@ -347,7 +329,7 @@ export default function QuestionsPage() {
 
                 {/* List */}
                 <div className="space-y-4">
-                    {questions.map((q) => (
+                    {questions.map((q, index) => (
                         <div key={q.id} className="bg-white p-6 rounded-[1.5rem] border border-pw-border shadow-sm hover:shadow-pw-lg transition-all relative group hover:-translate-y-0.5">
                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
@@ -366,10 +348,23 @@ export default function QuestionsPage() {
                                 </button>
                             </div>
 
-                            <div className="flex gap-3 mb-3">
+                            <div className="flex flex-wrap gap-2 mb-3 items-center">
+                                {/* Serial Number */}
+                                <span className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-600 font-mono font-bold rounded-lg text-xs">
+                                    #{index + 1}
+                                </span>
+
                                 <span className="px-3 py-1 bg-pw-surface border border-pw-border text-gray-500 text-xs font-bold rounded-lg uppercase tracking-wider">
                                     {q.board} {q.class}
                                 </span>
+
+                                {/* Main Subject Badge */}
+                                {q.mainSubject && (
+                                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-blue-100">
+                                        {q.mainSubject}
+                                    </span>
+                                )}
+
                                 <span className="px-3 py-1 bg-pw-indigo/10 text-pw-indigo text-xs font-bold rounded-lg uppercase tracking-wider">
                                     {q.subject}
                                 </span>
@@ -410,18 +405,20 @@ export default function QuestionsPage() {
                 </div>
 
                 {/* Load More */}
-                {hasMore && (
-                    <div className="mt-10 text-center">
-                        <button
-                            onClick={() => fetchQuestions(false)}
-                            disabled={loading}
-                            className="px-8 py-3 bg-white border border-pw-border text-pw-indigo font-bold rounded-xl hover:bg-pw-surface shadow-pw-sm disabled:opacity-50 transition-all"
-                        >
-                            {loading ? 'Loading Questions...' : 'Load More Results'}
-                        </button>
-                    </div>
-                )}
-            </div>
-        </div>
+                {
+                    hasMore && (
+                        <div className="mt-10 text-center">
+                            <button
+                                onClick={() => fetchQuestions(false)}
+                                disabled={loading}
+                                className="px-8 py-3 bg-white border border-pw-border text-pw-indigo font-bold rounded-xl hover:bg-pw-surface shadow-pw-sm disabled:opacity-50 transition-all"
+                            >
+                                {loading ? 'Loading Questions...' : 'Load More Results'}
+                            </button>
+                        </div>
+                    )
+                }
+            </div >
+        </div >
     )
 }
