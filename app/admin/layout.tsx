@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HiHome, HiUpload, HiDatabase, HiUsers, HiChartBar } from 'react-icons/hi'
+import { FaYoutube } from 'react-icons/fa'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
@@ -11,6 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const navItems = [
         { label: 'Dashboard', href: '/admin', icon: HiChartBar },
         { label: 'Upload Questions', href: '/admin/upload', icon: HiUpload },
+        { label: 'Study Hub Manager', href: '/admin/study-hub', icon: FaYoutube },
         // { label: 'Manage Users', href: '/admin/users', icon: HiUsers }, // Future
         // { label: 'Metadata', href: '/admin/metadata', icon: HiDatabase }, // Future
     ]
@@ -36,8 +38,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${isActive
-                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
-                                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                     }`}
                             >
                                 <Icon className="text-xl" />
