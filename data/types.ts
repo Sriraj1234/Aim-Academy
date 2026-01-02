@@ -10,6 +10,7 @@ export interface Question {
     language: Language
     subject: Subject
     subSubject?: string
+    mainSubject?: string // Added for bulk uploads structure
     class: Class
     year: number
     question: string
