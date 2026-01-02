@@ -76,6 +76,16 @@ export interface GamificationStats {
     achievements: string[];
 }
 
+export interface AIMemory {
+    weakSubjects: string[];
+    topicsStudied: string[]; // Last 5 topics
+    preferences: {
+        language: 'hinglish' | 'english';
+        answerLength: 'short' | 'detailed';
+    };
+    lastInteraction: number;
+}
+
 export interface UserProfile {
     uid: string;
     email: string;
@@ -99,6 +109,7 @@ export interface UserProfile {
     };
     gamification?: GamificationStats;
     bookmarkedQuestions?: string[];
+    aiMemory?: AIMemory; // AI Personalization Memory
     coordinates?: {
         lat: number;
         lng: number;
