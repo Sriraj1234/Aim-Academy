@@ -339,8 +339,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                 </div>
                             )}
                         </div>
-                    </div>
-                </motion.div>
+                    </motion.div>
                 </>
             )}
         </AnimatePresence>
