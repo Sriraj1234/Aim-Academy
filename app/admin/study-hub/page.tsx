@@ -90,7 +90,12 @@ export default function StudyHubAdmin() {
     }, [user]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        let value = e.target.value;
+        // Auto-capitalize Subject for consistency
+        if (e.target.name === 'subject' && value.length > 0) {
+            value = value.charAt(0).toUpperCase() + value.slice(1);
+        }
+        setFormData({ ...formData, [e.target.name]: value });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
