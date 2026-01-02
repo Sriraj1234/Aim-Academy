@@ -5,7 +5,7 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export async function POST(req: NextRequest) {
     try {
-        const { topic, count = 8, classLevel = '10', board = 'CBSE' } = await req.json();
+        const { topic, count = 8, classLevel = '10', board = 'CBSE', language = 'english' } = await req.json();
 
         if (!topic) {
             return NextResponse.json({ success: false, error: 'Topic is required' }, { status: 400 });
@@ -15,7 +15,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'AI service not configured' }, { status: 500 });
         }
 
+        // Language instructions
+        const languageInstruction = language === 'hindi'
+            ? 'Generate flashcards in HINDI language. Use Devanagari script.'
+            : language === 'hinglish'
+                ? 'Generate flashcards in HINGLISH (mix of Hindi and English, written in Roman script).'
+                : 'Generate flashcards in ENGLISH.';
+
         const prompt = `You are an expert educator for Class ${classLevel} (${board} Board).
+${languageInstruction}
 Generate exactly ${count} flashcards for the topic: "${topic}".
 
 Context: The student is in Class ${classLevel}. Ensure the difficulty and depth matches this level.
