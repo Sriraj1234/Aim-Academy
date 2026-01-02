@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Header } from '@/components/shared/Header'
 import { MediaUploader } from '@/components/admin/MediaUploader'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, serverTimestamp, query, orderBy, getDocs, deleteDoc, doc, writeBatch, where } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, query, orderBy, getDocs, deleteDoc, doc, writeBatch, where, getDoc, setDoc } from 'firebase/firestore'
 import { FaBook, FaSave, FaLock, FaTrash, FaQuestionCircle, FaFileExcel, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa'
 import { useAuth } from '@/hooks/useAuth'
 import * as XLSX from 'xlsx'
@@ -29,9 +29,9 @@ const UploadPage = () => {
 
     // Global Metadata State (for Bulk Upload)
     const [globalSettings, setGlobalSettings] = useState({
-        class: '10',
-        board: 'CBSE',
-        stream: 'Science'
+        class: 'all',  // Default to Auto Detect
+        board: 'all',  // Default to Auto Detect
+        stream: 'all'  // Default to Auto Detect
     })
 
     // Questions Upload State
@@ -114,35 +114,59 @@ const UploadPage = () => {
                 const mainSubject = mainSubjectKey ? row[mainSubjectKey] : null;
 
                 // For Subject: Look for "subject", "sub" OR any key containing "subject" (but exclude "main")
-                let subjectKey = keys.find(k => ['subject', 'sub', 'subject name', 'subjects'].includes(normalize(k)));
+                // Improved: Check against explicit list of common headers first
+                const explicitSubjectKeys = ['subject', 'sub', 'subject name', 'subjects', 'subject_name', 'course'];
+                let subjectKey = keys.find(k => explicitSubjectKeys.includes(normalize(k)));
+
                 if (!subjectKey) {
                     // Fallback: Contains 'subject' but NOT 'main' (to avoid Main Subject overlap)
-                    subjectKey = keys.find(k => normalize(k).includes('subject') && !normalize(k).includes('main'));
+                    // Also robustly check for 'sub' if it stands alone or is a prefix
+                    subjectKey = keys.find(k => {
+                        const norm = normalize(k);
+                        return (norm.includes('subject') && !norm.includes('main')) || norm === 'sub';
+                    });
                 }
                 const subjectRaw = subjectKey ? row[subjectKey] : 'general';
                 const subject = String(subjectRaw).toLowerCase();
 
                 // For Chapter: Look for "chapter", "topic", "unit", "lesson"
-                const chapterKey = findKeySmart(['chapter', 'topic', 'unit', 'lesson'], 'chapter');
+                // For Chapter: Robust check (contains any of these keywords)
+                const chapterKey = keys.find(k =>
+                    ['chapter', 'topic', 'unit', 'lesson', 'chap'].some(keyword => normalize(k).includes(keyword))
+                );
                 const chapter = chapterKey ? row[chapterKey] : 'General';
 
-                const questionKey = findKeySmart(['question', 'question text', 'q', 'questions'], 'question');
+                const questionKey = findKeySmart(['question', 'question text', 'q', 'questions', 'qs', 'problem'], 'question');
                 const question = questionKey ? row[questionKey] : '';
 
                 // Options - Force string conversion for numbers (e.g. 2024, 0)
-                const findOptionKey = (letter: string) => findKeySmart([`option ${letter}`, `opt ${letter}`, `(${letter})`, `${letter}`]);
+                // IMPROVED: Prioritize exact match for "Option A", "Option B", etc.
+                const findOptionKey = (letter: string) => {
+                    const candidates = [`option ${letter}`, `opt ${letter}`, `(${letter})`, `${letter})`];
+                    // First: Exact match
+                    let key = keys.find(k => candidates.includes(normalize(k)));
+                    // Second: Loose match (contains "option" and the letter)
+                    if (!key) {
+                        key = keys.find(k => normalize(k).includes('option') && normalize(k).includes(letter));
+                    }
+                    // Third: Just the letter (e.g., column named "A", "B")
+                    if (!key) {
+                        key = keys.find(k => normalize(k) === letter);
+                    }
+                    return key;
+                };
 
                 const options = [
-                    findOptionKey('a') ? String(row[findOptionKey('a')!]) : '',
-                    findOptionKey('b') ? String(row[findOptionKey('b')!]) : '',
-                    findOptionKey('c') ? String(row[findOptionKey('c')!]) : '',
-                    findOptionKey('d') ? String(row[findOptionKey('d')!]) : ''
+                    findOptionKey('a') ? String(row[findOptionKey('a')!] ?? '') : '',
+                    findOptionKey('b') ? String(row[findOptionKey('b')!] ?? '') : '',
+                    findOptionKey('c') ? String(row[findOptionKey('c')!] ?? '') : '',
+                    findOptionKey('d') ? String(row[findOptionKey('d')!] ?? '') : ''
                 ];
 
                 // Correct Answer Logic
                 let correctAnswer = 0; // Default to A
 
-                const ansKey = findKeySmart(['correct answer', 'correct', 'answer', 'ans']);
+                const ansKey = findKeySmart(['correct answer', 'correct', 'answer', 'ans', 'correct_option']);
                 const rawAns = (ansKey ? row[ansKey] : '').toString().trim();
 
                 if (rawAns.toLowerCase() === 'a' || rawAns.toLowerCase() === 'option a') correctAnswer = 0;
@@ -156,13 +180,13 @@ const UploadPage = () => {
                 }
 
                 // Apply specific row override OR global setting
-                const classKey = findKeySmart(['class', 'grade', 'standard']);
+                const classKey = findKeySmart(['class', 'grade', 'standard', 'cls', 'std']);
                 const rowClass = classKey ? row[classKey].toString() : globalSettings.class;
 
-                const boardKey = findKeySmart(['board']);
+                const boardKey = findKeySmart(['board', 'brd']);
                 const rowBoard = (boardKey ? row[boardKey] : globalSettings.board).toString().toLowerCase();
 
-                const streamKey = findKeySmart(['stream']);
+                const streamKey = findKeySmart(['stream', 'str']);
                 const rowStream = (streamKey ? row[streamKey] : globalSettings.stream).toString().toLowerCase();
 
                 return {
@@ -182,6 +206,14 @@ const UploadPage = () => {
             return { name: sheet.name, questions: processedQuestions }
         })
 
+        // DEBUG: Log first parsed question
+        if (processedSheets.length > 0 && processedSheets[0].questions.length > 0) {
+            console.log("=== PARSED DATA DEBUG ===");
+            console.log("First Question:", processedSheets[0].questions[0]);
+            console.log("Total Sheets:", processedSheets.length);
+            console.log("Total Questions:", processedSheets.reduce((sum, s) => sum + s.questions.length, 0));
+        }
+
         setParsedSheets(processedSheets)
         setActiveSheet(0)
         setPreviewMode(true)
@@ -195,8 +227,14 @@ const UploadPage = () => {
 
         setUploadingQuestions(true)
         setUploadProgress('Starting upload...')
+        console.log("=== UPLOAD STARTED ===");
+        console.log("Total questions to upload:", allQuestions.length);
+        console.log("Valid questions:", allQuestions.filter(q => q.isValid).length);
+        console.log("Invalid questions:", allQuestions.filter(q => !q.isValid).length);
         let successCount = 0
         let failedCount = 0
+        const failedItems: any[] = [] // Track failed items
+        let globalQuestionIndex = 0; // COUNTER FOR UNIQUE IDs
 
         const batchSize = 450 // Firestore limit is 500 actions per batch
         const chunks = []
@@ -210,20 +248,40 @@ const UploadPage = () => {
                 const batch = writeBatch(db)
                 setUploadProgress(`Processing batch ${i + 1} of ${chunks.length}...`)
 
-                chunk.forEach((q: any) => {
+                chunk.forEach((q: any, chunkIndex: number) => {
                     if (!q.isValid) {
                         failedCount++
+                        failedItems.push({ error: "Invalid Data (Missing Q/Opt)", ...q })
                         return
                     }
 
+                    // ENFORCE Global Settings if set (User Request: "jis class, board ko slect kru... wahi upload ho")
+                    // If global settings are NOT 'all' or default, we prioritize them over the row data
+                    // actually processParsedData already did this fallback, but let's be strict if the user changed the dropdowns AFTER parsing.
+                    const finalBoard = (globalSettings.board && globalSettings.board !== 'all')
+                        ? globalSettings.board.toLowerCase()
+                        : q.board;
+
+                    const finalClass = (globalSettings.class && globalSettings.class !== 'all')
+                        ? globalSettings.class.toString()
+                        : q.class.toString();
+
+                    const finalStream = (globalSettings.stream && globalSettings.stream !== 'all')
+                        ? globalSettings.stream.toLowerCase()
+                        : (q.stream || 'science');
+
                     try {
-                        // Generate deterministic ID
-                        const docId = generateQuestionId(
+                        // Generate TRULY UNIQUE ID using global counter + random
+                        // This GUARANTEES no collision even if question text is identical
+                        globalQuestionIndex++;
+                        const uniqueSuffix = `${Date.now().toString(36)}${globalQuestionIndex.toString().padStart(6, '0')}${Math.random().toString(36).substr(2, 4)}`;
+                        const baseId = generateQuestionId(
                             q.question,
-                            q.board,
-                            q.class.toString(),
+                            finalBoard,
+                            finalClass,
                             q.subject
-                        )
+                        );
+                        const docId = `${baseId}_${uniqueSuffix}`;
 
                         const docRef = doc(db, 'questions', docId)
                         batch.set(docRef, {
@@ -232,25 +290,88 @@ const UploadPage = () => {
                             correctAnswer: q.correctAnswer,
                             subject: q.subject,
                             chapter: q.chapter,
-                            board: q.board,
-                            class: q.class.toString(),
-                            stream: q.stream || 'Science', // New Field
+                            board: finalBoard,
+                            class: finalClass,
+                            stream: finalStream,
                             mainSubject: q.mainSubject,
                             createdAt: Date.now(),
                             active: true
                         })
+
+                        // Update the 'q' object in place so the Metadata update logic below uses the CORRECT enforced values
+                        q.board = finalBoard;
+                        q.class = finalClass;
+                        // q.stream = finalStream; // Stream not used in metadata yet but good to be consistent
+
                         successCount++
-                    } catch (e) {
+                    } catch (e: any) {
                         console.error("Error preparing doc", e)
                         failedCount++
+                        failedItems.push({ error: e.message || "ID Gen/Batch Error", ...q })
                     }
                 })
 
                 await batch.commit()
+                console.log(`Batch ${i + 1} committed successfully. Running total: ${successCount} success, ${failedCount} failed`);
+            }
+
+            // NEW: Update Metadata for New Chapters
+            setUploadProgress('Updating App Menu (Metadata)...');
+            const metaDocRef = doc(db, 'metadata', 'taxonomy');
+            const metaSnap = await getDoc(metaDocRef);
+            let metaData = metaSnap.exists() ? metaSnap.data() : {};
+            let metaModified = false;
+
+            // Group uploaded questions by Board_Class -> Subject
+            allQuestions.forEach(q => {
+                if (q.isValid) {
+                    const key = `${q.board.toLowerCase()}_${q.class}`;
+                    const subject = q.subject.toLowerCase();
+                    const chapter = q.chapter;
+
+                    // Ensure keys exist
+                    if (!metaData[key]) {
+                        metaData[key] = { subjects: [], chapters: {} };
+                        metaModified = true;
+                    }
+                    if (!metaData[key].subjects.includes(subject)) {
+                        metaData[key].subjects.push(subject);
+                        metaModified = true;
+                    }
+                    if (!metaData[key].chapters) {
+                        metaData[key].chapters = {};
+                        metaModified = true;
+                    }
+                    if (!metaData[key].chapters[subject]) {
+                        metaData[key].chapters[subject] = [];
+                        metaModified = true;
+                    }
+
+                    // Add Chapter if unique
+                    const existingChapters = metaData[key].chapters[subject].map((c: any) => typeof c === 'string' ? c : c.name);
+                    if (!existingChapters.includes(chapter)) {
+                        // FIX: Store as object to match existing schema AND app expectations
+                        metaData[key].chapters[subject].push({ name: chapter, count: 1 });
+                        metaModified = true;
+                    }
+                }
+            });
+
+            if (metaModified) {
+                await setDoc(metaDocRef, metaData);
             }
 
             setUploadStats({ total: allQuestions.length, success: successCount, failed: failedCount })
-            alert(`Upload Complete!\nSuccess: ${successCount}\nFailed: ${failedCount}`)
+
+            if (failedCount > 0) {
+                // Generate simple error report
+                const errorReport = failedItems.map((f, idx) => `${idx + 1}. [${f.error}] Q: ${f.question?.substring(0, 30)}... (Row: ${f.id})`).join('\n');
+                alert(`Upload Partial Success!\nSuccess: ${successCount}\nFailed: ${failedCount}\n\nFailures (Check Console for more):\n${errorReport.substring(0, 1000)}${errorReport.length > 1000 ? '...' : ''}`)
+                console.log("Failed Items Detail:", failedItems);
+            } else {
+                alert(`Upload Complete! All ${successCount} questions uploaded successfully.`)
+            }
+
             setParsedSheets([])
             setPreviewMode(false)
 
@@ -338,6 +459,61 @@ const UploadPage = () => {
     // Derived state for view
     const parsedQuestions = parsedSheets[activeSheet]?.questions || []
 
+
+    // NEW: Clean Metadata (Taxonomy)
+    const sanitizeMetadata = async () => {
+        if (!confirm("Are you sure you want to remove 'Mathematics' from the APP MENU (Metadata)?")) return;
+        setLoading(true);
+        try {
+            const docRef = doc(db, 'metadata', 'taxonomy');
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                alert("Metadata not found!");
+                return;
+            }
+
+            const data = docSnap.data();
+            let modified = false;
+
+            // Iterate over all keys (e.g., cbse_10, icse_9)
+            Object.keys(data).forEach(key => {
+                const entry = data[key];
+                if (entry && entry.subjects) {
+                    // Filter out math
+                    const newSubjects = entry.subjects.filter((s: string) => s !== 'mathematics' && s !== 'maths');
+                    if (newSubjects.length !== entry.subjects.length) {
+                        entry.subjects = newSubjects;
+                        modified = true;
+                    }
+                }
+                if (entry && entry.chapters) {
+                    if (entry.chapters['mathematics']) {
+                        delete entry.chapters['mathematics'];
+                        modified = true;
+                    }
+                    if (entry.chapters['maths']) {
+                        delete entry.chapters['maths'];
+                        modified = true;
+                    }
+                }
+            });
+
+            if (modified) {
+                await setDoc(docRef, data); // Overwrite with cleaned data
+                alert("Metadata cleaned! 'Mathematics' should be gone from the app menu now.");
+            } else {
+                alert("No 'Mathematics' found in metadata.");
+            }
+
+        } catch (e) {
+            console.error("Error cleaning metadata", e);
+            alert("Failed to clean metadata");
+        } finally {
+            setLoading(false);
+        }
+    }
+
     const deleteSubjectQuestions = async () => {
         const subjectToDelete = 'mathematics'; // Target
         if (!confirm(`DANGER: Are you sure you want to PERMANENTLY DELETE ALL questions for '${subjectToDelete}'? This cannot be undone.`)) return;
@@ -412,7 +588,14 @@ const UploadPage = () => {
                         onClick={deleteSubjectQuestions}
                         className="w-full py-2 bg-red-100 text-red-700 rounded-lg font-bold text-sm hover:bg-red-200 transition-colors border border-red-200"
                     >
-                        Delete All "Mathematics" Data
+                        Delete All "Mathematics" Data (Questions)
+                    </button>
+
+                    <button
+                        onClick={sanitizeMetadata}
+                        className="w-full mt-3 py-2 bg-orange-100 text-orange-700 rounded-lg font-bold text-sm hover:bg-orange-200 transition-colors border border-orange-200"
+                    >
+                        Clean App Menu (Remove Mathematics)
                     </button>
                 </div>
 
@@ -601,6 +784,7 @@ const UploadPage = () => {
                                     onChange={(e) => setGlobalSettings({ ...globalSettings, class: e.target.value })}
                                     className="w-full p-2 rounded-lg border border-gray-200 text-sm font-semibold focus:border-pw-indigo outline-none"
                                 >
+                                    <option value="all">Auto Detect (File)</option>
                                     <option value="9">Class 9</option>
                                     <option value="10">Class 10</option>
                                     <option value="11">Class 11</option>
@@ -614,27 +798,35 @@ const UploadPage = () => {
                                     onChange={(e) => setGlobalSettings({ ...globalSettings, board: e.target.value })}
                                     className="w-full p-2 rounded-lg border border-gray-200 text-sm font-semibold focus:border-pw-indigo outline-none"
                                 >
+                                    <option value="all">Auto Detect (File)</option>
                                     <option value="CBSE">CBSE</option>
-                                    <option value="Bihar Board">Bihar Board</option>
+                                    <option value="BSEB">BSEB (Bihar)</option>
                                     <option value="ICSE">ICSE</option>
-                                    <option value="State Board">State Board</option>
+                                    <option value="UP">UP Board</option>
+                                    <option value="MP">MP Board</option>
+                                    <option value="Maharashtra">Maharashtra Board</option>
+                                    <option value="RBSE">RBSE (Rajasthan)</option>
+                                    <option value="JAC">JAC (Jharkhand)</option>
+                                    <option value="UK">UK Board (Uttarakhand)</option>
+                                    <option value="WB">West Bengal Board</option>
+                                    <option value="State Board">Other State Board</option>
                                 </select>
                             </div>
-                            {(globalSettings.class === '11' || globalSettings.class === '12') && (
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Stream</label>
-                                    <select
-                                        value={globalSettings.stream}
-                                        onChange={(e) => setGlobalSettings({ ...globalSettings, stream: e.target.value })}
-                                        className="w-full p-2 rounded-lg border border-gray-200 text-sm font-semibold focus:border-pw-indigo outline-none"
-                                    >
-                                        <option value="Science">Science</option>
-                                        <option value="Commerce">Commerce</option>
-                                        <option value="Arts">Arts</option>
-                                        <option value="General">General</option>
-                                    </select>
-                                </div>
-                            )}
+                            {/* Always show Stream selector but maybe disabled if class < 11? Or just show for all for flexibility */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Stream</label>
+                                <select
+                                    value={globalSettings.stream}
+                                    onChange={(e) => setGlobalSettings({ ...globalSettings, stream: e.target.value })}
+                                    className="w-full p-2 rounded-lg border border-gray-200 text-sm font-semibold focus:border-pw-indigo outline-none"
+                                >
+                                    <option value="all">Auto Detect (File)</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Commerce">Commerce</option>
+                                    <option value="Arts">Arts</option>
+                                    <option value="General">General</option>
+                                </select>
+                            </div>
                         </div>
 
                         {!previewMode ? (
@@ -761,7 +953,7 @@ const UploadPage = () => {
                                                         />
                                                     </td>
                                                     <td className="p-2">
-                                                        <select
+                                                        <input
                                                             value={q.subject}
                                                             onChange={(e) => {
                                                                 const newVal = e.target.value;
@@ -771,12 +963,9 @@ const UploadPage = () => {
                                                                     return sheets;
                                                                 });
                                                             }}
-                                                            className="w-full bg-transparent text-xs py-1 outline-none cursor-pointer hover:text-pw-indigo"
-                                                        >
-                                                            {['physics', 'chemistry', 'biology', 'history', 'geography', 'civics', 'economics', 'english', 'hindi'].map(s => (
-                                                                <option key={s} value={s}>{s}</option>
-                                                            ))}
-                                                        </select>
+                                                            className="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-pw-indigo outline-none py-1 px-1 text-xs text-gray-600 focus:text-gray-900 capitalize"
+                                                            placeholder="Subject"
+                                                        />
                                                     </td>
                                                     <td className="p-2">
                                                         <select
