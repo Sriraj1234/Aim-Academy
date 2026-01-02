@@ -98,7 +98,22 @@ export default function QuizPage() {
 
     const question = questions[currentQuestionIndex]
 
-    if (!question) return null
+    // Robust Guard: Check for question AND valid options array to prevent crashes
+    if (!question || !Array.isArray(question.options)) {
+        return (
+            <div className="min-h-screen bg-pw-surface flex items-center justify-center">
+                <div className="text-center p-8 bg-white rounded-3xl shadow-pw-lg border border-pw-border">
+                    <FaInfoCircle className="text-4xl text-pw-indigo mx-auto mb-4" />
+                    <h3 className="font-bold text-lg text-gray-700">Question Unavailable</h3>
+                    <p className="text-gray-500 mb-6">This question seems to be invalid or missing options.</p>
+                    <Button onClick={() => skipQuestion()}>Skip to Next</Button>
+                </div>
+            </div>
+        )
+    }
+
+    // Safety fallback for optional fields
+    const safeOptions = question.options.map(o => o || "Option Missing");
 
     const handleOptionClick = (index: number) => {
         if (!isLocked) {
@@ -248,7 +263,7 @@ export default function QuizPage() {
                     {/* Options Grid */}
                     <div className="grid gap-2 md:gap-3">
                         <AnimatePresence mode="wait">
-                            {question.options.map((option, index) => {
+                            {safeOptions.map((option, index) => {
                                 let correctState: boolean | null = null;
                                 if (isLocked) {
                                     if (index === question.correctAnswer) {
