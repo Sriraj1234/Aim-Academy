@@ -197,13 +197,22 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
 
             if (isImageIntent) {
                 setStreamingText('🔍 Searching for visual aids...');
-                // Clean query for better image search: Remove command words but keep structure/topic intact
-                // We keep 'of' to preserve "structure of X"
-                const query = userMessage.content.replace(/\b(show|me|images?|photos?|pics?|diagrams?|drawings?|sketches?|pictures?)\b/gi, '').trim();
+                // Clean query for better image search: Remove command words but KEEP "photo" as it can be part of "synthesis" (photosynthesis)
+                // We use a phrase-based cleaner for common starts, and then a lighter keyword remover
+                let query = userMessage.content
+                    .replace(/^(show|give|fetch|display)\s+(me\s+)?(an?|the\s+)?(images?|pics?|pictures?|diagrams?|sketches?)\s+(of\s+)?/i, '')
+                    .replace(/\b(diagrams?|drawings?|sketches?)\b/gi, '') // Remove these styles as we append better ones
+                    .trim();
+
+                // If the user just typed "photo synthesis", we don't want to strip "photo" globally.
+
                 promises.push(
                     fetch('/api/search', {
                         method: 'POST',
-                        body: JSON.stringify({ query: query || userMessage.content, type: 'image' })
+                        body: JSON.stringify({
+                            query: `${query} scientific diagram labeled`, // Enforce educational quality
+                            type: 'image'
+                        })
                     }).then(res => res.json()).then(data => {
                         if (data.results && data.results.length > 0) {
                             imageResults = data.results;
