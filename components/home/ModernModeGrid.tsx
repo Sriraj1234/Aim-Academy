@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { FaBookOpen, FaLayerGroup, FaUsers, FaArrowRight, FaHistory, FaClock, FaFire, FaStar, FaExclamationTriangle } from 'react-icons/fa'
+import { FaBookOpen, FaLayerGroup, FaUsers, FaArrowRight, FaHistory, FaClock, FaFire, FaStar, FaExclamationTriangle, FaYoutube } from 'react-icons/fa'
 import { useLanguage } from '@/context/LanguageContext'
 
 export const ModernModeGrid = () => {
@@ -56,6 +56,18 @@ export const ModernModeGrid = () => {
             badge: 'POPULAR',
             badgeColor: 'bg-gradient-to-r from-pw-violet to-pw-indigo',
             delay: 0.3
+        },
+        {
+            id: 'study-hub',
+            title: 'Study Hub',
+            desc: 'Free video lectures & resources',
+            icon: FaYoutube,
+            gradient: 'from-red-500 to-pink-500',
+            shadow: 'shadow-red-500/20',
+            bgGlow: 'bg-red-500',
+            badge: 'FREE',
+            badgeColor: 'bg-red-600',
+            delay: 0.35
         }
     ]
 
@@ -76,9 +88,10 @@ export const ModernModeGrid = () => {
                     <Link
                         href={
                             mode.id === 'group' ? '/play/group' :
-                                mode.id === 'mistakes' ? '/mistakes' : // NEW ROUTE
+                                mode.id === 'mistakes' ? '/mistakes' :
                                     mode.id === 'subject' ? '/play/selection?mode=subject' :
-                                        '/play/selection'
+                                        mode.id === 'study-hub' ? '/study-hub' : // NEW ROUTE
+                                            '/play/selection'
                         }
                         key={mode.id}
                         className="block w-full"
