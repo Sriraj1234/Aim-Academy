@@ -157,7 +157,7 @@ export default function StudyHubPage() {
                                     : 'bg-white border text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
-                                <span>{SUBJECT_ICONS[subj] || '📚'}</span>
+                                <span>{SUBJECT_ICONS[subj] || SUBJECT_ICONS[subj.charAt(0).toUpperCase() + subj.slice(1)] || '📚'}</span>
                                 {subj}
                             </button>
                         ))}
