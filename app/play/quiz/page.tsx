@@ -21,6 +21,27 @@ export default function QuizPage() {
     const [selectedOption, setSelectedOption] = useState<number | null>(null)
     const [isLocked, setIsLocked] = useState(false)
 
+    // Double-Tap Back Logic
+    const [showExitWarning, setShowExitWarning] = useState(false);
+
+    useEffect(() => {
+        window.history.pushState(null, '', window.location.href);
+
+        const handlePopState = () => {
+            const isWarningVisible = document.getElementById('exit-warning');
+            if (isWarningVisible) {
+                router.push('/');
+            } else {
+                window.history.pushState(null, '', window.location.href);
+                setShowExitWarning(true);
+                setTimeout(() => setShowExitWarning(false), 2000);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [router]);
+
     // Handle AI Mode Loading
     useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
@@ -136,26 +157,7 @@ export default function QuizPage() {
         }, delay)
     }
 
-    // Double-Tap Back Logic
-    const [showExitWarning, setShowExitWarning] = useState(false);
 
-    useEffect(() => {
-        window.history.pushState(null, '', window.location.href);
-
-        const handlePopState = () => {
-            const isWarningVisible = document.getElementById('exit-warning');
-            if (isWarningVisible) {
-                router.push('/');
-            } else {
-                window.history.pushState(null, '', window.location.href);
-                setShowExitWarning(true);
-                setTimeout(() => setShowExitWarning(false), 2000);
-            }
-        };
-
-        window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
-    }, [router]);
 
     return (
         <div className="min-h-screen bg-pw-surface pb-32 font-sans selection:bg-pw-indigo selection:text-white">
