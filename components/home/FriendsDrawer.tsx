@@ -63,40 +63,40 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col font-sans"
+                        className="fixed right-0 top-0 h-full w-full max-w-md bg-white dark:bg-slate-900 z-50 shadow-2xl flex flex-col font-sans border-l border-none dark:border-slate-800"
                     >
                         {/* Header */}
-                        <div className="p-5 border-b border-pw-border flex items-center justify-between bg-white relative overflow-hidden">
+                        <div className="p-5 border-b border-pw-border dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 relative overflow-hidden">
                             <div className="relative z-10 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-pw-surface border border-pw-border flex items-center justify-center text-pw-indigo shadow-sm">
+                                <div className="w-10 h-10 rounded-xl bg-pw-surface dark:bg-slate-800 border border-pw-border dark:border-slate-700 flex items-center justify-center text-pw-indigo shadow-sm">
                                     <FaUserFriends className="text-xl" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-pw-violet">Social Hub</h2>
-                                    <p className="text-xs text-gray-500 font-medium">Connect & Compete</p>
+                                    <h2 className="text-xl font-bold text-pw-violet dark:text-white">Social Hub</h2>
+                                    <p className="text-xs text-gray-500 dark:text-slate-400 font-medium">Connect & Compete</p>
                                 </div>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 hover:bg-pw-surface rounded-full text-gray-400 hover:text-pw-indigo transition-colors relative z-10"
+                                className="p-2 hover:bg-pw-surface dark:hover:bg-slate-800 rounded-full text-gray-400 hover:text-pw-indigo transition-colors relative z-10"
                             >
                                 <FaTimes />
                             </button>
                         </div>
 
                         {/* Tabs */}
-                        <div className="flex px-4 pt-2 border-b border-pw-border bg-white">
+                        <div className="flex px-4 pt-2 border-b border-pw-border dark:border-slate-800 bg-white dark:bg-slate-900">
                             <button
                                 onClick={() => setActiveTab('friends')}
-                                className={`flex-1 py-3 text-sm font-bold transition-colors relative ${activeTab === 'friends' ? 'text-pw-indigo' : 'text-gray-400 hover:text-gray-600'}`}
+                                className={`flex-1 py-3 text-sm font-bold transition-colors relative ${activeTab === 'friends' ? 'text-pw-indigo' : 'text-gray-400 hover:text-gray-600 dark:hover:text-slate-300'}`}
                             >
                                 Friends
-                                <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] ${activeTab === 'friends' ? 'bg-pw-indigo/10 text-pw-indigo' : 'bg-gray-100 text-gray-500'}`}>{friends.length}</span>
+                                <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] ${activeTab === 'friends' ? 'bg-pw-indigo/10 text-pw-indigo' : 'bg-gray-100 dark:bg-slate-800 text-gray-500'}`}>{friends.length}</span>
                                 {activeTab === 'friends' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-pw-indigo rounded-t-full" />}
                             </button>
                             <button
                                 onClick={() => setActiveTab('requests')}
-                                className={`flex-1 py-3 text-sm font-bold transition-colors relative ${activeTab === 'requests' ? 'text-pw-indigo' : 'text-gray-400 hover:text-gray-600'}`}
+                                className={`flex-1 py-3 text-sm font-bold transition-colors relative ${activeTab === 'requests' ? 'text-pw-indigo' : 'text-gray-400 hover:text-gray-600 dark:hover:text-slate-300'}`}
                             >
                                 Requests
                                 {incomingRequests.length > 0 && (
@@ -106,7 +106,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                             </button>
                             <button
                                 onClick={() => setActiveTab('add')}
-                                className={`flex-1 py-3 text-sm font-bold transition-colors relative ${activeTab === 'add' ? 'text-pw-indigo' : 'text-gray-400 hover:text-gray-600'}`}
+                                className={`flex-1 py-3 text-sm font-bold transition-colors relative ${activeTab === 'add' ? 'text-pw-indigo' : 'text-gray-400 hover:text-gray-600 dark:hover:text-slate-300'}`}
                             >
                                 <span className="flex items-center justify-center gap-1.5">
                                     <FaUserPlus className="text-xs" /> Add
@@ -116,15 +116,15 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-4 bg-pw-surface">
+                        <div className="flex-1 overflow-y-auto p-4 bg-pw-surface dark:bg-slate-950">
                             {activeTab === 'friends' && (
                                 <div className="space-y-3">
                                     {friends.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center h-64 text-center p-6">
-                                            <div className="w-20 h-20 rounded-full bg-pw-surface border-2 border-dashed border-pw-border flex items-center justify-center text-3xl text-gray-300 mb-4">
+                                            <div className="w-20 h-20 rounded-full bg-pw-surface dark:bg-slate-800 border-2 border-dashed border-pw-border dark:border-slate-700 flex items-center justify-center text-3xl text-gray-300 mb-4">
                                                 <FaUserFriends />
                                             </div>
-                                            <h3 className="text-pw-violet font-bold mb-1">No friends yet</h3>
+                                            <h3 className="text-pw-violet dark:text-white font-bold mb-1">No friends yet</h3>
                                             <p className="text-sm text-gray-500 mb-4">Invite classmates to start competing!</p>
                                             <button
                                                 onClick={() => setActiveTab('add')}
@@ -140,7 +140,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
-                                                className="bg-white p-3 rounded-2xl shadow-pw-sm border border-pw-border flex items-center gap-3 hover:shadow-pw-md transition-shadow group"
+                                                className="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-pw-sm border border-pw-border dark:border-slate-800 flex items-center gap-3 hover:shadow-pw-md transition-shadow group"
                                             >
                                                 <div className="relative">
                                                     <div className="w-12 h-12 rounded-xl p-[2px] bg-gradient-to-br from-pw-indigo to-pw-violet">
@@ -152,7 +152,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                         />
                                                     </div>
                                                     {/* Online Status Indicator */}
-                                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white rounded-full flex items-center justify-center ${onlineUsers[friend.uid] === 'playing' ? 'bg-orange-500' :
+                                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center ${onlineUsers[friend.uid] === 'playing' ? 'bg-orange-500' :
                                                         onlineUsers[friend.uid] === 'in-lobby' ? 'bg-blue-500' :
                                                             onlineUsers[friend.uid] === 'online' ? 'bg-green-500' :
                                                                 'bg-gray-400'
@@ -161,7 +161,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className="font-bold text-pw-violet truncate">{friend.displayName}</h3>
+                                                    <h3 className="font-bold text-pw-violet dark:text-white truncate">{friend.displayName}</h3>
                                                     <p className={`text-xs font-bold ${onlineUsers[friend.uid] === 'playing' ? 'text-orange-500' :
                                                         onlineUsers[friend.uid] === 'in-lobby' ? 'text-blue-500' :
                                                             onlineUsers[friend.uid] === 'online' ? 'text-green-600' :
@@ -177,7 +177,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                     {onPlayWithFriend && (
                                                         <button
                                                             onClick={() => onPlayWithFriend(friend)}
-                                                            className={`p-2 rounded-lg transition-all flex items-center justify-center ${onlineUsers[friend.uid] ? 'bg-pw-indigo text-white shadow-pw-sm hover:scale-105' : 'bg-gray-100 text-gray-400'}`}
+                                                            className={`p-2 rounded-lg transition-all flex items-center justify-center ${onlineUsers[friend.uid] ? 'bg-pw-indigo text-white shadow-pw-sm hover:scale-105' : 'bg-gray-100 dark:bg-slate-800 text-gray-400'}`}
                                                             title={onlineUsers[friend.uid] ? "Challenge Friend" : "Friend Offline"}
                                                         >
                                                             <FaGamepad />
@@ -186,7 +186,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                     {onInvite && (
                                                         <button
                                                             onClick={() => onInvite(friend.uid)}
-                                                            className="p-2 rounded-lg bg-pw-surface text-pw-indigo border border-pw-border hover:bg-white hover:border-pw-indigo hover:shadow-sm transition-all"
+                                                            className="p-2 rounded-lg bg-pw-surface dark:bg-slate-800 text-pw-indigo border border-pw-border dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 hover:border-pw-indigo hover:shadow-sm transition-all"
                                                             title="Send Invite"
                                                         >
                                                             {externalInviteLoading ? <span className="animate-spin">C</span> : <FaShareAlt />}
@@ -204,7 +204,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                     {incomingRequests.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center h-64 text-center p-6 opacity-60">
                                             <FaEnvelope className="text-4xl text-gray-300 mb-3" />
-                                            <p className="text-gray-500 font-medium">No pending requests</p>
+                                            <p className="text-gray-500 dark:text-gray-400 font-medium">No pending requests</p>
                                         </div>
                                     ) : (
                                         incomingRequests.map((req, idx) => (
@@ -213,7 +213,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
-                                                className="bg-white p-4 rounded-2xl shadow-pw-sm border border-pw-border"
+                                                className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-pw-sm border border-pw-border dark:border-slate-800"
                                             >
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <img
