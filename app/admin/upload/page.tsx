@@ -27,6 +27,13 @@ const UploadPage = () => {
         pdfUrl: '',
     })
 
+    // Global Metadata State (for Bulk Upload)
+    const [globalSettings, setGlobalSettings] = useState({
+        class: '10',
+        board: 'CBSE',
+        stream: 'Science'
+    })
+
     // Questions Upload State
     const [uploadProgress, setUploadProgress] = useState('')
     const [parsedQuestions, setParsedQuestions] = useState<any[]>([])
@@ -43,10 +50,20 @@ const UploadPage = () => {
             try {
                 const bstr = evt.target?.result
                 const wb = XLSX.read(bstr, { type: 'binary' })
-                const wsname = wb.SheetNames[0]
-                const ws = wb.Sheets[wsname]
-                const data = XLSX.utils.sheet_to_json(ws)
-                processParsedData(data)
+
+                let allData: any[] = []
+
+                // MULTI-SHEET SUPPORT: Iterate all sheets
+                wb.SheetNames.forEach(sheetName => {
+                    const ws = wb.Sheets[sheetName]
+                    const sheetData = XLSX.utils.sheet_to_json(ws)
+                    if (sheetData.length > 0) {
+                        allData = [...allData, ...sheetData]
+                    }
+                })
+
+                console.log(`Parsed ${allData.length} rows from ${wb.SheetNames.length} sheets.`)
+                processParsedData(allData)
             } catch (error) {
                 console.error("Error parsing file", error)
                 alert("Failed to parse Excel file. Please check the format.")
@@ -85,6 +102,11 @@ const UploadPage = () => {
                 if (idx !== -1) correctAnswer = idx
             }
 
+            // Apply specific row override OR global setting
+            const rowClass = row['Class'] ? row['Class'].toString() : globalSettings.class;
+            const rowBoard = row['Board'] || globalSettings.board;
+            const rowStream = row['Stream'] || globalSettings.stream;
+
             return {
                 id: index, // Temp ID for preview
                 mainSubject,
@@ -93,8 +115,9 @@ const UploadPage = () => {
                 question,
                 options,
                 correctAnswer,
-                class: row['Class'] || '10', // Default or from file
-                board: row['Board'] || 'CBSE', // Default or from file
+                class: rowClass,
+                board: rowBoard,
+                stream: rowStream,
                 isValid: question && options[0] && options[1] // Basic validation
             }
         })
@@ -146,6 +169,7 @@ const UploadPage = () => {
                             chapter: q.chapter,
                             board: q.board,
                             class: q.class.toString(),
+                            stream: q.stream || 'Science', // New Field
                             mainSubject: q.mainSubject,
                             createdAt: Date.now(),
                             active: true
@@ -454,6 +478,49 @@ const UploadPage = () => {
                             <div>
                                 <h1 className="text-2xl font-bold text-pw-violet">Bulk Question Upload</h1>
                                 <p className="text-gray-500">Upload Excel/CSV file to add questions</p>
+                            </div>
+                        </div>
+
+                        {/* Global Metadata Selectors */}
+                        <div className="grid grid-cols-3 gap-4 mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Class</label>
+                                <select
+                                    value={globalSettings.class}
+                                    onChange={(e) => setGlobalSettings({ ...globalSettings, class: e.target.value })}
+                                    className="w-full p-2 rounded-lg border border-gray-200 text-sm font-semibold focus:border-pw-indigo outline-none"
+                                >
+                                    <option value="9">Class 9</option>
+                                    <option value="10">Class 10</option>
+                                    <option value="11">Class 11</option>
+                                    <option value="12">Class 12</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Board</label>
+                                <select
+                                    value={globalSettings.board}
+                                    onChange={(e) => setGlobalSettings({ ...globalSettings, board: e.target.value })}
+                                    className="w-full p-2 rounded-lg border border-gray-200 text-sm font-semibold focus:border-pw-indigo outline-none"
+                                >
+                                    <option value="CBSE">CBSE</option>
+                                    <option value="Bihar Board">Bihar Board</option>
+                                    <option value="ICSE">ICSE</option>
+                                    <option value="State Board">State Board</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Stream</label>
+                                <select
+                                    value={globalSettings.stream}
+                                    onChange={(e) => setGlobalSettings({ ...globalSettings, stream: e.target.value })}
+                                    className="w-full p-2 rounded-lg border border-gray-200 text-sm font-semibold focus:border-pw-indigo outline-none"
+                                >
+                                    <option value="Science">Science</option>
+                                    <option value="Commerce">Commerce</option>
+                                    <option value="Arts">Arts</option>
+                                    <option value="General">General</option>
+                                </select>
                             </div>
                         </div>
 
