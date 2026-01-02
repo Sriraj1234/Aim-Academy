@@ -34,7 +34,6 @@ const PAGE_SIZE = 20
 // Extend Domain Question with Firestore specific fields
 interface Question extends DomainQuestion {
     createdAt: number
-    mainSubject?: string // Added for bulk uploads
 }
 
 export default function QuestionsPage() {
