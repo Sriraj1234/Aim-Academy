@@ -24,6 +24,27 @@ const ResultPage = () => {
     const [showReview, setShowReview] = useState(false)
     const [showConfetti, setShowConfetti] = useState(false)
 
+    // Double-Tap Back Logic
+    const [showExitWarning, setShowExitWarning] = useState(false);
+
+    useEffect(() => {
+        window.history.pushState(null, '', window.location.href);
+
+        const handlePopState = () => {
+            const isWarningVisible = document.getElementById('exit-warning');
+            if (isWarningVisible) {
+                router.push('/');
+            } else {
+                window.history.pushState(null, '', window.location.href);
+                setShowExitWarning(true);
+                setTimeout(() => setShowExitWarning(false), 2000);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [router]);
+
     const [quizData, setQuizData] = useState<{
         questions: Question[]
         answers: (number | null)[]
@@ -152,27 +173,6 @@ const ResultPage = () => {
     const skippedCount = answers.filter(a => a === null || a === undefined).length
     const isHighScore = accuracy >= 80
     const isPass = accuracy >= 40
-
-    // Double-Tap Back Logic
-    const [showExitWarning, setShowExitWarning] = useState(false);
-
-    useEffect(() => {
-        window.history.pushState(null, '', window.location.href);
-
-        const handlePopState = () => {
-            const isWarningVisible = document.getElementById('exit-warning');
-            if (isWarningVisible) {
-                router.push('/');
-            } else {
-                window.history.pushState(null, '', window.location.href);
-                setShowExitWarning(true);
-                setTimeout(() => setShowExitWarning(false), 2000);
-            }
-        };
-
-        window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
-    }, [router]);
 
     return (
         <div className="min-h-screen bg-pw-surface text-pw-violet pb-32 overflow-x-hidden font-sans">
