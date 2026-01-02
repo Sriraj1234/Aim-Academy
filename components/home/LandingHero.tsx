@@ -32,7 +32,7 @@ export const LandingHero = () => {
                         <span className="text-pw-indigo text-xs font-bold tracking-wide uppercase">India's Most Loved Learning Platform</span>
                     </motion.div>
 
-                    <h1 className="text-3xl sm:text-5xl lg:text-6xl font-display font-bold text-pw-violet mb-6 leading-tight max-w-2xl lg:max-w-none">
+                    <h1 className="text-3xl sm:text-5xl lg:text-6xl font-display font-bold text-pw-violet dark:text-white mb-6 leading-tight max-w-2xl lg:max-w-none">
                         Master Your <br className="hidden lg:block" />
                         <span className="text-pw-indigo relative inline-block">
                             Exams
@@ -43,7 +43,7 @@ export const LandingHero = () => {
                         </span>
                     </h1>
 
-                    <p className="text-gray-500 text-lg sm:text-xl font-body leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+                    <p className="text-gray-500 dark:text-gray-400 text-lg sm:text-xl font-body leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
                         Experience the new era of learning with interactive quizzes, real-time battles, and smart performance analysis.
                     </p>
 
@@ -61,7 +61,7 @@ export const LandingHero = () => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="w-full px-8 py-4 bg-white border border-pw-border text-pw-violet font-bold text-lg rounded-xl shadow-sm hover:bg-pw-surface transition-all"
+                                className="w-full px-8 py-4 bg-white dark:bg-slate-900 border border-pw-border dark:border-slate-800 text-pw-violet dark:text-white font-bold text-lg rounded-xl shadow-sm hover:bg-pw-surface dark:hover:bg-slate-800 transition-all"
                             >
                                 Join for Free
                             </motion.button>
@@ -71,14 +71,14 @@ export const LandingHero = () => {
                     <div className="mt-12 flex items-center justify-center lg:justify-start gap-8 opacity-90">
                         <div className="flex -space-x-4">
                             {[1, 2, 3].map(i => (
-                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-pw-surface relative overflow-hidden shadow-md">
+                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-900 bg-pw-surface dark:bg-slate-800 relative overflow-hidden shadow-md">
                                     {/* Placeholder avatars can be replaced */}
                                     <div className="w-full h-full bg-gradient-to-br from-pw-indigo/20 to-pw-violet/20 flex items-center justify-center text-xs text-pw-indigo font-bold">{i}</div>
                                 </div>
                             ))}
                         </div>
-                        <div className="text-sm text-gray-500">
-                            <span className="font-bold text-pw-violet block text-lg">50k+</span>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <span className="font-bold text-pw-violet dark:text-white block text-lg">50k+</span>
                             Happy Students
                         </div>
                     </div>
@@ -90,9 +90,9 @@ export const LandingHero = () => {
                         initial={{ opacity: 0, rotateY: 15, scale: 0.9 }}
                         animate={{ opacity: 1, rotateY: 0, scale: 1 }}
                         transition={{ duration: 1, type: "spring" }}
-                        className="relative w-full h-full rounded-[2rem] overflow-hidden border border-pw-border shadow-pw-xl bg-white"
+                        className="relative w-full h-full rounded-[2rem] overflow-hidden border border-pw-border dark:border-slate-800 shadow-pw-xl bg-white dark:bg-slate-900"
                     >
-                        <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden bg-pw-surface">
+                        <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden bg-pw-surface dark:bg-slate-950">
                             {/* If image exists, use it, else fallback to a nice gradient/pattern */}
                             <Image
                                 src="/assets/login-hero.png"
@@ -113,7 +113,7 @@ export const LandingHero = () => {
                         <motion.div
                             animate={{ y: [-10, 10, -10] }}
                             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            className="hidden sm:flex absolute top-10 right-10 p-4 bg-white/80 backdrop-blur-xl border border-pw-border rounded-2xl shadow-pw-lg"
+                            className="hidden sm:flex absolute top-10 right-10 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-pw-border dark:border-slate-800 rounded-2xl shadow-pw-lg"
                         >
                             <TbSum className="text-4xl text-pw-indigo" />
                         </motion.div>
@@ -121,14 +121,14 @@ export const LandingHero = () => {
                         <motion.div
                             animate={{ y: [10, -10, 10] }}
                             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                            className="hidden sm:flex absolute bottom-10 left-10 p-4 bg-white/80 backdrop-blur-xl border border-pw-border rounded-2xl shadow-pw-lg items-center gap-3"
+                            className="hidden sm:flex absolute bottom-10 left-10 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-pw-border dark:border-slate-800 rounded-2xl shadow-pw-lg items-center gap-3"
                         >
                             <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                                 <FaRocket className="text-red-500" />
                             </div>
                             <div>
-                                <span className="block text-xs text-gray-400 font-bold uppercase tracking-wider">New</span>
-                                <span className="text-pw-violet font-bold">Live Quizzes & Tests</span>
+                                <span className="block text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">New</span>
+                                <span className="text-pw-violet dark:text-white font-bold">Live Quizzes & Tests</span>
                             </div>
                         </motion.div>
                     </motion.div>
