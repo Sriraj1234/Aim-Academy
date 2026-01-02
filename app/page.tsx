@@ -32,11 +32,11 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pw-surface flex flex-col text-gray-900 font-sans selection:bg-pw-indigo selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-pw-surface dark:bg-slate-950 flex flex-col text-gray-900 dark:text-gray-100 font-sans selection:bg-pw-indigo selection:text-white overflow-x-hidden transition-colors duration-300">
 
       {/* Ambient Glows - Hidden on mobile to prevent content squeeze */}
-      <div className="hidden md:block fixed top-[-20%] left-[-10%] w-[40%] h-[40%] bg-pw-indigo/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
-      <div className="hidden md:block fixed bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-pw-violet/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      <div className="hidden md:block fixed top-[-20%] left-[-10%] w-[40%] h-[40%] bg-pw-indigo/5 dark:bg-pw-indigo/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      <div className="hidden md:block fixed bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-pw-violet/5 dark:bg-pw-violet/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
       <main className="relative pt-16 z-10 space-y-24 pb-24">
 
@@ -51,12 +51,12 @@ export default function LandingPage() {
 
       </main>
 
-      <footer className="relative z-10 bg-white/80 backdrop-blur-md border-t border-pw-border py-12 text-center">
+      <footer className="relative z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-pw-border dark:border-slate-800 py-12 text-center transition-colors">
         <div className="max-w-7xl mx-auto px-4">
           <p className="font-display font-bold text-3xl mb-4 tracking-tight flex items-center justify-center gap-2">
-            <span className="text-pw-violet">Padhaku</span>
+            <span className="text-pw-violet dark:text-white">Padhaku</span>
           </p>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto">Empowering Bihar Board Students to achieve excellence through royal education.</p>
+          <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">Empowering Bihar Board Students to achieve excellence through royal education.</p>
           <p className="text-gray-400 text-sm">© 2024 Padhaku. Crafted for Toppers.</p>
           <div className="mt-8 flex justify-center gap-6 opacity-60">
             {/* Social placeholders or links could go here */}
