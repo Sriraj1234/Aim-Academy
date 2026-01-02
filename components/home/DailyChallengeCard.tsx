@@ -174,28 +174,43 @@ export const DailyChallengeCard = () => {
 
                                     <div className="space-y-2">
                                         {question.options.map((opt: string, idx: number) => {
-                                            const isWrong = wrongIndices.includes(idx);
-                                            const isRight = isSolved && idx === question.correctAnswer;
+                                            const isSelected = selectedOption === idx;
+                                            const isRightAnswer = idx === question.correctAnswer;
+                                            const showResult = selectedOption !== null;
 
-                                            // Dynamic Styling
+                                            // Default style
                                             let style = "bg-gray-50 dark:bg-slate-800 border-gray-100 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-750";
-                                            let icon = null;
+
+                                            // Result Styles
+                                            if (showResult) {
+                                                if (isSelected) {
+                                                    style = isCorrect
+                                                        ? "bg-green-50 dark:bg-green-900/20 border-green-500 text-green-600 dark:text-green-400 font-bold"
+                                                        : "bg-red-50 dark:bg-red-900/20 border-red-500 text-red-600 dark:text-red-400 opacity-80";
+                                                } else if (isRightAnswer && !isCorrect) {
+                                                    // Show correct answer if user got it wrong
+                                                    style = "bg-green-50 dark:bg-green-900/20 border-green-500 text-green-600 dark:text-green-400 font-bold ring-2 ring-green-100 dark:ring-green-900";
+                                                } else {
+                                                    style += " opacity-50 cursor-not-allowed";
+                                                }
+                                            }
 
                                             return (
                                                 <button
                                                     key={idx}
                                                     onClick={() => handleOptionSelect(idx)}
-                                                    disabled={isSolved || isWrong}
+                                                    disabled={showResult}
                                                     className={`w-full text-left p-3 rounded-xl border text-xs font-bold transition-all flex justify-between items-center ${style}`}
                                                 >
                                                     <span className="flex-1 mr-2">{opt}</span>
-                                                    {isWrong && (
-                                                        <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+
+                                                    {showResult && isSelected && !isCorrect && (
+                                                        <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-red-600 dark:text-red-400">
                                                             Wrong <FaTimesCircle className="text-sm" />
                                                         </span>
                                                     )}
-                                                    {isRight && (
-                                                        <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                                                    {showResult && isRightAnswer && (
+                                                        <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-green-600 dark:text-green-400">
                                                             Correct <FaCheckCircle className="text-sm" />
                                                         </span>
                                                     )}
@@ -204,12 +219,21 @@ export const DailyChallengeCard = () => {
                                         })}
                                     </div>
 
-                                    {isSolved && (
+                                    {isCorrect === true && (
                                         <motion.div
                                             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                             className="mt-4 text-center text-green-600 dark:text-green-400 text-sm font-bold bg-green-50 dark:bg-green-900/20 p-2 rounded-lg border border-green-100 dark:border-green-900/30"
                                         >
                                             +30 XP Earned! 🎉
+                                        </motion.div>
+                                    )}
+
+                                    {isCorrect === false && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                            className="mt-4 text-center text-red-500 dark:text-red-400 text-sm font-bold bg-red-50 dark:bg-red-900/20 p-2 rounded-lg border border-red-100 dark:border-red-900/30"
+                                        >
+                                            Wrong Answer! Better luck next time. 😔
                                         </motion.div>
                                     )}
                                 </>
