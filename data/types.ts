@@ -179,3 +179,27 @@ export interface Note {
     uploadedAt: number;
     downloadCount: number;
 }
+
+export interface VideoResource {
+    id: string;
+    title: string;
+    description?: string;
+    videoUrl: string; // Full Youtube URL
+    videoId: string;  // Extracted ID
+    thumbnailUrl?: string;
+
+    // Taxonomy
+    board: string;
+    classLevel: string;
+    subject: string;
+    chapter: string;
+
+    // Credits
+    teacherName: string;
+    channelName: string;
+
+    // Metadata
+    uploadedBy: string;
+    createdAt: number;
+    updatedAt: number;
+}
