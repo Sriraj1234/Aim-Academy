@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -38,6 +38,9 @@ export default function LobbyPage() {
         }
     };
 
+    // Fix: Use ref to track intentional navigation to prevent auto-leave
+    const isNavigatingRef = useRef(false);
+
     // 0. Double-Tap Back Logic
     const [showExitWarning, setShowExitWarning] = useState(false);
 
@@ -50,8 +53,8 @@ export default function LobbyPage() {
             const isWarningVisible = document.getElementById('exit-warning');
 
             if (isWarningVisible) {
-                // Second tap: Allow exit (do nothing, let browser go back)
-                // Or explicitly route
+                // Second tap: Allow exit
+                isNavigatingRef.current = true; // Mark as intentional
                 router.push('/play/group');
             } else {
                 // First tap: Prevent exit, show warning
@@ -76,10 +79,8 @@ export default function LobbyPage() {
 
         // Auto-Leave on Component Unmount (Tab close, Back button, etc.)
         return () => {
-            if (user && localStorage.getItem(`player_id_${roomId}`)) {
-                // Use Beacon for reliable background request on close
-                // Note: Firebase SDK handles basic offline/disconnect, but explicit leave helps
-                // We can't await here reliably, but we fire the promise.
+            // Only leave if NOT navigating intentionally elsewhere in the app
+            if (!isNavigatingRef.current && user && localStorage.getItem(`player_id_${roomId}`)) {
                 const playerId = localStorage.getItem(`player_id_${roomId}`) || user.uid;
                 leaveRoom(roomId as string, playerId).catch(err => console.error("Auto-leave failed", err));
             }
@@ -113,6 +114,7 @@ export default function LobbyPage() {
                 if (data.status === 'in-progress') {
                     // Use a ref or simple check to avoid loops, though router.push is safe
                     console.log("Game started, navigating...", roomId);
+                    isNavigatingRef.current = true; // Mark as intentional to prevent auto-leave
                     router.push(`/play/group/game/${roomId}`);
                 }
             } else {
@@ -159,6 +161,7 @@ export default function LobbyPage() {
             localStorage.removeItem(`player_id_${roomId}`);
             localStorage.removeItem(`room_host_${roomId}`); // Just in case, though host should probably delete room
             setHasJoined(false);
+            isNavigatingRef.current = true; // Mark as intentional
             router.push('/play/group');
         } catch (e) {
             console.error("Failed to leave room", e);
@@ -415,15 +418,27 @@ export default function LobbyPage() {
                 {/* Footer Action */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-pw-border md:static md:bg-transparent md:border-0 md:p-0 flex justify-center z-50">
                     {isHost ? (
-                        <div className="bg-white p-2 rounded-[2.5rem] shadow-pw-xl border border-pw-border flex items-center gap-4 animate-in slide-in-from-bottom duration-500 ring-4 ring-pw-surface">
+                        <div className="bg-white p-2 rounded-[2.5rem] shadow-pw-xl border border-pw-border flex items-center gap-4 animate-in slide-in-from-bottom duration-500 ring-4 ring-pw-surface relative">
+
                             {/* If room not configured yet */}
                             {!room.subject ? (
-                                <button
-                                    onClick={() => router.push(`/play/group/host?existingRoomId=${roomId}`)}
-                                    className="bg-pw-indigo hover:bg-pw-violet text-white px-12 py-4 rounded-[2rem] text-xl font-bold shadow-lg hover:shadow-pw-indigo/25 transition-all flex items-center gap-3 active:scale-95"
-                                >
-                                    <FaGamepad /> CONFIGURE GAME
-                                </button>
+                                <div className="flex items-center gap-4 pr-2">
+                                    <div className="hidden md:block pl-6 text-left">
+                                        <p className="text-[10px] font-bold text-pw-indigo uppercase tracking-wider mb-0.5">Next Step</p>
+                                        <p className="text-sm text-gray-500 font-medium">Choose Subject & Questions</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            isNavigatingRef.current = true; // Prevent auto-leave
+                                            router.push(`/play/group/host?existingRoomId=${roomId}`);
+                                        }}
+                                        className="relative overflow-hidden bg-pw-indigo hover:bg-pw-violet text-white px-8 md:px-12 py-4 rounded-[2rem] text-lg md:text-xl font-bold shadow-lg hover:shadow-pw-indigo/25 transition-all flex items-center gap-3 active:scale-95 group"
+                                    >
+                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+                                        <FaGamepad className="text-2xl group-hover:rotate-12 transition-transform" />
+                                        <span>CONFIGURE GAME</span>
+                                    </button>
+                                </div>
                             ) : (
                                 <>
                                     <div className="pl-8 pr-4 text-left">
@@ -431,7 +446,10 @@ export default function LobbyPage() {
                                         <p className="text-xl font-bold text-pw-violet">{playersList.length} <span className="text-gray-400 text-sm font-medium">Players Ready</span></p>
                                     </div>
                                     <button
-                                        onClick={handleStart}
+                                        onClick={() => {
+                                            isNavigatingRef.current = true; // Prevent auto-leave on game start
+                                            handleStart();
+                                        }}
                                         className="bg-gradient-to-r from-pw-indigo to-pw-violet hover:shadow-pw-lg text-white px-12 py-4 rounded-[2rem] text-xl font-bold shadow-pw-md transition-all flex items-center gap-3 active:scale-95 hover:-translate-y-0.5"
                                     >
                                         <FaPlay /> START MATCH
