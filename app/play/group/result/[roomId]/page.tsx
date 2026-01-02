@@ -73,15 +73,6 @@ export default function ResultPage() {
         fetchResults();
     }, [roomId]);
 
-    if (loading) return (
-        <div className="min-h-screen bg-surface-off flex items-center justify-center text-brand-600">
-            <div className="flex flex-col items-center">
-                <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4" />
-                <span className="font-bold text-lg">Calculating Results...</span>
-            </div>
-        </div>
-    );
-
     // Double-Tap Back Logic
     const [showExitWarning, setShowExitWarning] = useState(false);
 
@@ -102,6 +93,15 @@ export default function ResultPage() {
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
     }, [router]);
+
+    if (loading) return (
+        <div className="min-h-screen bg-surface-off flex items-center justify-center text-brand-600">
+            <div className="flex flex-col items-center">
+                <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4" />
+                <span className="font-bold text-lg">Calculating Results...</span>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-surface-off text-text-main font-sans overflow-x-hidden">
