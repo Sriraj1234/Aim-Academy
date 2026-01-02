@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Header } from '@/components/shared/Header'
 import { MediaUploader } from '@/components/admin/MediaUploader'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, serverTimestamp, query, orderBy, getDocs, deleteDoc, doc, writeBatch } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, query, orderBy, getDocs, deleteDoc, doc, writeBatch, where } from 'firebase/firestore'
 import { FaBook, FaSave, FaLock, FaTrash, FaQuestionCircle, FaFileExcel, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa'
 import { useAuth } from '@/hooks/useAuth'
 import * as XLSX from 'xlsx'
@@ -160,10 +160,10 @@ const UploadPage = () => {
                 const rowClass = classKey ? row[classKey].toString() : globalSettings.class;
 
                 const boardKey = findKeySmart(['board']);
-                const rowBoard = boardKey ? row[boardKey] : globalSettings.board;
+                const rowBoard = (boardKey ? row[boardKey] : globalSettings.board).toString().toLowerCase();
 
                 const streamKey = findKeySmart(['stream']);
-                const rowStream = streamKey ? row[streamKey] : globalSettings.stream;
+                const rowStream = (streamKey ? row[streamKey] : globalSettings.stream).toString().toLowerCase();
 
                 return {
                     id: `${sheet.name}-${index}`, // Temp ID
@@ -338,12 +338,53 @@ const UploadPage = () => {
     // Derived state for view
     const parsedQuestions = parsedSheets[activeSheet]?.questions || []
 
+    const deleteSubjectQuestions = async () => {
+        const subjectToDelete = 'mathematics'; // Target
+        if (!confirm(`DANGER: Are you sure you want to PERMANENTLY DELETE ALL questions for '${subjectToDelete}'? This cannot be undone.`)) return;
+
+        const confirmText = prompt(`Type "DELETE ${subjectToDelete.toUpperCase()}" to confirm:`);
+        if (confirmText !== `DELETE ${subjectToDelete.toUpperCase()}`) {
+            alert("Deletion cancelled. Text did not match.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // query for both 'mathematics' and 'maths' just in case
+            const subjects = ['mathematics', 'maths'];
+            let totalDeleted = 0;
+
+            for (const subj of subjects) {
+                const q = query(collection(db, 'questions'), where('subject', '==', subj));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) continue;
+
+                const batch = writeBatch(db);
+                snapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                totalDeleted += snapshot.size;
+            }
+
+            alert(`Successfully deleted ${totalDeleted} questions via batch operation.`);
+            window.location.reload(); // Refresh to clear any local state/caches
+        } catch (error) {
+            console.error("Error deleting subject data:", error);
+            alert("Failed to delete data. Check console.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-pw-surface pb-20">
             <Header />
 
             <div className="pt-24 px-4 max-w-2xl mx-auto">
                 {/* Tabs */}
+                {/* ... existing tab buttons ... */}
                 <div className="bg-white p-2 rounded-2xl shadow-pw-sm border border-pw-border flex mb-8">
                     <button
                         onClick={() => setActiveTab('notes')}
@@ -356,6 +397,22 @@ const UploadPage = () => {
                         className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === 'questions' ? 'bg-pw-indigo text-white shadow-md' : 'text-gray-500 hover:text-pw-indigo'}`}
                     >
                         Questions (Bulk)
+                    </button>
+                </div>
+
+                {/* DANGER ZONE - Added for subject deletion */}
+                <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-2xl">
+                    <h3 className="text-red-700 font-bold mb-2 flex items-center gap-2">
+                        <FaExclamationTriangle /> Danger Zone
+                    </h3>
+                    <p className="text-xs text-red-600 mb-4">
+                        Use this to permanently remove a subject's data from the database.
+                    </p>
+                    <button
+                        onClick={deleteSubjectQuestions}
+                        className="w-full py-2 bg-red-100 text-red-700 rounded-lg font-bold text-sm hover:bg-red-200 transition-colors border border-red-200"
+                    >
+                        Delete All "Mathematics" Data
                     </button>
                 </div>
 
@@ -716,7 +773,7 @@ const UploadPage = () => {
                                                             }}
                                                             className="w-full bg-transparent text-xs py-1 outline-none cursor-pointer hover:text-pw-indigo"
                                                         >
-                                                            {['physics', 'chemistry', 'biology', 'maths', 'history', 'geography', 'civics', 'economics', 'english', 'hindi'].map(s => (
+                                                            {['physics', 'chemistry', 'biology', 'history', 'geography', 'civics', 'economics', 'english', 'hindi'].map(s => (
                                                                 <option key={s} value={s}>{s}</option>
                                                             ))}
                                                         </select>
