@@ -20,6 +20,7 @@ const STORAGE_KEY = 'aim_flashcards';
 
 export const AIFlashcardGenerator = () => {
     const [topic, setTopic] = useState('');
+    const [language, setLanguage] = useState<'english' | 'hindi' | 'hinglish'>('english');
     const [loading, setLoading] = useState(false);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -48,8 +49,9 @@ export const AIFlashcardGenerator = () => {
                 body: JSON.stringify({
                     topic,
                     count: 10,
-                    classLevel: userProfile?.class || '10', // Pass class (default 10)
-                    board: userProfile?.board || 'CBSE'     // Pass board (default CBSE)
+                    classLevel: userProfile?.class || '10',
+                    board: userProfile?.board || 'CBSE',
+                    language // Pass selected language
                 })
             });
 
@@ -219,6 +221,26 @@ export const AIFlashcardGenerator = () => {
                     className="w-full px-5 py-4 border-2 border-gray-100 rounded-2xl text-gray-700 bg-gray-50/50 focus:bg-white focus:border-pw-indigo focus:ring-4 focus:ring-pw-indigo/10 transition-all outline-none font-medium placeholder-gray-400"
                     onKeyDown={(e) => e.key === 'Enter' && generateFlashcards()}
                 />
+
+                {/* Language Selector */}
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Language:</span>
+                    <div className="flex gap-1.5 flex-1">
+                        {(['english', 'hindi', 'hinglish'] as const).map((lang) => (
+                            <button
+                                key={lang}
+                                onClick={() => setLanguage(lang)}
+                                className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${language === lang
+                                        ? 'bg-pw-indigo text-white shadow-md'
+                                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                    }`}
+                            >
+                                {lang === 'english' ? '🇬🇧 English' : lang === 'hindi' ? '🇮🇳 हिंदी' : '🌐 Hinglish'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <button
                     onClick={generateFlashcards}
                     disabled={loading || !topic.trim()}
