@@ -11,7 +11,9 @@ import { ModernTimer } from '@/components/quiz/ModernTimer'
 import { useQuiz } from '@/hooks/useQuiz'
 import { useTimer } from '@/hooks/useTimer'
 import { useAuth } from '@/hooks/useAuth'
-import { FaChevronLeft, FaPause, FaPlay, FaInfoCircle, FaBookmark, FaRegBookmark, FaStepForward, FaStepBackward } from 'react-icons/fa'
+import { useSound } from '@/hooks/useSound'
+import { FaChevronLeft, FaPause, FaPlay, FaInfoCircle, FaBookmark, FaRegBookmark, FaStepForward, FaStepBackward, FaStar, FaFire, FaTrophy } from 'react-icons/fa'
+import { HiSparkles } from 'react-icons/hi'
 
 export default function QuizPage() {
     const router = useRouter()
@@ -20,6 +22,11 @@ export default function QuizPage() {
     const { questions, currentQuestionIndex, submitAnswer, nextQuestion, prevQuestion, skipQuestion, toggleBookmark, bookmarks, isFinished, isLoading, isSavingResult, answers, startAIQuiz } = useQuiz()
     const [selectedOption, setSelectedOption] = useState<number | null>(null)
     const [isLocked, setIsLocked] = useState(false)
+    const { play } = useSound() // Sound effects hook
+
+    // Appreciation System States
+    const [correctStreak, setCorrectStreak] = useState(0)
+    const [showCelebration, setShowCelebration] = useState<{ type: string; message: string } | null>(null)
 
     // Double-Tap Back Logic
     const [showExitWarning, setShowExitWarning] = useState(false);
@@ -139,6 +146,7 @@ export default function QuizPage() {
     const handleOptionClick = (index: number) => {
         if (!isLocked) {
             setSelectedOption(index)
+            play('click') // Click sound on option select
         }
     }
 
@@ -146,6 +154,38 @@ export default function QuizPage() {
         if (!isRunning) resumeTimer()
         setIsLocked(true)
         submitAnswer(selectedOption)
+
+        // Check correct/wrong and play sound
+        const isCorrect = selectedOption === question?.correctAnswer
+        play(isCorrect ? 'correct' : 'wrong')
+
+        // Streak & Appreciation Logic
+        if (isCorrect) {
+            const newStreak = correctStreak + 1
+            setCorrectStreak(newStreak)
+
+            // Milestone celebrations
+            if (newStreak === 3) {
+                setShowCelebration({ type: 'fire', message: '3x Streak! 🔥 Keep going!' })
+                play('success')
+            } else if (newStreak === 5) {
+                setShowCelebration({ type: 'star', message: '5x Streak! ⭐ Superstar!' })
+                play('levelUp')
+            } else if (newStreak === 10) {
+                setShowCelebration({ type: 'trophy', message: '10x PERFECT! 🏆 CHAMPION!' })
+                play('levelUp')
+            } else if (newStreak > 0 && newStreak % 10 === 0) {
+                setShowCelebration({ type: 'trophy', message: `${newStreak}x STREAK! 🎯 UNSTOPPABLE!` })
+                play('levelUp')
+            }
+
+            // Auto-hide celebration
+            if (newStreak >= 3) {
+                setTimeout(() => setShowCelebration(null), 2000)
+            }
+        } else {
+            setCorrectStreak(0) // Reset streak on wrong answer
+        }
 
         // Navigate faster on the last question
         const isLastQuestion = currentQuestionIndex === questions.length - 1
@@ -166,6 +206,66 @@ export default function QuizPage() {
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-pw-indigo/10 rounded-full blur-[100px]" />
                 <div className="absolute bottom[-10%] right-[-10%] w-[40%] h-[40%] bg-pw-violet/10 rounded-full blur-[100px]" />
             </div>
+
+            {/* Celebration Overlay */}
+            <AnimatePresence>
+                {showCelebration && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
+                    >
+                        {/* Confetti particles */}
+                        {[...Array(20)].map((_, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{
+                                    x: 0, y: 0, opacity: 1, scale: 1,
+                                }}
+                                animate={{
+                                    x: (Math.random() - 0.5) * 400,
+                                    y: (Math.random() - 0.5) * 400,
+                                    opacity: 0,
+                                    scale: 0,
+                                    rotate: Math.random() * 360
+                                }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                className="absolute"
+                                style={{
+                                    color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#A855F7', '#F97316'][i % 5]
+                                }}
+                            >
+                                <HiSparkles className="text-2xl" />
+                            </motion.div>
+                        ))}
+
+                        {/* Main celebration badge */}
+                        <motion.div
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            exit={{ scale: 0 }}
+                            transition={{ type: 'spring', damping: 10, stiffness: 200 }}
+                            className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 p-1 rounded-3xl shadow-2xl"
+                        >
+                            <div className="bg-white dark:bg-gray-900 rounded-[1.3rem] px-8 py-6 text-center">
+                                <motion.div
+                                    animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 0.5, repeat: 2 }}
+                                    className="text-5xl mb-3"
+                                >
+                                    {showCelebration.type === 'fire' && <FaFire className="text-orange-500 mx-auto" />}
+                                    {showCelebration.type === 'star' && <FaStar className="text-yellow-500 mx-auto" />}
+                                    {showCelebration.type === 'trophy' && <FaTrophy className="text-yellow-500 mx-auto" />}
+                                </motion.div>
+                                <p className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">
+                                    {showCelebration.message}
+                                </p>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Header - PW Style */}
             <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-pw-border shadow-pw-sm font-sans">
