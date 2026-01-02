@@ -121,15 +121,15 @@ export const NotesSection = () => {
                             transition={{ delay: index * 0.05 }}
                             whileHover={{ y: -2 }}
                             onClick={() => handleDownload(note)}
-                            className="flex flex-col items-center p-4 bg-pw-surface rounded-xl border border-pw-border hover:shadow-md transition-all text-center group"
+                            className="flex flex-col items-center p-4 bg-pw-surface rounded-xl border border-pw-border hover:shadow-md transition-all text-center group overflow-hidden"
                         >
                             <div className="text-3xl mb-2">
                                 {subjectIcons[note.subject.toLowerCase()] || '📄'}
                             </div>
-                            <h3 className="text-sm font-bold text-gray-800 line-clamp-2 mb-1">
+                            <h3 className="text-sm font-bold text-gray-800 line-clamp-2 mb-1 w-full break-words">
                                 {note.title}
                             </h3>
-                            <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full font-bold uppercase mb-2">
+                            <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full font-bold uppercase mb-2 truncate max-w-full">
                                 {note.subject}
                             </span>
                             <div className="flex items-center gap-1 text-xs text-gray-400 group-hover:text-pw-indigo transition-colors">
