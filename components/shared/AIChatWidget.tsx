@@ -19,6 +19,7 @@ interface Message {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
+    images?: { title: string; image: string; thumbnail?: string }[];
 }
 
 interface AIChatWidgetProps {
@@ -37,24 +38,30 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
     const [isListening, setIsListening] = useState(false);
     const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false);
     const [streamingText, setStreamingText] = useState('');
+    // Gallery Modal State
+    const [galleryImages, setGalleryImages] = useState<{ title: string; image: string }[]>([]);
+    const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null); // Changed to textarea
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recognitionRef = useRef<any>(null);
 
     // Hooks
     const { speak, stop, isSpeaking, isSupported: ttsSupported } = useSpeech();
     const { play } = useSound();
-    const { userProfile } = useAuth(); // Get user profile
+    const { userProfile, updateProfile } = useAuth(); // Get user profile and update function
 
-    // Determine effective context
+    // Determine effective context (including AI memory)
     const effectiveContext = {
         ...context,
         class: context?.class || userProfile?.class,
         board: userProfile?.board,
         stream: userProfile?.stream,
-        name: userProfile?.displayName // Pass user name
+        name: userProfile?.displayName,
+        // AI Memory for personalization
+        weakSubjects: userProfile?.aiMemory?.weakSubjects || [],
+        preferredLanguage: userProfile?.aiMemory?.preferences?.language || 'hinglish',
     };
 
     // Initialize speech recognition
@@ -131,17 +138,135 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
         play('click');
 
         try {
+
+            const lowerInput = userMessage.content.toLowerCase();
+            let searchContextParts: string[] = [];
+            let imageResults: any[] = [];
+
+            // --- Smart Intent Detection ---
+            // 1. Image Intent: Explicit requests OR Educational topics that benefit from visuals
+            const explicitImageKeywords = ['show', 'image', 'photo', 'pic', 'tasveer', 'diagram', 'drawing', 'sketch', 'map', 'chart'];
+            const eduVisualKeywords = ['structure', 'anatomy', 'mechanism', 'cycle', 'process', 'parts of', 'schematic', 'layout'];
+
+            const isImageIntent = explicitImageKeywords.some(k => lowerInput.includes(k)) ||
+                eduVisualKeywords.some(k => lowerInput.includes(k));
+
+            // 2. Web Intent: Factual, Time-sensitive, or specific queries
+            // We verify "syllabus", "dates", "news", "current", "who is", "latest"
+            // Including Hinglish/Hindi keywords for broader support
+            const webKeywords = [
+                'search', 'google', 'current', 'latest', 'news', 'syllabus', 'omr', 'pattern', 'exam date',
+                'who is', 'what is the price', 'weather', 'minister', 'president', 'ceo', 'founder',
+                'karrent', 'current', 'vartman', 'kaun hai', 'kya hai', 'kab', 'kahan', 'mantri', 'yojana'
+            ];
+            const isWebIntent = !isImageIntent && webKeywords.some(k => lowerInput.includes(k));
+            // Note: We prioritize images for "What is photosynthesis?" but if it's "What is the syllabus", we want web.
+            // A hybrid approach: 
+            const shouldFetchWeb = webKeywords.some(k => lowerInput.includes(k));
+
+            // --- AI Memory: Detect Weak Subject Mentions ---
+            const weakSubjectPatterns = [
+                /weak in (\w+)/i,
+                /problem in (\w+)/i,
+                /struggle with (\w+)/i,
+                /(\w+) samajh nahi aata/i,
+                /(\w+) mushkil hai/i,
+                /(\w+) difficult/i,
+            ];
+            for (const pattern of weakSubjectPatterns) {
+                const match = lowerInput.match(pattern);
+                if (match && match[1]) {
+                    const subject = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+                    const currentWeak = userProfile?.aiMemory?.weakSubjects || [];
+                    if (!currentWeak.includes(subject)) {
+                        const updatedMemory = {
+                            weakSubjects: [...currentWeak, subject].slice(-5), // Keep last 5
+                            topicsStudied: userProfile?.aiMemory?.topicsStudied || [],
+                            preferences: userProfile?.aiMemory?.preferences || { language: 'hinglish', answerLength: 'short' },
+                            lastInteraction: Date.now(),
+                        };
+                        updateProfile({ aiMemory: updatedMemory });
+                        console.log(`[AI Memory] Added "${subject}" to weak subjects.`);
+                    }
+                    break; // Only detect one per message
+                }
+            }
+
+            // --- Parallel Fetching (Agentic Behavior) ---
+            const promises = [];
+
+            if (isImageIntent) {
+                setStreamingText('🔍 Searching for visual aids...');
+                // Clean query for better image search: Remove command words but keep structure/topic intact
+                // We keep 'of' to preserve "structure of X"
+                const query = userMessage.content.replace(/\b(show|me|images?|photos?|pics?|diagrams?|drawings?|sketches?|pictures?)\b/gi, '').trim();
+                promises.push(
+                    fetch('/api/search', {
+                        method: 'POST',
+                        body: JSON.stringify({ query: query || userMessage.content, type: 'image' })
+                    }).then(res => res.json()).then(data => {
+                        if (data.results && data.results.length > 0) {
+                            imageResults = data.results;
+                            searchContextParts.push(`[SYSTEM: I have displayed ${data.results.length} related images/diagrams to the user. Reference them in your explanation if helpful.]`);
+
+                            // Immediately show images in chat stream
+                            const imgMsg: Message = {
+                                id: Date.now().toString() + '_img',
+                                role: 'assistant',
+                                content: 'Found these visuals for you:',
+                                timestamp: new Date(),
+                                images: data.results
+                            };
+                            setMessages(prev => [...prev, imgMsg]);
+                        }
+                    }).catch(err => console.error("Image search failed", err))
+                );
+            }
+
+            if (shouldFetchWeb || isWebIntent) {
+                if (!isImageIntent) setStreamingText('🌐 Verifying information...'); // Only show if not already showing image search
+                const query = userMessage.content.replace(/(search|for|google|web|internet|find|about)/gi, '').trim();
+                promises.push(
+                    fetch('/api/search', {
+                        method: 'POST',
+                        body: JSON.stringify({ query: query || userMessage.content, type: 'text' })
+                    }).then(res => res.json()).then(data => {
+                        if (data.results && data.results.length > 0) {
+                            const snippets = data.results.map((r: any) => `- ${r.title}: ${r.description}`).join('\n');
+                            searchContextParts.push(`[SYSTEM: Real-time search results for "${query}":\n${snippets}\nUse this verified info to answer accurately.]`);
+                        } else {
+                            searchContextParts.push(`[SYSTEM: The web search for "${query}" FAILED to return any results and returned an empty list. Do NOT guess the answer based on your internal knowledge cutoff. Explicitly tell the user you cannot verify the current information online right now.]`);
+                        }
+                    }).catch(err => console.error("Web search failed", err))
+                );
+            }
+
+            // Wait for all "tools" to finish
+            if (promises.length > 0) {
+                await Promise.all(promises);
+            }
+
+            // Construct Final Context
+            let finalContext = userMessage.content;
+            if (searchContextParts.length > 0) {
+                finalContext = `${searchContextParts.join('\n\n')}\n\nUser Question: ${userMessage.content}`;
+            }
+
+            // Clear loading text before starting AI stream
+            if (promises.length > 0) setStreamingText('');
+
             const history = messages.slice(-6).map(m => ({
                 role: m.role === 'assistant' ? 'model' : 'user',
                 content: m.content
             }));
+
 
             // Use streaming
             const response = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: userMessage.content,
+                    message: finalContext, // Send context included
                     history,
                     context: effectiveContext,
                     stream: true,
@@ -221,7 +346,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
         } finally {
             setLoading(false);
         }
-    }, [input, loading, messages, context, play]);
+    }, [input, loading, messages, effectiveContext, play]); // Updated deps
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -265,17 +390,17 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 100, scale: 0.9 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm h-[70vh] max-h-[600px] bg-white rounded-[2rem] border border-pw-border shadow-pw-xl flex flex-col overflow-hidden"
+                        className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm h-[70vh] max-h-[600px] bg-white dark:bg-gray-900 rounded-[2rem] border border-pw-border dark:border-gray-700 shadow-pw-xl flex flex-col overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="bg-pw-surface p-5 border-b border-pw-border flex items-center justify-between shrink-0">
+                        <div className="bg-pw-surface dark:bg-gray-800 p-5 border-b border-pw-border dark:border-gray-700 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-[1rem] bg-pw-violet text-white flex items-center justify-center relative shadow-pw-md">
                                     <FaRobot className="text-xl" />
                                     <HiLightningBolt className="absolute -top-1 -right-1 text-yellow-400 text-base" />
                                 </div>
                                 <div>
-                                    <h3 className="font-display font-bold text-pw-violet text-lg flex items-center gap-2">
+                                    <h3 className="font-display font-bold text-pw-violet dark:text-purple-400 text-lg flex items-center gap-2">
                                         AIM Buddy
                                     </h3>
                                     <p className="text-xs text-green-600 font-bold flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full inline-flex">
@@ -286,22 +411,22 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="w-8 h-8 rounded-full bg-white hover:bg-gray-100 border border-gray-100 flex items-center justify-center transition-colors text-gray-400 hover:text-red-500"
+                                className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-100 dark:border-gray-600 flex items-center justify-center transition-colors text-gray-400 dark:text-gray-300 hover:text-red-500"
                             >
                                 <FaTimes className="text-sm" />
                             </button>
                         </div>
 
                         {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/50 scrollbar-thin scrollbar-thumb-gray-200">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/50 dark:bg-gray-900/50 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
                             {messages.length === 0 && (
                                 <div className="text-center py-12 px-6">
                                     <div className="w-20 h-20 mx-auto mb-6 rounded-[2rem] bg-pw-surface border-2 border-white shadow-pw-sm flex items-center justify-center relative">
                                         <FaRobot className="text-4xl text-pw-indigo" />
                                         <HiSparkles className="absolute -top-2 -right-2 text-2xl text-yellow-400" />
                                     </div>
-                                    <h4 className="font-bold text-pw-violet text-lg mb-2">Hello Bachhon! 👋</h4>
-                                    <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                                    <h4 className="font-bold text-pw-violet dark:text-purple-400 text-lg mb-2">Hello Bachhon! 👋</h4>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 leading-relaxed">
                                         Main hoon aapka AIM Buddy! <br />
                                         Padhai mein koi bhi help chahiye?
                                     </p>
@@ -310,7 +435,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                             <button
                                                 key={q}
                                                 onClick={() => setInput(q)}
-                                                className="text-xs font-bold bg-white hover:bg-pw-surface hover:text-pw-indigo text-gray-600 border border-pw-border px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95"
+                                                className="text-xs font-bold bg-white dark:bg-gray-700 hover:bg-pw-surface dark:hover:bg-gray-600 hover:text-pw-indigo dark:hover:text-purple-300 text-gray-600 dark:text-gray-300 border border-pw-border dark:border-gray-600 px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95"
                                             >
                                                 {q}
                                             </button>
@@ -330,10 +455,10 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                         <div
                                             className={`px-5 py-3 rounded-[1.5rem] text-sm leading-relaxed shadow-sm ${msg.role === 'user'
                                                 ? 'bg-pw-violet text-white rounded-br-md'
-                                                : 'bg-white border border-pw-border text-gray-800 rounded-bl-md'
+                                                : 'bg-white dark:bg-gray-800 border border-pw-border dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-md'
                                                 }`}
                                         >
-                                            <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
+                                            <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}>
                                                 <ReactMarkdown
                                                     remarkPlugins={[remarkGfm]}
                                                     components={{
@@ -341,6 +466,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                                         ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-1" {...props} />,
                                                         ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-1" {...props} />,
                                                         li: ({ node, ...props }) => <li className="" {...props} />,
+                                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                         code: ({ node, className, children, ...props }: any) => {
                                                             const match = /language-(\w+)/.exec(className || '')
                                                             return match ? (
@@ -361,6 +487,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                                 </ReactMarkdown>
                                             </div>
                                         </div>
+
                                         {msg.role === 'assistant' && ttsSupported && (
                                             <button
                                                 onClick={() => speakMessage(msg.content)}
@@ -369,6 +496,32 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                                 {isSpeaking ? <FaVolumeMute /> : <FaVolumeUp />}
                                                 {isSpeaking ? 'Stop' : 'Listen'}
                                             </button>
+                                        )}
+
+                                        {/* Image Carousel */}
+                                        {msg.images && msg.images.length > 0 && (
+                                            <div className="mt-3 flex gap-2 overflow-x-auto pb-2 snap-x">
+                                                {msg.images.map((img, idx) => (
+                                                    <div key={idx} className="flex-shrink-0 w-48 snap-center">
+                                                        <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm aspect-video bg-gray-100 dark:bg-gray-800">
+                                                            <img
+                                                                src={img.image}
+                                                                alt={img.title}
+                                                                className="w-full h-full object-cover transition-transform hover:scale-105 cursor-pointer"
+                                                                onClick={() => {
+                                                                    setGalleryImages(msg.images || []);
+                                                                    setGalleryIndex(idx);
+                                                                }}
+                                                                loading="lazy"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300?text=Image+Load+Error';
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 truncate px-1">{img.title}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         )}
                                     </div>
                                 </motion.div>
@@ -405,8 +558,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 border-t border-pw-border bg-white shrink-0">
-                            <div className="flex items-center gap-3 bg-pw-surface p-2 rounded-[1.5rem] border border-pw-border shadow-inner">
+                        <div className="p-4 border-t border-pw-border dark:border-gray-700 bg-white dark:bg-gray-900 shrink-0">
+                            <div className="flex items-end gap-3 bg-pw-surface dark:bg-gray-800 p-2 rounded-[1.5rem] border border-pw-border dark:border-gray-700 shadow-inner">
                                 {/* Voice Button */}
                                 <button
                                     onClick={toggleVoice}
@@ -419,15 +572,25 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     {isListening ? <FaMicrophoneSlash className="text-sm" /> : <FaMicrophone className="text-sm" />}
                                 </button>
 
-                                {/* Text Input */}
-                                <input
-                                    ref={inputRef}
-                                    type="text"
+                                {/* Text Input - Textarea for expansion */}
+                                <textarea
+                                    ref={textareaRef}
                                     value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={handleKeyDown}
+                                    onChange={(e) => {
+                                        setInput(e.target.value);
+                                        // Auto-resize
+                                        e.target.style.height = 'auto';
+                                        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            sendMessage();
+                                        }
+                                    }}
                                     placeholder={isListening ? "Listening..." : "Poocho jo poochna hai..."}
-                                    className="flex-1 bg-transparent border-none px-2 text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-0 font-medium"
+                                    rows={1}
+                                    className="flex-1 bg-transparent border-none px-2 text-gray-800 dark:text-gray-100 text-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-0 font-medium resize-none max-h-[120px] overflow-y-auto"
                                 />
 
                                 {/* Send Button */}
@@ -439,6 +602,71 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     <FaPaperPlane className="text-sm ml-0.5" />
                                 </button>
                             </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            {/* Full Screen Image Gallery Modal */}
+            <AnimatePresence>
+                {galleryIndex !== null && galleryImages.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
+                        onClick={() => setGalleryIndex(null)}
+                    >
+                        {/* Close Button */}
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            onClick={() => setGalleryIndex(null)}
+                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md z-10"
+                        >
+                            <FaTimes />
+                        </motion.button>
+
+                        {/* Image Counter */}
+                        <div className="absolute top-4 left-4 text-white/70 text-sm font-medium bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">
+                            {galleryIndex + 1} / {galleryImages.length}
+                        </div>
+
+                        {/* Previous Button */}
+                        {galleryIndex > 0 && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setGalleryIndex(galleryIndex - 1); }}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md text-xl"
+                            >
+                                ‹
+                            </button>
+                        )}
+
+                        {/* Main Image */}
+                        <motion.img
+                            key={galleryIndex} // Force re-render on change
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            src={galleryImages[galleryIndex].image}
+                            alt={galleryImages[galleryIndex].title}
+                            className="max-w-[90vw] max-h-[80vh] rounded-2xl shadow-2xl object-contain"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+
+                        {/* Next Button */}
+                        {galleryIndex < galleryImages.length - 1 && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setGalleryIndex(galleryIndex + 1); }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md text-xl"
+                            >
+                                ›
+                            </button>
+                        )}
+
+                        {/* Image Title */}
+                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm max-w-[80%] truncate">
+                            {galleryImages[galleryIndex].title}
                         </div>
                     </motion.div>
                 )}
