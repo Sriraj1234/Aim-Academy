@@ -194,8 +194,13 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             // FINISH QUIZ LOGIC
             setEndTime(Date.now())
             setIsSavingResult(true)
+
+            // Safety: Force navigation after 8 seconds max if Firestore hangs
+            const savePromise = saveQuizResult();
+            const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 8000));
+
             try {
-                await saveQuizResult()
+                await Promise.race([savePromise, timeoutPromise]);
             } catch (err) {
                 console.error("Critical error saving result:", err)
             } finally {
