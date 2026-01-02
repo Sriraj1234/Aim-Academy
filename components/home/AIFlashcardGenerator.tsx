@@ -230,9 +230,9 @@ export const AIFlashcardGenerator = () => {
                             <button
                                 key={lang}
                                 onClick={() => setLanguage(lang)}
-                                className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${language === lang
-                                        ? 'bg-pw-indigo text-white shadow-md'
-                                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex justify-center items-center whitespace-nowrap ${language === lang
+                                    ? 'bg-pw-indigo text-white shadow-md'
+                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                     }`}
                             >
                                 {lang === 'english' ? '🇬🇧 English' : lang === 'hindi' ? '🇮🇳 हिंदी' : '🌐 Hinglish'}
