@@ -1,6 +1,6 @@
 export type Board = 'bseb' | 'cbse' | 'icse' | 'up' | 'mp' | 'maharashtra' | 'rbse' | 'jac' | 'uk' | 'wb' | 'other'
 export type Language = 'english' | 'hindi'
-export type Subject = 'physics' | 'chemistry' | 'biology' | 'mathematics' | 'history' | 'geography' | 'economics' | 'political science' | 'social science' | 'disaster management'
+export type Subject = 'physics' | 'chemistry' | 'biology' | 'history' | 'geography' | 'economics' | 'political science' | 'social science' | 'disaster management'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 export type Class = '9' | '10' | '11' | '12'
 
