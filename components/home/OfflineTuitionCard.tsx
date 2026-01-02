@@ -33,17 +33,9 @@ export const OfflineTuitionCard = () => {
                 <div className="flex gap-3">
                     <button
                         onClick={() => router.push('/offline')}
-                        className="flex-1 bg-white text-orange-600 px-4 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-orange-50 transition-colors flex items-center justify-center gap-2 group-hover:gap-3"
+                        className="w-full bg-white text-orange-600 px-4 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-orange-50 transition-colors flex items-center justify-center gap-2 group-hover:gap-3"
                     >
                         <FaMapMarkerAlt /> Find Now <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
-                    </button>
-
-                    <button
-                        onClick={() => router.push('/offline/register')}
-                        className="px-4 py-3 bg-black/20 hover:bg-black/30 backdrop-blur-md text-white rounded-xl font-bold text-xl shadow-inner border border-white/10 transition-all flex items-center justify-center"
-                        title="Register as Tutor"
-                    >
-                        <FaChalkboardTeacher />
                     </button>
                 </div>
             </div>
