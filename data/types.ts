@@ -114,6 +114,7 @@ export interface UserProfile {
         lat: number;
         lng: number;
     };
+    viewedVideoIds?: string[]; // Study Hub Tracking
 }
 
 export interface BattleRoom {
@@ -202,4 +203,9 @@ export interface VideoResource {
     uploadedBy: string;
     createdAt: number;
     updatedAt: number;
+
+    // Analytics & Features
+    views?: number;
+    hasQuiz?: boolean;
+    linkedQuizChapter?: string;
 }
