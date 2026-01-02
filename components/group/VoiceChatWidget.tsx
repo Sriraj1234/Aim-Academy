@@ -31,12 +31,15 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
     const remoteTracksRef = useRef<Map<number, IRemoteAudioTrack>>(new Map());
 
     // Use a random UID to prevent "UID_CONFLICT" errors if the user re-joins quickly
-    // (Agora holds the session for a few seconds after disconnect, causing conflicts if we reuse the same static UID immediately)
-    const [clientUid] = useState(() => Math.floor(Math.random() * 100000));
     const [speakerOn, setSpeakerOn] = useState(true);
 
     useEffect(() => {
-        if (!channelName || !clientUid) return;
+        if (!channelName) return;
+
+        // Generate a random UID for this specific connection attempt
+        // This ensures that if the component remounts immediately (e.g. StrictMode), we use a fresh UID
+        // preventing "UID_CONFLICT" errors while the previous session is cleaning up
+        const clientUid = Math.floor(Math.random() * 100000);
 
         let isMounted = true;
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
@@ -69,8 +72,8 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
                 // This significantly reduces bandwidth/CPU usage for 4+ users.
                 const micTrack = await AgoraRTC.createMicrophoneAudioTrack({
                     encoderConfig: "speech_standard",
-                    aec: true, // Echo Cancellation
-                    ans: true  // Noise Suppression
+                    AEC: true, // Echo Cancellation
+                    ANS: true  // Noise Suppression
                 });
 
                 localTrackRef.current = micTrack;
@@ -146,7 +149,7 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
             };
             cleanup();
         };
-    }, [channelName, clientUid, speakerOn]); // Added speakerOn to dependencies to ensure user-published handler uses latest state
+    }, [channelName, speakerOn]); // Added speakerOn to dependencies to ensure user-published handler uses latest state
 
     // Toggle mic
     const toggleMic = () => {
