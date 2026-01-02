@@ -9,10 +9,10 @@ interface ScoreCircleProps {
 }
 
 export const ScoreCircle = ({ score, total, size = 192 }: ScoreCircleProps) => {
-    const percentage = Math.round((score / total) * 100)
+    const percentage = total > 0 ? Math.round((score / total) * 100) : 0
     const radius = size * 0.35
     const circumference = 2 * Math.PI * radius
-    const strokeDashoffset = circumference - (percentage / 100) * circumference
+    const strokeDashoffset = isNaN(percentage) ? circumference : circumference - (percentage / 100) * circumference
     const center = size / 2
 
     // Dynamic Color & Label based on score
