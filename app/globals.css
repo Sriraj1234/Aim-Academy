@@ -118,31 +118,10 @@ body {
 
 /* Replaces old !important overrides with semantic class usage expectation
    or minimal targeted fixes if needed. */
-.bg-white {
-  background-color: var(--pw-bg-card);
-}
 
-.bg-gray-50,
-.bg-gray-100 {
-  background-color: var(--bg-primary);
-}
-
-.text-gray-900,
-.text-gray-800 {
-  color: var(--text-primary);
-}
-
-.text-gray-600,
-.text-gray-500 {
-  color: var(--pw-text-sub);
-  /* Or muted */
-}
-
-.border-gray-100,
-.border-gray-200,
-.border-gray-300 {
-  border-color: var(--pw-border);
-}
+/* REMOVED DANGEROUS OVERRIDES */
+/* .bg-white, .text-gray-900 etc are now standard Tailwind.
+   We will use dark:bg-slate-900 etc. explicitly. */
 
 /* Specifically target PW classes to be dynamic if they aren't already */
 .text-pw-violet {
@@ -156,6 +135,10 @@ body {
 
 .bg-pw-card {
   background-color: var(--card-bg);
+}
+
+.border-pw-border {
+  border-color: var(--pw-border);
 }
 
 /* ========================================
