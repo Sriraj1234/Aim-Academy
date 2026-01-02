@@ -6,7 +6,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { VideoResource } from '@/data/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaYoutube, FaSearch, FaFilter, FaPlay, FaExclamationCircle } from 'react-icons/fa';
+import { FaYoutube, FaSearch, FaFilter, FaPlay, FaExclamationCircle, FaEye, FaCheck, FaBolt } from 'react-icons/fa';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 
 // Filter constants
@@ -52,6 +52,7 @@ export default function StudyHubPage() {
                     resourcesRef,
                     where('board', '==', selectedBoard),
                     where('classLevel', '==', selectedClass),
+                    orderBy('views', 'desc'), // Sort by Popularity
                     orderBy('createdAt', 'desc')
                 );
 
@@ -67,6 +68,21 @@ export default function StudyHubPage() {
 
         fetchVideos();
     }, [selectedBoard, selectedClass]);
+
+    // View Tracking Handler - Call API to increment view + update history
+    const handleVideoClick = async (video: VideoResource) => {
+        setSelectedVideo(video);
+
+        try {
+            // Call API to increment views securely
+            fetch('/api/study-hub/view', {
+                method: 'POST',
+                body: JSON.stringify({ videoId: video.id, userId: userProfile?.uid })
+            });
+        } catch (e) {
+            console.error("View track error", e);
+        }
+    };
 
     // Derived Data
     const subjects = Array.from(new Set(videos.map(v => v.subject)));
@@ -126,8 +142,8 @@ export default function StudyHubPage() {
                         <button
                             onClick={() => setSelectedSubject('All')}
                             className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${selectedSubject === 'All'
-                                    ? 'bg-pw-indigo text-white shadow-md'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-pw-indigo text-white shadow-md'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             All Subjects
@@ -137,8 +153,8 @@ export default function StudyHubPage() {
                                 key={subj}
                                 onClick={() => setSelectedSubject(subj)}
                                 className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 ${selectedSubject === subj
-                                        ? 'bg-pw-indigo text-white shadow-md'
-                                        : 'bg-white border text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-pw-indigo text-white shadow-md'
+                                    : 'bg-white border text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <span>{SUBJECT_ICONS[subj] || '📚'}</span>
@@ -266,16 +282,28 @@ export default function StudyHubPage() {
                             <div className="p-4 bg-gray-900 text-white flex justify-between items-start gap-4">
                                 <div>
                                     <h3 className="font-bold text-lg mb-1">{selectedVideo.title}</h3>
-                                    <p className="text-sm text-gray-400">
-                                        By <span className="text-white font-bold">{selectedVideo.teacherName}</span> • {selectedVideo.channelName}
+                                    <p className="text-sm text-gray-400 mb-4">
+                                        By <span className="text-white font-bold">{selectedVideo.teacherName}</span> • {selectedVideo.channelName} • {selectedVideo.views || 0} views
                                     </p>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-3">
+                                        {selectedVideo.hasQuiz && (
+                                            <a
+                                                href={`/play/quiz?mode=chapter&board=${selectedVideo.board}&class=${selectedVideo.classLevel}&subject=${selectedVideo.subject}&chapter=${encodeURIComponent(selectedVideo.linkedQuizChapter || selectedVideo.chapter)}`}
+                                                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                                            >
+                                                <FaBolt /> Take Quiz
+                                            </a>
+                                        )}
+                                        <button
+                                            onClick={() => setSelectedVideo(null)}
+                                            className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
                                 </div>
-                                <button
-                                    onClick={() => setSelectedVideo(null)}
-                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors"
-                                >
-                                    Close
-                                </button>
                             </div>
                         </div>
                     </motion.div>
