@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Toaster } from 'react-hot-toast'
 import { Outfit, Space_Grotesk, Noto_Sans } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
@@ -79,6 +80,7 @@ export default function RootLayout({
                   <PresenceListener />
                   <GameInviteListener />
                   <InstallPrompt />
+                  <Toaster position="top-center" toastOptions={{ duration: 3000, style: { background: '#333', color: '#fff', borderRadius: '12px' } }} />
                   <div className="relative w-full max-w-full overflow-x-hidden">
                     {children}
                   </div>
