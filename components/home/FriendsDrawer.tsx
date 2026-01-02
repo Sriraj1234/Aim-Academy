@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FaUserFriends, FaUserPlus, FaTimes, FaCheck, FaSearch, FaGamepad, FaEnvelope, FaShareAlt } from 'react-icons/fa'
 import { useFriends } from '@/hooks/useFriends'
 import { useAuth } from '@/context/AuthContext'
+import { useSound } from '@/hooks/useSound'
 import { LocalStudentsSection } from '@/components/home/LocalStudentsSection'
 
 interface FriendsDrawerProps {
@@ -19,6 +20,7 @@ interface FriendsDrawerProps {
 export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: externalInviteLoading, onPlayWithFriend }: FriendsDrawerProps) => {
     const { user, userProfile } = useAuth();
     const { friends, requests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, loading, onlineUsers } = useFriends()
+    const { play } = useSound() // Sound effects
     const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'add'>('friends')
     const [email, setEmail] = useState('')
     const [error, setError] = useState('')
@@ -37,11 +39,23 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
             await sendFriendRequest(email)
             setSuccess('Request sent successfully!')
             setEmail('')
+            play('success') // Success sound
         } catch (err: any) {
             setError(err.message || 'Failed to send request')
+            play('wrong') // Error sound
         } finally {
             setInviteLoading(false)
         }
+    }
+
+    const handleAccept = async (uid: string) => {
+        await acceptFriendRequest(uid)
+        play('success') // Friend accepted sound
+    }
+
+    const handleReject = async (uid: string) => {
+        await rejectFriendRequest(uid)
+        play('click') // Reject click
     }
 
     return (
@@ -229,13 +243,13 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <button
-                                                        onClick={() => acceptFriendRequest(req.uid)}
+                                                        onClick={() => handleAccept(req.uid)}
                                                         className="flex-1 bg-pw-indigo text-white py-2.5 rounded-xl text-sm font-bold shadow-pw-md hover:bg-pw-violet transition-all flex items-center justify-center gap-2 active:scale-95"
                                                     >
                                                         <FaCheck /> Accept
                                                     </button>
                                                     <button
-                                                        onClick={() => rejectFriendRequest(req.uid)}
+                                                        onClick={() => handleReject(req.uid)}
                                                         className="flex-1 bg-pw-surface text-gray-600 py-2.5 rounded-xl text-sm font-bold border border-pw-border hover:bg-white hover:text-pw-red transition-all flex items-center justify-center gap-2 active:scale-95"
                                                     >
                                                         <FaTimes /> Reject
@@ -328,6 +342,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                     onClick={() => {
                                                         navigator.clipboard.writeText(user?.email || '')
                                                         setSuccess('Email copied to clipboard!')
+                                                        play('click') // Click sound
                                                         setTimeout(() => setSuccess(''), 2000)
                                                     }}
                                                     className="px-3 py-1.5 bg-white text-pw-indigo rounded-lg text-xs font-bold hover:bg-pw-lavender transition-colors"
