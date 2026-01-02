@@ -14,6 +14,8 @@ export const DailyChallengeCard = () => {
     const [isExpanded, setIsExpanded] = useState(false); // Controls maximized/minimized state
     const [loading, setLoading] = useState(true);
     const [question, setQuestion] = useState<any | null>(null);
+
+    // NEW STATE LOGIC: Single-attempt strict mode
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
@@ -35,15 +37,16 @@ export const DailyChallengeCard = () => {
                 const challengeRef = doc(db, 'users', user.uid, 'daily_challenges', todayStr);
                 const docSnap = await getDoc(challengeRef);
 
-                if (docSnap.exists() && docSnap.data().correct) {
-                    setIsVisible(false); // Already done, hide completely
+                if (docSnap.exists()) {
+                    // Already attempted today (win or loss)
+                    setIsVisible(false);
                     setLoading(false);
                     return;
                 }
 
                 setIsVisible(true); // Not done, show widget
 
-                // 2. Check LocalStorage for existing question (to keep it consistent for the day)
+                // 2. Check LocalStorage for existing question
                 const cached = localStorage.getItem(STORAGE_KEY);
                 if (cached) {
                     setQuestion(JSON.parse(cached));
@@ -90,39 +93,38 @@ export const DailyChallengeCard = () => {
     }, [user, userProfile, todayStr]);
 
     const handleOptionSelect = async (index: number) => {
-        if (selectedOption !== null || !question) return;
+        if (selectedOption !== null || !question) return; // Prevent multi-clicks
 
         setSelectedOption(index);
         const correct = index === question.correctAnswer;
         setIsCorrect(correct);
 
+        if (user) {
+            // Save attempt immediately (win or loss)
+            await setDoc(doc(db, 'users', user.uid, 'daily_challenges', todayStr), {
+                questionId: question.id || 'ai-gen',
+                correct: correct,
+                timestamp: Date.now(),
+                xpEarned: correct ? 30 : 0
+            });
+        }
+
         if (correct) {
-            // Reward & Save
-            await addXP(30); // Requested: 30 XP
+            // Reward
+            await addXP(30);
 
-            if (user) {
-                await setDoc(doc(db, 'users', user.uid, 'daily_challenges', todayStr), {
-                    questionId: question.id || 'ai-gen',
-                    correct: true,
-                    timestamp: Date.now(),
-                    xpEarned: 30
-                });
-            }
-
-            // Auto-close after delay
+            // Auto-close success
             setTimeout(() => {
-                setIsVisible(false); // Disappear
-            }, 3000);
+                setIsVisible(false);
+            }, 4000);
         } else {
-            // Incorrect logic: Allow retry or generate new? User said "if i correct answer then i will get 30 xp". 
-            // Usually we allow retry or fail. I'll just show incorrect state.
-            // If strictly "daily challenge", maybe fail for the day? 
-            // "popup hat jaye" only on correct. So it stays if wrong.
-            // I'll reset selection after 2s to allow retry.
+            // Wrong: Just show feedback, user failed.
+            // Optional: Auto-close fail? Or let them close?
+            // User said "disable ho jayiga". 
+            // We'll leave it visible so they see they failed.
             setTimeout(() => {
-                setSelectedOption(null);
-                setIsCorrect(null);
-            }, 2000);
+                setIsVisible(false);
+            }, 3000);
         }
     };
 
@@ -137,10 +139,10 @@ export const DailyChallengeCard = () => {
                         initial={{ opacity: 0, y: 20, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                        className="bg-white pointer-events-auto rounded-2xl shadow-2xl border border-pw-border w-80 mb-4 overflow-hidden"
+                        className="bg-white dark:bg-slate-900 pointer-events-auto rounded-2xl shadow-2xl border border-pw-border dark:border-slate-700 w-80 md:w-96 mb-4 overflow-hidden flex flex-col max-h-[80vh]"
                     >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white flex justify-between items-center">
+                        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white flex justify-between items-center shrink-0">
                             <div className="flex items-center gap-2">
                                 <FaFire className="animate-pulse" />
                                 <span className="font-bold">Daily Challenge</span>
@@ -151,7 +153,7 @@ export const DailyChallengeCard = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="p-4">
+                        <div className="p-4 overflow-y-auto custom-scrollbar">
                             {loading ? (
                                 <div className="py-8 text-center text-gray-400 text-sm animate-pulse">
                                     <FaRobot className="mx-auto text-2xl mb-2 text-pw-indigo" />
@@ -160,46 +162,52 @@ export const DailyChallengeCard = () => {
                             ) : question ? (
                                 <>
                                     <div className="flex items-start gap-3 mb-4">
-                                        <div className="bg-orange-50 p-2 rounded-lg">
+                                        <div className="bg-orange-50 dark:bg-orange-900/20 p-2 rounded-lg shrink-0">
                                             <FaGift className="text-orange-500 text-xl" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">{question.subject}</p>
-                                            <p className="text-sm font-medium text-gray-800 line-clamp-3">{question.question}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider mb-1">{question.subject}</p>
+                                            {/* REMOVED line-clamp-3 to show full question */}
+                                            <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{question.question}</p>
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         {question.options.map((opt: string, idx: number) => {
-                                            const isSelected = selectedOption === idx;
-                                            const isRight = idx === question.correctAnswer;
+                                            const isWrong = wrongIndices.includes(idx);
+                                            const isRight = isSolved && idx === question.correctAnswer;
 
-                                            let style = "bg-gray-50 border-gray-100 text-gray-600 hover:bg-gray-100";
-                                            // Provide feedback immediately on selection
-                                            if (isSelected) {
-                                                style = isRight
-                                                    ? "bg-green-100 border-green-500 text-green-700 shadow-sm"
-                                                    : "bg-red-100 border-red-500 text-red-700 shadow-sm";
-                                            }
+                                            // Dynamic Styling
+                                            let style = "bg-gray-50 dark:bg-slate-800 border-gray-100 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-750";
+                                            let icon = null;
 
                                             return (
                                                 <button
                                                     key={idx}
                                                     onClick={() => handleOptionSelect(idx)}
-                                                    disabled={selectedOption !== null}
+                                                    disabled={isSolved || isWrong}
                                                     className={`w-full text-left p-3 rounded-xl border text-xs font-bold transition-all flex justify-between items-center ${style}`}
                                                 >
-                                                    <span>{opt}</span>
-                                                    {isSelected && (isRight ? <FaCheckCircle /> : <FaTimesCircle />)}
+                                                    <span className="flex-1 mr-2">{opt}</span>
+                                                    {isWrong && (
+                                                        <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                                                            Wrong <FaTimesCircle className="text-sm" />
+                                                        </span>
+                                                    )}
+                                                    {isRight && (
+                                                        <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                                                            Correct <FaCheckCircle className="text-sm" />
+                                                        </span>
+                                                    )}
                                                 </button>
                                             );
                                         })}
                                     </div>
 
-                                    {isCorrect === true && (
+                                    {isSolved && (
                                         <motion.div
-                                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                            className="mt-4 text-center text-green-600 text-sm font-bold bg-green-50 p-2 rounded-lg border border-green-100"
+                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                            className="mt-4 text-center text-green-600 dark:text-green-400 text-sm font-bold bg-green-50 dark:bg-green-900/20 p-2 rounded-lg border border-green-100 dark:border-green-900/30"
                                         >
                                             +30 XP Earned! 🎉
                                         </motion.div>
