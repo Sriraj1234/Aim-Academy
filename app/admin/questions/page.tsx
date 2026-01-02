@@ -158,11 +158,21 @@ export default function QuestionsPage() {
         if (filterSubject) {
             if (filterBoard !== 'all' && filterClass !== 'all' && taxonomy[taxKey]) {
                 const chapList = taxonomy[taxKey].chapters?.[filterSubject]
-                if (chapList) chapList.forEach((c: any) => chapters.add(c.name))
+                if (chapList) {
+                    chapList.forEach((c: any) => {
+                        const name = typeof c === 'string' ? c : c.name;
+                        if (name) chapters.add(name);
+                    })
+                }
             } else {
                 Object.values(taxonomy).forEach((val: any) => {
                     const chapList = val.chapters?.[filterSubject]
-                    if (chapList) chapList.forEach((c: any) => chapters.add(c.name))
+                    if (chapList) {
+                        chapList.forEach((c: any) => {
+                            const name = typeof c === 'string' ? c : c.name;
+                            if (name) chapters.add(name);
+                        })
+                    }
                 })
             }
         }
