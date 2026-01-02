@@ -119,9 +119,31 @@ body {
 /* Replaces old !important overrides with semantic class usage expectation
    or minimal targeted fixes if needed. */
 
-/* REMOVED DANGEROUS OVERRIDES */
-/* .bg-white, .text-gray-900 etc are now standard Tailwind.
-   We will use dark:bg-slate-900 etc. explicitly. */
+/* RESTORED OVERRIDES as per user request */
+/* This ensures that standard Tailwind utility classes map to our theme variables in Dark Mode */
+.bg-white {
+  background-color: var(--bg-secondary);
+}
+
+.text-gray-900 {
+  color: var(--text-primary);
+}
+
+.text-gray-600 {
+  color: var(--pw-text-muted);
+}
+
+.text-gray-500 {
+  color: var(--pw-text-muted);
+}
+
+.bg-gray-50 {
+  background-color: var(--bg-primary);
+}
+
+.border-gray-200 {
+  border-color: var(--pw-border);
+}
 
 /* Specifically target PW classes to be dynamic if they aren't already */
 .text-pw-violet {
