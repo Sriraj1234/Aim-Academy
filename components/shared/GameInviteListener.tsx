@@ -24,6 +24,14 @@ export const GameInviteListener = () => {
 
     const handleAccept = async () => {
         if (!currentInvite) return;
+
+        // Check if already in a game/lobby
+        const isInGame = window.location.pathname.includes('/play/group/');
+        if (isInGame) {
+            const confirmed = window.confirm("You are already in a room. Do you want to leave this room and join the new one?");
+            if (!confirmed) return;
+        }
+
         const roomId = currentInvite.roomId;
         const inviteId = currentInvite.id;
 
@@ -46,50 +54,58 @@ export const GameInviteListener = () => {
     return (
         <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0, y: -50, x: '-50%' }}
-                animate={{ opacity: 1, y: 0, x: '-50%' }}
-                exit={{ opacity: 0, y: -50, x: '-50%' }}
-                className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-sm md:right-4 md:left-auto md:translate-x-0"
+                initial={{ opacity: 0, scale: 0.8, y: -20, x: '-50%' }}
+                animate={{ opacity: 1, scale: 1, y: 0, x: '-50%' }}
+                exit={{ opacity: 0, scale: 0.8, y: -20, x: '-50%' }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="fixed top-6 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm md:w-full md:right-6 md:left-auto md:translate-x-0"
+                style={{ translateX: '-50%' }} // Safe fallback for mobile centering
             >
-                <div className="bg-white/95 backdrop-blur-md border border-pw-border shadow-pw-lg rounded-2xl p-4 flex items-center gap-3 md:gap-4 relative overflow-hidden">
-                    {/* Progress Bar */}
-                    <motion.div
-                        initial={{ width: '100%' }}
-                        animate={{ width: '0%' }}
-                        transition={{ duration: 60, ease: 'linear' }}
-                        className="absolute bottom-0 left-0 h-1 bg-pw-indigo"
-                    />
+                <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden ring-1 ring-black/5">
+                    {/* Premium Progress Bar */}
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100">
+                        <motion.div
+                            initial={{ width: '100%' }}
+                            animate={{ width: '0%' }}
+                            transition={{ duration: 60, ease: 'linear' }}
+                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                        />
+                    </div>
 
                     <div className="relative shrink-0">
-                        <img
-                            src={currentInvite.fromPhoto || `https://ui-avatars.com/api/?name=${currentInvite.fromName}`}
-                            className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white shadow-sm bg-gray-100"
-                            alt="inviter"
-                        />
-                        <div className="absolute -bottom-1 -right-1 bg-pw-indigo text-white rounded-full p-1 border-2 border-white">
-                            <FaGamepad size={12} />
+                        <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-br from-indigo-500 to-purple-500">
+                            <img
+                                src={currentInvite.fromPhoto || `https://ui-avatars.com/api/?name=${currentInvite.fromName}`}
+                                className="w-full h-full rounded-full object-cover border-2 border-white"
+                                alt="inviter"
+                            />
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-sm">
+                            <div className="bg-indigo-500 text-white rounded-full p-1 w-5 h-5 flex items-center justify-center">
+                                <FaGamepad size={10} />
+                            </div>
                         </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-pw-violet truncate text-sm md:text-base">{currentInvite.fromName}</h4>
-                        <p className="text-xs text-pw-indigo/80 font-medium truncate">is challenging you! ⚔️</p>
+                        <h4 className="font-bold text-gray-800 truncate text-base">{currentInvite.fromName}</h4>
+                        <p className="text-xs text-indigo-600 font-bold tracking-wide uppercase">Challenge Invite ⚔️</p>
                     </div>
 
                     <div className="flex gap-2 shrink-0">
                         <button
-                            onClick={handleAccept}
-                            className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-md transition-transform active:scale-95 flex items-center justify-center"
-                            title="Accept"
-                        >
-                            <FaCheck size={16} />
-                        </button>
-                        <button
                             onClick={handleReject}
-                            className="bg-red-100 hover:bg-red-200 text-red-500 p-3 rounded-full shadow-sm transition-transform active:scale-95 flex items-center justify-center"
+                            className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 active:scale-90 transition-all border border-red-100"
                             title="Decline"
                         >
-                            <FaTimes size={16} />
+                            <FaTimes size={14} />
+                        </button>
+                        <button
+                            onClick={handleAccept}
+                            className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 hover:bg-indigo-600 active:scale-90 transition-all"
+                            title="Accept"
+                        >
+                            <FaCheck size={14} />
                         </button>
                     </div>
                 </div>
