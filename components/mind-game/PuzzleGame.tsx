@@ -18,10 +18,96 @@ const TOTAL_TILES = GRID_SIZE * GRID_SIZE; // 16
 export default function PuzzleGame({ imageUrl, difficulty, onComplete, onExit }: PuzzleGameProps) {
     const [showFullImage, setShowFullImage] = useState(false);
 
+    const [tiles, setTiles] = useState<number[]>([]);
+    const [emptyIndex, setEmptyIndex] = useState(TOTAL_TILES - 1);
+    const [moves, setMoves] = useState(0);
+    const [isSolved, setIsSolved] = useState(false);
+    const [isShuffling, setIsShuffling] = useState(true);
+
     // Initialize Solved State
     const getSolvedState = () => Array.from({ length: TOTAL_TILES }, (_, i) => i);
 
-    // ... (keep checkWin and shuffleTiles as is) ...
+    // Check if Solved
+    const checkWin = (currentTiles: number[]) => {
+        const win = currentTiles.every((tile, index) => tile === index);
+        if (win && !isShuffling) {
+            setIsSolved(true);
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+            onComplete(moves + 1); // +1 because strict mode might lag updates
+        }
+        return win;
+    };
+
+    // Shuffle Logic (Reverse Walk to guarantee solvability)
+    const shuffleTiles = useCallback(async () => {
+        setIsShuffling(true);
+        setIsSolved(false);
+        setMoves(0);
+
+        let currentWrapper = [...getSolvedState()];
+        let currentEmpty = TOTAL_TILES - 1;
+        let previousMove = -1;
+
+        const shuffleCount = difficulty === 'hard' ? 80 : difficulty === 'medium' ? 40 : 15;
+
+        // Perform Shuffle
+        for (let i = 0; i < shuffleCount; i++) {
+            const possibleMoves = [];
+            const row = Math.floor(currentEmpty / GRID_SIZE);
+            const col = currentEmpty % GRID_SIZE;
+
+            if (row > 0) possibleMoves.push(currentEmpty - GRID_SIZE); // Up
+            if (row < GRID_SIZE - 1) possibleMoves.push(currentEmpty + GRID_SIZE); // Down
+            if (col > 0) possibleMoves.push(currentEmpty - 1); // Left
+            if (col < GRID_SIZE - 1) possibleMoves.push(currentEmpty + 1); // Right
+
+            // Filter out 'undo' move to ensure effective shuffling
+            const validMoves = possibleMoves.filter(m => m !== previousMove);
+            const nextEmpty = validMoves[Math.floor(Math.random() * validMoves.length)];
+
+            // Swap
+            currentWrapper[currentEmpty] = currentWrapper[nextEmpty];
+            currentWrapper[nextEmpty] = TOTAL_TILES - 1;
+
+            previousMove = currentEmpty;
+            currentEmpty = nextEmpty;
+        }
+
+        setTiles(currentWrapper);
+        setEmptyIndex(currentEmpty);
+        setIsShuffling(false);
+    }, [difficulty]);
+
+    useEffect(() => {
+        shuffleTiles();
+    }, [shuffleTiles]);
+
+    const handleTileClick = (index: number) => {
+        if (isSolved || isShuffling) return;
+
+        const row = Math.floor(index / GRID_SIZE);
+        const col = index % GRID_SIZE;
+        const emptyRow = Math.floor(emptyIndex / GRID_SIZE);
+        const emptyCol = emptyIndex % GRID_SIZE;
+
+        const isAdjacent = Math.abs(row - emptyRow) + Math.abs(col - emptyCol) === 1;
+
+        if (isAdjacent) {
+            const newTiles = [...tiles];
+            // Swap logic
+            newTiles[emptyIndex] = newTiles[index];
+            newTiles[index] = TOTAL_TILES - 1; // 15 is empty
+
+            setTiles(newTiles);
+            setEmptyIndex(index);
+            setMoves(m => m + 1);
+            checkWin(newTiles);
+        }
+    };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[600px] w-full max-w-md mx-auto p-4">
