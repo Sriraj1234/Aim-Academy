@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminMessaging, adminDb } from '@/lib/firebase-admin';
 
+// Force dynamic to prevent build-time execution
+export const dynamic = 'force-dynamic';
+
 // Vercel Cron Job for Streak Reminders
 // Schedule: 8:00 AM IST (2:30 AM UTC) and 8:00 PM IST (2:30 PM UTC)
 
