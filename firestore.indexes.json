@@ -1,15 +1,27 @@
 {
     "indexes": [
-    {
-      "collectionGroup": "video_resources",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "board", "order": "ASCENDING" },
-        { "fieldPath": "classLevel", "order": "ASCENDING" },
-        { "fieldPath": "views", "order": "DESCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
+        {
+            "collectionGroup": "video_resources",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "board",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "classLevel",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "views",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
         {
             "collectionGroup": "notes",
             "queryScope": "COLLECTION",
@@ -20,6 +32,20 @@
                 },
                 {
                     "fieldPath": "uploadedAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "mind_games",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "isActive",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
                     "order": "DESCENDING"
                 }
             ]
