@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminMessaging, adminDb } from '@/lib/firebase-admin';
 
+// Force dynamic to prevent build-time execution
+export const dynamic = 'force-dynamic';
+
 // Types for notification payloads
 interface NotificationPayload {
     userId?: string;
