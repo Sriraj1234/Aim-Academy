@@ -105,10 +105,17 @@ export default function LobbyPage() {
                     console.log("Verifying room presence...");
                     await joinRoom(roomId as string, storedName, user.uid, user.photoURL || undefined);
                     setHasJoined(true);
-                } catch (e) {
-                    console.error("Auto-join verification failed", e);
-                    // If room expired or full, handle error? 
-                    // Usually logic in onSnapshot handles "Room deleted"
+                } catch (e: any) {
+                    // Suppress overlay for expected errors
+                    if (e.message.includes('Room has expired')) {
+                        console.warn("Auto-join verification: Room expired.");
+                        setError("This room has expired.");
+                    } else if (e.message.includes('Room is full')) {
+                        console.warn("Auto-join verification: Room full.");
+                        setError("This room is full.");
+                    } else {
+                        console.error("Auto-join verification failed", e);
+                    }
                 }
             }
         };
