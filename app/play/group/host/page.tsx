@@ -227,7 +227,7 @@ function HostGameContent() {
             const randomId = doc(collection(db, 'questions')).id;
             const constraints: any[] = [];
 
-            if (selectedChapter) {
+            if (selectedChapter && selectedChapter !== 'All Mixed') {
                 constraints.push(where('subject', '==', selectedSubject));
                 constraints.push(where('chapter', '==', selectedChapter));
             } else {
