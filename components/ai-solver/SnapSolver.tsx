@@ -175,7 +175,7 @@ export default function SnapSolver() {
                             <p className="text-gray-400 text-sm">Select how you want to search</p>
                         </div>
 
-                        {/* Option 1: Google Lens (Default) */}
+                        {/* Option 1: Google Lens (Live Camera + Gallery Support) */}
                         <a
                             href="https://lens.google.com"
                             target="_blank"
@@ -189,14 +189,14 @@ export default function SnapSolver() {
                             </div>
                             <div className="flex-1">
                                 <h3 className="text-xl font-bold text-white mb-1">Google Lens</h3>
-                                <p className="text-gray-400 text-sm">Best for identifying objects, regular search, and translation.</p>
+                                <p className="text-gray-400 text-sm">Use Google Camera or <b>Gallery</b> for fast solution.</p>
                             </div>
                             <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                                 <FaCamera className="text-sm" />
                             </div>
                         </a>
 
-                        {/* Option 2: AI Solver (Internal) */}
+                        {/* Option 2: AI Solver (Internal: Camera + Upload) */}
                         <button
                             onClick={startCamera}
                             className="group relative w-full p-6 bg-gradient-to-br from-indigo-900/80 to-purple-900/80 border border-indigo-500/30 rounded-3xl flex items-center gap-6 hover:border-indigo-500 transition-all text-left shadow-lg shadow-indigo-900/20"
@@ -209,24 +209,16 @@ export default function SnapSolver() {
                                     AI Doubt Solver
                                     <span className="px-2 py-0.5 rounded-full bg-indigo-500 text-[10px] font-bold uppercase tracking-wide">Beta</span>
                                 </h3>
-                                <p className="text-indigo-200 text-sm">Get step-by-step solutions for Math & Science problems using Gemini.</p>
+                                <p className="text-indigo-200 text-sm">Step-by-step solution via <b>Internal Camera</b> or <b>Upload</b>.</p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-white text-indigo-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                                 <FaBolt className="text-sm" />
                             </div>
                         </button>
-
-                        <div className="text-center mt-4">
-                            <label className="text-gray-500 text-sm hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-2">
-                                <FaImage /> Upload from Gallery
-                                <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
-                            </label>
-                        </div>
-
                     </div>
                 )}
 
-                {/* 2. CAMERA: Live Feed */}
+                {/* 2. CAMERA: Internal AI Mode (Live Feed + Internal Upload) */}
                 {mode === 'CAMERA' && (
                     <div className="relative w-full h-full flex flex-col items-center bg-black rounded-3xl overflow-hidden border border-gray-800">
                         <Webcam
@@ -237,7 +229,17 @@ export default function SnapSolver() {
                             className="w-full h-full object-cover"
                         />
 
+                        {/* Internal Overlay Controls */}
+                        <div className="absolute top-4 right-4 flex flex-col gap-3 z-20">
+                            {/* Internal Upload Button */}
+                            <label className="p-3 bg-black/50 text-white rounded-full backdrop-blur-md cursor-pointer hover:bg-black/70 transition-all border border-white/20" title="Upload Image for AI">
+                                <FaImage className="text-xl" />
+                                <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+                            </label>
+                        </div>
+
                         <div className="absolute bottom-0 inset-x-0 p-8 flex flex-col items-center bg-gradient-to-t from-black/90 to-transparent pt-20">
+                            <p className="text-white/70 mb-6 text-sm font-medium tracking-wide">Tap button to solve</p>
                             <button
                                 onClick={capture}
                                 className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-110 transition-transform bg-white/20 backdrop-blur-sm shadow-[0_0_40px_rgba(255,255,255,0.3)]"
