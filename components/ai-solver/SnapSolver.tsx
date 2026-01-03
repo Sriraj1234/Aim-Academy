@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import Cropper from 'react-easy-crop';
-import { FaCamera, FaImage, FaTimes, FaBolt, FaRobot, FaCheckCircle, FaSpinner, FaCrop, FaUndo, FaRedo, FaGoogle } from 'react-icons/fa';
+import { FaCamera, FaImage, FaTimes, FaBolt, FaRobot, FaCheckCircle, FaSpinner, FaCrop, FaUndo, FaRedo, FaGoogle, FaArrowRight } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -185,19 +185,19 @@ export default function SnapSolver() {
     };
 
     return (
-        <div className="relative min-h-screen bg-black text-white flex flex-col">
+        <div className="relative h-full bg-black text-white flex flex-col overflow-hidden">
 
             {/* Top Bar */}
-            <div className="p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/80 to-transparent">
-                <div onClick={reset} className="flex items-center gap-2 cursor-pointer">
-                    <div className="bg-blue-600 p-1.5 rounded-lg">
+            <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-20 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+                <div onClick={reset} className="flex items-center gap-2 cursor-pointer pointer-events-auto">
+                    <div className="bg-blue-600 p-1.5 rounded-lg shadow-[0_0_15px_rgba(37,99,235,0.5)]">
                         <FaBolt className="text-white text-sm" />
                     </div>
-                    <span className="font-bold text-lg">Snap & Solve</span>
+                    <span className="font-bold text-lg tracking-tight">Snap & Solve</span>
                 </div>
                 {mode !== 'INITIAL' && (
-                    <button onClick={reset} className="text-white/80 hover:text-white">
-                        <FaTimes className="text-xl" />
+                    <button onClick={reset} className="pointer-events-auto w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors">
+                        <FaTimes className="text-lg" />
                     </button>
                 )}
             </div>
@@ -210,49 +210,57 @@ export default function SnapSolver() {
             )}
 
             {/* --- CORE CONTENT AREA --- */}
-            <div className="flex-1 flex flex-col items-center justify-center relative w-full max-w-2xl mx-auto p-4">
+            <div className="flex-1 flex flex-col items-center justify-center relative w-full h-full">
 
                 {/* 1. INITIAL: Mode Selection */}
                 {mode === 'INITIAL' && (
-                    <div className="w-full flex flex-col justify-center gap-6 p-6 animate-in zoom-in-95 duration-300">
-                        <div className="text-center mb-4">
-                            <h2 className="text-3xl font-bold text-white mb-2">Choose Method</h2>
-                            <p className="text-gray-400">How do you want to solve this?</p>
+                    <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 animate-in zoom-in-95 duration-300 relative">
+
+                        {/* Background Effects */}
+                        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[100px]" />
+                            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/20 rounded-full blur-[100px]" />
                         </div>
 
-                        {/* Option 1: Google Lens */}
-                        <button
-                            onClick={startLensMode}
-                            className="group relative w-full p-6 bg-gray-900 border border-gray-800 rounded-3xl flex items-center gap-4 hover:bg-gray-800 transition-all text-left"
-                        >
-                            <div className="w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center text-2xl shrink-0">
-                                <FaGoogle />
+                        <div className="text-center mb-8 relative z-10">
+                            <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(79,70,229,0.3)] mb-6 transform rotate-3">
+                                <FaCamera className="text-4xl text-white" />
                             </div>
-                            <div className="flex-1">
-                                <h3 className="text-lg font-bold text-white">Snap with Google Lens</h3>
-                                <p className="text-gray-400 text-xs">Directly search images on Google.</p>
-                            </div>
-                            <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-colors">
-                                <FaCamera className="text-xs" />
-                            </div>
-                        </button>
+                            <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-3">Snap & Solve</h2>
+                            <p className="text-gray-400 font-medium">Get instant homework help</p>
+                        </div>
 
-                        {/* Option 2: Internal AI */}
-                        <button
-                            onClick={startAIMode}
-                            className="group relative w-full p-6 bg-indigo-900/40 border border-indigo-500/30 rounded-3xl flex items-center gap-4 hover:bg-indigo-900/60 transition-all text-left"
-                        >
-                            <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-indigo-500/30">
-                                <FaRobot />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-lg font-bold text-white">Solve with AI</h3>
-                                <p className="text-indigo-200 text-xs">Step-by-step solution by Gemini.</p>
-                            </div>
-                            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                <FaBolt className="text-xs" />
-                            </div>
-                        </button>
+                        <div className="w-full max-w-md space-y-4 relative z-10">
+                            {/* Option 1: Google Lens */}
+                            <button
+                                onClick={startLensMode}
+                                className="group relative w-full p-5 bg-gradient-to-r from-gray-900 to-gray-800 border border-white/10 rounded-2xl flex items-center gap-4 hover:border-blue-500/50 transition-all hover:scale-[1.02] active:scale-95 shadow-lg"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-white text-black flex items-center justify-center text-2xl shrink-0 shadow-lg">
+                                    <FaGoogle />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">Google Lens</h3>
+                                    <p className="text-gray-500 text-xs font-medium">Fast • Search Web • Objects</p>
+                                </div>
+                                <FaArrowRight className="text-white/20 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                            </button>
+
+                            {/* Option 2: Internal AI */}
+                            <button
+                                onClick={startAIMode}
+                                className="group relative w-full p-5 bg-gradient-to-r from-indigo-900/40 to-indigo-900/20 border border-indigo-500/30 rounded-2xl flex items-center gap-4 hover:bg-indigo-900/40 transition-all hover:scale-[1.02] active:scale-95 shadow-lg"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-indigo-500/30">
+                                    <FaRobot />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">AI Solution</h3>
+                                    <p className="text-indigo-200/60 text-xs font-medium">Detailed • Step-by-Step • Math</p>
+                                </div>
+                                <FaArrowRight className="text-indigo-500/50 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                            </button>
+                        </div>
                     </div>
                 )}
 
