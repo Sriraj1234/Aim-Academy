@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
-import { FaLightbulb, FaSpinner, FaArrowLeft, FaArrowRight, FaRedo, FaTrash } from 'react-icons/fa';
+import { FaLightbulb, FaSpinner, FaArrowLeft, FaArrowRight, FaRedo, FaTrash, FaTimes } from 'react-icons/fa';
 
 interface Flashcard {
     term: string;
@@ -19,6 +19,9 @@ interface FlashcardSet {
 const STORAGE_KEY = 'aim_flashcards';
 
 export const AIFlashcardGenerator = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const { userProfile } = useAuth();
+
     const [topic, setTopic] = useState('');
     const [language, setLanguage] = useState<'english' | 'hindi' | 'hinglish'>('english');
     const [loading, setLoading] = useState(false);
@@ -28,7 +31,7 @@ export const AIFlashcardGenerator = () => {
     const [savedSets, setSavedSets] = useState<FlashcardSet[]>([]);
     const [showGenerator, setShowGenerator] = useState(true);
 
-    const { userProfile } = useAuth(); // Get user context
+
 
     // Load saved flashcards from localStorage
     useEffect(() => {
@@ -51,7 +54,7 @@ export const AIFlashcardGenerator = () => {
                     count: 10,
                     classLevel: userProfile?.class || '10',
                     board: userProfile?.board || 'CBSE',
-                    language // Pass selected language
+                    language
                 })
             });
 
@@ -63,13 +66,12 @@ export const AIFlashcardGenerator = () => {
                 setIsFlipped(false);
                 setShowGenerator(false);
 
-                // Save to localStorage
                 const newSet: FlashcardSet = {
                     topic: topic,
                     cards: data.flashcards,
                     createdAt: Date.now()
                 };
-                const updated = [newSet, ...savedSets.slice(0, 4)]; // Keep last 5
+                const updated = [newSet, ...savedSets.slice(0, 4)];
                 setSavedSets(updated);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
             }
@@ -110,162 +112,101 @@ export const AIFlashcardGenerator = () => {
         setTopic('');
     };
 
-    if (!showGenerator && flashcards.length > 0) {
-        const card = flashcards[currentIndex];
-        return (
-            <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/50 shadow-pw-xl relative overflow-hidden">
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-pw-violet/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+    // --- RENDER HELPERS ---
 
-                <div className="flex items-center justify-between mb-6 relative z-10">
-                    <h3 className="text-xl font-display font-bold text-pw-violet flex items-center gap-2">
-                        <span className="p-2 bg-yellow-100 rounded-xl text-yellow-600 shadow-sm"><FaLightbulb /></span>
-                        {topic}
-                    </h3>
-                    <button onClick={resetToGenerator} className="text-sm font-bold text-gray-500 hover:text-pw-indigo flex items-center gap-2 bg-gray-100/50 hover:bg-white px-3 py-1.5 rounded-lg transition-all border border-transparent hover:border-gray-200 shadow-sm">
-                        <FaRedo className="text-xs" /> New
-                    </button>
-                </div>
+    // 1. Flashcard Display (Inside Modal)
+    const renderFlashcardView = () => (
+        <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="p-1.5 bg-yellow-500/20 text-yellow-400 rounded-lg"><FaLightbulb /></span>
+                    {topic}
+                </h3>
+                <button onClick={resetToGenerator} className="text-xs font-bold text-white/60 hover:text-white flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-all">
+                    <FaRedo className="text-[10px]" /> New
+                </button>
+            </div>
 
-                {/* Card Counter */}
-                <div className="flex justify-center mb-4">
-                    <span className="bg-gray-100/80 px-3 py-1 rounded-full text-xs font-bold text-gray-500 font-mono tracking-wider border border-white/50">
-                        {currentIndex + 1} / {flashcards.length}
-                    </span>
-                </div>
-
-                {/* Flashcard */}
-                <div
-                    className="relative h-64 md:h-72 cursor-pointer perspective-1000 group"
-                    onClick={() => setIsFlipped(!isFlipped)}
-                >
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+                <div className="relative w-full max-w-sm aspect-[4/3] perspective-1000 group cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
                     <motion.div
-                        className="absolute inset-0 rounded-[2rem] shadow-xl backface-hidden transition-all duration-500"
+                        className="absolute inset-0 rounded-[2rem] shadow-2xl backface-hidden transition-all duration-500"
                         animate={{ rotateY: isFlipped ? 180 : 0 }}
                         initial={false}
                         transition={{ duration: 0.5, type: "spring", stiffness: 260, damping: 20 }}
                         style={{ transformStyle: 'preserve-3d' }}
                     >
-                        {/* Front (Term) */}
-                        <div
-                            className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-[2rem] p-8 flex flex-col items-center justify-center text-white backface-hidden ${isFlipped ? 'invisible' : ''} shadow-inner ring-1 ring-white/20`}
-                        >
-                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-                            <div className="absolute top-6 left-6 text-white/40 font-bold text-xs tracking-[0.2em] uppercase">Flashcard</div>
-
-                            <h4 className="text-2xl md:text-3xl font-black text-center drop-shadow-lg leading-tight relative z-10 font-display">
-                                {card.term}
-                            </h4>
-
-                            <div className="absolute bottom-6 flex flex-col items-center opacity-80 group-hover:opacity-100 transition-opacity">
-                                <span className="text-[10px] bg-white/20 px-3 py-1 rounded-full backdrop-blur-md uppercase font-bold tracking-widest border border-white/10 shadow-sm">
-                                    Tap to Flip
-                                </span>
-                            </div>
+                        {/* Front */}
+                        <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-[2rem] p-6 flex flex-col items-center justify-center text-white backface-hidden shadow-inner ring-1 ring-white/20 ${isFlipped ? 'invisible' : ''}`}>
+                            <div className="absolute top-4 left-4 text-white/40 font-bold text-[10px] tracking-[0.2em] uppercase">Term</div>
+                            <h4 className="text-2xl font-black text-center drop-shadow-lg leading-tight">{flashcards[currentIndex].term}</h4>
+                            <div className="absolute bottom-4 opacity-60 text-[10px] bg-black/20 px-2 py-1 rounded-full">Tap to Flip</div>
                         </div>
 
-                        {/* Back (Definition) */}
-                        <div
-                            className={`absolute inset-0 bg-white rounded-[2rem] p-6 flex flex-col items-center justify-center text-gray-800 backface-hidden ${!isFlipped ? 'invisible' : ''} shadow-inner border-2 border-pw-border`}
-                            style={{ transform: 'rotateY(180deg)' }}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-emerald-50/50 rounded-[2rem]" />
-                            <span className="relative z-10 text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full mb-3">
-                                Definition
-                            </span>
-                            <p className="relative z-10 text-base font-medium text-center leading-relaxed text-gray-700 overflow-y-auto max-h-[70%] scrollbar-hide">
-                                {card.definition}
-                            </p>
+                        {/* Back */}
+                        <div className={`absolute inset-0 bg-[#0f0a1f] rounded-[2rem] p-6 flex flex-col items-center justify-center text-white backface-hidden border border-white/10 shadow-xl ${!isFlipped ? 'invisible' : ''}`} style={{ transform: 'rotateY(180deg)' }}>
+                            <div className="absolute top-4 left-4 text-emerald-400 font-bold text-[10px] tracking-[0.2em] uppercase">Definition</div>
+                            <p className="text-sm font-medium text-center leading-relaxed text-white/90 overflow-y-auto max-h-[80%] custom-scrollbar">{flashcards[currentIndex].definition}</p>
                         </div>
                     </motion.div>
                 </div>
 
-                {/* Navigation */}
-                <div className="flex items-center justify-center gap-6 mt-6">
-                    <button
-                        onClick={prevCard}
-                        className="w-12 h-12 rounded-full bg-white border border-gray-100 hover:border-pw-indigo/20 text-gray-400 hover:text-pw-indigo transition-all active:scale-90 shadow-md hover:shadow-lg flex items-center justify-center group"
-                    >
-                        <FaArrowLeft className="group-hover:-translate-x-0.5 transition-transform" />
-                    </button>
-                    <button
-                        onClick={nextCard}
-                        className="w-14 h-14 rounded-full bg-gradient-to-r from-pw-indigo to-pw-violet text-white transition-all active:scale-90 shadow-lg hover:shadow-pw-indigo/40 hover:-translate-y-1 flex items-center justify-center group relative overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                        <FaArrowRight className="text-xl group-hover:translate-x-0.5 transition-transform relative z-10" />
-                    </button>
+                {/* Controls */}
+                <div className="flex items-center gap-6 mt-8">
+                    <button onClick={prevCard} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 text-white flex items-center justify-center transition-colors"><FaArrowLeft /></button>
+                    <span className="text-white/40 text-xs font-mono">{currentIndex + 1} / {flashcards.length}</span>
+                    <button onClick={nextCard} className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-105 transition-transform"><FaArrowRight /></button>
                 </div>
             </div>
-        );
-    }
+        </div>
+    );
 
-    return (
-        <div className="bg-white rounded-[2rem] p-6 border border-pw-border shadow-pw-lg relative overflow-hidden group hover:shadow-pw-xl transition-all duration-300">
-            {/* Background Decor */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-pw-lavender/30 to-transparent rounded-bl-full -mr-16 -mt-16 transition-opacity opacity-50 group-hover:opacity-100" />
-
-            <h3 className="text-xl font-display font-bold text-pw-violet mb-6 flex items-center gap-3 relative z-10">
-                <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-200">
-                    <FaLightbulb />
-                </span>
-                AI Flashcard Generator
-            </h3>
-
-            <div className="flex flex-col gap-3 mb-6 relative z-10">
+    // 2. Generator Form (Inside Modal)
+    const renderGeneratorForm = () => (
+        <div className="space-y-5">
+            <div>
+                <label className="text-xs text-white/60 uppercase tracking-wider font-bold block mb-2">Topic</label>
                 <input
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    placeholder="Enter topic (e.g., Quantum Physics)..."
-                    className="w-full px-5 py-4 border-2 border-gray-100 rounded-2xl text-gray-700 bg-gray-50/50 focus:bg-white focus:border-pw-indigo focus:ring-4 focus:ring-pw-indigo/10 transition-all outline-none font-medium placeholder-gray-400"
+                    placeholder="e.g., Quantum Physics"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-purple-500/50"
                     onKeyDown={(e) => e.key === 'Enter' && generateFlashcards()}
                 />
-
-                {/* Language Selector */}
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Language:</span>
-                    <div className="flex gap-1.5 flex-1">
-                        {(['english', 'hindi', 'hinglish'] as const).map((lang) => (
-                            <button
-                                key={lang}
-                                onClick={() => setLanguage(lang)}
-                                className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex justify-center items-center whitespace-nowrap ${language === lang
-                                    ? 'bg-pw-indigo text-white shadow-md'
-                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                                    }`}
-                            >
-                                {lang === 'english' ? '🇬🇧 English' : lang === 'hindi' ? '🇮🇳 हिंदी' : '🌐 Hinglish'}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <button
-                    onClick={generateFlashcards}
-                    disabled={loading || !topic.trim()}
-                    className="w-full px-8 py-4 bg-pw-violet hover:bg-pw-indigo text-white rounded-2xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-pw-violet/20"
-                >
-                    {loading ? <FaSpinner className="animate-spin text-lg" /> : <>Generate Flashcards <FaArrowRight className="text-sm" /></>}
-                </button>
             </div>
 
-            {/* Saved Sets */}
+            <div>
+                <label className="text-xs text-white/60 uppercase tracking-wider font-bold block mb-2">Language</label>
+                <div className="flex gap-2">
+                    {(['english', 'hindi', 'hinglish'] as const).map((lang) => (
+                        <button
+                            key={lang}
+                            onClick={() => setLanguage(lang)}
+                            className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase transition-all ${language === lang ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                        >
+                            {lang === 'english' ? '🇬🇧 Eng' : lang === 'hindi' ? '🇮🇳 Hin' : '🌐 Hing'}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <button
+                onClick={generateFlashcards}
+                disabled={loading || !topic.trim()}
+                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50"
+            >
+                {loading ? <FaSpinner className="animate-spin" /> : <>Generate <FaLightbulb /></>}
+            </button>
+
             {savedSets.length > 0 && (
-                <div className="relative z-10">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 ml-1">Recent Searches</p>
+                <div className="pt-4 border-t border-white/10">
+                    <p className="text-[10px] font-bold text-white/40 uppercase mb-2">Recent</p>
                     <div className="flex flex-wrap gap-2">
                         {savedSets.map((set, idx) => (
-                            <div key={idx} className="group flex items-center gap-2 pl-4 pr-2 py-2 bg-white border border-gray-100 rounded-xl text-sm hover:border-pw-indigo/30 hover:shadow-md transition-all cursor-pointer">
-                                <button onClick={() => loadSet(set)} className="text-gray-600 font-bold group-hover:text-pw-indigo transition-colors">
-                                    {set.topic}
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); deleteSet(idx); }}
-                                    className="w-6 h-6 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 flex items-center justify-center transition-colors"
-                                >
-                                    <FaTrash className="text-[10px]" />
-                                </button>
+                            <div key={idx} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all cursor-pointer">
+                                <button onClick={() => loadSet(set)} className="text-xs text-white/80 font-medium hover:text-white">{set.topic}</button>
+                                <button onClick={(e) => { e.stopPropagation(); deleteSet(idx); }} className="text-white/20 hover:text-red-400"><FaTrash className="text-[10px]" /></button>
                             </div>
                         ))}
                     </div>
@@ -273,4 +214,62 @@ export const AIFlashcardGenerator = () => {
             )}
         </div>
     );
+
+    return (
+        <>
+            {/* Trigger Button */}
+            <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsOpen(true)}
+                className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all"
+            >
+                <FaLightbulb className="text-xl" />
+                <div className="text-left">
+                    <p className="font-bold">Flashcard Generator</p>
+                    <p className="text-xs opacity-80">Memorize topics faster</p>
+                </div>
+                <FaArrowRight className="ml-auto text-white/50" />
+            </motion.button>
+
+            {/* Modal */}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="w-full max-w-md bg-gradient-to-br from-[#1a1330] to-[#0f0a1f] rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 p-4 border-b border-white/10 flex items-center justify-between shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                                        <FaLightbulb className="text-white text-lg" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-sm">Flashcards</h3>
+                                        <p className="text-[10px] text-white/50">AI Powered Memory Aid</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"><FaTimes className="text-white/60" /></button>
+                            </div>
+
+                            <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+                                {(!showGenerator && flashcards.length > 0) ? renderFlashcardView() : renderGeneratorForm()}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
+    );
 };
+
