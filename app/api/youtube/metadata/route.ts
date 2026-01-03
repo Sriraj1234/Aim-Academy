@@ -9,8 +9,8 @@ export async function GET(request: Request) {
     }
 
     try {
-        // Extract video ID from the URL
-        const videoIdMatch = videoUrl.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+        // Extract video ID from the URL - NOW SUPPORTS /live/
+        const videoIdMatch = videoUrl.match(/(?:v=|\/embed\/|\/live\/|\.be\/)([a-zA-Z0-9_-]{11})/);
         if (!videoIdMatch || !videoIdMatch[1]) {
             return NextResponse.json({ error: 'Invalid YouTube video URL' }, { status: 400 });
         }
