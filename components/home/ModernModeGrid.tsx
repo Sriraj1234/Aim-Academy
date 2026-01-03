@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { FaBookOpen, FaLayerGroup, FaUsers, FaArrowRight, FaHistory, FaClock, FaFire, FaStar, FaExclamationTriangle, FaYoutube } from 'react-icons/fa'
+import { FaBookOpen, FaLayerGroup, FaUsers, FaArrowRight, FaHistory, FaClock, FaFire, FaStar, FaExclamationTriangle, FaYoutube, FaBrain } from 'react-icons/fa'
 import { useLanguage } from '@/context/LanguageContext'
 
 export const ModernModeGrid = () => {
@@ -144,6 +144,50 @@ export const ModernModeGrid = () => {
                         </motion.div>
                     </Link>
                 ))}
+
+                {/* Brain Warmup Card */}
+                <Link
+                    href="/play/mind-game"
+                    className="block w-full"
+                >
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                        whileHover={{
+                            y: -8,
+                            scale: 1.02,
+                            transition: { duration: 0.2 }
+                        }}
+                        whileTap={{ scale: 0.96 }}
+                        className="group relative h-full bg-white rounded-2xl p-5 hover:shadow-pw-lg transition-all overflow-hidden cursor-pointer border border-pw-border hover:border-pw-indigo/30"
+                    >
+                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-purple-500 opacity-0 group-hover:opacity-5 rounded-full blur-3xl transition-opacity duration-500" />
+
+                        <div className="absolute top-3 right-3 px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full z-20 shadow-sm">
+                            <span className="text-[10px] font-black text-white tracking-wider">GAME</span>
+                        </div>
+
+                        <div className="relative z-10">
+                            <div className="w-12 h-12 mb-4 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300">
+                                <FaBrain className="text-xl" />
+                            </div>
+
+                            <h3 className="text-lg font-bold text-pw-violet mb-2 group-hover:text-pw-indigo transition-colors">
+                                Brain Warmup
+                            </h3>
+
+                            <p className="text-gray-500 text-sm leading-relaxed mb-4 group-hover:text-gray-600 transition-colors">
+                                Quick visual puzzles to focus your mind.
+                            </p>
+
+                            <div className="flex items-center text-sm font-bold text-pw-indigo/40 group-hover:text-pw-indigo transition-colors">
+                                <span>Play Now</span>
+                                <FaArrowRight className="ml-2 transform group-hover:translate-x-2 transition-transform" />
+                            </div>
+                        </div>
+                    </motion.div>
+                </Link>
             </div>
 
             {/* Coming Soon Banner */}
