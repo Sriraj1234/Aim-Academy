@@ -254,14 +254,25 @@ export default function VivaSession() {
         };
 
         recognitionRef.current.onerror = (e: any) => {
-            console.error("Speech Recognition Error:", e);
+            // Log specific error details (Object structure fix)
+            console.error("Speech Recognition Error Event:", e.error, e.message);
             setIsRecording(false);
+
+            if (e.error === 'aborted') {
+                // Ignore intentional aborts (e.g. stopping manually)
+                return;
+            }
+
             if (e.error === 'no-speech') {
-                speak("Didn't catch that. Please try again.");
+                speak("I didn't hear anything. Please try again.");
             } else if (e.error === 'not-allowed') {
                 alert("Microphone access denied. Please allow microphone access in your browser settings.");
+            } else if (e.error === 'network') {
+                speak("Network error. Please check your internet.");
             } else {
-                speak("Sorry, an error occurred with speech recognition.");
+                // Generic error fallback
+                console.warn("Unhandled Speech Error:", e.error);
+                speak("Sorry, I had trouble listening. Can you repeat?");
             }
             setStatus('IDLE');
         };
