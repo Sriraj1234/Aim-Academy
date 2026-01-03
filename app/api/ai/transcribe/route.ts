@@ -18,9 +18,8 @@ export async function POST(req: NextRequest) {
 
         const transcription = await groq.audio.transcriptions.create({
             file: file,
-            model: 'distil-whisper-large-v3-en', // Or 'whisper-large-v3' if available
+            model: 'whisper-large-v3', // Multilingual support for Hindi/English
             response_format: 'json',
-            language: 'en', // Can also detect 'hi' but enforcing 'en' or mix
             temperature: 0.0,
         });
 
