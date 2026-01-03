@@ -56,7 +56,9 @@ async function getCroppedImg(imageSrc: string, pixelCrop: any): Promise<Blob> {
 // -------------------------------------
 
 export default function SnapSolver() {
+    // Modes: INITIAL -> CAMERA -> CROP -> SOLVING -> RESULT
     const [mode, setMode] = useState<'INITIAL' | 'CAMERA' | 'CROP' | 'SOLVING' | 'RESULT'>('INITIAL');
+    const [solverType, setSolverType] = useState<'LENS' | 'AI'>('LENS');
 
     // Camera State
     const webcamRef = useRef<Webcam>(null);
@@ -74,7 +76,15 @@ export default function SnapSolver() {
 
     // --- Actions ---
 
-    const startCamera = () => setMode('CAMERA');
+    const startLensMode = () => {
+        setSolverType('LENS');
+        setMode('CAMERA');
+    };
+
+    const startAIMode = () => {
+        setSolverType('AI');
+        setMode('CAMERA');
+    };
 
     const capture = useCallback(() => {
         const image = webcamRef.current?.getScreenshot();
@@ -108,25 +118,36 @@ export default function SnapSolver() {
         try {
             const croppedBlob = await getCroppedImg(imgSrc, croppedAreaPixels);
 
-            const formData = new FormData();
-            formData.append('image', croppedBlob, 'question.jpg');
+            if (solverType === 'LENS') {
+                // --- GOOGLE LENS FLOW ---
+                const formData = new FormData();
+                formData.append('file', croppedBlob, 'snap.jpg');
 
-            const res = await fetch('/api/ai/solve', {
-                method: 'POST',
-                body: formData
-            });
+                const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Upload Failed');
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed');
+                // Redirect
+                window.location.href = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(data.url)}`;
+            }
+            else {
+                // --- INTERNAL AI FLOW ---
+                const formData = new FormData();
+                formData.append('image', croppedBlob, 'question.jpg');
 
-            setSolution(data.solution);
-            setUsedModel(data.modelUsed);
-            setMode('RESULT');
+                const res = await fetch('/api/ai/solve', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to solve');
+
+                setSolution(data.solution);
+                setUsedModel(data.modelUsed);
+                setMode('RESULT');
+            }
 
         } catch (err: any) {
             console.error(err);
-            setError(err.message || 'Error solving problem');
-            setMode('CROP'); // Go back to crop on error
+            setError(err.message || 'Error processing request');
+            setMode('CROP');
         }
     };
 
@@ -167,52 +188,42 @@ export default function SnapSolver() {
                 {/* 1. INITIAL: Mode Selection */}
                 {mode === 'INITIAL' && (
                     <div className="w-full flex flex-col justify-center gap-6 p-6 animate-in zoom-in-95 duration-300">
-
                         <div className="text-center mb-4">
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                                Choose Scanner
-                            </h2>
-                            <p className="text-gray-400 text-sm">Select how you want to search</p>
+                            <h2 className="text-3xl font-bold text-white mb-2">Choose Method</h2>
+                            <p className="text-gray-400">How do you want to solve this?</p>
                         </div>
 
-                        {/* Option 1: Google Lens (Live Camera + Gallery Support) */}
-                        <a
-                            href="https://lens.google.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative w-full p-6 bg-gray-900/80 border border-gray-800 rounded-3xl flex items-center gap-6 hover:bg-gray-800 transition-all cursor-pointer overflow-hidden"
+                        {/* Option 1: Google Lens */}
+                        <button
+                            onClick={startLensMode}
+                            className="group relative w-full p-6 bg-gray-900 border border-gray-800 rounded-3xl flex items-center gap-4 hover:bg-gray-800 transition-all text-left"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white text-3xl shrink-0">
+                            <div className="w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center text-2xl shrink-0">
                                 <FaGoogle />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-xl font-bold text-white mb-1">Google Lens</h3>
-                                <p className="text-gray-400 text-sm">Use Google Camera or <b>Gallery</b> for fast solution.</p>
+                                <h3 className="text-lg font-bold text-white">Snap with Google Lens</h3>
+                                <p className="text-gray-400 text-xs">Directly search images on Google.</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                                <FaCamera className="text-sm" />
+                            <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-colors">
+                                <FaCamera className="text-xs" />
                             </div>
-                        </a>
+                        </button>
 
-                        {/* Option 2: AI Solver (Internal: Camera + Upload) */}
+                        {/* Option 2: Internal AI */}
                         <button
-                            onClick={startCamera}
-                            className="group relative w-full p-6 bg-gradient-to-br from-indigo-900/80 to-purple-900/80 border border-indigo-500/30 rounded-3xl flex items-center gap-6 hover:border-indigo-500 transition-all text-left shadow-lg shadow-indigo-900/20"
+                            onClick={startAIMode}
+                            className="group relative w-full p-6 bg-indigo-900/40 border border-indigo-500/30 rounded-3xl flex items-center gap-4 hover:bg-indigo-900/60 transition-all text-left"
                         >
-                            <div className="w-16 h-16 rounded-2xl bg-indigo-500 flex items-center justify-center text-white text-3xl shrink-0 shadow-lg shadow-indigo-500/30">
+                            <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-indigo-500/30">
                                 <FaRobot />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
-                                    AI Doubt Solver
-                                    <span className="px-2 py-0.5 rounded-full bg-indigo-500 text-[10px] font-bold uppercase tracking-wide">Beta</span>
-                                </h3>
-                                <p className="text-indigo-200 text-sm">Step-by-step solution via <b>Internal Camera</b> or <b>Upload</b>.</p>
+                                <h3 className="text-lg font-bold text-white">Solve with AI</h3>
+                                <p className="text-indigo-200 text-xs">Step-by-step solution by Gemini.</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-white text-indigo-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                <FaBolt className="text-sm" />
+                            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <FaBolt className="text-xs" />
                             </div>
                         </button>
                     </div>
@@ -232,19 +243,23 @@ export default function SnapSolver() {
                         {/* Internal Overlay Controls */}
                         <div className="absolute top-4 right-4 flex flex-col gap-3 z-20">
                             {/* Internal Upload Button */}
-                            <label className="p-3 bg-black/50 text-white rounded-full backdrop-blur-md cursor-pointer hover:bg-black/70 transition-all border border-white/20" title="Upload Image for AI">
+                            <label className="p-3 bg-black/50 text-white rounded-full backdrop-blur-md cursor-pointer hover:bg-black/70 transition-all border border-white/20" title="Upload Image">
                                 <FaImage className="text-xl" />
                                 <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
                             </label>
                         </div>
 
                         <div className="absolute bottom-0 inset-x-0 p-8 flex flex-col items-center bg-gradient-to-t from-black/90 to-transparent pt-20">
-                            <p className="text-white/70 mb-6 text-sm font-medium tracking-wide">Tap button to solve</p>
+                            <p className="text-white/90 mb-6 text-sm font-bold tracking-wide flex items-center gap-2">
+                                {solverType === 'LENS' ? <><FaGoogle /> Snap for Lens</> : <><FaRobot /> Snap for AI</>}
+                            </p>
                             <button
                                 onClick={capture}
                                 className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-110 transition-transform bg-white/20 backdrop-blur-sm shadow-[0_0_40px_rgba(255,255,255,0.3)]"
                             >
-                                <div className="w-16 h-16 bg-white rounded-full" />
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                                    <FaCamera className="text-gray-900 text-2xl" />
+                                </div>
                             </button>
                         </div>
                     </div>
@@ -281,13 +296,14 @@ export default function SnapSolver() {
                             </div>
                             <button
                                 onClick={processSolution}
-                                className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-500 transition-colors"
+                                className={`w-full py-4 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${solverType === 'LENS' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-indigo-600 hover:bg-indigo-500'}`}
                             >
-                                <FaCheckCircle /> Solve This Question
+                                {solverType === 'LENS' ? <><FaGoogle /> Search with Lens</> : <><FaBolt /> Solve with AI</>}
                             </button>
                         </div>
                     </div>
                 )}
+
 
                 {/* 4. SOLVING: Loading */}
                 {mode === 'SOLVING' && (
