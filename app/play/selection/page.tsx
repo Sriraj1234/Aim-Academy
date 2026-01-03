@@ -108,8 +108,8 @@ function SelectionContent() {
     // ... (rest of useEffects remain same until handlers)
 
     // Fetch Metadata based on User Profile
+    // Fetch Metadata based on User Profile
     useEffect(() => {
-        // ... (existing metadata fetch logic, no changes needed inside)
         const fetchCategories = async () => {
             if (!userProfile) return
             setLoading(true)
@@ -129,9 +129,36 @@ function SelectionContent() {
                 setLoading(false)
             }
         }
+
         if (!authLoading && userProfile) fetchCategories()
         else if (!authLoading && !userProfile) setLoading(false)
     }, [userProfile, authLoading])
+
+    // Auto-Select Logic from URL
+    useEffect(() => {
+        const paramChapter = searchParams.get('chapter');
+        const paramSubject = searchParams.get('subject');
+
+        if (paramChapter && paramSubject && !loading && activeCategories.chapters) {
+            // 1. Set Subject if valid
+            const subKey = Object.keys(activeCategories.chapters).find(k => k.toLowerCase() === paramSubject.toLowerCase());
+            if (subKey) {
+                setSelectedSubject(subKey);
+
+                // 2. Find Chapter and Trigger Modal
+                const chapters = activeCategories.chapters[subKey] || [];
+                const targetChapter = chapters.find(c =>
+                    (typeof c === 'string' ? c : c.name).toLowerCase() === paramChapter.toLowerCase()
+                );
+
+                if (targetChapter) {
+                    const name = typeof targetChapter === 'string' ? targetChapter : targetChapter.name;
+                    const count = typeof targetChapter === 'string' ? 0 : targetChapter.count;
+                    setCustomizing({ name, count });
+                }
+            }
+        }
+    }, [searchParams, loading, activeCategories]);
 
     const [selectedScience, setSelectedScience] = useState(false)
     const scienceSubjects = ['physics', 'chemistry', 'biology']
