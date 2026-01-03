@@ -56,7 +56,7 @@ async function getCroppedImg(imageSrc: string, pixelCrop: any): Promise<Blob> {
 // -------------------------------------
 
 export default function SnapSolver() {
-    const [mode, setMode] = useState<'INITIAL' | 'CAMERA' | 'CROP' | 'SOLVING' | 'RESULT'>('CAMERA');
+    const [mode, setMode] = useState<'INITIAL' | 'CAMERA' | 'CROP' | 'SOLVING' | 'RESULT'>('INITIAL');
 
     // Camera State
     const webcamRef = useRef<Webcam>(null);
@@ -162,81 +162,91 @@ export default function SnapSolver() {
             )}
 
             {/* --- CORE CONTENT AREA --- */}
-            <div className="flex-1 flex flex-col items-center justify-center relative w-full max-w-2xl mx-auto">
+            <div className="flex-1 flex flex-col items-center justify-center relative w-full max-w-2xl mx-auto p-4">
 
-                {/* 1. INITIAL: Buttons */}
+                {/* 1. INITIAL: Mode Selection */}
                 {mode === 'INITIAL' && (
-                    <div className="flex flex-col items-center gap-6 p-8 animate-in zoom-in-95 duration-300">
-                        <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/20 mb-4">
-                            <FaRobot className="text-5xl text-white" />
-                        </div>
-                        <h2 className="text-3xl font-bold text-center">Solve Doubts Instantly</h2>
-                        <p className="text-gray-400 text-center max-w-xs">Take a photo of any math or science problem to get a step-by-step solution.</p>
+                    <div className="w-full flex flex-col justify-center gap-6 p-6 animate-in zoom-in-95 duration-300">
 
-                        <div className="flex flex-col gap-4 w-full max-w-xs mt-4">
-                            <button
-                                onClick={startCamera}
-                                className="w-full py-4 bg-white text-black rounded-2xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition-transform"
-                            >
-                                <FaCamera /> Open Camera
-                            </button>
-                            <label className="w-full py-4 bg-gray-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 cursor-pointer hover:bg-gray-700 transition-colors">
+                        <div className="text-center mb-4">
+                            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                                Choose Scanner
+                            </h2>
+                            <p className="text-gray-400 text-sm">Select how you want to search</p>
+                        </div>
+
+                        {/* Option 1: Google Lens (Default) */}
+                        <a
+                            href="https://lens.google.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group relative w-full p-6 bg-gray-900/80 border border-gray-800 rounded-3xl flex items-center gap-6 hover:bg-gray-800 transition-all cursor-pointer overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white text-3xl shrink-0">
+                                <FaGoogle />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-xl font-bold text-white mb-1">Google Lens</h3>
+                                <p className="text-gray-400 text-sm">Best for identifying objects, regular search, and translation.</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                                <FaCamera className="text-sm" />
+                            </div>
+                        </a>
+
+                        {/* Option 2: AI Solver (Internal) */}
+                        <button
+                            onClick={startCamera}
+                            className="group relative w-full p-6 bg-gradient-to-br from-indigo-900/80 to-purple-900/80 border border-indigo-500/30 rounded-3xl flex items-center gap-6 hover:border-indigo-500 transition-all text-left shadow-lg shadow-indigo-900/20"
+                        >
+                            <div className="w-16 h-16 rounded-2xl bg-indigo-500 flex items-center justify-center text-white text-3xl shrink-0 shadow-lg shadow-indigo-500/30">
+                                <FaRobot />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
+                                    AI Doubt Solver
+                                    <span className="px-2 py-0.5 rounded-full bg-indigo-500 text-[10px] font-bold uppercase tracking-wide">Beta</span>
+                                </h3>
+                                <p className="text-indigo-200 text-sm">Get step-by-step solutions for Math & Science problems using Gemini.</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-white text-indigo-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <FaBolt className="text-sm" />
+                            </div>
+                        </button>
+
+                        <div className="text-center mt-4">
+                            <label className="text-gray-500 text-sm hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-2">
                                 <FaImage /> Upload from Gallery
                                 <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
                             </label>
-
-                            <a
-                                href="https://lens.google.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-2 w-full py-3 border border-gray-700 text-gray-400 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-800 hover:text-white transition-colors"
-                            >
-                                <FaGoogle /> Use Google Lens
-                            </a>
                         </div>
+
                     </div>
                 )}
 
-                {/* 2. CAMERA: Live Feed */
-                    (mode === 'CAMERA' || mode === 'INITIAL') && (
-                        <div className="relative w-full h-full flex flex-col items-center bg-black">
-                            <Webcam
-                                audio={false}
-                                ref={webcamRef}
-                                screenshotFormat="image/jpeg"
-                                videoConstraints={{ facingMode: "environment" }}
-                                className="w-full h-full object-cover opacity-80"
-                            />
+                {/* 2. CAMERA: Live Feed */}
+                {mode === 'CAMERA' && (
+                    <div className="relative w-full h-full flex flex-col items-center bg-black rounded-3xl overflow-hidden border border-gray-800">
+                        <Webcam
+                            audio={false}
+                            ref={webcamRef}
+                            screenshotFormat="image/jpeg"
+                            videoConstraints={{ facingMode: "environment" }}
+                            className="w-full h-full object-cover"
+                        />
 
-                            {/* Overlay Controls */}
-                            <div className="absolute top-4 right-4 flex flex-col gap-3 z-20">
-                                <label className="p-3 bg-black/50 text-white rounded-full backdrop-blur-md cursor-pointer hover:bg-black/70 transition-all border border-white/20">
-                                    <FaImage className="text-xl" />
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
-                                </label>
-
-                                <a
-                                    href="https://lens.google.com"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-3 bg-black/50 text-white rounded-full backdrop-blur-md cursor-pointer hover:bg-black/70 transition-all border border-white/20 flex items-center justify-center"
-                                    title="Use Google Lens"
-                                >
-                                    <FaGoogle className="text-xl" />
-                                </a>
-                            </div>
-
-                            <div className="absolute bottom-0 inset-x-0 p-8 flex flex-col items-center bg-gradient-to-t from-black/90 to-transparent pt-20">
-                                <p className="text-white/70 mb-6 text-sm font-medium tracking-wide">Tap button to solve</p>
-                                <button
-                                    onClick={capture}
-                                    className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-110 transition-transform bg-white/20 backdrop-blur-sm shadow-[0_0_40px_rgba(255,255,255,0.3)]"
-                                >
-                                    <div className="w-16 h-16 bg-white rounded-full" />
-                                </button>
-                            </div>
+                        <div className="absolute bottom-0 inset-x-0 p-8 flex flex-col items-center bg-gradient-to-t from-black/90 to-transparent pt-20">
+                            <button
+                                onClick={capture}
+                                className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-110 transition-transform bg-white/20 backdrop-blur-sm shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+                            >
+                                <div className="w-16 h-16 bg-white rounded-full" />
+                            </button>
                         </div>
-                    )}
+                    </div>
+                )}
 
                 {/* 3. CROP: Adjust Image */}
                 {mode === 'CROP' && imgSrc && (
