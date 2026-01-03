@@ -81,6 +81,7 @@ export default function DashboardPage() {
             </main>
 
             <DailyChallengeCard />
+
             <AIChatWidget />
         </div>
     )
