@@ -6,8 +6,14 @@ import { doc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { submitAnswer, nextQuestion, endGame } from '@/utils/roomService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaUser, FaCheckCircle, FaClock, FaShapes, FaBolt, FaStar, FaUsers, FaTimes, FaChevronDown } from 'react-icons/fa';
-import { VoiceChatWidget } from '@/components/group/VoiceChatWidget';
+import dynamic from 'next/dynamic';
 import { useSound } from '@/context/SoundContext';
+
+// Fix: Dynamically import VoiceChatWidget to avoid SSR "window is not defined" error
+const VoiceChatWidget = dynamic(
+    () => import('@/components/group/VoiceChatWidget').then((mod) => mod.VoiceChatWidget),
+    { ssr: false }
+);
 
 export default function GamePage() {
     const { roomId } = useParams();
