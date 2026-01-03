@@ -56,7 +56,7 @@ async function getCroppedImg(imageSrc: string, pixelCrop: any): Promise<Blob> {
 // -------------------------------------
 
 export default function SnapSolver() {
-    const [mode, setMode] = useState<'INITIAL' | 'CAMERA' | 'CROP' | 'SOLVING' | 'RESULT'>('INITIAL');
+    const [mode, setMode] = useState<'INITIAL' | 'CAMERA' | 'CROP' | 'SOLVING' | 'RESULT'>('CAMERA');
 
     // Camera State
     const webcamRef = useRef<Webcam>(null);
@@ -197,26 +197,46 @@ export default function SnapSolver() {
                     </div>
                 )}
 
-                {/* 2. CAMERA: Live Feed */}
-                {mode === 'CAMERA' && (
-                    <div className="relative w-full h-full flex flex-col items-center bg-black">
-                        <Webcam
-                            audio={false}
-                            ref={webcamRef}
-                            screenshotFormat="image/jpeg"
-                            videoConstraints={{ facingMode: "environment" }}
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute bottom-10 inset-x-0 flex justify-center">
-                            <button
-                                onClick={capture}
-                                className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-110 transition-transform bg-white/20 backdrop-blur-sm"
-                            >
-                                <div className="w-16 h-16 bg-white rounded-full" />
-                            </button>
+                {/* 2. CAMERA: Live Feed */
+                    (mode === 'CAMERA' || mode === 'INITIAL') && (
+                        <div className="relative w-full h-full flex flex-col items-center bg-black">
+                            <Webcam
+                                audio={false}
+                                ref={webcamRef}
+                                screenshotFormat="image/jpeg"
+                                videoConstraints={{ facingMode: "environment" }}
+                                className="w-full h-full object-cover opacity-80"
+                            />
+
+                            {/* Overlay Controls */}
+                            <div className="absolute top-4 right-4 flex flex-col gap-3 z-20">
+                                <label className="p-3 bg-black/50 text-white rounded-full backdrop-blur-md cursor-pointer hover:bg-black/70 transition-all border border-white/20">
+                                    <FaImage className="text-xl" />
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+                                </label>
+
+                                <a
+                                    href="https://lens.google.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-3 bg-black/50 text-white rounded-full backdrop-blur-md cursor-pointer hover:bg-black/70 transition-all border border-white/20 flex items-center justify-center"
+                                    title="Use Google Lens"
+                                >
+                                    <FaGoogle className="text-xl" />
+                                </a>
+                            </div>
+
+                            <div className="absolute bottom-0 inset-x-0 p-8 flex flex-col items-center bg-gradient-to-t from-black/90 to-transparent pt-20">
+                                <p className="text-white/70 mb-6 text-sm font-medium tracking-wide">Tap button to solve</p>
+                                <button
+                                    onClick={capture}
+                                    className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-110 transition-transform bg-white/20 backdrop-blur-sm shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+                                >
+                                    <div className="w-16 h-16 bg-white rounded-full" />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
                 {/* 3. CROP: Adjust Image */}
                 {mode === 'CROP' && imgSrc && (
