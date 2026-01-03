@@ -6,8 +6,8 @@ import { FaMicrophone, FaMicrophoneSlash, FaStop, FaHome, FaClock } from 'react-
 import { useRouter } from 'next/navigation';
 import confetti from 'canvas-confetti';
 
-// 3D Avatar URL (Using DiceBear 'Avataaars' for a friendly female examiner look)
-const TEACHER_AVATAR = "https://api.dicebear.com/9.x/avataaars/svg?seed=MsSia&clothing=blazerAndShirt&eyes=happy&mouth=smile&top=longHairStraight&hairColor=brown&skinColor=light";
+// 3D Avatar (Female Teacher - Professional Look)
+const TEACHER_AVATAR = "https://api.dicebear.com/9.x/avataaars/svg?seed=MsSia&clothing=blazerAndShirt&eyes=happy&mouth=smile&top=longHairStraight&hairColor=brown&skinColor=light&style=circle";
 
 type SessionState = 'IDLE' | 'SPEAKING_QUESTION' | 'LISTENING' | 'PROCESSING' | 'FEEDBACK' | 'FINISHED';
 
@@ -18,11 +18,13 @@ export default function VivaSession() {
     // Conversation State
     const [history, setHistory] = useState<{ role: string, content: string }[]>([]);
 
-    // Initial Greeting (Hinglish - Ms. Sia)
-    const [currentQuestion, setCurrentQuestion] = useState("Hello! Main Ms. Sia, aapki Viva Examiner hoon. Aaj aap kis subject aur topic ka viva dena chahenge?");
+    // Initial Greeting (AI Guru Persona)
+    const [currentQuestion, setCurrentQuestion] = useState("Hello! Mis Sia here. Batao, aaj kya padhna hai? Ya koi doubt pareshaan kar raha hai?");
 
     const [feedback, setFeedback] = useState("");
     const [transcript, setTranscript] = useState("");
+    const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+    const hasGreetedRef = useRef(false);
 
     // Audio & Auto-Submit State
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -63,51 +65,109 @@ export default function VivaSession() {
         confetti();
     };
 
-    // --- TTS LOGIC ---
-    const speak = useCallback((text: string) => {
+    // --- TTS LOGIC (Google Cloud) ---
+    const speak = useCallback(async (text: string) => {
         if (typeof window === 'undefined') return;
-        window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
-
-        // Improved Voice Selection for "Ms. Sia" (Indian Female)
-        const getPreferredVoice = () => {
-            const voices = window.speechSynthesis.getVoices();
-            return voices.find(v =>
-                (v.name.includes('Google हिन्दी') && v.lang.includes('hi')) || // Best natural Hinglish
-                v.name.includes('Microsoft Heera') || // Very good Indian Female
-                v.name.includes('Google English India') || // Good English
-                (v.lang === 'hi-IN' && !v.name.includes('Male')) // Generic Female Hindi
-            ) || voices.find(v => v.name.includes('Google US English'));
-        };
-
-        let preferredVoice = getPreferredVoice();
-
-        // Retry if voices aren't loaded yet
-        if (!preferredVoice && window.speechSynthesis.getVoices().length === 0) {
-            window.speechSynthesis.onvoiceschanged = () => {
-                preferredVoice = getPreferredVoice();
-                if (preferredVoice) utterance.voice = preferredVoice;
-            };
-        } else if (preferredVoice) {
-            utterance.voice = preferredVoice;
+        // Stop previous audio immediately
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current = null;
         }
 
-        // Tuned for "Teacher" Persona
-        utterance.rate = 0.9;  // Slightly slower, more clear
-        utterance.pitch = 1.05; // Slightly higher/feminine
+        try {
+            setStatus('PROCESSING');
+            // Phonetic tweak for "Mis" to sound like "Miss"
+            const audioText = text.replace(/Mis Sia/g, "Miss Sia").replace(/\bMis\b/g, "Miss");
 
-        utterance.onstart = () => setStatus('SPEAKING_QUESTION');
-        utterance.onend = () => {
+            const res = await fetch('/api/ai/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: audioText })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || `TTS API Error: ${res.statusText}`);
+            }
+
+            const data = await res.json();
+
+            if (data.audioContent) {
+                const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+                currentAudioRef.current = audio;
+
+                audio.onplay = () => setStatus('SPEAKING_QUESTION');
+
+                // CRITICAL FAIL-SAFE: Handle Audio Load Errors (Event objects)
+                audio.onerror = (e) => {
+                    console.error("Audio Load Error (Event):", e);
+                    setStatus('IDLE');
+                };
+
+                audio.onended = () => {
+                    setStatus('IDLE');
+                    currentAudioRef.current = null;
+                };
+
+                // Robust play handling
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        if (error.name === 'AbortError') {
+                            // Ignore abort errors (intentional pauses)
+                            console.log('Playback aborted intentionally');
+                        } else {
+                            console.error("Playback failed:", error);
+                            setStatus('IDLE');
+                        }
+                    });
+                }
+            } else {
+                console.error("No audio content received");
+                // Fallback
+                try {
+                    const u = new SpeechSynthesisUtterance(text);
+                    window.speechSynthesis.speak(u);
+                } catch (e) {
+                    console.error("Fallback TTS failed:", e);
+                }
+                setStatus('IDLE');
+            }
+        } catch (err: any) {
+            // Handle [object Event] panic
+            if (err && typeof err === 'object' && 'type' in err) {
+                console.error("TTS Error (DOM Event):", err.type);
+            } else {
+                console.error("TTS Error:", err.message || err);
+            }
+
+            // Fallback attempt
+            try {
+                const u = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(u);
+            } catch (fbErr) {
+                console.error("Fallback TTS failed", fbErr);
+            }
             setStatus('IDLE');
-        };
+        }
+    }, []);
 
-        window.speechSynthesis.speak(utterance);
+    // Cleanup audio on unmount
+    useEffect(() => {
+        return () => {
+            if (currentAudioRef.current) {
+                currentAudioRef.current.pause();
+                currentAudioRef.current = null;
+            }
+        };
     }, []);
 
     // Initial Start: Speak the Greeting automatically
     useEffect(() => {
-        speak("Hello! Main Ms. Sia, aapki Viva Examiner hoon. Aaj aap kis subject aur topic ka viva dena chahenge?");
+        if (hasGreetedRef.current) return;
+        hasGreetedRef.current = true;
+        speak("Hello! Mis Sia here. Batao, aaj kya padhna hai? Ya koi doubt pareshaan kar raha hai?");
     }, [speak]);
 
     // --- MAIN API LOGIC ---
@@ -239,34 +299,45 @@ export default function VivaSession() {
 
     // --- RENDER ---
     return (
-        <div className="flex flex-col items-center justify-center min-h-[85vh] w-full max-w-2xl mx-auto p-4 relative">
+        <div className="flex flex-col items-center min-h-[90vh] w-full max-w-2xl mx-auto p-4 relative bg-gradient-to-br from-indigo-50/80 via-white/80 to-purple-50/80 rounded-[2.5rem] border border-white/60 shadow-2xl backdrop-blur-xl overflow-hidden mt-4 pb-40">
 
-            {/* TIMER BADGE */}
-            <div className={`absolute top-0 right-4 flex items-center gap-2 px-4 py-2 rounded-full font-mono text-sm font-bold shadow-sm transition-colors ${timeLeft < 60 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-white text-gray-600'}`}>
-                <FaClock /> {formatTime(timeLeft)}
-            </div>
+            {/* Background Orbs */}
+            <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-indigo-200/30 rounded-full blur-3xl pointer-events-none animate-pulse" />
+            <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-purple-200/30 rounded-full blur-3xl pointer-events-none animate-pulse animation-delay-1000" />
 
-            {/* Header */}
-            <div className="text-center mb-6 mt-8">
-                <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" /> AI Examiner
+            {/* HEADER AREA */}
+            <div className="w-full flex flex-col items-center justify-between z-10 mt-6 mb-4">
+
+                {/* Top Row: Badge + Timer */}
+                <div className="flex w-full justify-between items-center px-2 mb-4">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-sm border border-indigo-200">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" /> AI Guru
+                    </div>
+
+                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-mono text-sm font-bold shadow-sm transition-colors border ${timeLeft < 60 ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : 'bg-white/80 text-gray-600 border-gray-200'}`}>
+                        <FaClock className="text-sm" /> {formatTime(timeLeft)}
+                    </div>
                 </div>
-                {status === 'FINISHED' ? (
-                    <h2 className="text-3xl font-bold text-gray-800">Session Complete!</h2>
-                ) : (
-                    <h2 className="text-2xl font-bold text-gray-800">Oral Exam (Viva)</h2>
-                )}
+
+                {/* Title */}
+                <div className="text-center">
+                    {status === 'FINISHED' ? (
+                        <h2 className="text-2xl font-bold text-gray-800">Session Complete!</h2>
+                    ) : (
+                        <h2 className="text-2xl font-bold text-gray-800">AI Mentor Session</h2>
+                    )}
+                </div>
             </div>
 
             {/* 3D AVATAR AREA */}
-            <div className="relative mb-8">
+            <div className="relative mb-6 z-10">
                 <motion.div
                     animate={{
                         scale: status === 'SPEAKING_QUESTION' ? [1, 1.05, 1] : 1,
                         filter: status === 'LISTENING' ? 'grayscale(0%)' : 'grayscale(0%)',
                     }}
                     transition={{ repeat: Infinity, duration: status === 'SPEAKING_QUESTION' ? 2 : 0 }}
-                    className="w-40 h-40 rounded-full bg-white shadow-2xl border-4 border-white overflow-hidden relative z-10"
+                    className="w-40 h-40 rounded-full bg-white shadow-2xl border-4 border-white overflow-hidden relative z-10 ring-4 ring-indigo-50"
                 >
                     <img
                         src={TEACHER_AVATAR}
@@ -288,68 +359,68 @@ export default function VivaSession() {
             </div>
 
             {/* MAIN TEXT AREA */}
-            <div className="min-h-[160px] w-full flex flex-col items-center justify-center text-center space-y-4 px-4 bg-white/50 rounded-3xl backdrop-blur-sm border border-white/40 p-6 shadow-sm">
-
-                {status === 'FINISHED' ? (
-                    <div className="space-y-4">
-                        <p className="text-xl text-gray-700">Exam time is over.</p>
-                        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">Start New Viva</button>
-                    </div>
-                ) : status === 'SPEAKING_QUESTION' || status === 'IDLE' ? (
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key="question"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-3"
-                        >
-                            {feedback && <p className={`font-medium text-sm italic ${feedback.toLowerCase().includes('incorrect') || feedback.toLowerCase().includes('galat') ? 'text-red-500' : 'text-green-600'}`}>"{feedback}"</p>}
-                            <p className="text-xl md:text-2xl font-medium text-gray-800 leading-relaxed font-serif">
-                                "{currentQuestion}"
-                            </p>
-                        </motion.div>
-                    </AnimatePresence>
-                ) : status === 'LISTENING' ? (
-                    <motion.div
-                        animate={{ opacity: [0.6, 1, 0.6] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                        className="flex flex-col items-center gap-2"
-                    >
-                        <p className="text-red-500 font-bold tracking-widest text-sm uppercase">Listening...</p>
-                        <div className="flex gap-1 h-8 items-end">
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <motion.div
-                                    key={i}
-                                    animate={{ height: [10, 30, 10] }}
-                                    transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
-                                    className="w-1.5 bg-red-500 rounded-full"
-                                />
-                            ))}
+            <div className="w-full flex-1 flex flex-col items-center text-center space-y-4 px-4 z-10">
+                <div className="w-full bg-white/60 rounded-3xl backdrop-blur-md border border-white/50 p-6 shadow-lg min-h-[140px] flex flex-col justify-center">
+                    {status === 'FINISHED' ? (
+                        <div className="space-y-4">
+                            <p className="text-lg text-gray-700">Hope I could help! See you next time.</p>
+                            <button onClick={() => window.location.reload()} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-transform hover:scale-105">Start New Session</button>
                         </div>
-                        <p className="text-xs text-gray-400 mt-2">Will auto-submit on silence</p>
-                    </motion.div>
-                ) : (
-                    <div className="flex flex-col items-center gap-3 text-indigo-500">
-                        <FaMicrophoneSlash className="text-3xl animate-spin" />
-                        <p className="text-sm font-bold animate-pulse">Analyzing Answer...</p>
+                    ) : status === 'SPEAKING_QUESTION' || status === 'IDLE' ? (
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key="question"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-3"
+                            >
+                                {feedback && <p className={`font-medium text-sm italic ${feedback.toLowerCase().includes('incorrect') || feedback.toLowerCase().includes('galat') ? 'text-red-500' : 'text-green-600'}`}>"{feedback}"</p>}
+                                <p className="text-lg md:text-xl font-medium text-gray-800 leading-relaxed font-sans">
+                                    "{currentQuestion}"
+                                </p>
+                            </motion.div>
+                        </AnimatePresence>
+                    ) : status === 'LISTENING' ? (
+                        <motion.div
+                            animate={{ opacity: [0.6, 1, 0.6] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                            className="flex flex-col items-center gap-2"
+                        >
+                            <p className="text-red-500 font-bold tracking-widest text-sm uppercase flex items-center gap-2"><span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /> Listening...</p>
+                            <div className="flex gap-1 h-8 items-end">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <motion.div
+                                        key={i}
+                                        animate={{ height: [10, 24, 10] }}
+                                        transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
+                                        className="w-1.5 bg-gradient-to-t from-red-500 to-red-300 rounded-full"
+                                    />
+                                ))}
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-3 text-indigo-500">
+                            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />
+                            <p className="text-xs font-bold animate-pulse uppercase tracking-wider">Thinking...</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Transcript Preview */}
+                {transcript && status !== 'LISTENING' && transcript.length > 5 && (
+                    <div className="mt-2 w-full px-4 py-3 bg-indigo-50/80 rounded-xl text-xs text-indigo-800 border border-indigo-100 text-left shadow-sm">
+                        <span className="font-bold">You:</span> {transcript}
                     </div>
                 )}
             </div>
 
-            {/* Transcript Preview */}
-            {transcript && status !== 'LISTENING' && transcript.length > 5 && (
-                <div className="mt-4 px-4 py-2 bg-gray-100/80 rounded-lg text-xs text-gray-500 border border-gray-200">
-                    You: {transcript}
-                </div>
-            )}
-
-            {/* Controls */}
-            <div className="fixed bottom-8 left-0 right-0 flex justify-center items-center gap-8 z-50">
+            {/* Controls Fixed Bottom */}
+            <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-6 z-50">
                 <button
                     onClick={() => router.push('/play')}
-                    className="w-14 h-14 rounded-full bg-white shadow-xl text-gray-400 hover:text-indigo-600 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-gray-100"
+                    className="w-12 h-12 rounded-full bg-white/90 backdrop-blur shadow-lg text-gray-400 hover:text-indigo-600 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-white/50"
                 >
-                    <FaHome className="text-xl" />
+                    <FaHome className="text-lg" />
                 </button>
 
                 {/* Main Mic Button */}
@@ -358,12 +429,12 @@ export default function VivaSession() {
                         onClick={isRecording ? stopRecording : startListening}
                         disabled={status === 'PROCESSING' || status === 'SPEAKING_QUESTION'}
                         className={`
-                            relative w-24 h-24 rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] flex items-center justify-center text-4xl transition-all transform
+                            relative w-20 h-20 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center text-3xl transition-all transform duration-300
                             ${isRecording
-                                ? 'bg-red-500 text-white scale-110 ring-4 ring-red-200'
+                                ? 'bg-gradient-to-tr from-red-500 to-pink-500 text-white scale-110 ring-4 ring-red-100 shadow-red-200'
                                 : status === 'PROCESSING' || status === 'SPEAKING_QUESTION'
-                                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed scale-95'
-                                    : 'bg-indigo-600 text-white hover:scale-105 active:scale-95 ring-4 ring-indigo-100'
+                                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed scale-95 ring-0'
+                                    : 'bg-gradient-to-tr from-indigo-600 to-purple-600 text-white hover:scale-105 active:scale-95 ring-4 ring-indigo-100 shadow-indigo-200'
                             }
                         `}
                     >
