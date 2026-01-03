@@ -6,6 +6,11 @@ const groq = new Groq({
 });
 
 export async function POST(req: NextRequest) {
+    if (!process.env.GROQ_API_KEY) {
+        console.error("GROQ_API_KEY is missing");
+        return NextResponse.json({ error: "Server Configuration Error: Missing GROQ_API_KEY" }, { status: 500 });
+    }
+
     try {
         const { history, subject, chapter, level } = await req.json();
 
@@ -38,9 +43,11 @@ Return your response in strict JSON format:
             ...history
         ];
 
+        console.log("Sending to Groq:", messages.length, "messages");
+
         const completion = await groq.chat.completions.create({
             messages: messages as any,
-            model: "llama3-70b-8192", // High intelligence for logic
+            model: "llama-3.3-70b-versatile",
             temperature: 0.7,
             response_format: { type: "json_object" }
         });
@@ -55,10 +62,11 @@ Return your response in strict JSON format:
 
         return NextResponse.json(jsonResponse);
 
-    } catch (error) {
-        console.error('Viva AI error:', error);
+    } catch (error: any) {
+        console.error('Viva AI Code Error:', error);
+        // Return the actual error message for debugging
         return NextResponse.json(
-            { error: 'Failed to generate viva response' },
+            { error: error.message || 'Failed to generate viva response' },
             { status: 500 }
         );
     }
