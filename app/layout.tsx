@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/context/ThemeContext'
 import { GameInviteListener } from '@/components/shared/GameInviteListener'
 import { PresenceListener } from '@/components/shared/PresenceListener'
 import { InstallPrompt } from '@/components/shared/InstallPrompt'
+import { NotificationPrompt } from '@/components/shared/NotificationPrompt'
 
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SoundProvider } from '@/context/SoundContext'
@@ -80,6 +81,7 @@ export default function RootLayout({
                   <PresenceListener />
                   <GameInviteListener />
                   <InstallPrompt />
+                  <NotificationPrompt delay={10000} />
                   <Toaster position="top-center" toastOptions={{ duration: 3000, style: { background: '#333', color: '#fff', borderRadius: '12px' } }} />
                   <div className="relative w-full max-w-full overflow-x-hidden">
                     {children}
