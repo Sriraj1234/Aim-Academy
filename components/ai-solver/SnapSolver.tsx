@@ -86,13 +86,40 @@ export default function SnapSolver() {
         setMode('CAMERA');
     };
 
-    const capture = useCallback(() => {
+    const capture = useCallback(async () => {
         const image = webcamRef.current?.getScreenshot();
         if (image) {
             setImgSrc(image);
-            setMode('CROP');
+
+            if (solverType === 'LENS') {
+                // --- FAST TRACK: LENS (No Crop) ---
+                setMode('SOLVING');
+                setError('');
+                try {
+                    // Convert Base64 to Blob
+                    const blob = await (await fetch(image)).blob();
+
+                    const formData = new FormData();
+                    formData.append('file', blob, 'snap.jpg');
+
+                    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Upload Failed');
+
+                    // Redirect
+                    window.location.href = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(data.url)}`;
+
+                } catch (e: any) {
+                    console.error(e);
+                    setError(e.message || 'Error redirecting to Lens');
+                    setMode('CAMERA');
+                }
+            } else {
+                // --- NORMAL TRACK: AI (With Crop) ---
+                setMode('CROP');
+            }
         }
-    }, [webcamRef]);
+    }, [webcamRef, solverType]);
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
