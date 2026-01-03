@@ -22,6 +22,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         { icon: FaUserCircle, label: 'My Profile', href: '/profile' },
         { icon: FaBolt, label: 'AI Tools', isDivider: true },
         { icon: FaShareAlt, label: 'Snap & Solve', href: '/play/snap-solve' },
+        { icon: FaBook, label: 'Wisdom Book', href: '/wisdom', isNew: true },
         { icon: FaHandsHelping, label: 'AI Guru', href: '/live-guru' },
         { icon: FaGraduationCap, label: 'Leaderboard', href: '/leaderboard' },
         { icon: FaMoon, label: 'Settings', isDivider: true },
