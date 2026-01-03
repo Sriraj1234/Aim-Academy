@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { VideoResource } from '@/data/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaYoutube, FaSearch, FaFilter, FaPlay, FaExclamationCircle, FaEye, FaCheck, FaBolt } from 'react-icons/fa';
@@ -31,10 +31,11 @@ const SUBJECT_ICONS: Record<string, string> = {
 };
 
 export default function StudyHubPage() {
-    const { userProfile } = useAuth();
+    const { userProfile, user } = useAuth();
     const [videos, setVideos] = useState<VideoResource[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedVideo, setSelectedVideo] = useState<VideoResource | null>(null);
+    const [completedVideoIds, setCompletedVideoIds] = useState<Set<string>>(new Set());
 
     // Filters
     const [selectedBoard, setSelectedBoard] = useState(userProfile?.board?.toLowerCase() || 'cbse');
@@ -69,6 +70,19 @@ export default function StudyHubPage() {
         fetchVideos();
     }, [selectedBoard, selectedClass]);
 
+    // Fetch Completed Videos
+    useEffect(() => {
+        if (!user) return;
+
+        // Real-time listener for completions
+        const unsubscribe = onSnapshot(collection(db, `users/${user.uid}/completed_videos`), (snapshot) => {
+            const ids = new Set(snapshot.docs.map(doc => doc.id));
+            setCompletedVideoIds(ids);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
     // View Tracking Handler - Call API to increment view + update history
     const handleVideoClick = async (video: VideoResource) => {
         setSelectedVideo(video);
@@ -81,6 +95,31 @@ export default function StudyHubPage() {
             });
         } catch (e) {
             console.error("View track error", e);
+        }
+    };
+
+    const toggleCompletion = async (e: React.MouseEvent, videoId: string) => {
+        e.stopPropagation();
+        if (!user) return;
+
+        const isCompleted = completedVideoIds.has(videoId);
+        const ref = doc(db, `users/${user.uid}/completed_videos`, videoId);
+
+        try {
+            if (isCompleted) {
+                await deleteDoc(ref);
+                // State update handled by onSnapshot
+            } else {
+                await setDoc(ref, {
+                    videoId,
+                    completedAt: serverTimestamp(),
+                    board: selectedBoard,
+                    class: selectedClass
+                });
+                // State update handled by onSnapshot
+            }
+        } catch (error) {
+            console.error("Error toggling completion:", error);
         }
     };
 
@@ -207,20 +246,34 @@ export default function StudyHubPage() {
                                     {chapterVideos.map(video => (
                                         <div
                                             key={video.id}
-                                            className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                                            onClick={() => setSelectedVideo(video)}
+                                            className={`group bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${completedVideoIds.has(video.id) ? 'border-green-200 ring-1 ring-green-100' : 'border-gray-100'}`}
+                                            onClick={() => handleVideoClick(video)}
                                         >
                                             {/* Thumbnail */}
                                             <div className="relative aspect-video bg-gray-900">
                                                 <img
                                                     src={video.thumbnailUrl}
                                                     alt={video.title}
-                                                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                                    className={`w-full h-full object-cover transition-opacity ${completedVideoIds.has(video.id) ? 'opacity-75' : 'opacity-90 group-hover:opacity-100'}`}
                                                 />
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
                                                     <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg scale-90 group-hover:scale-100 transition-transform">
                                                         <FaPlay className="ml-1" />
                                                     </div>
+                                                </div>
+
+                                                {/* STATUS BADGES */}
+                                                <div className="absolute top-2 right-2 flex gap-1">
+                                                    {completedVideoIds.has(video.id) && (
+                                                        <div className="bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                                                            <FaCheck /> Done
+                                                        </div>
+                                                    )}
+                                                    {video.hasQuiz && (
+                                                        <div className="bg-purple-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                                                            <FaBolt /> Quiz
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -231,7 +284,7 @@ export default function StudyHubPage() {
                                                         {video.subject}
                                                     </span>
                                                 </div>
-                                                <h3 className="font-bold text-gray-800 line-clamp-2 leading-tight mb-3 h-10">
+                                                <h3 className={`font-bold text-gray-800 line-clamp-2 leading-tight mb-3 h-10 ${completedVideoIds.has(video.id) ? 'text-gray-500' : ''}`}>
                                                     {video.title}
                                                 </h3>
 
@@ -279,30 +332,51 @@ export default function StudyHubPage() {
                                     allowFullScreen
                                 />
                             </div>
-                            <div className="p-4 bg-gray-900 text-white flex justify-between items-start gap-4">
+                            <div className="p-4 bg-gray-900 text-white flex flex-col md:flex-row justify-between items-start gap-4">
                                 <div>
                                     <h3 className="font-bold text-lg mb-1">{selectedVideo.title}</h3>
                                     <p className="text-sm text-gray-400 mb-4">
                                         By <span className="text-white font-bold">{selectedVideo.teacherName}</span> • {selectedVideo.channelName} • {selectedVideo.views || 0} views
                                     </p>
+                                </div>
 
-                                    {/* Action Buttons */}
-                                    <div className="flex gap-3">
-                                        {selectedVideo.hasQuiz && (
-                                            <a
-                                                href={`/play/quiz?mode=chapter&board=${selectedVideo.board}&class=${selectedVideo.classLevel}&subject=${selectedVideo.subject}&chapter=${encodeURIComponent(selectedVideo.linkedQuizChapter || selectedVideo.chapter)}`}
-                                                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
-                                            >
-                                                <FaBolt /> Take Quiz
-                                            </a>
+                                {/* Action Buttons */}
+                                <div className="flex flex-wrap gap-3">
+                                    {/* Mark as Complete Button */}
+                                    <button
+                                        onClick={(e) => toggleCompletion(e, selectedVideo.id)}
+                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${completedVideoIds.has(selectedVideo.id)
+                                            ? 'bg-green-600 text-white hover:bg-green-700'
+                                            : 'bg-white/10 hover:bg-white/20 text-gray-300'
+                                            }`}
+                                    >
+                                        {completedVideoIds.has(selectedVideo.id) ? (
+                                            <>
+                                                <FaCheck /> Completed
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="w-4 h-4 rounded-full border-2 border-current" /> Mark as Done
+                                            </>
                                         )}
-                                        <button
-                                            onClick={() => setSelectedVideo(null)}
-                                            className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors"
+                                    </button>
+
+                                    {/* Link with updated HREF logic for better safety */}
+                                    {selectedVideo.hasQuiz && (
+                                        <a
+                                            href={`/play/selection?mode=chapter&board=${selectedVideo.board}&class=${selectedVideo.classLevel}&subject=${selectedVideo.subject}&chapter=${encodeURIComponent(selectedVideo.linkedQuizChapter || selectedVideo.chapter)}`}
+                                            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-sm font-bold transition-all flex items-center gap-2 animate-pulse"
                                         >
-                                            Close
-                                        </button>
-                                    </div>
+                                            <FaBolt /> Take Quiz
+                                        </a>
+                                    )}
+
+                                    <button
+                                        onClick={() => setSelectedVideo(null)}
+                                        className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors"
+                                    >
+                                        Close
+                                    </button>
                                 </div>
                             </div>
                         </div>
