@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
 
         const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
 
-        // SSML Wrapper for more natural breaths and pauses
-        const synthesisInput = { ssml: `<speak>${text}</speak>` };
+        // Switch to Plain Text to prevent SSML errors (which cause fallback to robotic voice)
+        const synthesisInput = { text: text };
 
         const response = await fetch(url, {
             method: 'POST',
@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
                 voice: { languageCode: 'en-IN', name: voiceName },
                 audioConfig: {
                     audioEncoding: 'MP3',
-                    pitch: 0.0, // Natural pitch
-                    speakingRate: 0.95 // Slightly slower for better clarity and human-feel
+                    pitch: 0.0,
+                    speakingRate: 1.0 // Natural speed
                 }
             })
         });
