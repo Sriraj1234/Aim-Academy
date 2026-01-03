@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HiHome, HiUpload, HiDatabase, HiUsers, HiChartBar } from 'react-icons/hi'
-import { FaYoutube } from 'react-icons/fa'
+import { FaYoutube, FaPuzzlePiece } from 'react-icons/fa'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
@@ -13,6 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { label: 'Dashboard', href: '/admin', icon: HiChartBar },
         { label: 'Upload Questions', href: '/admin/upload', icon: HiUpload },
         { label: 'Study Hub Manager', href: '/admin/study-hub', icon: FaYoutube },
+        { label: 'Mind Game Manager', href: '/admin/mind-game', icon: FaPuzzlePiece },
         // { label: 'Manage Users', href: '/admin/users', icon: HiUsers }, // Future
         // { label: 'Metadata', href: '/admin/metadata', icon: HiDatabase }, // Future
     ]
