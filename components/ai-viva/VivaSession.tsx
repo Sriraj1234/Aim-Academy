@@ -77,8 +77,25 @@ export default function VivaSession() {
 
         try {
             setStatus('PROCESSING');
+            setStatus('PROCESSING');
+
+            // --- CLEANING LOGIC START ---
+            let cleanText = text
+                // Remove Markdown (*, **, _, `)
+                .replace(/[*_`]/g, '')
+                // Remove Brackets and their content if it looks like metadata (e.g. [Visual])
+                // or just remove brackets but keep text: .replace(/[\[\]\(\)\{\}]/g, '')
+                .replace(/[\[\]\(\)\{\}]/g, '')
+                // Remove Emojis (Simple range for common emojis)
+                .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+                // Remove "comma" word if someone wrote it literally (rare but happens in AI)
+                .replace(/\bcomma\b/gi, '')
+                // Fix extra spaces
+                .replace(/\s+/g, ' ').trim();
+
             // Phonetic tweak for "Mis" to sound like "Miss"
-            const audioText = text.replace(/Mis Sia/g, "Miss Sia").replace(/\bMis\b/g, "Miss");
+            const audioText = cleanText.replace(/Mis Sia/g, "Miss Sia").replace(/\bMis\b/g, "Miss");
+            // --- CLEANING LOGIC END ---
 
             const res = await fetch('/api/ai/tts', {
                 method: 'POST',
