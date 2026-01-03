@@ -375,18 +375,44 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
             {/* Floating Button */}
             <AnimatePresence>
                 {!isOpen && (
-                    <motion.button
+                    <motion.div
+                        className="fixed bottom-6 md:bottom-10 right-4 z-50 flex items-center justify-center"
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setIsOpen(true)}
-                        className="fixed bottom-6 md:bottom-10 right-4 z-50 w-16 h-16 rounded-full bg-white shadow-2xl border-2 border-white/50 flex items-center justify-center transform transition-all duration-300 overflow-hidden"
                     >
-                        <FaRobot className="w-8 h-8 text-indigo-600" />
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
-                    </motion.button>
+                        {/* Sparkles */}
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+                            className="absolute inset-0 pointer-events-none"
+                        >
+                            <motion.div
+                                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ repeat: Infinity, duration: 2, delay: 0 }}
+                                className="absolute -top-2 -right-2 text-yellow-400 text-xl"
+                            >
+                                <HiSparkles />
+                            </motion.div>
+                            <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ repeat: Infinity, duration: 2, delay: 1 }}
+                                className="absolute -bottom-1 -left-1 text-indigo-400 text-lg"
+                            >
+                                <HiSparkles />
+                            </motion.div>
+                        </motion.div>
+
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setIsOpen(true)}
+                            className="w-16 h-16 rounded-full bg-white shadow-2xl border-2 border-white/50 flex items-center justify-center overflow-hidden relative"
+                        >
+                            <FaRobot className="w-8 h-8 text-indigo-600" />
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+                        </motion.button>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
