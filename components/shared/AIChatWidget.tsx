@@ -384,7 +384,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         onClick={() => setIsOpen(true)}
                         className="fixed bottom-6 md:bottom-10 right-4 z-50 w-16 h-16 rounded-full bg-white shadow-2xl border-2 border-white/50 flex items-center justify-center transform transition-all duration-300 overflow-hidden"
                     >
-                        <img src="/ai-avatar-v2.png" alt="AI Buddy" className="w-full h-full object-contain p-1" />
+                        <img src="/fallback-buddy.png" alt="AI Buddy" className="w-full h-full object-contain p-1" />
                         <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                     </motion.button>
                 )}
@@ -404,7 +404,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         <div className="bg-white/50 dark:bg-gray-800/50 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0 backdrop-blur-md">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-white overflow-hidden border-2 border-white shadow-sm flex items-center justify-center">
-                                    <img src="/ai-avatar-v2.png" alt="AI Buddy" className="w-full h-full object-contain p-0.5" />
+                                    <img src="/fallback-buddy.png" alt="AI Buddy" className="w-full h-full object-contain p-0.5" />
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg leading-tight">
@@ -433,7 +433,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                         transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
                                         className="w-32 h-32 mb-6 rounded-full bg-white flex items-center justify-center p-4 shadow-inner border border-gray-100"
                                     >
-                                        <img src="/ai-avatar-v2.png" alt="AI Buddy" className="w-full h-full object-contain drop-shadow-md" />
+                                        <img src="/fallback-buddy.png" alt="AI Buddy" className="w-full h-full object-contain drop-shadow-md" />
                                     </motion.div>
                                     <h4 className="font-black text-2xl text-gray-800 dark:text-white mb-2">Hi there! 👋</h4>
                                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 leading-relaxed max-w-[80%] mx-auto">
@@ -462,7 +462,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 >
                                     {msg.role === 'assistant' && (
                                         <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0 mb-1">
-                                            <img src="/ai-avatar-v2.png" alt="Bot" className="w-full h-full object-cover" />
+                                            <img src="/fallback-buddy.png" alt="Bot" className="w-full h-full object-cover" />
                                         </div>
                                     )}
 
@@ -548,7 +548,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     className="flex justify-start items-end gap-2"
                                 >
                                     <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0 mb-1">
-                                        <img src="/ai-avatar-v2.png" alt="Bot" className="w-full h-full object-cover" />
+                                        <img src="/fallback-buddy.png" alt="Bot" className="w-full h-full object-cover" />
                                     </div>
                                     <div className="bg-white px-5 py-3 rounded-2xl rounded-bl-none text-sm text-gray-800 shadow-sm border border-gray-100">
                                         {streamingText}
@@ -564,7 +564,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     className="flex justify-start items-end gap-2"
                                 >
                                     <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0 mb-1">
-                                        <img src="/ai-avatar-v2.png" alt="Bot" className="w-full h-full object-cover" />
+                                        <img src="/fallback-buddy.png" alt="Bot" className="w-full h-full object-cover" />
                                     </div>
                                     <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-2 shadow-sm border border-gray-100">
                                         <span className="flex gap-1">
