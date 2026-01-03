@@ -13,11 +13,13 @@ const firebaseConfig = {
 
 import { getFirestore } from 'firebase/firestore'
 import { getDatabase } from 'firebase/database'
+import { getStorage } from 'firebase/storage'
 
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
 const auth = getAuth(app)
 const db = getFirestore(app)
 const rtdb = getDatabase(app)
+const storage = getStorage(app)
 
-export { app, auth, db, rtdb }
+export { app, auth, db, rtdb, storage }
