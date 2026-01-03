@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp, arrayUnion, deleteField } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp, arrayUnion, deleteField, query, where, getDocs } from 'firebase/firestore';
 
 export interface Player {
     id: string; // This is the socket/session ID or Firestore key
@@ -31,8 +31,9 @@ const generateRoomId = () => {
 };
 
 export const createRoom = async (hostName: string, subject: string, chapter: string, questions: any[], userId?: string, photoURL?: string) => {
+    // 1. Check removed: User can create multiple rooms
     const roomId = generateRoomId();
-    const hostId = userId || `host-${Date.now()}`; // Use Auth ID if available, else fallback (though UI will enforce Auth)
+    const hostId = userId || `host-${Date.now()}`;
 
     const roomRef = doc(db, 'rooms', roomId);
 
@@ -41,16 +42,16 @@ export const createRoom = async (hostName: string, subject: string, chapter: str
         hostId,
         status: 'waiting',
         createdAt: serverTimestamp(),
-        expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         subject,
         chapter,
         questions,
-        currentQuestionIndex: -1, // -1 means lobby
+        currentQuestionIndex: -1,
         players: {
             [hostId]: {
                 id: hostId,
                 userId: userId,
-                name: hostName, // Removed "(Host)" suffix to keep name clean
+                name: hostName,
                 photoURL: photoURL,
                 score: 0,
                 status: 'joined',
@@ -60,7 +61,7 @@ export const createRoom = async (hostName: string, subject: string, chapter: str
     };
 
     await setDoc(roomRef, initialData);
-    return { roomId, hostId };
+    return { roomId, hostId, isExisting: false };
 };
 
 export const joinRoom = async (roomId: string, playerName: string, userId?: string, photoURL?: string) => {
@@ -125,9 +126,20 @@ export const joinRoom = async (roomId: string, playerName: string, userId?: stri
 
 export const leaveRoom = async (roomId: string, playerId: string) => {
     const roomRef = doc(db, 'rooms', roomId);
-    await updateDoc(roomRef, {
-        [`players.${playerId}`]: deleteField()
-    });
+    try {
+        // Optimistic check: Using getDoc first is safer but slower. 
+        // Just Try/Catch the update is fine for "cleanup" operations.
+        await updateDoc(roomRef, {
+            [`players.${playerId}`]: deleteField()
+        });
+    } catch (error: any) {
+        // Verify if error is "No document to update" (code: not-found)
+        if (error.code === 'not-found' || error.toString().includes('No document to update')) {
+            console.warn(`Room ${roomId} already deleted. Leave action skipped.`);
+            return;
+        }
+        throw error; // Re-throw real errors
+    }
 };
 
 export const listenToRoom = (roomId: string, callback: (room: Room) => void) => {
@@ -139,6 +151,7 @@ export const listenToRoom = (roomId: string, callback: (room: Room) => void) => 
 };
 
 export const createEmptyRoom = async (hostName: string, userId: string, photoURL?: string) => {
+    // 1. Check removed: User can create multiple rooms
     const roomId = generateRoomId();
     const hostId = userId;
 
@@ -147,10 +160,10 @@ export const createEmptyRoom = async (hostName: string, userId: string, photoURL
     const initialData: Room = {
         roomId,
         hostId,
-        status: 'waiting', // Using waiting to be compatible with existing logic, but with empty subject
+        status: 'waiting',
         createdAt: serverTimestamp(),
         expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-        subject: '', // Empty initially
+        subject: '',
         chapter: '',
         questions: [],
         currentQuestionIndex: -1,
@@ -168,7 +181,7 @@ export const createEmptyRoom = async (hostName: string, userId: string, photoURL
     };
 
     await setDoc(roomRef, initialData);
-    return { roomId };
+    return { roomId, isExisting: false };
 };
 
 export const updateRoomConfig = async (roomId: string, subject: string, chapter: string, questions: any[]) => {
