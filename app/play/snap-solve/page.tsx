@@ -2,7 +2,7 @@ import SnapSolver from '@/components/ai-solver/SnapSolver';
 
 export default function SnapSolvePage() {
     return (
-        <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="h-screen w-full overflow-hidden bg-black">
             <SnapSolver />
         </div>
     );
