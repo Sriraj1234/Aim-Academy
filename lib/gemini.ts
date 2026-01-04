@@ -70,9 +70,13 @@ export const AIM_BUDDY_INSTRUCTION = `You are "AIM Buddy", a highly intelligent 
  * Get the text-only Gemini model
  * Using gemini-2.5-flash for best performance (250K TPM)
  */
+/**
+ * Get the text-only Gemini model
+ * Using gemini-1.5-flash (User requested "Flash")
+ */
 export function getTextModel() {
     return genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash-preview-05-20',
+        model: 'gemini-1.5-flash',
         safetySettings,
         generationConfig: defaultConfig,
         systemInstruction: AIM_BUDDY_INSTRUCTION,
@@ -81,11 +85,11 @@ export function getTextModel() {
 
 /**
  * Get the multimodal Gemini model (for images)
- * Using gemini-2.5-flash for image understanding
+ * Using gemini-1.5-flash
  */
 export function getMultimodalModel() {
     return genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash-preview-05-20',
+        model: 'gemini-1.5-flash',
         safetySettings,
         generationConfig: defaultConfig,
         systemInstruction: AIM_BUDDY_INSTRUCTION,
