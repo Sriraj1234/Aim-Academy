@@ -24,6 +24,43 @@ export const useNotifications = () => {
         checkSupport();
     }, []);
 
+    // Helper to get and save token
+    const saveToken = useCallback(async () => {
+        try {
+            const messaging = getMessaging(app);
+            const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || 'BIXVNyIxta1PgGJ0sldAJo7_4e_um_1FxIgXNTOUp7RU4quMpE1uSN0y-ZLuESg2zVHr_O9t36WjoOLZ5uISMMs';
+
+            if (!vapidKey) {
+                console.error('VAPID key not configured');
+                return null;
+            }
+
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            const token = await getToken(messaging, {
+                vapidKey,
+                serviceWorkerRegistration: registration
+            });
+
+            if (token) {
+                console.log('FCM Token:', token);
+                setFcmToken(token);
+
+                if (user?.uid) {
+                    await updateDoc(doc(db, 'users', user.uid), {
+                        fcmToken: token,
+                        notificationsEnabled: true,
+                        lastTokenUpdate: new Date().toISOString()
+                    });
+                    console.log('FCM token saved to Firestore');
+                }
+                return token;
+            }
+        } catch (error) {
+            console.error('Error getting/saving token:', error);
+        }
+        return null;
+    }, [user]);
+
     // Request permission and get token
     const requestPermission = useCallback(async () => {
         if (!isSupported) {
@@ -36,40 +73,7 @@ export const useNotifications = () => {
             setPermission(result);
 
             if (result === 'granted') {
-                // Get the FCM token
-                const messaging = getMessaging(app);
-                const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-
-                if (!vapidKey) {
-                    console.error('VAPID key not configured');
-                    return null;
-                }
-
-                // Register service worker first
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                console.log('Service Worker registered:', registration);
-
-                const token = await getToken(messaging, {
-                    vapidKey,
-                    serviceWorkerRegistration: registration
-                });
-
-                if (token) {
-                    console.log('FCM Token:', token);
-                    setFcmToken(token);
-
-                    // Save token to Firestore if user is logged in
-                    if (user?.uid) {
-                        await updateDoc(doc(db, 'users', user.uid), {
-                            fcmToken: token,
-                            notificationsEnabled: true,
-                            lastTokenUpdate: new Date().toISOString()
-                        });
-                        console.log('FCM token saved to Firestore');
-                    }
-
-                    return token;
-                }
+                return await saveToken();
             } else {
                 console.log('Notification permission denied');
                 toast.error('Please enable notifications to stay updated!');
@@ -79,7 +83,14 @@ export const useNotifications = () => {
         }
 
         return null;
-    }, [isSupported, user]);
+    }, [isSupported, saveToken]);
+
+    // Auto-sync token if already granted
+    useEffect(() => {
+        if (isSupported && permission === 'granted' && user?.uid) {
+            saveToken();
+        }
+    }, [isSupported, permission, user, saveToken]);
 
     // Listen for foreground messages
     useEffect(() => {
