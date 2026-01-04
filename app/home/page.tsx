@@ -8,13 +8,14 @@ import { ModernCarousel } from '@/components/home/ModernCarousel'
 import { DailyChallengeCard } from '@/components/home/DailyChallengeCard'
 import { GamificationCard } from '@/components/home/GamificationCard'
 import { AIChatWidget } from '@/components/shared/AIChatWidget'
-import { AIQuestionGenerator } from '@/components/home/AIQuestionGenerator'
-import { ChapterSummary } from '@/components/home/ChapterSummary'
-import { AIFlashcardGenerator } from '@/components/home/AIFlashcardGenerator'
 import { BookmarkedQuestionsSection } from '@/components/home/BookmarkedQuestionsSection'
 import { NotesSection } from '@/components/home/NotesSection'
 import { AIPerformanceCard } from '@/components/home/AIPerformanceCard'
 import { OfflineTuitionCard } from '@/components/home/OfflineTuitionCard'
+import { Footer } from '@/components/shared/Footer'
+import { AIQuestionGenerator } from '@/components/home/AIQuestionGenerator'
+import { AIFlashcardGenerator } from '@/components/home/AIFlashcardGenerator'
+import { ChapterSummary } from '@/components/home/ChapterSummary'
 
 
 export default function DashboardPage() {
@@ -82,7 +83,10 @@ export default function DashboardPage() {
 
             <DailyChallengeCard />
 
+
             <AIChatWidget />
+
+            <Footer />
         </div>
     )
 }
