@@ -3,9 +3,10 @@
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion } from 'framer-motion'
-import { FaStar, FaRocket, FaUserFriends } from 'react-icons/fa'
+import { FaStar, FaRocket, FaUserFriends, FaBell } from 'react-icons/fa'
 import { useState } from 'react'
 import { FriendsDrawer } from './FriendsDrawer'
+import { NotificationsDrawer } from './NotificationsDrawer'
 import { useRouter } from 'next/navigation'
 import { useFriends } from '@/hooks/useFriends'
 import { createEmptyRoom } from '@/utils/roomService'
@@ -22,6 +23,7 @@ export const DashboardHeader = () => {
     const { user, userProfile } = useAuth()
     const { t } = useLanguage()
     const [isFriendsOpen, setIsFriendsOpen] = useState(false)
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
 
     const timeOfDay = new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'
     const emoji = new Date().getHours() < 12 ? '🌅' : new Date().getHours() < 18 ? '☀️' : '🌙'
@@ -98,6 +100,14 @@ export const DashboardHeader = () => {
 
                 <div className="flex gap-3">
                     <button
+                        onClick={() => setIsNotificationsOpen(true)}
+                        className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
+                    >
+                        <FaBell className="text-xl group-hover:scale-110 transition-transform" />
+                        <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white animate-pulse"></span>
+                    </button>
+
+                    <button
                         onClick={() => setIsFriendsOpen(true)}
                         className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm"
                     >
@@ -108,7 +118,6 @@ export const DashboardHeader = () => {
                             </span>
                         )}
                     </button>
-                    {/* Actions or Notifications can go here later */}
                 </div>
             </motion.div>
 
@@ -117,6 +126,11 @@ export const DashboardHeader = () => {
                 onClose={() => setIsFriendsOpen(false)}
                 onPlayWithFriend={handlePlayWithFriend}
                 inviteLoading={inviteLoading}
+            />
+
+            <NotificationsDrawer
+                isOpen={isNotificationsOpen}
+                onClose={() => setIsNotificationsOpen(false)}
             />
         </div>
     )
