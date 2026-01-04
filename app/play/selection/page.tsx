@@ -168,10 +168,12 @@ function SelectionContent() {
     const [selectedSST, setSelectedSST] = useState(false)
 
     const scienceSubjects = ['physics', 'chemistry', 'biology']
-    const sstSubjects = ['history', 'geography', 'civics', 'economics', 'political science', 'disaster management', 'social studies']
+    const sstSubjects = ['history', 'geography', 'civics', 'economics', 'political science', 'disaster management']
 
     const displayedSubjects = activeCategories.subjects?.filter(
-        sub => !scienceSubjects.includes(sub.toLowerCase()) && !sstSubjects.includes(sub.toLowerCase())
+        sub => !scienceSubjects.includes(sub.toLowerCase()) &&
+            !sstSubjects.includes(sub.toLowerCase()) &&
+            sub.toLowerCase() !== 'social studies' // Explicitly hide Social Studies
     ) || []
 
     const hasScience = activeCategories.subjects?.some(sub => scienceSubjects.includes(sub.toLowerCase()))
