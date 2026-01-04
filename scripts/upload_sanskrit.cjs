@@ -56,41 +56,44 @@ async function uploadSanskrit() {
                 let rawAnswer = (row['Correct Answer'] || row['correct answer'] || row['Answer'] || '').toString().trim().toLowerCase();
 
                 // Normalize Answer
-                let correctAnswer = '';
-                if (rawAnswer.match(/^(option )?a|विकल्प a/)) correctAnswer = 'a';
-                else if (rawAnswer.match(/^(option )?b|विकल्प b/)) correctAnswer = 'b';
-                else if (rawAnswer.match(/^(option )?c|विकल्प c/)) correctAnswer = 'c';
-                else if (rawAnswer.match(/^(option )?d|विकल्प d/)) correctAnswer = 'd';
+                let correctIndex = -1;
+
+                // Try to find index from letter
+                if (rawAnswer.match(/^(option )?a|विकल्प a/)) correctIndex = 0;
+                else if (rawAnswer.match(/^(option )?b|विकल्प b/)) correctIndex = 1;
+                else if (rawAnswer.match(/^(option )?c|विकल्प c/)) correctIndex = 2;
+                else if (rawAnswer.match(/^(option )?d|विकल्प d/)) correctIndex = 3;
 
                 // Fallbacks
-                if (!correctAnswer) {
-                    if (rawAnswer.includes('k') || rawAnswer.includes('क')) correctAnswer = 'a';
-                    else if (rawAnswer.includes('kh') || rawAnswer.includes('ख')) correctAnswer = 'b';
-                    else if (rawAnswer.includes('g') || rawAnswer.includes('ग')) correctAnswer = 'c';
-                    else if (rawAnswer.includes('gh') || rawAnswer.includes('घ')) correctAnswer = 'd';
+                if (correctIndex === -1) {
+                    if (rawAnswer.includes('k') || rawAnswer.includes('क')) correctIndex = 0;
+                    else if (rawAnswer.includes('kh') || rawAnswer.includes('ख')) correctIndex = 1;
+                    else if (rawAnswer.includes('g') || rawAnswer.includes('ग')) correctIndex = 2;
+                    else if (rawAnswer.includes('gh') || rawAnswer.includes('घ')) correctIndex = 3;
                 }
 
-                if (!correctAnswer) {
+                const optionsList = [
+                    (row['Option A'] || row['A'] || '').toString(),
+                    (row['Option B'] || row['B'] || '').toString(),
+                    (row['Option C'] || row['C'] || '').toString(),
+                    (row['Option D'] || row['D'] || '').toString()
+                ];
+
+                if (correctIndex === -1) {
                     // Check against options text
-                    const opts = [row['Option A'], row['Option B'], row['Option C'], row['Option D']];
-                    const idx = opts.findIndex(o => o && o.toString().toLowerCase().trim() === rawAnswer);
-                    if (idx !== -1) correctAnswer = ['a', 'b', 'c', 'd'][idx];
+                    const idx = optionsList.findIndex(o => o && o.toString().toLowerCase().trim() === rawAnswer);
+                    if (idx !== -1) correctIndex = idx;
                 }
 
-                if (!correctAnswer) continue;
+                if (correctIndex === -1) continue;
 
                 const newDocRef = doc(collection(db, 'questions'));
                 const qData = {
                     subject: 'sanskrit',
                     chapter: chapter,
                     question: questionText,
-                    options: {
-                        a: (row['Option A'] || row['A'] || '').toString(),
-                        b: (row['Option B'] || row['B'] || '').toString(),
-                        c: (row['Option C'] || row['C'] || '').toString(),
-                        d: (row['Option D'] || row['D'] || '').toString()
-                    },
-                    correctAnswer: correctAnswer,
+                    options: optionsList,
+                    correctAnswer: correctIndex,
                     board: 'bseb',
                     class: '10',
                     createdAt: new Date().toISOString()
