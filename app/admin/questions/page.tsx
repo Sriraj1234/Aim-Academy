@@ -176,7 +176,7 @@ export default function QuestionsPage() {
                 })
             }
         }
-        setAvailableChapters(Array.from(chapters).sort())
+        setAvailableChapters(Array.from(chapters))
 
     }, [taxonomy, filterBoard, filterClass, filterSubject])
 
