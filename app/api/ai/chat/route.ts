@@ -15,6 +15,8 @@ import {
     getMultimodalModel,
     AIM_BUDDY_INSTRUCTION
 } from '@/lib/gemini';
+import { db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 // Fallback to Groq
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -57,15 +59,65 @@ export async function POST(request: NextRequest) {
         // Check if streaming is requested
         const wantStream = body.stream === true;
 
-        // Build context info
-        // Build context info with Profile Data
-        let contextInfo = `Student Profile: ${body.context?.name ? 'Name: ' + body.context.name + ', ' : ''}Class ${body.context?.class || 'Unknown'}, Board: ${body.context?.board || 'General'}`;
-        if (body.context?.stream) contextInfo += `, Stream: ${body.context.stream}`;
-        if (body.context?.subject) contextInfo += `\nCurrent Subject: ${body.context.subject}`;
-        if (body.context?.chapter) contextInfo += `\nCurrent Chapter: ${body.context.chapter}`;
+        // --- NEW: Fetch Syllabus Data ---
+        let syllabusInfo = '';
+        let subjects: string[] = [];
+        let chapterSummary = '';
 
-        // Add User Preference for Format: Short & Chunked
-        contextInfo += `\n\nIMPORTANT FORMATTING RULE: Break long answers into short, readable parts (bullet points or short paragraphs). Adapt the difficulty level strictly to Class ${body.context?.class || '10'}.`;
+        try {
+            const board = (body.context?.board || 'cbse').toLowerCase();
+            const classNum = body.context?.class || '10';
+            const taxonomyKey = `${board}_${classNum}`;
+
+            const taxDoc = await getDoc(doc(db, 'metadata', 'taxonomy'));
+            if (taxDoc.exists()) {
+                const taxonomy = taxDoc.data();
+                const syllabusData = taxonomy?.[taxonomyKey];
+
+                if (syllabusData?.subjects) {
+                    subjects = syllabusData.subjects;
+                    syllabusInfo = `\n\n**Available Subjects in Your ${body.context?.board?.toUpperCase() || 'CBSE'} Class ${classNum} Syllabus:**\n${subjects.join(', ')}`;
+
+                    // Build chapter summary (limited to avoid token overflow)
+                    if (syllabusData.chapters) {
+                        const chapterList = subjects.slice(0, 5).map(sub => {
+                            const chapters = syllabusData.chapters[sub] || [];
+                            const count = chapters.length;
+                            return `- ${sub}: ${count} chapters`;
+                        }).join('\n');
+                        chapterSummary = `\n\n**Chapter Counts:**\n${chapterList}`;
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch taxonomy:', err);
+            // Continue without syllabus data
+        }
+
+        // --- Enhanced Context with Personalization ---
+        const userName = body.context?.name || 'Student';
+        const userClass = body.context?.class || '10';
+        const userBoard = body.context?.board?.toUpperCase() || 'CBSE';
+        const userStream = body.context?.stream;
+
+        let contextInfo = `**Student Profile:**
+- Name: ${userName}
+- Board: ${userBoard}
+- Class: ${userClass}${userStream ? `\n- Stream: ${userStream}` : ''}`;
+
+        if (body.context?.subject) contextInfo += `\n- Current Subject: ${body.context.subject}`;
+        if (body.context?.chapter) contextInfo += `\n- Current Chapter: ${body.context.chapter}`;
+
+        contextInfo += syllabusInfo + chapterSummary;
+
+        contextInfo += `\n\n**Personality & Style:**
+- Greet by name when user says hi/hello/hai/namaste
+- Respond naturally in Hinglish (mix of English & Hindi)
+- Use emojis for warmth 📚✨
+- Be encouraging like a senior student
+- If asked about subjects/chapters, refer to the EXACT syllabus list above`;
+
+        contextInfo += `\n\n**FORMATTING RULE:** Break long answers into short, readable parts (bullet points or short paragraphs). Adapt difficulty to Class ${userClass}.`;
 
         // Try Gemini first
         if (isGeminiConfigured()) {
