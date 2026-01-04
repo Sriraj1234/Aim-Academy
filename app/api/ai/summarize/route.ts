@@ -10,6 +10,13 @@ interface SummarizeRequest {
     board?: string;
     name?: string;
     language?: 'english' | 'hindi' | 'hinglish';
+    useWebResearch?: boolean;
+}
+
+interface WebSnippet {
+    title: string;
+    description?: string;
+    url: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -44,44 +51,85 @@ export async function POST(request: NextRequest) {
                 languageInstruction = 'Use Hinglish (Hindi-English mix) for better understanding.';
         }
 
-        const systemPrompt = `You are an expert teacher creating DETAILED revision notes for ${body.name ? body.name + ', a ' : ''}${body.board || 'Indian board'} ${body.classLevel || 'Class 10'} student.
-Create comprehensive, in-depth summaries that explain concepts clearly.
+        // === Web Research Phase ===
+        let webContext = '';
+        let sources: string[] = [];
+
+        if (body.useWebResearch) {
+            try {
+                const searchQuery = `${body.chapter} ${body.subject} Class ${body.classLevel || '10'} notes explanation`;
+                const searchRes = await fetch(`${request.nextUrl.origin}/api/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: searchQuery, type: 'text' }),
+                    signal: AbortSignal.timeout(8000) // 8 second timeout
+                });
+
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    if (searchData.results && searchData.results.length > 0) {
+                        const snippets: WebSnippet[] = searchData.results.slice(0, 5);
+
+                        webContext = `
+--- WEB RESEARCH CONTEXT ---
+The following information was gathered from the web. Use this to enhance your summary with accurate, up-to-date details:
+${snippets.map((s, i) => `[${i + 1}] ${s.title}: ${s.description || ''}`).join('\n')}
+--- END WEB CONTEXT ---
+`;
+                        sources = snippets.map(s => s.url).filter(Boolean);
+                    }
+                }
+            } catch (e) {
+                console.log('Web research failed, continuing without:', e);
+            }
+        }
+
+        const systemPrompt = `You are an expert teacher creating DETAILED, COMPREHENSIVE revision notes for ${body.name ? body.name + ', a ' : ''}${body.board || 'Indian board'} ${body.classLevel || 'Class 10'} student.
+
+Create thorough, in-depth summaries that explain concepts clearly and help with exam preparation.
+
 Rules:
 1. Address the student by name (${body.name || 'Student'}) occasionally to keep them engaged.
-2. Provide DETAILED explanations for each key point. Do not be too brief.
-3. Use bullet points but ensure each point has a proper explanation.
-4. Keep definitions clear and include examples.
-5. Adapt language complexity to Class ${body.classLevel || '10'}.
+2. Provide DETAILED explanations for each key point. Be thorough, not brief.
+3. Include practical examples and real-world applications where relevant.
+4. Use bullet points but ensure each point has a proper explanation.
+5. Keep definitions clear, include examples, and explain WHY things work the way they do.
+6. Adapt language complexity to Class ${body.classLevel || '10'}.
 ${languageInstruction}
+${webContext}
 
 Format your response as JSON with this structure:
 {
     "title": "Chapter title",
-    "keyPoints": ["Point 1", "Point 2", ...],
-    "definitions": [{"term": "Term", "meaning": "Definition"}, ...],
-    "formulas": ["Formula 1", "Formula 2", ...],
+    "keyPoints": ["Point 1 with detailed explanation", "Point 2 with detailed explanation", ...],
+    "definitions": [{"term": "Term", "meaning": "Detailed definition with example"}, ...],
+    "formulas": ["Formula 1 with explanation", "Formula 2 with explanation", ...],
     "importantDates": [{"event": "Event", "date": "Date"}, ...],
-    "mnemonics": ["Memory trick 1", ...],
-    "examTips": ["Tip 1", "Tip 2"]
+    "mnemonics": ["Memory trick 1 with explanation", ...],
+    "examTips": ["Tip 1 specific to this chapter", "Tip 2", ...]
 }
 
 Include only relevant sections. For science chapters include formulas, for history include dates, etc.
-Keep each point SHORT and memorable.`;
+Make each key point INFORMATIVE and EXAM-FOCUSED.`;
 
-        const userPrompt = `Create quick revision notes for:
+        const userPrompt = `Create comprehensive revision notes for:
 Subject: ${body.subject}
 Chapter: ${body.chapter}
 Class: ${body.classLevel || '10'}
 Board: ${body.board || 'CBSE/BSEB'}
 
 Focus on:
-- Key concepts students must remember
-- Important definitions
-- Formulas (if applicable)
+- ALL key concepts students must remember for exams
+- Important definitions with examples
+- Formulas and their applications (if applicable)
 - Important dates/events (if applicable)
-- Memory tricks
+- Memory tricks that actually help
+- Specific exam tips for this chapter
 
-IMPORTANT: If any explanation is long, break it into smaller "chunks" or bullets. Do not output walls of text. Return ONLY the JSON.`;
+IMPORTANT:
+1. Be DETAILED and COMPREHENSIVE - this should be enough for complete revision
+2. Include examples wherever possible
+3. Return ONLY the JSON, no markdown formatting.`;
 
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
@@ -96,7 +144,7 @@ IMPORTANT: If any explanation is long, break it into smaller "chunks" or bullets
                     { role: 'user', content: userPrompt }
                 ],
                 temperature: 0.7,
-                max_tokens: 2500, // Increased for detailed notes
+                max_tokens: 4000, // Increased for comprehensive notes
             }),
         });
 
@@ -130,9 +178,11 @@ IMPORTANT: If any explanation is long, break it into smaller "chunks" or bullets
         return NextResponse.json({
             success: true,
             summary,
+            sources: body.useWebResearch ? sources : undefined,
             metadata: {
                 subject: body.subject,
                 chapter: body.chapter,
+                webResearchUsed: body.useWebResearch || false,
                 generatedAt: new Date().toISOString()
             }
         });
