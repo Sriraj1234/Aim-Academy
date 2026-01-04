@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaBook, FaTimes, FaSpinner, FaLightbulb, FaCalculator, FaCalendarAlt, FaBrain, FaGraduationCap } from 'react-icons/fa';
+import { FaBook, FaTimes, FaSpinner, FaLightbulb, FaCalculator, FaCalendarAlt, FaBrain, FaGraduationCap, FaGlobe, FaExternalLinkAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 
 interface Summary {
@@ -33,6 +33,8 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
     const [loading, setLoading] = useState(false);
     const [summary, setSummary] = useState<Summary | null>(null);
     const [error, setError] = useState('');
+    const [useWebResearch, setUseWebResearch] = useState(false);
+    const [sources, setSources] = useState<string[]>([]);
 
     const generateSummary = async () => {
         if (!subject || !chapter.trim()) {
@@ -54,7 +56,8 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                     language: 'hinglish',
                     classLevel: userProfile?.class || '10',
                     board: userProfile?.board || 'CBSE',
-                    name: userProfile?.displayName // Pass user name
+                    name: userProfile?.displayName,
+                    useWebResearch
                 })
             });
 
@@ -62,6 +65,9 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
 
             if (data.success && data.summary) {
                 setSummary(data.summary);
+                if (data.sources) {
+                    setSources(data.sources);
+                }
             } else {
                 setError(data.error || 'Failed to generate summary');
             }
@@ -77,6 +83,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
         if (!initialChapter) setChapter('');
         setSummary(null);
         setError('');
+        setSources([]);
     };
 
     return (
@@ -176,6 +183,23 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                                 {error}
                                             </div>
                                         )}
+
+                                        {/* Web Research Toggle */}
+                                        <div className="flex items-center gap-3 p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+                                            <button
+                                                type="button"
+                                                onClick={() => setUseWebResearch(!useWebResearch)}
+                                                className={`w-12 h-6 rounded-full transition-all relative ${useWebResearch ? 'bg-cyan-500' : 'bg-white/10'}`}
+                                            >
+                                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${useWebResearch ? 'left-7' : 'left-1'}`} />
+                                            </button>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 text-sm font-bold text-cyan-400">
+                                                    <FaGlobe /> Web Research
+                                                </div>
+                                                <p className="text-[10px] text-white/50">Fetch extra context from the web (takes longer)</p>
+                                            </div>
+                                        </div>
 
                                         {/* Generate Button */}
                                         <button
@@ -307,6 +331,33 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                                         </li>
                                                     ))}
                                                 </ul>
+                                            </div>
+                                        )}
+
+                                        {/* Web Sources */}
+                                        {sources.length > 0 && (
+                                            <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4">
+                                                <h5 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                                    <FaGlobe /> Web Sources
+                                                </h5>
+                                                <div className="space-y-1.5">
+                                                    {sources.slice(0, 3).map((url, i) => {
+                                                        let hostname = "";
+                                                        try { hostname = new URL(url).hostname; } catch { }
+                                                        return (
+                                                            <a
+                                                                key={i}
+                                                                href={url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-xs text-cyan-300/80 hover:text-cyan-200 flex items-center gap-1 truncate"
+                                                            >
+                                                                <FaExternalLinkAlt className="text-[10px] shrink-0" />
+                                                                {hostname || url}
+                                                            </a>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
