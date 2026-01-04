@@ -115,6 +115,11 @@ export interface UserProfile {
         lng: number;
     };
     viewedVideoIds?: string[]; // Study Hub Tracking
+    activeDevices?: {
+        deviceId: string;
+        deviceName: string;
+        lastActive: number;
+    }[];
 }
 
 export interface BattleRoom {
