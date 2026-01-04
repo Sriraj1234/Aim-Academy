@@ -313,7 +313,7 @@ export default function GamePage() {
                     <div className="flex justify-between items-center mb-2 md:mb-6">
                         {/* Question Counter & Voice Chat */}
                         <div className="flex items-center gap-2">
-                            <VoiceChatWidget channelName={roomId as string} />
+                            <VoiceChatWidget channelName={roomId as string} playerId={playerId || undefined} />
 
                             <div className="bg-white/80 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-sm text-xs md:text-sm font-bold text-text-sub border border-white/50">
                                 Q <span className="text-brand-600 text-sm md:text-lg">{room.currentQuestionIndex + 1}</span>
