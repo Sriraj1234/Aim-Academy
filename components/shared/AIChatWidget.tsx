@@ -152,16 +152,24 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                 eduVisualKeywords.some(k => lowerInput.includes(k));
 
             // 2. Web Intent: Factual, Time-sensitive, or specific queries
-            // We verify "syllabus", "dates", "news", "current", "who is", "latest"
-            // Including Hinglish/Hindi keywords for broader support
+            // Comprehensive list of Hindi, Hinglish, and English triggers
             const webKeywords = [
+                // English triggers
                 'search', 'google', 'current', 'latest', 'news', 'syllabus', 'omr', 'pattern', 'exam date',
-                'who is', 'what is the price', 'weather', 'minister', 'president', 'ceo', 'founder',
-                'karrent', 'current', 'vartman', 'kaun hai', 'kya hai', 'kab', 'kahan', 'mantri', 'yojana'
+                'who is', 'what is the', 'when is', 'where is', 'how many', 'how much',
+                'weather', 'minister', 'president', 'ceo', 'founder', 'capital', 'population',
+                'price', 'cost', 'salary', 'result', 'admit card', 'date sheet',
+                // Hindi/Hinglish triggers
+                'kon hai', 'kaun hai', 'kya hai', 'kab hai', 'kahan hai', 'kitna hai', 'kitne',
+                'vartman', 'abhi', 'aaj', 'kal', 'mantri', 'mukhyamantri', 'cm', 'pm',
+                'home minister', 'education minister', 'finance minister',
+                'rajdhani', 'jansankhya', 'daam', 'kimat', 'result kab', 'exam kab',
+                'bihar', 'india', 'bharat', 'state', 'district', 'jila',
+                'yojana', 'scheme', 'sarkari', 'government', 'vacancy', 'bharti',
+                // Question patterns (will trigger for any "who/what/when" style questions)
+                'batao', 'bataiye', 'bata do', 'tell me about'
             ];
             const isWebIntent = !isImageIntent && webKeywords.some(k => lowerInput.includes(k));
-            // Note: We prioritize images for "What is photosynthesis?" but if it's "What is the syllabus", we want web.
-            // A hybrid approach: 
             const shouldFetchWeb = webKeywords.some(k => lowerInput.includes(k));
 
             // --- AI Memory: Detect Weak Subject Mentions ---
@@ -392,25 +400,37 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 transition={{ repeat: Infinity, duration: 2, delay: 0 }}
                                 className="absolute -top-2 -right-2 text-yellow-400 text-xl"
                             >
-                                <HiSparkles />
+                                ✨
                             </motion.div>
                             <motion.div
                                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                                 transition={{ repeat: Infinity, duration: 2, delay: 1 }}
                                 className="absolute -bottom-1 -left-1 text-indigo-400 text-lg"
                             >
-                                <HiSparkles />
+                                ✨
                             </motion.div>
                         </motion.div>
 
+                        {/* 3D Floating Button */}
                         <motion.button
-                            whileHover={{ scale: 1.1 }}
+                            whileHover={{ scale: 1.1, rotateY: 10 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setIsOpen(true)}
-                            className="w-16 h-16 rounded-full bg-white shadow-2xl border-2 border-white/50 flex items-center justify-center overflow-hidden relative"
+                            className="relative"
                         >
-                            <FaRobot className="w-8 h-8 text-indigo-600" />
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+                            {/* Outer Glow Ring */}
+                            <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-75 blur-md animate-pulse" />
+
+                            {/* Main 3D Button */}
+                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 p-1 shadow-2xl shadow-purple-500/40">
+                                <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
+                                    {/* 3D Robot Face */}
+                                    <span className="text-3xl" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>🤖</span>
+                                </div>
+                            </div>
+
+                            {/* Online Indicator */}
+                            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg animate-pulse" />
                         </motion.button>
                     </motion.div>
                 )}
@@ -429,16 +449,50 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         {/* Header */}
                         <div className="bg-white/50 dark:bg-gray-800/50 p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0 backdrop-blur-md">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-indigo-100 overflow-hidden border-2 border-white shadow-sm flex items-center justify-center">
-                                    <FaRobot className="w-6 h-6 text-indigo-600" />
-                                </div>
+                                {/* 3D Avatar with Thinking State */}
+                                <motion.div
+                                    animate={loading ? {
+                                        rotateY: [0, 15, -15, 0],
+                                        scale: [1, 1.05, 1]
+                                    } : {}}
+                                    transition={{ repeat: loading ? Infinity : 0, duration: 1.5 }}
+                                    className="relative"
+                                >
+                                    {/* Outer Glow Ring */}
+                                    <div className={`absolute -inset-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-75 blur-sm ${loading ? 'animate-pulse' : ''}`} />
+
+                                    {/* Main 3D Avatar */}
+                                    <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 p-0.5 shadow-lg shadow-purple-500/30">
+                                        <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
+                                            {/* Face with 3D depth */}
+                                            <div className="relative">
+                                                {loading ? (
+                                                    // Thinking Face
+                                                    <motion.div
+                                                        animate={{ rotate: [0, 10, -10, 0] }}
+                                                        transition={{ repeat: Infinity, duration: 2 }}
+                                                        className="text-2xl"
+                                                    >
+                                                        🤔
+                                                    </motion.div>
+                                                ) : (
+                                                    // Normal Face - Robot emoji for 3D effect
+                                                    <span className="text-2xl">🤖</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Online Indicator */}
+                                    <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-500'}`} />
+                                </motion.div>
                                 <div>
                                     <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg leading-tight">
                                         AI Companion
                                     </h3>
-                                    <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-500 flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                        Always Online
+                                    <span className={`text-[10px] uppercase tracking-wider font-bold flex items-center gap-1 ${loading ? 'text-yellow-500' : 'text-indigo-500'}`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${loading ? 'bg-yellow-400 animate-ping' : 'bg-green-500 animate-pulse'}`} />
+                                        {loading ? 'Thinking...' : 'Always Online'}
                                     </span>
                                 </div>
                             </div>
@@ -455,11 +509,30 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                             {messages.length === 0 && (
                                 <div className="text-center py-10 px-6 flex flex-col items-center">
                                     <motion.div
-                                        animate={{ y: [0, -10, 0] }}
+                                        animate={{ y: [0, -10, 0], rotateY: [0, 5, -5, 0] }}
                                         transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                        className="w-32 h-32 mb-6 rounded-full bg-gradient-to-tr from-indigo-100 to-purple-100 flex items-center justify-center p-4 shadow-inner"
+                                        className="relative w-36 h-36 mb-6"
                                     >
-                                        <FaRobot className="w-16 h-16 text-indigo-500 drop-shadow-md" />
+                                        {/* 3D Glow Background */}
+                                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-xl animate-pulse" />
+
+                                        {/* Main Avatar Container */}
+                                        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border-4 border-white/20 shadow-2xl flex items-center justify-center overflow-hidden">
+                                            {/* Inner Gradient Ring */}
+                                            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20" />
+
+                                            {/* 3D Robot Face */}
+                                            <span className="text-6xl drop-shadow-lg" style={{ textShadow: '0 4px 8px rgba(0,0,0,0.3)' }}>🤖</span>
+                                        </div>
+
+                                        {/* Sparkle Effects */}
+                                        <motion.div
+                                            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                            transition={{ repeat: Infinity, duration: 2 }}
+                                            className="absolute -top-2 -right-2 text-yellow-400 text-xl"
+                                        >
+                                            ✨
+                                        </motion.div>
                                     </motion.div>
                                     <h4 className="font-black text-2xl text-gray-800 dark:text-white mb-2">Hi there! 👋</h4>
                                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 leading-relaxed max-w-[80%] mx-auto">
@@ -573,9 +646,17 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     animate={{ opacity: 1 }}
                                     className="flex justify-start items-end gap-2"
                                 >
-                                    <div className="w-6 h-6 rounded-full overflow-hidden bg-indigo-100 border border-gray-200 shrink-0 mb-1 flex items-center justify-center">
-                                        <FaRobot className="w-4 h-4 text-indigo-600" />
-                                    </div>
+                                    {/* 3D Mini Avatar for Streaming */}
+                                    <motion.div
+                                        animate={{ rotateY: [0, 15, -15, 0], scale: [1, 1.05, 1] }}
+                                        transition={{ repeat: Infinity, duration: 1 }}
+                                        className="relative shrink-0 mb-1"
+                                    >
+                                        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 animate-pulse blur-sm" />
+                                        <div className="relative w-7 h-7 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-yellow-400/50">
+                                            <span className="text-sm">🤔</span>
+                                        </div>
+                                    </motion.div>
                                     <div className="bg-white px-5 py-3 rounded-2xl rounded-bl-none text-sm text-gray-800 shadow-sm border border-gray-100">
                                         {streamingText}
                                         <span className="animate-pulse inline-block w-2 h-4 bg-indigo-500 ml-1 align-middle"></span>
@@ -589,9 +670,23 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     animate={{ opacity: 1 }}
                                     className="flex justify-start items-end gap-2"
                                 >
-                                    <div className="w-6 h-6 rounded-full overflow-hidden bg-indigo-100 border border-gray-200 shrink-0 mb-1 flex items-center justify-center">
-                                        <FaRobot className="w-4 h-4 text-indigo-600" />
-                                    </div>
+                                    {/* 3D Mini Avatar for Loading */}
+                                    <motion.div
+                                        animate={{ rotateY: [0, 20, -20, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.5 }}
+                                        className="relative shrink-0 mb-1"
+                                    >
+                                        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse blur-sm" />
+                                        <div className="relative w-7 h-7 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-indigo-400/50">
+                                            <motion.span
+                                                animate={{ rotate: [0, 15, -15, 0] }}
+                                                transition={{ repeat: Infinity, duration: 1 }}
+                                                className="text-sm"
+                                            >
+                                                🤔
+                                            </motion.span>
+                                        </div>
+                                    </motion.div>
                                     <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-2 shadow-sm border border-gray-100">
                                         <span className="flex gap-1">
                                             <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -650,73 +745,75 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence >
 
             {/* Full Screen Image Gallery Modal */}
             <AnimatePresence>
-                {galleryIndex !== null && galleryImages.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
-                        onClick={() => setGalleryIndex(null)}
-                    >
-                        {/* Close Button */}
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
+                {
+                    galleryIndex !== null && galleryImages.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
                             onClick={() => setGalleryIndex(null)}
-                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md z-10"
                         >
-                            <FaTimes />
-                        </motion.button>
-
-                        {/* Image Counter */}
-                        <div className="absolute top-4 left-4 text-white/70 text-sm font-medium bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">
-                            {galleryIndex + 1} / {galleryImages.length}
-                        </div>
-
-                        {/* Previous Button */}
-                        {galleryIndex > 0 && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setGalleryIndex(galleryIndex - 1); }}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md text-xl"
+                            {/* Close Button */}
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.5 }}
+                                onClick={() => setGalleryIndex(null)}
+                                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md z-10"
                             >
-                                ‹
-                            </button>
-                        )}
+                                <FaTimes />
+                            </motion.button>
 
-                        {/* Main Image */}
-                        <motion.img
-                            key={galleryIndex} // Force re-render on change
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            src={galleryImages[galleryIndex].image}
-                            alt={galleryImages[galleryIndex].title}
-                            className="max-w-[90vw] max-h-[80vh] rounded-2xl shadow-2xl object-contain"
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                            {/* Image Counter */}
+                            <div className="absolute top-4 left-4 text-white/70 text-sm font-medium bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">
+                                {galleryIndex + 1} / {galleryImages.length}
+                            </div>
 
-                        {/* Next Button */}
-                        {galleryIndex < galleryImages.length - 1 && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setGalleryIndex(galleryIndex + 1); }}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md text-xl"
-                            >
-                                ›
-                            </button>
-                        )}
+                            {/* Previous Button */}
+                            {galleryIndex > 0 && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setGalleryIndex(galleryIndex - 1); }}
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md text-xl"
+                                >
+                                    ‹
+                                </button>
+                            )}
 
-                        {/* Image Title */}
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm max-w-[80%] truncate">
-                            {galleryImages[galleryIndex].title}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            {/* Main Image */}
+                            <motion.img
+                                key={galleryIndex} // Force re-render on change
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                src={galleryImages[galleryIndex].image}
+                                alt={galleryImages[galleryIndex].title}
+                                className="max-w-[90vw] max-h-[80vh] rounded-2xl shadow-2xl object-contain"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+
+                            {/* Next Button */}
+                            {galleryIndex < galleryImages.length - 1 && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setGalleryIndex(galleryIndex + 1); }}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-md text-xl"
+                                >
+                                    ›
+                                </button>
+                            )}
+
+                            {/* Image Title */}
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm max-w-[80%] truncate">
+                                {galleryImages[galleryIndex].title}
+                            </div>
+                        </motion.div>
+                    )
+                }
+            </AnimatePresence >
         </>
     );
 };
