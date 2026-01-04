@@ -8,6 +8,8 @@ import { FaLightbulb, FaSpinner, FaArrowLeft, FaArrowRight, FaRedo, FaTrash, FaT
 interface Flashcard {
     term: string;
     definition: string;
+    example?: string;
+    imageUrl?: string;
 }
 
 interface FlashcardSet {
@@ -137,16 +139,32 @@ export const AIFlashcardGenerator = () => {
                         style={{ transformStyle: 'preserve-3d' }}
                     >
                         {/* Front */}
-                        <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-[2rem] p-6 flex flex-col items-center justify-center text-white backface-hidden shadow-inner ring-1 ring-white/20 ${isFlipped ? 'invisible' : ''}`}>
-                            <div className="absolute top-4 left-4 text-white/40 font-bold text-[10px] tracking-[0.2em] uppercase">Term</div>
-                            <h4 className="text-2xl font-black text-center drop-shadow-lg leading-tight">{flashcards[currentIndex].term}</h4>
-                            <div className="absolute bottom-4 opacity-60 text-[10px] bg-black/20 px-2 py-1 rounded-full">Tap to Flip</div>
+                        <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-[2rem] p-6 flex flex-col items-center justify-center text-white backface-hidden shadow-inner ring-1 ring-white/20 overflow-hidden ${isFlipped ? 'invisible' : ''}`}>
+                            {/* Background Image */}
+                            {flashcards[currentIndex].imageUrl && (
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center opacity-30"
+                                    style={{ backgroundImage: `url(${flashcards[currentIndex].imageUrl})` }}
+                                />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+
+                            <div className="absolute top-4 left-4 text-white/60 font-bold text-[10px] tracking-[0.2em] uppercase z-10">Term</div>
+                            <h4 className="text-2xl font-black text-center drop-shadow-lg leading-tight z-10">{flashcards[currentIndex].term}</h4>
+                            <div className="absolute bottom-4 opacity-80 text-[10px] bg-black/30 px-3 py-1 rounded-full z-10 backdrop-blur-sm">Tap to Flip</div>
                         </div>
 
                         {/* Back */}
-                        <div className={`absolute inset-0 bg-[#0f0a1f] rounded-[2rem] p-6 flex flex-col items-center justify-center text-white backface-hidden border border-white/10 shadow-xl ${!isFlipped ? 'invisible' : ''}`} style={{ transform: 'rotateY(180deg)' }}>
-                            <div className="absolute top-4 left-4 text-emerald-400 font-bold text-[10px] tracking-[0.2em] uppercase">Definition</div>
-                            <p className="text-sm font-medium text-center leading-relaxed text-white/90 overflow-y-auto max-h-[80%] custom-scrollbar">{flashcards[currentIndex].definition}</p>
+                        <div className={`absolute inset-0 bg-[#0f0a1f] rounded-[2rem] p-5 flex flex-col text-white backface-hidden border border-white/10 shadow-xl overflow-hidden ${!isFlipped ? 'invisible' : ''}`} style={{ transform: 'rotateY(180deg)' }}>
+                            <div className="text-emerald-400 font-bold text-[10px] tracking-[0.2em] uppercase mb-2">Definition</div>
+                            <p className="text-sm font-medium leading-relaxed text-white/90 flex-1 overflow-y-auto custom-scrollbar">{flashcards[currentIndex].definition}</p>
+
+                            {flashcards[currentIndex].example && (
+                                <div className="mt-3 pt-3 border-t border-white/10">
+                                    <div className="text-yellow-400 font-bold text-[10px] tracking-[0.2em] uppercase mb-1">💡 Example</div>
+                                    <p className="text-xs text-white/70 leading-relaxed">{flashcards[currentIndex].example}</p>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 </div>
