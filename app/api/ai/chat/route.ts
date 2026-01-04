@@ -15,8 +15,7 @@ import {
     getMultimodalModel,
     AIM_BUDDY_INSTRUCTION
 } from '@/lib/gemini';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 
 // Fallback to Groq
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -69,8 +68,9 @@ export async function POST(request: NextRequest) {
             const classNum = body.context?.class || '10';
             const taxonomyKey = `${board}_${classNum}`;
 
-            const taxDoc = await getDoc(doc(db, 'metadata', 'taxonomy'));
-            if (taxDoc.exists()) {
+            // Use Firebase Admin SDK syntax
+            const taxDoc = await adminDb.collection('metadata').doc('taxonomy').get();
+            if (taxDoc.exists) {
                 const taxonomy = taxDoc.data();
                 const syllabusData = taxonomy?.[taxonomyKey];
 
