@@ -4,12 +4,14 @@ import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion } from 'framer-motion'
 import { FaStar, FaRocket, FaUserFriends, FaBell } from 'react-icons/fa'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FriendsDrawer } from './FriendsDrawer'
 import { NotificationsDrawer } from './NotificationsDrawer'
 import { useRouter } from 'next/navigation'
 import { useFriends } from '@/hooks/useFriends'
 import { createEmptyRoom } from '@/utils/roomService'
+import { db } from '@/lib/firebase'
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore'
 
 const motivationalQuotes = [
     "Aaj ka goal: Apne aap se kal behtar bano! 🎯",
@@ -24,6 +26,7 @@ export const DashboardHeader = () => {
     const { t } = useLanguage()
     const [isFriendsOpen, setIsFriendsOpen] = useState(false)
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+    const [unreadCount, setUnreadCount] = useState(0)
 
     const timeOfDay = new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'
     const emoji = new Date().getHours() < 12 ? '🌅' : new Date().getHours() < 18 ? '☀️' : '🌙'
@@ -35,6 +38,32 @@ export const DashboardHeader = () => {
 
     // Filter incoming requests
     const incomingRequests = requests.filter(r => r.direction === 'received')
+
+    // Fetch unread notifications count
+    useEffect(() => {
+        if (!user?.uid) return;
+
+        const notificationsRef = collection(db, 'notifications');
+        const q = query(
+            notificationsRef,
+            orderBy('createdAt', 'desc'),
+            limit(20)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            let count = 0;
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                // Count as unread if user is NOT in readBy array
+                if (!data.readBy?.includes(user.uid)) {
+                    count++;
+                }
+            });
+            setUnreadCount(count);
+        });
+
+        return () => unsubscribe();
+    }, [user?.uid]);
 
     const handlePlayWithFriend = async (friend: any) => {
         if (!user) return;
@@ -104,7 +133,11 @@ export const DashboardHeader = () => {
                         className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
                     >
                         <FaBell className="text-xl group-hover:scale-110 transition-transform" />
-                        <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white animate-pulse"></span>
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                        )}
                     </button>
 
                     <button
