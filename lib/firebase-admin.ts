@@ -21,7 +21,15 @@ function initializeFirebaseAdmin() {
 
         // Handle different formats of private key
         // Vercel may double-escape the newlines
-        privateKey = privateKey.replace(/\\n/g, '\n');
+        if (privateKey) {
+            // Remove surrounding quotes if present
+            if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+                privateKey = privateKey.slice(1, -1);
+            }
+
+            // Replace literal \n with actual newlines
+            privateKey = privateKey.replace(/\\n/g, '\n');
+        }
 
         admin.initializeApp({
             credential: admin.credential.cert({
