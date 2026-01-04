@@ -5,14 +5,14 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
 // Firebase Configuration for aim-83922 project
-// IMPORTANT: Update these values to match your .env.local
+// These values match .env.local
 const firebaseConfig = {
     apiKey: "AIzaSyBJbsR_XlzPzHNDdSGqdqZJQRww4VQZhVc",
     authDomain: "aim-83922.firebaseapp.com",
     projectId: "aim-83922",
     storageBucket: "aim-83922.firebasestorage.app",
-    messagingSenderId: "117020260903544594123",
-    appId: "1:117020260903544594123:web:f9e8d7c6b5a43210" // Update this from .env.local
+    messagingSenderId: "134379665002",
+    appId: "1:134379665002:web:34f8abf08f3c3655967c13"
 };
 
 firebase.initializeApp(firebaseConfig);
