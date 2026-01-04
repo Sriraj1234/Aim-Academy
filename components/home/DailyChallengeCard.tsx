@@ -24,7 +24,7 @@ export const DailyChallengeCard = () => {
 
     // Random subject picker
     const getRandomSubject = () => {
-        const subjects = ['Mathematics', 'Science', 'English', 'Economics']; // Replaced Social Science with Economics
+        const subjects = ['Science', 'English', 'Economics']; // Replaced Social Science with Economics
         return subjects[Math.floor(Math.random() * subjects.length)];
     };
 
