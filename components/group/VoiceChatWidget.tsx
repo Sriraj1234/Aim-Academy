@@ -16,15 +16,6 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
     // Use passed playerId (game specific) or fallback to auth user id or random if generic
     const stableId = playerId || user?.uid || 'guest';
 
-    // Generate a UNIQUE STRING UID per session (Mount) to prevent "UID_CONFLICT"
-    // Format: "userBaseId_Timestamp"
-    // This forces Agora to treat every connection as unique (User Account Mode)
-    const clientUid = useMemo(() => {
-        // clean generic id
-        const base = stableId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
-        return `${base}_${Date.now().toString().slice(-6)}`;
-    }, [stableId]);
-
     const [isConnected, setIsConnected] = useState(false);
     const [micOn, setMicOn] = useState(false);
     const [remoteUsersCount, setRemoteUsersCount] = useState(0);
@@ -35,11 +26,9 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
     const localTrackRef = useRef<IMicrophoneAudioTrack | null>(null);
     const remoteTracksRef = useRef<Map<number, IRemoteAudioTrack>>(new Map());
 
-    // Use a random UID to prevent "UID_CONFLICT" errors if the user re-joins quickly
     const [speakerOn, setSpeakerOn] = useState(true);
-    const speakerOnRef = useRef(true); // Ref to track speaker state without re-triggering effect
+    const speakerOnRef = useRef(true);
 
-    // Update ref when state changes
     useEffect(() => {
         speakerOnRef.current = speakerOn;
     }, [speakerOn]);
@@ -47,17 +36,23 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
     useEffect(() => {
         if (!channelName) return;
 
-        // Use the stable UID calculated above
-        console.log('[Voice] Initializing with UID:', clientUid);
-
         let isMounted = true;
+
+        // Generate a FRESH UID for this specific connection attempt
+        // This ensures that even if the component re-renders or quick-refreshes,
+        // we never reuse an ID that might be stuck on the server.
+        const base = stableId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+        const sessionUid = `${base}_${Date.now().toString().slice(-6)}`;
+
+        console.log('[Voice] Initializing new session with UID:', sessionUid);
+
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
         clientRef.current = client;
 
         const init = async () => {
             try {
                 setStatus('Getting token...');
-                const tokenUrl = `/api/agora?channelName=${channelName}&uid=${clientUid}`;
+                const tokenUrl = `/api/agora?channelName=${channelName}&uid=${sessionUid}`;
                 console.log('[Voice] Fetching token from:', tokenUrl);
 
                 const res = await fetch(tokenUrl);
@@ -77,8 +72,9 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
                 // Helper to join with retry
                 const joinWithRetry = async (retries = 1, delay = 1500) => {
                     try {
-                        console.log(`[Voice] Joining Agora Channel: ${channelName} with UID: ${clientUid}`);
-                        await client.join(AGORA_APP_ID, channelName, data.token, clientUid);
+                        console.log(`[Voice] Joining Agora Channel: ${channelName} with UID: ${sessionUid}`);
+                        // Important: Pass sessionUid here
+                        await client.join(AGORA_APP_ID, channelName, data.token, sessionUid);
                         console.log('[Voice] Join Success!');
                     } catch (err: any) {
                         console.error('[Voice] Join Failed:', err);
@@ -132,7 +128,8 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
             console.log('[Voice] User published:', remoteUser.uid, mediaType);
 
             // Safety: Do not subscribe to self (should handled by Agora, but verifying)
-            if (remoteUser.uid === clientUid) {
+            // Use sessionUid from closure
+            if (remoteUser.uid === sessionUid) {
                 console.warn('[Voice] Ignoring self-published stream');
                 return;
             }
