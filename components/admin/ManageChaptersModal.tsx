@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { HiX, HiSave, HiTrash, HiPencil, HiPlus } from 'react-icons/hi'
-import { motion } from 'framer-motion'
+import { motion, Reorder } from 'framer-motion'
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Board, Class } from '@/data/types'
@@ -82,7 +82,13 @@ export default function ManageChaptersModal({ isOpen, onClose, onUpdate }: Manag
         const key = `${selectedBoard}_${selectedClass}`
         const data = taxonomy[key]
         if (data && data.chapters && data.chapters[selectedSubject]) {
-            setChapters(data.chapters[selectedSubject])
+            // Normalize: Ensure all chapters are objects with IDs (for Reorder)
+            const raw = data.chapters[selectedSubject];
+            const normalized = raw.map((c: any, i: number) => {
+                if (typeof c === 'string') return { name: c, id: `chap-${Date.now()}-${i}` }
+                return { ...c, id: c.id || `chap-${Date.now()}-${i}` }
+            })
+            setChapters(normalized)
         } else {
             setChapters([])
         }
@@ -252,49 +258,71 @@ export default function ManageChaptersModal({ isOpen, onClose, onUpdate }: Manag
                                 </button>
                             </div>
 
-                            {/* List */}
-                            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                            {/* List with Drag and Drop */}
+                            <Reorder.Group axis="y" values={chapters} onReorder={setChapters} className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
                                 {chapters.map((chap, idx) => (
-                                    <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between group">
-                                        {editingChapterIndex === idx ? (
-                                            <div className="flex-1 flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={editChapterName}
-                                                    onChange={e => setEditChapterName(e.target.value)}
-                                                    className="flex-1 p-1 border border-purple-300 rounded text-sm focus:ring-1 focus:ring-purple-500"
-                                                    autoFocus
-                                                />
-                                                <button onClick={() => saveEditing(idx)} className="text-green-600 hover:bg-green-50 p-1 rounded"><HiSave /></button>
-                                                <button onClick={cancelEditing} className="text-slate-400 hover:bg-slate-100 p-1 rounded"><HiX /></button>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <span className="text-slate-700 text-sm font-medium">{chap.name}</span>
-                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => startEditing(idx, chap.name)}
-                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
-                                                        title="Edit"
-                                                    >
-                                                        <HiPencil />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteChapter(idx)}
-                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-                                                        title="Delete"
-                                                    >
-                                                        <HiTrash />
-                                                    </button>
+                                    <Reorder.Item key={chap.id || chap.name} value={chap}>
+                                        <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between group cursor-move hover:border-purple-300 transition-colors shadow-sm">
+                                            {editingChapterIndex === idx ? (
+                                                <div className="flex-1 flex gap-2" onPointerDown={(e) => e.stopPropagation()}>
+                                                    <input
+                                                        type="text"
+                                                        value={editChapterName}
+                                                        onChange={e => setEditChapterName(e.target.value)}
+                                                        className="flex-1 p-1 border border-purple-300 rounded text-sm focus:ring-1 focus:ring-purple-500"
+                                                        autoFocus
+                                                    />
+                                                    <button onClick={() => saveEditing(idx)} className="text-green-600 hover:bg-green-50 p-1 rounded"><HiSave /></button>
+                                                    <button onClick={cancelEditing} className="text-slate-400 hover:bg-slate-100 p-1 rounded"><HiX /></button>
                                                 </div>
-                                            </>
-                                        )}
-                                    </div>
+                                            ) : (
+                                                <>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-slate-400 cursor-grab active:cursor-grabbing">
+                                                            ⋮⋮
+                                                        </span>
+                                                        <span className="text-slate-700 text-sm font-medium">{chap.name}</span>
+                                                    </div>
+                                                    <div className="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity" onPointerDown={(e) => e.stopPropagation()}>
+                                                        <button
+                                                            onClick={() => startEditing(idx, chap.name)}
+                                                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                                                            title="Edit"
+                                                        >
+                                                            <HiPencil />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteChapter(idx)}
+                                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                                                            title="Delete"
+                                                        >
+                                                            <HiTrash />
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </Reorder.Item>
                                 ))}
-                                {chapters.length === 0 && (
-                                    <p className="text-center text-slate-400 text-sm py-8">No chapters found. Add one above.</p>
-                                )}
-                            </div>
+                            </Reorder.Group>
+
+                            {chapters.length > 0 && (
+                                <div className="mt-4 flex justify-end">
+                                    <button
+                                        onClick={() => {
+                                            // Manual trigger to save current order to Firestore
+                                            const key = `${selectedBoard}_${selectedClass}`
+                                            const currentTaxonomy = { ...taxonomy }
+                                            currentTaxonomy[key].chapters[selectedSubject] = chapters
+                                            saveTaxonomy(currentTaxonomy)
+                                            alert("Order Saved!")
+                                        }}
+                                        className="text-xs font-bold text-purple-600 hover:bg-purple-50 px-3 py-1 bg-white border border-purple-200 rounded-lg transition-colors"
+                                    >
+                                        Save Order
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="flex items-center justify-center h-[300px] bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-400">
