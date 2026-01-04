@@ -58,10 +58,28 @@ export function getAdminMessaging() {
     return admin.messaging();
 }
 
-// For backwards compatibility
+// For backwards compatibility - return actual Firestore reference
 export const adminDb = {
     collection: (name: string) => {
         initializeFirebaseAdmin();
+        if (!initialized && admin.apps.length === 0) {
+            console.warn('Firebase Admin not initialized, returning mock');
+            // Return a mock that won't crash
+            return {
+                doc: () => ({
+                    get: async () => ({ exists: false, data: () => null }),
+                    set: async () => { },
+                    update: async () => { }
+                }),
+                add: async () => ({ id: 'mock' }),
+                where: () => ({
+                    get: async () => ({
+                        docs: [],
+                        forEach: (callback: (doc: any) => void) => { }
+                    })
+                })
+            };
+        }
         return admin.firestore().collection(name);
     }
 };
