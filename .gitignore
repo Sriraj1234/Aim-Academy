@@ -44,6 +44,8 @@ next-env.d.ts
 serviceAccountKey.json
 serviceAccountKey.json.json
 *.pem
+scripts/fix_env.cjs
+scripts/temp_key.txt
 
 # large binaries & installers
 *.msi
