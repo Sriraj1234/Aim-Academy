@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaMoon, FaWifi, FaGraduationCap, FaFileAlt, FaShoppingCart, FaBolt, FaHandsHelping, FaBook, FaLaptopCode, FaDesktop, FaBookOpen, FaDownload, FaShareAlt, FaUserCircle, FaGem, FaCamera, FaLightbulb, FaPaperPlane } from 'react-icons/fa';
+import { FaTimes, FaMoon, FaWifi, FaGraduationCap, FaFileAlt, FaShoppingCart, FaBolt, FaHandsHelping, FaBook, FaLaptopCode, FaDesktop, FaBookOpen, FaDownload, FaShareAlt, FaUserCircle, FaGem, FaCamera, FaLightbulb, FaPaperPlane, FaInfoCircle, FaHeadset, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import Link from 'next/link';
@@ -36,6 +36,9 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         { icon: FaMoon, label: 'Settings', isDivider: true },
         { icon: FaLightbulb, label: 'Request Feature', action: () => setIsRequestOpen(true) },
         { icon: FaMoon, label: 'Dark Mode', isToggle: true, action: toggleTheme },
+        { icon: FaInfoCircle, label: 'About Us', href: '/about' },
+        { icon: FaHeadset, label: 'Contact Support', href: '/contact' },
+        { icon: FaShieldAlt, label: 'Policies', href: '/privacy' },
     ];
 
     const sidebarVariants: any = {
