@@ -7,27 +7,22 @@ import { FaMicrophone, FaMicrophoneSlash, FaHeadphones, FaVolumeUp } from 'react
 import { useAuth } from '@/context/AuthContext';
 
 // Helper to convert String UID to numeric (Agora compatible)
-function stringToNumber(str: string): number {
-    let hash = 0;
-    if (str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    // Use a larger range (Agora supports uint32)
-    return Math.abs(hash) % 1000000;
-}
+// Helper to remove special characters for Agora UID compliance if needed
+// But generic string works fine as long as we use user account mode
+// We will just use a clean string
 
 export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string, playerId?: string }) => {
     const { user } = useAuth();
     // Use passed playerId (game specific) or fallback to auth user id or random if generic
     const stableId = playerId || user?.uid || 'guest';
 
-    // Generate a UNIQUE UID per session (Mount) to prevent "UID_CONFLICT"
-    // We add a random offset so even if connection persists on server, we are a "new" user.
+    // Generate a UNIQUE STRING UID per session (Mount) to prevent "UID_CONFLICT"
+    // Format: "userBaseId_Timestamp"
+    // This forces Agora to treat every connection as unique (User Account Mode)
     const clientUid = useMemo(() => {
-        return stringToNumber(stableId) + Math.floor(Math.random() * 10000);
+        // clean generic id
+        const base = stableId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+        return `${base}_${Date.now().toString().slice(-6)}`;
     }, [stableId]);
 
     const [isConnected, setIsConnected] = useState(false);
@@ -62,20 +57,31 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
         const init = async () => {
             try {
                 setStatus('Getting token...');
+                const tokenUrl = `/api/agora?channelName=${channelName}&uid=${clientUid}`;
+                console.log('[Voice] Fetching token from:', tokenUrl);
 
-                // Fetch token from our API
-                const res = await fetch(`/api/agora?channelName=${channelName}&uid=${clientUid}`);
-                if (!res.ok) throw new Error('Token fetch failed');
+                const res = await fetch(tokenUrl);
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('[Voice] Token fetch failed:', res.status, errorText);
+                    throw new Error(`Token Error: ${res.status}`);
+                }
+
                 const data = await res.json();
-                if (!data.token) throw new Error('No token received');
+                console.log('[Voice] Token received:', data.token ? 'YES' : 'NO');
+
+                if (!data.token) throw new Error('No token received from server');
 
                 setStatus('Joining channel...');
 
                 // Helper to join with retry
                 const joinWithRetry = async (retries = 1, delay = 1500) => {
                     try {
+                        console.log(`[Voice] Joining Agora Channel: ${channelName} with UID: ${clientUid}`);
                         await client.join(AGORA_APP_ID, channelName, data.token, clientUid);
+                        console.log('[Voice] Join Success!');
                     } catch (err: any) {
+                        console.error('[Voice] Join Failed:', err);
                         if ((err.code === "UID_CONFLICT" || err.message?.includes("UID_CONFLICT")) && retries > 0) {
                             console.warn(`[Voice] UID Conflict detected. Retrying in ${delay}ms...`);
                             setStatus('Retrying connection...');
@@ -109,7 +115,7 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
                 console.log('[Voice] Local mic published (Speech Mode)');
 
             } catch (err: any) {
-                console.error('[Voice] Init Error:', err);
+                console.error('[Voice] Init Critical Error:', err);
                 if (isMounted) {
                     if (err.code === "UID_CONFLICT" || err.message?.includes("UID_CONFLICT")) {
                         setError('Device conflict. Please refresh.');
