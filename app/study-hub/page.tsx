@@ -6,8 +6,9 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, orderBy, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { VideoResource } from '@/data/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaYoutube, FaSearch, FaFilter, FaPlay, FaExclamationCircle, FaEye, FaCheck, FaBolt } from 'react-icons/fa';
+import { FaSearch, FaFilter, FaPlay, FaExclamationCircle, FaEye, FaCheck, FaBolt, FaYoutube } from 'react-icons/fa';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
+import { StudyHubBanner } from '@/components/study-hub/StudyHubBanner';
 
 // Filter constants
 const BOARDS = [
@@ -142,37 +143,38 @@ export default function StudyHubPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20 font-sans">
-            {/* Header */}
+            {/* Banner Section */}
+            <div className="max-w-7xl mx-auto px-4 py-4 pt-6">
+                <StudyHubBanner />
+            </div>
+
+            {/* Sticky Header (Filters & Tabs) */}
             <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm">
-                                <FaYoutube className="text-xl" />
-                            </div>
+                    <div className="w-full">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                             <div>
-                                <h1 className="text-xl font-bold text-gray-900">Complete Study Hub</h1>
-                                <p className="text-xs text-gray-500 font-medium">Curated Free Resources • {BOARDS.find(b => b.id === selectedBoard)?.name} • Class {selectedClass}</p>
+                                <h2 className="text-xl font-bold text-gray-900">Browse Resources</h2>
+                                <p className="text-sm text-gray-500 font-medium">Curated content for <span className="text-pw-indigo font-bold">{BOARDS.find(b => b.id === selectedBoard)?.name}</span> • Class {selectedClass}</p>
                             </div>
-                        </div>
 
-                        {/* Filters */}
-                        <div className="flex flex-wrap gap-2">
-                            <select
-                                value={selectedBoard}
-                                onChange={(e) => setSelectedBoard(e.target.value)}
-                                className="px-3 py-2 bg-gray-100 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pw-indigo/20"
-                            >
-                                {BOARDS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                            </select>
+                            <div className="flex flex-wrap gap-2">
+                                <select
+                                    value={selectedBoard}
+                                    onChange={(e) => setSelectedBoard(e.target.value)}
+                                    className="px-3 py-2 bg-gray-100 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pw-indigo/20"
+                                >
+                                    {BOARDS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                </select>
 
-                            <select
-                                value={selectedClass}
-                                onChange={(e) => setSelectedClass(e.target.value)}
-                                className="px-3 py-2 bg-gray-100 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pw-indigo/20"
-                            >
-                                {CLASSES.map(c => <option key={c} value={c}>Class {c}</option>)}
-                            </select>
+                                <select
+                                    value={selectedClass}
+                                    onChange={(e) => setSelectedClass(e.target.value)}
+                                    className="px-3 py-2 bg-gray-100 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pw-indigo/20"
+                                >
+                                    {CLASSES.map(c => <option key={c} value={c}>Class {c}</option>)}
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -203,6 +205,7 @@ export default function StudyHubPage() {
                     </div>
                 </div>
             </div>
+
 
             {/* Content Area */}
             <div className="max-w-7xl mx-auto px-4 py-8">
@@ -326,17 +329,17 @@ export default function StudyHubPage() {
                             <div className="aspect-video">
                                 <iframe
                                     className="w-full h-full"
-                                    src={`https://www.youtube.com/embed/${selectedVideo.videoId}?autoplay=1&rel=0`}
-                                    title={selectedVideo.title}
+                                    src={`https://www.youtube.com/embed/${selectedVideo?.videoId}?autoplay=1&rel=0`}
+                                    title={selectedVideo?.title}
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 />
                             </div>
                             <div className="p-4 bg-gray-900 text-white flex flex-col md:flex-row justify-between items-start gap-4">
                                 <div>
-                                    <h3 className="font-bold text-lg mb-1">{selectedVideo.title}</h3>
+                                    <h3 className="font-bold text-lg mb-1">{selectedVideo?.title}</h3>
                                     <p className="text-sm text-gray-400 mb-4">
-                                        By <span className="text-white font-bold">{selectedVideo.teacherName}</span> • {selectedVideo.channelName} • {selectedVideo.views || 0} views
+                                        By <span className="text-white font-bold">{selectedVideo?.teacherName}</span> • {selectedVideo?.channelName} • {selectedVideo?.views || 0} views
                                     </p>
                                 </div>
 
@@ -344,13 +347,13 @@ export default function StudyHubPage() {
                                 <div className="flex flex-wrap gap-3">
                                     {/* Mark as Complete Button */}
                                     <button
-                                        onClick={(e) => toggleCompletion(e, selectedVideo.id)}
-                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${completedVideoIds.has(selectedVideo.id)
+                                        onClick={(e) => selectedVideo && toggleCompletion(e, selectedVideo.id)}
+                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${selectedVideo && completedVideoIds.has(selectedVideo.id)
                                             ? 'bg-green-600 text-white hover:bg-green-700'
                                             : 'bg-white/10 hover:bg-white/20 text-gray-300'
                                             }`}
                                     >
-                                        {completedVideoIds.has(selectedVideo.id) ? (
+                                        {selectedVideo && completedVideoIds.has(selectedVideo.id) ? (
                                             <>
                                                 <FaCheck /> Completed
                                             </>
@@ -362,9 +365,9 @@ export default function StudyHubPage() {
                                     </button>
 
                                     {/* Link with updated HREF logic for better safety */}
-                                    {selectedVideo.hasQuiz && (
+                                    {selectedVideo?.hasQuiz && (
                                         <a
-                                            href={`/play/selection?mode=chapter&board=${selectedVideo.board}&class=${selectedVideo.classLevel}&subject=${selectedVideo.subject}&chapter=${encodeURIComponent(selectedVideo.linkedQuizChapter || selectedVideo.chapter)}`}
+                                            href={`/play/selection?mode=chapter&board=${selectedVideo?.board}&class=${selectedVideo?.classLevel}&subject=${selectedVideo?.subject}&chapter=${encodeURIComponent(selectedVideo?.linkedQuizChapter || selectedVideo?.chapter || '')}`}
                                             className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-sm font-bold transition-all flex items-center gap-2 animate-pulse"
                                         >
                                             <FaBolt /> Take Quiz
@@ -392,6 +395,6 @@ export default function StudyHubPage() {
                     <a href="#" className="ml-2 text-gray-400 underline hover:text-gray-600">Content Removal Request</a>
                 </p>
             </div>
-        </div>
+        </div >
     );
 }
