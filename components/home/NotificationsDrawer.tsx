@@ -3,7 +3,10 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaTimes, FaBell, FaCheck, FaTrash } from 'react-icons/fa'
 import { useNotifications } from '@/hooks/useNotifications'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/context/AuthContext'
+import { db } from '@/lib/firebase'
+import { collection, query, orderBy, limit, onSnapshot, doc, updateDoc, where, Timestamp } from 'firebase/firestore'
 
 interface NotificationsDrawerProps {
     isOpen: boolean
@@ -15,43 +18,97 @@ interface NotificationItem {
     title: string
     message: string
     time: string
+    createdAt: Date
     read: boolean
     type: 'info' | 'success' | 'warning'
 }
 
 export const NotificationsDrawer = ({ isOpen, onClose }: NotificationsDrawerProps) => {
     const { permission, requestPermission, isSupported } = useNotifications()
-    const [notifications, setNotifications] = useState<NotificationItem[]>([
-        {
-            id: '1',
-            title: 'Welcome to Padhaku!',
-            message: 'Start your journey by taking your first quiz today.',
-            time: 'Just now',
-            read: false,
-            type: 'success'
-        },
-        {
-            id: '2',
-            title: 'Daily Streak',
-            message: 'Don\'t forget to maintain your 3-day streak! 🔥',
-            time: '2 hours ago',
-            read: true,
-            type: 'info'
-        }
-    ])
+    const { user } = useAuth()
+    const [notifications, setNotifications] = useState<NotificationItem[]>([])
+    const [loading, setLoading] = useState(true)
+
+    // Fetch notifications from Firestore
+    useEffect(() => {
+        if (!isOpen) return;
+
+        setLoading(true);
+
+        // Fetch global notifications (sent to all users)
+        const notificationsRef = collection(db, 'notifications');
+        const q = query(
+            notificationsRef,
+            orderBy('createdAt', 'desc'),
+            limit(20)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const items: NotificationItem[] = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const createdAt = data.createdAt?.toDate?.() || new Date();
+                items.push({
+                    id: doc.id,
+                    title: data.title || 'Notification',
+                    message: data.body || data.message || '',
+                    time: formatTimeAgo(createdAt),
+                    createdAt,
+                    read: data.readBy?.includes(user?.uid) || false,
+                    type: data.type || 'info'
+                });
+            });
+            setNotifications(items);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [isOpen, user?.uid]);
+
+    // Format time ago
+    const formatTimeAgo = (date: Date) => {
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min ago`;
+
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+
+        return date.toLocaleDateString();
+    };
 
     const handleEnable = async () => {
         await requestPermission()
     }
 
-    const clearAll = () => {
-        setNotifications([])
+    const clearAll = async () => {
+        // Mark all as read locally
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     }
 
-    const markAsRead = (id: string) => {
-        setNotifications(prev => prev.map(n =>
-            n.id === id ? { ...n, read: true } : n
-        ))
+    const markAsRead = async (id: string) => {
+        if (!user?.uid) return;
+
+        try {
+            // Update local state
+            setNotifications(prev => prev.map(n =>
+                n.id === id ? { ...n, read: true } : n
+            ));
+
+            // Update Firestore - add user to readBy array
+            const notifRef = doc(db, 'notifications', id);
+            await updateDoc(notifRef, {
+                [`readBy`]: [...(notifications.find(n => n.id === id)?.read ? [] : [user.uid])]
+            });
+        } catch (error) {
+            console.error('Error marking as read:', error);
+        }
     }
 
     return (
@@ -142,8 +199,8 @@ export const NotificationsDrawer = ({ isOpen, onClose }: NotificationsDrawerProp
                                         exit={{ opacity: 0, scale: 0.95 }}
                                         onClick={() => markAsRead(note.id)}
                                         className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden ${note.read
-                                                ? 'bg-white border-gray-100'
-                                                : 'bg-indigo-50/30 border-indigo-100'
+                                            ? 'bg-white border-gray-100'
+                                            : 'bg-indigo-50/30 border-indigo-100'
                                             }`}
                                     >
                                         {!note.read && (
@@ -151,8 +208,8 @@ export const NotificationsDrawer = ({ isOpen, onClose }: NotificationsDrawerProp
                                         )}
                                         <div className="flex gap-3">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${note.type === 'success' ? 'bg-green-100 text-green-600' :
-                                                    note.type === 'warning' ? 'bg-orange-100 text-orange-600' :
-                                                        'bg-blue-100 text-blue-600'
+                                                note.type === 'warning' ? 'bg-orange-100 text-orange-600' :
+                                                    'bg-blue-100 text-blue-600'
                                                 }`}>
                                                 {note.type === 'success' ? '🎉' :
                                                     note.type === 'warning' ? '⚠️' : 'ℹ️'}
