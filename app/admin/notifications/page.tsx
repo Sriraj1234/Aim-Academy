@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaPaperPlane, FaUsers, FaCheckCircle, FaTimesCircle, FaInfoCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
