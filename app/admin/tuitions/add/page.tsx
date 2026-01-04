@@ -11,7 +11,7 @@ import { MediaUploader } from '@/components/admin/MediaUploader';
 
 // Constants for choices
 const CLASS_OPTIONS = ['Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12', 'Competitive'];
-const SUBJECT_OPTIONS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Hindi', 'Social Science', 'Computer'];
+const SUBJECT_OPTIONS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Hindi', 'Economics', 'Computer'];
 
 export default function AdminAddTuitionPage() {
     const { user } = useAuth();
