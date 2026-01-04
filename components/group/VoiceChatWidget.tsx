@@ -18,8 +18,15 @@ function stringToNumber(str: string): number {
     return Math.abs(hash) % 65000;
 }
 
-export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
+export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string, playerId?: string }) => {
     const { user } = useAuth();
+    // Use passed playerId (game specific) or fallback to auth user id or random if generic
+    const stableId = playerId || user?.uid || 'guest';
+
+    // Generate a STABLE UID based on the player ID
+    // This prevents "Ghost User" echo where a user hears their previous instance
+    const clientUid = stringToNumber(stableId);
+
     const [isConnected, setIsConnected] = useState(false);
     const [micOn, setMicOn] = useState(false);
     const [remoteUsersCount, setRemoteUsersCount] = useState(0);
@@ -36,10 +43,8 @@ export const VoiceChatWidget = ({ channelName }: { channelName: string }) => {
     useEffect(() => {
         if (!channelName) return;
 
-        // Generate a random UID for this specific connection attempt
-        // This ensures that if the component remounts immediately (e.g. StrictMode), we use a fresh UID
-        // preventing "UID_CONFLICT" errors while the previous session is cleaning up
-        const clientUid = Math.floor(Math.random() * 100000);
+        // Use the stable UID calculated above
+        console.log('[Voice] Initializing with UID:', clientUid);
 
         let isMounted = true;
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
