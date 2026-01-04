@@ -1,0 +1,31 @@
+{
+  "uid": "n86yaS6aLmVN7kYmUcTh6vm52z32",
+  "email": "jayant.kgp81@gmail.com",
+  "displayName": "Sri Raj",
+  "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocLG3bowFopudHoXf8klK7_kk3ZSx8BVPD1GUPnSTnFN3l9j-ab6lQ=s96-c",
+  "createdAt": 1767534945453,
+  "stats": {
+    "quizzesTaken": 0,
+    "avgScore": 0,
+    "rank": 0
+  },
+  "gamification": {
+    "xp": 0,
+    "level": 1,
+    "currentStreak": 0,
+    "lastPracticeDate": null,
+    "currentMonth": "2026-01",
+    "achievements": []
+  },
+  "notificationsEnabled": true,
+  "fcmToken": "eabya3Z5QughCpfwGa-mnD:APA91bGhsDm9CtFyLVK00xgGDlzZcmMhZSeafmQ5m5G6iDZTvL8ih5wNjO0Tt_YcyTu8jEtMd58EZ-xk_emLmFt93440ZOwH1e0KwxQZdo7wb5cVdUDinnc",
+  "lastTokenUpdate": "2026-01-04T14:38:12.807Z",
+  "pincode": "811213",
+  "city": "Munger",
+  "locality": "Haweli Kharagpur",
+  "state": "Bihar",
+  "onboardingCompleted": true,
+  "class": "10",
+  "board": "bseb",
+  "_id": "n86yaS6aLmVN7kYmUcTh6vm52z32"
+}
