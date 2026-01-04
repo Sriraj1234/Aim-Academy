@@ -130,6 +130,13 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
         // Handle remote user events
         client.on('user-published', async (remoteUser, mediaType) => {
             console.log('[Voice] User published:', remoteUser.uid, mediaType);
+
+            // Safety: Do not subscribe to self (should handled by Agora, but verifying)
+            if (remoteUser.uid === clientUid) {
+                console.warn('[Voice] Ignoring self-published stream');
+                return;
+            }
+
             if (mediaType === 'audio') {
                 await client.subscribe(remoteUser, mediaType);
                 const audioTrack = remoteUser.audioTrack;
