@@ -141,7 +141,11 @@ function SelectionContent() {
 
         if (paramChapter && paramSubject && !loading && activeCategories.chapters) {
             // 1. Set Subject if valid
-            const subKey = Object.keys(activeCategories.chapters).find(k => k.toLowerCase() === paramSubject.toLowerCase());
+            // Handle legacy "Social Science" param by checking "Economics"
+            let paramSubjectClean = paramSubject.toLowerCase();
+            if (paramSubjectClean === 'social science') paramSubjectClean = 'economics';
+
+            const subKey = Object.keys(activeCategories.chapters).find(k => k.toLowerCase() === paramSubjectClean);
             if (subKey) {
                 setSelectedSubject(subKey);
 
@@ -161,21 +165,33 @@ function SelectionContent() {
     }, [searchParams, loading, activeCategories]);
 
     const [selectedScience, setSelectedScience] = useState(false)
+    const [selectedSST, setSelectedSST] = useState(false)
+
     const scienceSubjects = ['physics', 'chemistry', 'biology']
+    const sstSubjects = ['history', 'geography', 'civics', 'economics', 'political science', 'disaster management', 'social studies']
+
     const displayedSubjects = activeCategories.subjects?.filter(
-        sub => !scienceSubjects.includes(sub.toLowerCase())
+        sub => !scienceSubjects.includes(sub.toLowerCase()) && !sstSubjects.includes(sub.toLowerCase())
     ) || []
+
     const hasScience = activeCategories.subjects?.some(sub => scienceSubjects.includes(sub.toLowerCase()))
+    const hasSST = activeCategories.subjects?.some(sub => sstSubjects.includes(sub.toLowerCase()))
 
     const subjects = displayedSubjects
     const chapters = selectedSubject ? (activeCategories.chapters?.[selectedSubject] || []) : []
 
     const handleSubjectClick = (sub: string) => {
-        if (sub.toLowerCase() === 'science') {
+        const lower = sub.toLowerCase()
+        if (lower === 'science') {
             setSelectedScience(true)
+            setSelectedSST(false)
+        } else if (lower === 'social science') {
+            setSelectedSST(true)
+            setSelectedScience(false)
         } else {
             setSelectedSubject(sub)
             setSelectedScience(false)
+            setSelectedSST(false)
         }
     }
 
@@ -184,11 +200,15 @@ function SelectionContent() {
             if (scienceSubjects.includes(selectedSubject.toLowerCase())) {
                 setSelectedSubject(null)
                 setSelectedScience(true)
+            } else if (sstSubjects.includes(selectedSubject.toLowerCase())) {
+                setSelectedSubject(null)
+                setSelectedSST(true)
             } else {
                 setSelectedSubject(null)
             }
-        } else if (selectedScience) {
+        } else if (selectedScience || selectedSST) {
             setSelectedScience(false)
+            setSelectedSST(false)
         }
     }
 
@@ -239,7 +259,11 @@ function SelectionContent() {
                             className="flex items-center gap-2 text-sm text-pw-indigo font-bold mb-3 hover:text-pw-violet transition-colors group"
                         >
                             <span className="group-hover:-translate-x-1 transition-transform">←</span>
-                            Back to {selectedSubject && scienceSubjects.includes(selectedSubject.toLowerCase()) ? 'Science' : 'Subjects'}
+                            Back to {
+                                selectedSubject && scienceSubjects.includes(selectedSubject.toLowerCase()) ? 'Science' :
+                                    selectedSubject && sstSubjects.includes(selectedSubject.toLowerCase()) ? 'Social Science' :
+                                        'Subjects'
+                            }
                         </button>
                     )}
 
@@ -247,7 +271,7 @@ function SelectionContent() {
                         <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-black text-pw-violet capitalize tracking-tight">
                             {selectedSubject
                                 ? `${selectedSubject} Chapters`
-                                : selectedScience
+                                : selectedScience || selectedSST
                                     ? 'Select Branch'
                                     : `Practice Questions`}
                         </h1>
@@ -259,8 +283,8 @@ function SelectionContent() {
                     <p className="text-pw-indigo/80 font-medium">
                         {selectedSubject
                             ? `Select a chapter from ${selectedSubject} to practice.`
-                            : selectedScience
-                                ? 'Choose a science branch to continue.'
+                            : selectedScience || selectedSST
+                                ? `Choose a ${selectedSST ? 'social science' : 'science'} branch to continue.`
                                 : `Select a subject for ${userProfile?.board?.toUpperCase() || 'CBSE'} Class ${userProfile?.class || '10'}`}
                     </p>
 
@@ -277,7 +301,7 @@ function SelectionContent() {
                         [...Array(6)].map((_, i) => (
                             <div key={i} className="h-32 bg-white rounded-2xl shadow-pw-sm animate-pulse border border-pw-border" />
                         ))
-                    ) : !selectedSubject && !selectedScience ? (
+                    ) : !selectedSubject && !selectedScience && !selectedSST ? (
                         /* MAIN SUBJECT VIEW */
                         <>
                             {subjects.length === 0 && !hasScience ? (
@@ -307,6 +331,28 @@ function SelectionContent() {
                                             <p className="text-sm text-gray-500 relative z-10">Physics, Chemistry, Biology</p>
                                         </motion.div>
                                     )}
+
+                                    {hasSST && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            onClick={() => handleSubjectClick('Social Science')}
+                                            className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
+                                        >
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <HiAcademicCap className="text-8xl text-orange-500 transform rotate-[-20deg]" />
+                                            </div>
+
+                                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                                <div className="p-3 rounded-xl bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                                                    <HiAcademicCap className="text-2xl" />
+                                                </div>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-orange-600 px-2 py-1 rounded-lg border border-orange-200">Group</span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-pw-violet group-hover:text-orange-600 transition-colors capitalize mb-1 relative z-10">Social Science</h3>
+                                            <p className="text-sm text-gray-500 relative z-10">History, Civics, Geography...</p>
+                                        </motion.div>
+                                    )}
                                     {subjects.map((sub, idx) => (
                                         <motion.div
                                             key={idx}
@@ -333,10 +379,14 @@ function SelectionContent() {
                                 </>
                             )}
                         </>
-                    ) : selectedScience && !selectedSubject ? (
-                        /* SCIENCE BRANCH VIEW */
+                    ) : (selectedScience || selectedSST) && !selectedSubject ? (
+                        /* SCIENCE or SST BRANCH VIEW */
                         <>
-                            {activeCategories.subjects?.filter(s => scienceSubjects.includes(s.toLowerCase())).map((sub, idx) => (
+                            {activeCategories.subjects?.filter(s =>
+                                selectedScience
+                                    ? scienceSubjects.includes(s.toLowerCase())
+                                    : sstSubjects.includes(s.toLowerCase())
+                            ).map((sub, idx) => (
                                 <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, y: 20 }}
@@ -346,11 +396,11 @@ function SelectionContent() {
                                     className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
                                 >
                                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                        <HiAcademicCap className="text-8xl text-pw-indigo transform rotate-[-20deg]" />
+                                        <HiAcademicCap className={`text-8xl transform rotate-[-20deg] ${selectedSST ? 'text-orange-500' : 'text-pw-indigo'}`} />
                                     </div>
 
                                     <div className="flex justify-between items-start mb-4 relative z-10">
-                                        <div className="p-3 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                        <div className={`p-3 rounded-xl transition-colors ${selectedSST ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
                                             <HiAcademicCap className="text-2xl" />
                                         </div>
                                     </div>
@@ -397,8 +447,8 @@ function SelectionContent() {
                         </>
                     )}
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     )
 }
 
