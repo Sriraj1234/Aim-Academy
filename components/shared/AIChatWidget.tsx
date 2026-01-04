@@ -333,10 +333,10 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                     };
                     setMessages(prev => [...prev, botMessage]);
                     setStreamingText('');
-                    play('success');
+                    try { play('success'); } catch (e) { console.error('Sound error:', e); }
                 }
             } else {
-                // Non-streaming fallback
+                // Handle JSON response (Groq fallback or error)
                 const data = await response.json();
                 if (data.success) {
                     const botMessage: Message = {
@@ -346,20 +346,21 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         timestamp: new Date(),
                     };
                     setMessages(prev => [...prev, botMessage]);
-                    play('success');
+                    try { play('success'); } catch (e) { console.error('Sound error:', e); }
                 } else {
-                    throw new Error(data.error);
+                    throw new Error(data.error || 'Unknown error');
                 }
             }
-        } catch {
+        } catch (err) {
+            console.error('Chat error:', err);
             const errorMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: 'Oops! Kuch problem ho gaya. Please try again! 🙏',
+                content: `Oops! Kuch problem ho gaya. Error: ${(err as Error).message}. Please try again! 🙏`,
                 timestamp: new Date(),
             };
             setMessages(prev => [...prev, errorMessage]);
-            play('wrong');
+            try { play('wrong'); } catch (e) { console.error('Sound error:', e); }
         } finally {
             setLoading(false);
         }
