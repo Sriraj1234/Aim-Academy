@@ -1,21 +1,24 @@
+import google from 'googlethis';
 
-const google = require('googlethis');
-
-async function testGoogleThis() {
+async function test() {
     try {
-        console.log('Testing googlethis image search...');
-        const query = 'diagram of cell';
-        const images = await google.image(query, { safe: true });
-
-        console.log(`Found ${images.length} results.`);
-        if (images.length > 0) {
-            console.log('First result:', images[0]);
-        } else {
-            console.log('No results found.');
+        console.log("Testing Text Search for 'Photosynthesis'...");
+        const response = await google.search('Photosynthesis', { safe: true });
+        console.log("Text Results:", response.results?.length || 0);
+        if (response.results?.length > 0) {
+            console.log(response.results[0]);
         }
+
+        console.log("\nTesting Image Search for 'Photosynthesis diagram'...");
+        const images = await google.image('Photosynthesis diagram', { safe: true });
+        console.log("Image Results:", images.length || 0);
+        if (images.length > 0) {
+            console.log(images[0]);
+        }
+
     } catch (e) {
-        console.error('Error with googlethis:', e);
+        console.error("GoogleThis failed:", e);
     }
 }
 
-testGoogleThis();
+test();
