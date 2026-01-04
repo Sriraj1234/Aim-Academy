@@ -98,17 +98,25 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
                 // Enable Active Speaker Detection (helps with switching on some devices)
                 client.enableAudioVolumeIndicator();
 
-                // Create and publish local mic track with OPTIMIZED config for Mobile
+                // Create and publish local mic track with MAXIMUM Echo Cancellation
                 const micTrack = await AgoraRTC.createMicrophoneAudioTrack({
                     encoderConfig: "speech_standard",
                     AEC: true, // Echo Cancellation
+                    AGC: true, // Automatic Gain Control
                     ANS: true  // Noise Suppression
                 });
 
                 localTrackRef.current = micTrack;
+
+                // CRITICAL: Never play your own microphone audio locally
+                // This prevents hearing yourself
                 micTrack.setEnabled(false); // Start muted
+
+                // Ensure local track volume is 0 (safety measure, though we never call play())
+                micTrack.setVolume(0);
+
                 await client.publish(micTrack);
-                console.log('[Voice] Local mic published (Speech Mode)');
+                console.log('[Voice] Local mic published (Speech Mode, AEC+AGC+ANS enabled)');
 
             } catch (err: any) {
                 console.error('[Voice] Init Critical Error:', err);
@@ -125,24 +133,29 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
 
         // Handle remote user events
         client.on('user-published', async (remoteUser, mediaType) => {
-            console.log('[Voice] User published:', remoteUser.uid, mediaType);
+            console.log('[Voice] User published:', remoteUser.uid, 'Type:', typeof remoteUser.uid, mediaType);
+            console.log('[Voice] My sessionUid:', sessionUid, 'Type:', typeof sessionUid);
 
-            // Safety: Do not subscribe to self (should handled by Agora, but verifying)
-            // Use sessionUid from closure
-            if (remoteUser.uid === sessionUid) {
-                console.warn('[Voice] Ignoring self-published stream');
+            // CRITICAL: Do not subscribe to self
+            // Convert both to strings for reliable comparison
+            const remoteUidStr = String(remoteUser.uid);
+            const myUidStr = String(sessionUid);
+
+            if (remoteUidStr === myUidStr) {
+                console.warn('[Voice] ⚠️ BLOCKED SELF-SUBSCRIPTION - This is YOUR audio, not playing it back to you');
                 return;
             }
 
             if (mediaType === 'audio') {
+                console.log('[Voice] ✅ Subscribing to REMOTE user:', remoteUser.uid);
                 await client.subscribe(remoteUser, mediaType);
                 const audioTrack = remoteUser.audioTrack;
                 if (audioTrack) {
                     audioTrack.play();
                     // Use ref to set initial volume based on current state
                     audioTrack.setVolume(speakerOnRef.current ? 100 : 0);
-                    remoteTracksRef.current.set(remoteUser.uid as number, audioTrack);
-                    console.log('[Voice] Playing audio from:', remoteUser.uid);
+                    remoteTracksRef.current.set(remoteUser.uid as any, audioTrack);
+                    console.log('[Voice] 🔊 Playing audio from remote user:', remoteUser.uid);
                 }
                 setRemoteUsersCount(remoteTracksRef.current.size);
             }
@@ -151,14 +164,14 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
         client.on('user-unpublished', (remoteUser, mediaType) => {
             console.log('[Voice] User unpublished:', remoteUser.uid);
             if (mediaType === 'audio') {
-                remoteTracksRef.current.delete(remoteUser.uid as number);
+                remoteTracksRef.current.delete(remoteUser.uid as any);
                 setRemoteUsersCount(remoteTracksRef.current.size);
             }
         });
 
         client.on('user-left', (remoteUser) => {
             console.log('[Voice] User left:', remoteUser.uid);
-            remoteTracksRef.current.delete(remoteUser.uid as number);
+            remoteTracksRef.current.delete(remoteUser.uid as any);
             setRemoteUsersCount(remoteTracksRef.current.size);
         });
 
