@@ -1,0 +1,6 @@
+Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+Stack: Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at search (E:\AIM 2\aim-academy\node_modules\duck-duck-scrape\lib\search\search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async test (file:///E:/AIM%202/aim-academy/scripts/debugDuck.js:7:29)
+Response: {}
