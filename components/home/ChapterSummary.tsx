@@ -21,7 +21,7 @@ interface ChapterSummaryProps {
 }
 
 const SUBJECTS = [
-    'Physics', 'Chemistry', 'Biology', 'Mathematics',
+    'Physics', 'Chemistry', 'Biology',
     'History', 'Geography', 'Economics', 'Political Science'
 ];
 
