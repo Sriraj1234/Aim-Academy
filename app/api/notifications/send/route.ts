@@ -70,6 +70,20 @@ export async function POST(request: NextRequest) {
             data: payload.data || {},
         };
 
+        // Save notification to Firestore for history
+        const notificationDoc = {
+            title: payload.title,
+            body: payload.body,
+            type: payload.data?.type || 'info',
+            createdAt: new Date(),
+            readBy: [],
+            targetUserId: payload.userId || null,
+            clickAction: payload.clickAction || '/home'
+        };
+
+        const docRef = await adminDb.collection('notifications').add(notificationDoc);
+        console.log('Notification saved to Firestore:', docRef.id);
+
         // Send the notification
         const response = await adminMessaging.send(message);
         console.log('Notification sent successfully:', response);
@@ -77,6 +91,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             messageId: response,
+            notificationId: docRef.id,
         });
 
     } catch (error: any) {
@@ -119,6 +134,22 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ success: true, sent: 0 });
         }
 
+        // Save notification to Firestore for history (bulk = global notification)
+        const notificationDoc = {
+            title,
+            body,
+            type: type || 'info',
+            createdAt: new Date(),
+            readBy: [],
+            targetUserId: null, // null = sent to all users
+            clickAction: '/home',
+            isBulk: true,
+            recipientCount: tokens.length
+        };
+
+        const docRef = await adminDb.collection('notifications').add(notificationDoc);
+        console.log('Bulk notification saved to Firestore:', docRef.id);
+
         // Send multicast message
         const message = {
             tokens,
@@ -141,6 +172,7 @@ export async function PUT(request: NextRequest) {
             success: true,
             sent: response.successCount,
             failed: response.failureCount,
+            notificationId: docRef.id,
         });
 
     } catch (error: any) {
