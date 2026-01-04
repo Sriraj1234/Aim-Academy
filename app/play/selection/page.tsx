@@ -177,8 +177,7 @@ function SelectionContent() {
             !sstSubjects.includes(sub.toLowerCase()) &&
             !langSubjects.includes(sub.toLowerCase()) &&
             sub.toLowerCase() !== 'social studies' && // Explicitly hide Social Studies
-            sub.toLowerCase() !== 'mathematics' && // Hide duplicate Mathematics (Math already exists)
-            sub.toLowerCase() !== 'maths' // Also filter 'maths' variant
+            sub.toLowerCase() !== 'mathematics' // Hide duplicate Mathematics ONLY (exact match, not Math/Maths)
     ) || []
 
     const hasScience = activeCategories.subjects?.some(sub => scienceSubjects.includes(sub.toLowerCase()))
