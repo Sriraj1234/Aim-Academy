@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaMoon, FaWifi, FaGraduationCap, FaFileAlt, FaShoppingCart, FaBolt, FaHandsHelping, FaBook, FaLaptopCode, FaDesktop, FaBookOpen, FaDownload, FaShareAlt, FaUserCircle } from 'react-icons/fa';
+import { FaTimes, FaMoon, FaWifi, FaGraduationCap, FaFileAlt, FaShoppingCart, FaBolt, FaHandsHelping, FaBook, FaLaptopCode, FaDesktop, FaBookOpen, FaDownload, FaShareAlt, FaUserCircle, FaGem } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from './Button';
 
 interface SidebarDrawerProps {
@@ -14,6 +15,7 @@ interface SidebarDrawerProps {
 
 export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose }) => {
     const { user, logout, userProfile } = useAuth();
+    const pathname = usePathname();
 
     const menuItems = [
         { icon: FaDesktop, label: 'Dashboard', href: '/home' },
@@ -29,13 +31,14 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         { icon: FaMoon, label: 'Dark Mode', isToggle: true },
     ];
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
+    const sidebarVariants: any = {
+        hidden: {
+            x: '-100%',
+            transition: { type: 'spring', damping: 25, stiffness: 300 }
+        },
         show: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.05
-            }
+            x: 0,
+            transition: { type: 'spring', damping: 30, stiffness: 300, staggerChildren: 0.05, delayChildren: 0.1 }
         }
     };
 
@@ -48,136 +51,156 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Backdrop */}
+                    {/* Glassmorphism Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
                     />
 
-                    {/* Sidebar */}
+                    {/* Premium Sidebar */}
                     <motion.div
-                        initial={{ x: '-100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '-100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed top-0 left-0 bottom-0 w-[280px] bg-white z-[70] shadow-2xl overflow-y-auto"
+                        variants={sidebarVariants}
+                        initial="hidden"
+                        animate="show"
+                        exit="hidden"
+                        className="fixed top-0 left-0 bottom-0 w-[85vw] sm:w-[300px] bg-white/90 backdrop-blur-2xl z-[70] shadow-2xl border-r border-white/40 flex flex-col"
                     >
-                        {/* Header Section */}
-                        <div className="p-6 border-b border-gray-100 bg-gradient-to-br from-indigo-50 to-white">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-md">
-                                    {user?.photoURL ? (
-                                        <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-500 text-2xl">
-                                            <FaUserCircle />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-800 text-lg leading-tight truncate">
-                                        {user?.displayName || 'Scholar'}
+                        {/* Vibrant Header with Gradient */}
+                        <div className="relative p-5 sm:p-6 pt-12 pb-8 overflow-hidden">
+                            {/* Decorative Background Mesh */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 z-0" />
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full blur-xl -ml-5 -mb-5" />
+
+                            <div className="relative z-10 flex items-center gap-4">
+                                <Link href="/profile" onClick={onClose} className="group relative">
+                                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-[3px] border-white/30 shadow-lg group-hover:scale-105 transition-transform duration-300">
+                                        {user?.photoURL ? (
+                                            <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-3xl">
+                                                <FaUserCircle />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="absolute -bottom-1 -right-1 bg-green-400 w-4 h-4 rounded-full border-2 border-indigo-600 shadow-sm" />
+                                </Link>
+
+                                <div className="flex-1 min-w-0 text-white">
+                                    <h3 className="font-bold text-xl leading-tight truncate tracking-tight">
+                                        {user?.displayName || 'Future Scholar'}
                                     </h3>
-                                    <p className="text-xs text-gray-500 mb-1">
-                                        {userProfile?.class ? `Class ${userProfile.class}` : 'Student'}
-                                    </p>
-                                    <Link href="/profile" onClick={onClose} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-                                        View Profile <span>→</span>
-                                    </Link>
+                                    <div className="flex items-center gap-2 mt-1 opacity-90">
+                                        <span className="text-xs bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full font-medium border border-white/10">
+                                            {userProfile?.class ? `Class ${userProfile.class}` : 'Student'}
+                                        </span>
+                                        {/* Mock Level/XP */}
+                                        <span className="text-xs flex items-center gap-1">
+                                            <FaGem className="text-yellow-300 text-[10px]" />
+                                            Lvl {userProfile?.gamification?.level || 1}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1">
+
+                            {/* Close Button */}
+                            <button
+                                onClick={onClose}
+                                className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all"
+                            >
                                 <FaTimes />
                             </button>
                         </div>
 
-                        {/* My Purchases / Quick Stats (Optional "Real" feel) */}
-                        <div className="p-4">
-                            <div className="bg-indigo-50/50 rounded-xl p-3 flex items-center gap-3 border border-indigo-100/50 cursor-pointer hover:bg-indigo-50 transition-colors">
-                                <div className="bg-white p-2 rounded-lg text-indigo-600 shadow-sm">
-                                    <FaShoppingCart />
-                                </div>
-                                <div>
-                                    <span className="font-semibold text-gray-800 text-sm block">My Purchases</span>
-                                    <span className="text-xs text-gray-500">View your subscriptions</span>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto py-2 custom-scrollbar">
+                            <div className="px-4 space-y-1">
+                                {menuItems.map((item, idx) => (
+                                    <React.Fragment key={idx}>
+                                        {item.isDivider ? (
+                                            <motion.div variants={itemVariants} className="mt-6 mb-2 px-3">
+                                                <span className="text-[10px] font-black text-indigo-400/80 uppercase tracking-widest">{item.label}</span>
+                                            </motion.div>
+                                        ) : (
+                                            item.href ? (
+                                                <Link href={item.href} onClick={onClose}>
+                                                    <motion.div
+                                                        variants={itemVariants}
+                                                        className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer group transition-all duration-300 ${pathname === item.href
+                                                            ? 'bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-700 font-semibold shadow-inner'
+                                                            : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900 border border-transparent hover:border-gray-100'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <span className={`text-xl transition-transform duration-300 group-hover:scale-110 ${pathname === item.href ? 'text-indigo-600 drop-shadow-sm' : 'text-gray-400 group-hover:text-indigo-500'
+                                                                }`}>
+                                                                <item.icon />
+                                                            </span>
 
-                        {/* Menu Items */}
-                        <motion.div
-                            className="px-4 pb-20 space-y-1"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="show"
-                        >
-                            {menuItems.map((item, idx) => (
-                                <React.Fragment key={idx}>
-                                    {item.isDivider ? (
-                                        <motion.div variants={itemVariants} className="pt-4 pb-2 px-2">
-                                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{item.label}</span>
-                                        </motion.div>
-                                    ) : (
-                                        item.href ? (
-                                            <Link href={item.href} onClick={onClose}>
+                                                            <span className="text-sm tracking-wide">{item.label}</span>
+                                                        </div>
+
+                                                        {item.isNew && (
+                                                            <span className="text-[9px] font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+                                                                NEW
+                                                            </span>
+                                                        )}
+                                                        {pathname === item.href && (
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                                                        )}
+                                                    </motion.div>
+                                                </Link>
+                                            ) : (
                                                 <motion.div
                                                     variants={itemVariants}
-                                                    className="flex items-center justify-between p-3 rounded-xl hover:bg-indigo-50/50 cursor-pointer group transition-all duration-200 border border-transparent hover:border-indigo-100"
+                                                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-gray-50 cursor-pointer group transition-all duration-200"
                                                 >
-                                                    <div className="flex items-center gap-4 text-gray-600 group-hover:text-indigo-600 transition-colors">
-                                                        <span className="text-lg opacity-70 group-hover:opacity-100 transition-opacity"><item.icon /></span>
+                                                    <div className="flex items-center gap-4 text-gray-600 group-hover:text-gray-900">
+                                                        <span className="text-xl text-gray-400 group-hover:text-indigo-500 transition-colors"><item.icon /></span>
                                                         <span className="text-sm font-medium">{item.label}</span>
                                                     </div>
-                                                </motion.div>
-                                            </Link>
-                                        ) : (
-                                            <motion.div
-                                                variants={itemVariants}
-                                                className="flex items-center justify-between p-3 rounded-xl hover:bg-indigo-50/50 cursor-pointer group transition-all duration-200 border border-transparent hover:border-indigo-100"
-                                            >
-                                                <div className="flex items-center gap-4 text-gray-600 group-hover:text-indigo-600 transition-colors">
-                                                    <span className="text-lg opacity-70 group-hover:opacity-100 transition-opacity"><item.icon /></span>
-                                                    <span className="text-sm font-medium">{item.label}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
                                                     {item.isToggle && (
-                                                        <div className="w-9 h-5 bg-gray-200 rounded-full relative transition-colors group-hover:bg-gray-300">
-                                                            <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow-sm"></div>
+                                                        <div className="w-10 h-6 bg-gray-200 rounded-full relative transition-colors group-hover:bg-gray-300 cursor-pointer">
+                                                            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform" />
                                                         </div>
                                                     )}
-                                                </div>
-                                            </motion.div>
-                                        )
-                                    )}
-                                </React.Fragment>
-                            ))}
+                                                </motion.div>
+                                            )
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </div>
 
-                            {/* Logout Button */}
-                            <motion.div variants={itemVariants} className="pt-6 px-2">
-                                <Button variant="outline" className="w-full justify-start gap-3 hover:bg-red-50 hover:text-red-600 hover:border-red-100 group py-6" onClick={() => { onClose(); logout(); }}>
-                                    <div className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center group-hover:bg-red-100 transition-colors">
-                                        <FaShareAlt className="rotate-180" />
-                                    </div>
+                            {/* CTA / Upgrade Box */}
+                            <motion.div variants={itemVariants} className="mx-4 mt-6 p-4 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-xl relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl -mr-6 -mt-6 transition-transform group-hover:scale-150 duration-700" />
+                                <div className="relative z-10">
+                                    <h4 className="font-bold text-sm mb-1">Unlock Premium 🚀</h4>
+                                    <p className="text-xs text-gray-300 mb-3 leading-relaxed">Get unlimited AI doubts, ad-free learning, and exclusive notes.</p>
+                                    <button className="w-full py-2 bg-white text-gray-900 rounded-lg text-xs font-bold hover:bg-indigo-50 transition-colors">
+                                        View Plans
+                                    </button>
+                                </div>
+                            </motion.div>
+
+                            {/* Sign Out */}
+                            <motion.div variants={itemVariants} className="p-4 mt-2">
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50/80 rounded-xl h-12"
+                                    onClick={() => { onClose(); logout(); }}
+                                >
+                                    <FaShareAlt className="rotate-180" />
                                     <span className="font-medium">Sign Out</span>
                                 </Button>
+                                <div className="mt-4 text-center">
+                                    <p className="text-[10px] text-gray-400 font-medium">Padhaku v1.2.0 • Made with ❤️</p>
+                                </div>
                             </motion.div>
-                        </motion.div>
-
-                        {/* Bottom Upgrade Banner (Mock) */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-100">
-                            <div className="flex items-center justify-between">
-                                <div className="text-xs text-gray-500">
-                                    v 1.0.0
-                                </div>
-                                <div className="flex gap-4 text-gray-400 text-lg">
-                                    {/* Social Icons Mock */}
-                                </div>
-                            </div>
                         </div>
-
                     </motion.div>
                 </>
             )}
