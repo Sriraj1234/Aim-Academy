@@ -166,18 +166,22 @@ function SelectionContent() {
 
     const [selectedScience, setSelectedScience] = useState(false)
     const [selectedSST, setSelectedSST] = useState(false)
+    const [selectedLang, setSelectedLang] = useState(false)
 
     const scienceSubjects = ['physics', 'chemistry', 'biology']
     const sstSubjects = ['history', 'geography', 'civics', 'economics', 'political science', 'disaster management']
+    const langSubjects = ['english', 'hindi', 'sanskrit']
 
     const displayedSubjects = activeCategories.subjects?.filter(
         sub => !scienceSubjects.includes(sub.toLowerCase()) &&
             !sstSubjects.includes(sub.toLowerCase()) &&
+            !langSubjects.includes(sub.toLowerCase()) &&
             sub.toLowerCase() !== 'social studies' // Explicitly hide Social Studies
     ) || []
 
     const hasScience = activeCategories.subjects?.some(sub => scienceSubjects.includes(sub.toLowerCase()))
     const hasSST = activeCategories.subjects?.some(sub => sstSubjects.includes(sub.toLowerCase()))
+    const hasLang = activeCategories.subjects?.some(sub => langSubjects.includes(sub.toLowerCase()))
 
     const subjects = displayedSubjects
     const chapters = selectedSubject ? (activeCategories.chapters?.[selectedSubject] || []) : []
@@ -187,13 +191,20 @@ function SelectionContent() {
         if (lower === 'science') {
             setSelectedScience(true)
             setSelectedSST(false)
+            setSelectedLang(false)
         } else if (lower === 'social science') {
             setSelectedSST(true)
             setSelectedScience(false)
+            setSelectedLang(false)
+        } else if (lower === 'languages') {
+            setSelectedLang(true)
+            setSelectedScience(false)
+            setSelectedSST(false)
         } else {
             setSelectedSubject(sub)
             setSelectedScience(false)
             setSelectedSST(false)
+            setSelectedLang(false)
         }
     }
 
@@ -205,12 +216,16 @@ function SelectionContent() {
             } else if (sstSubjects.includes(selectedSubject.toLowerCase())) {
                 setSelectedSubject(null)
                 setSelectedSST(true)
+            } else if (langSubjects.includes(selectedSubject.toLowerCase())) {
+                setSelectedSubject(null)
+                setSelectedLang(true)
             } else {
                 setSelectedSubject(null)
             }
-        } else if (selectedScience || selectedSST) {
+        } else if (selectedScience || selectedSST || selectedLang) {
             setSelectedScience(false)
             setSelectedSST(false)
+            setSelectedLang(false)
         }
     }
 
@@ -303,7 +318,7 @@ function SelectionContent() {
                         [...Array(6)].map((_, i) => (
                             <div key={i} className="h-32 bg-white rounded-2xl shadow-pw-sm animate-pulse border border-pw-border" />
                         ))
-                    ) : !selectedSubject && !selectedScience && !selectedSST ? (
+                    ) : !selectedSubject && !selectedScience && !selectedSST && !selectedLang ? (
                         /* MAIN SUBJECT VIEW */
                         <>
                             {subjects.length === 0 && !hasScience ? (
@@ -355,6 +370,28 @@ function SelectionContent() {
                                             <p className="text-sm text-gray-500 relative z-10">History, Civics, Geography...</p>
                                         </motion.div>
                                     )}
+
+                                    {hasLang && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            onClick={() => handleSubjectClick('Languages')}
+                                            className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
+                                        >
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <HiAcademicCap className="text-8xl text-pink-500 transform rotate-[-20deg]" />
+                                            </div>
+
+                                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                                <div className="p-3 rounded-xl bg-pink-100 text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-colors">
+                                                    <HiAcademicCap className="text-2xl" />
+                                                </div>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-pink-600 px-2 py-1 rounded-lg border border-pink-200">Group</span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-pw-violet group-hover:text-pink-600 transition-colors capitalize mb-1 relative z-10">Languages</h3>
+                                            <p className="text-sm text-gray-500 relative z-10">Hindi, Sanskrit, English</p>
+                                        </motion.div>
+                                    )}
                                     {subjects.map((sub, idx) => (
                                         <motion.div
                                             key={idx}
@@ -381,13 +418,15 @@ function SelectionContent() {
                                 </>
                             )}
                         </>
-                    ) : (selectedScience || selectedSST) && !selectedSubject ? (
-                        /* SCIENCE or SST BRANCH VIEW */
+                    ) : (selectedScience || selectedSST || selectedLang) && !selectedSubject ? (
+                        /* SCIENCE or SST or LANG BRANCH VIEW */
                         <>
                             {activeCategories.subjects?.filter(s =>
                                 selectedScience
                                     ? scienceSubjects.includes(s.toLowerCase())
-                                    : sstSubjects.includes(s.toLowerCase())
+                                    : selectedLang
+                                        ? langSubjects.includes(s.toLowerCase())
+                                        : sstSubjects.includes(s.toLowerCase())
                             ).map((sub, idx) => (
                                 <motion.div
                                     key={idx}
@@ -398,11 +437,11 @@ function SelectionContent() {
                                     className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
                                 >
                                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                        <HiAcademicCap className={`text-8xl transform rotate-[-20deg] ${selectedSST ? 'text-orange-500' : 'text-pw-indigo'}`} />
+                                        <HiAcademicCap className={`text-8xl transform rotate-[-20deg] ${selectedSST ? 'text-orange-500' : selectedLang ? 'text-pink-500' : 'text-pw-indigo'}`} />
                                     </div>
 
                                     <div className="flex justify-between items-start mb-4 relative z-10">
-                                        <div className={`p-3 rounded-xl transition-colors ${selectedSST ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
+                                        <div className={`p-3 rounded-xl transition-colors ${selectedSST ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : selectedLang ? 'bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
                                             <HiAcademicCap className="text-2xl" />
                                         </div>
                                     </div>
