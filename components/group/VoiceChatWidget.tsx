@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import AgoraRTC, { IAgoraRTCClient, IMicrophoneAudioTrack, IRemoteAudioTrack } from 'agora-rtc-sdk-ng';
 import { AGORA_APP_ID } from '@/lib/agoraConfig';
 import { FaMicrophone, FaMicrophoneSlash, FaHeadphones, FaVolumeUp } from 'react-icons/fa';
@@ -15,7 +15,8 @@ function stringToNumber(str: string): number {
         hash = ((hash << 5) - hash) + char;
         hash = hash & hash;
     }
-    return Math.abs(hash) % 65000;
+    // Use a larger range (Agora supports uint32)
+    return Math.abs(hash) % 1000000;
 }
 
 export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string, playerId?: string }) => {
@@ -23,9 +24,11 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
     // Use passed playerId (game specific) or fallback to auth user id or random if generic
     const stableId = playerId || user?.uid || 'guest';
 
-    // Generate a STABLE UID based on the player ID
-    // This prevents "Ghost User" echo where a user hears their previous instance
-    const clientUid = stringToNumber(stableId);
+    // Generate a UNIQUE UID per session (Mount) to prevent "UID_CONFLICT"
+    // We add a random offset so even if connection persists on server, we are a "new" user.
+    const clientUid = useMemo(() => {
+        return stringToNumber(stableId) + Math.floor(Math.random() * 10000);
+    }, [stableId]);
 
     const [isConnected, setIsConnected] = useState(false);
     const [micOn, setMicOn] = useState(false);
@@ -39,6 +42,12 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
 
     // Use a random UID to prevent "UID_CONFLICT" errors if the user re-joins quickly
     const [speakerOn, setSpeakerOn] = useState(true);
+    const speakerOnRef = useRef(true); // Ref to track speaker state without re-triggering effect
+
+    // Update ref when state changes
+    useEffect(() => {
+        speakerOnRef.current = speakerOn;
+    }, [speakerOn]);
 
     useEffect(() => {
         if (!channelName) return;
@@ -62,8 +71,23 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
 
                 setStatus('Joining channel...');
 
-                // Join the channel
-                await client.join(AGORA_APP_ID, channelName, data.token, clientUid);
+                // Helper to join with retry
+                const joinWithRetry = async (retries = 1, delay = 1500) => {
+                    try {
+                        await client.join(AGORA_APP_ID, channelName, data.token, clientUid);
+                    } catch (err: any) {
+                        if ((err.code === "UID_CONFLICT" || err.message?.includes("UID_CONFLICT")) && retries > 0) {
+                            console.warn(`[Voice] UID Conflict detected. Retrying in ${delay}ms...`);
+                            setStatus('Retrying connection...');
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            await joinWithRetry(retries - 1, delay);
+                        } else {
+                            throw err;
+                        }
+                    }
+                };
+
+                await joinWithRetry();
 
                 if (!isMounted) return;
                 setIsConnected(true);
@@ -73,8 +97,6 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
                 client.enableAudioVolumeIndicator();
 
                 // Create and publish local mic track with OPTIMIZED config for Mobile
-                // "speech_standard" = 32 kHz, 18 Kbps mono. (Default is often higher)
-                // This significantly reduces bandwidth/CPU usage for 4+ users.
                 const micTrack = await AgoraRTC.createMicrophoneAudioTrack({
                     encoderConfig: "speech_standard",
                     AEC: true, // Echo Cancellation
@@ -89,7 +111,11 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
             } catch (err: any) {
                 console.error('[Voice] Init Error:', err);
                 if (isMounted) {
-                    setError(err.message || 'Connection failed');
+                    if (err.code === "UID_CONFLICT" || err.message?.includes("UID_CONFLICT")) {
+                        setError('Device conflict. Please refresh.');
+                    } else {
+                        setError(err.message || 'Connection failed');
+                    }
                     setStatus('Error');
                 }
             }
@@ -103,10 +129,8 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
                 const audioTrack = remoteUser.audioTrack;
                 if (audioTrack) {
                     audioTrack.play();
-                    // Default to 100 (ON) on join.
-                    // If user has manually turned it OFF, they might hear a blip until they toggle.
-                    // This is acceptable for "Speaker Auto On" requirement.
-                    audioTrack.setVolume(100);
+                    // Use ref to set initial volume based on current state
+                    audioTrack.setVolume(speakerOnRef.current ? 100 : 0);
                     remoteTracksRef.current.set(remoteUser.uid as number, audioTrack);
                     console.log('[Voice] Playing audio from:', remoteUser.uid);
                 }
@@ -154,7 +178,7 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
             };
             cleanup();
         };
-    }, [channelName, speakerOn]); // Added speakerOn to dependencies to ensure user-published handler uses latest state
+    }, [channelName]); // REMOVED speakerOn dependency to prevent re-join loops
 
     // Toggle mic
     const toggleMic = () => {
