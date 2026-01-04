@@ -30,6 +30,27 @@ const AuthContext = createContext<AuthContextType>({
     addXP: async () => { }
 } as unknown as AuthContextType)
 
+// Helper: Get or Create Device ID
+const getDeviceId = () => {
+    if (typeof window === 'undefined') return 'server';
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+        deviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+}
+
+const getDeviceName = () => {
+    if (typeof window === 'undefined') return 'Server';
+    const ua = navigator.userAgent;
+    if (ua.includes("Win")) return "PC (Windows)";
+    if (ua.includes("Mac")) return "Mac";
+    if (ua.includes("Android")) return "Android";
+    if (ua.includes("iPhone")) return "iPhone";
+    return "Browser";
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null)
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
@@ -45,6 +66,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 if (docSnap.exists()) {
                     const profileData = docSnap.data() as UserProfile
+
+                    // --- DEVICE LIMIT CHECK (FIFO Strategy) ---
+                    const deviceId = getDeviceId();
+                    const deviceName = getDeviceName();
+                    const nowTs = Date.now();
+
+                    let activeDevices = profileData.activeDevices || [];
+
+                    // 1. Clean stale devices (> 30 days inactive)
+                    activeDevices = activeDevices.filter(d => (nowTs - d.lastActive) < 30 * 24 * 60 * 60 * 1000);
+
+                    const existingIndex = activeDevices.findIndex(d => d.deviceId === deviceId);
+
+                    if (existingIndex !== -1) {
+                        // Update existing session
+                        activeDevices[existingIndex].lastActive = nowTs;
+                    } else {
+                        // New Device
+                        if (activeDevices.length >= 2) {
+                            // Limit reached: Remove Oldest (FIFO)
+                            activeDevices.sort((a, b) => a.lastActive - b.lastActive);
+                            console.log(`Device limit (2) reached. Replacing oldest: ${activeDevices[0].deviceName}`);
+                            activeDevices.shift();
+                        }
+                        // Add new
+                        activeDevices.push({ deviceId, deviceName, lastActive: nowTs });
+                    }
+
+                    // Sync Active Devices to Firestore (Non-blocking)
+                    updateDoc(docRef, { activeDevices }).catch(e => console.error("Device sync error", e));
+
+                    // Update local profile data immediately
+                    profileData.activeDevices = activeDevices;
 
                     // Check for Monthly Reset
                     const now = new Date()
@@ -185,7 +239,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                     setUserProfile({ ...profileData, gamification })
                 } else {
-                    // Create new profile if it doesn't exist
+                    // --- SAFETY CHECK ---
+                    // If account is OLD (> 5 mins) but has NO DATA, it's a fetch error/corruption.
+                    // DO NOT OVERWRITE with empty data.
+                    const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : Date.now();
+                    const isOldAccount = (Date.now() - creationTime) > 5 * 60 * 1000;
+
+                    if (isOldAccount) {
+                        console.error("CRITICAL: Existing user profile not found. Preventing overwrite.");
+                        alert("Error loading profile. Please check your internet connection and reload.");
+                        // We do NOT sign out automatically to allow retry, but we do NOT set userProfile.
+                        // Setting userProfile to null keeps the app in 'Loading' or 'Guest' state rather than 'New User' state.
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Create new profile if it doesn't exist (Only for truly NEW users)
                     const now = new Date()
                     const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
@@ -208,7 +277,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             lastPracticeDate: null,
                             currentMonth: currentMonthStr, // Initialize with current month
                             achievements: []
-                        }
+                        },
+                        activeDevices: [{
+                            deviceId: getDeviceId(),
+                            deviceName: getDeviceName(),
+                            lastActive: Date.now()
+                        }]
                     }
                     await setDoc(docRef, newProfile)
                     setUserProfile(newProfile)
