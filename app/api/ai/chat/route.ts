@@ -119,7 +119,64 @@ export async function POST(request: NextRequest) {
 
         contextInfo += `\n\n**FORMATTING RULE:** Break long answers into short, readable parts (bullet points or short paragraphs). Adapt difficulty to Class ${userClass}.`;
 
-        // Try Gemini first
+        contextInfo += `\n\n**FORMATTING RULE:** Break long answers into short, readable parts (bullet points or short paragraphs). Adapt difficulty to Class ${userClass}.`;
+
+        // ----------------------------------------------------
+        // PRIORITY 1: Groq (Llama 3) - User Requested Primary
+        // ----------------------------------------------------
+        let groqSuccess = false;
+
+        // Only try Groq for text-only (it doesn't support images)
+        if (GROQ_API_KEY && !body.image) {
+            try {
+                const systemPrompt = AIM_BUDDY_INSTRUCTION + (contextInfo ? `\n\n${contextInfo}` : '');
+
+                const messages = [
+                    { role: 'system', content: systemPrompt },
+                    ...(body.history || []).slice(-6).map(m => ({
+                        role: m.role === 'model' ? 'assistant' : m.role,
+                        content: m.content
+                    })),
+                    { role: 'user', content: body.message }
+                ];
+
+                const response = await fetch(GROQ_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'llama-3.3-70b-versatile',
+                        messages,
+                        temperature: 0.7,
+                        max_tokens: 600,
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const reply = data.choices?.[0]?.message?.content || '';
+                    if (reply) {
+                        return new Response(
+                            JSON.stringify({ success: true, reply: reply.trim(), provider: 'groq' }),
+                            { headers: { 'Content-Type': 'application/json' } }
+                        );
+                    }
+                } else {
+                    const errData = await response.json().catch(() => ({ error: { message: response.statusText } }));
+                    console.warn('Groq returned error, falling back to Gemini:', errData);
+                    // allow fallthrough to Gemini
+                }
+            } catch (error) {
+                console.error('Groq API error, falling back to Gemini:', error);
+                // allow fallthrough to Gemini
+            }
+        }
+
+        // ----------------------------------------------------
+        // PRIORITY 2: Gemini (Fallback or for Image/Multimodal)
+        // ----------------------------------------------------
         if (isGeminiConfigured()) {
             try {
                 // Convert history format for Gemini
@@ -128,7 +185,7 @@ export async function POST(request: NextRequest) {
                     parts: [{ text: msg.content }]
                 }));
 
-                // Handle multimodal (image) input
+                // Handle multimodal (image) input - Gemini Only
                 if (body.image) {
                     const model = getMultimodalModel();
                     const prompt = contextInfo
@@ -152,7 +209,7 @@ export async function POST(request: NextRequest) {
                     );
                 }
 
-                // Text-only chat
+                // Text-only chat (Fallback from Groq)
                 const model = getTextModel();
 
                 // Add context to the first message if available
@@ -201,58 +258,22 @@ export async function POST(request: NextRequest) {
                         { headers: { 'Content-Type': 'application/json' } }
                     );
                 }
-            } catch (geminiError) {
-                console.error('Gemini error, falling back to Groq:', geminiError);
-                // Fall through to Groq
+            } catch (geminiError: any) {
+                console.error('Gemini error:', geminiError);
+                return new Response(
+                    JSON.stringify({
+                        success: false,
+                        error: `Gemini Error: ${geminiError?.message || 'Unknown'}`
+                    }),
+                    { status: 500, headers: { 'Content-Type': 'application/json' } }
+                );
             }
         }
 
-        // Fallback to Groq
-        if (!GROQ_API_KEY) {
-            return new Response(
-                JSON.stringify({ success: false, error: 'AI service not configured' }),
-                { status: 500, headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-
-        const systemPrompt = AIM_BUDDY_INSTRUCTION + (contextInfo ? `\n\n${contextInfo}` : '');
-
-        const messages = [
-            { role: 'system', content: systemPrompt },
-            ...(body.history || []).slice(-6).map(m => ({
-                role: m.role === 'model' ? 'assistant' : m.role,
-                content: m.content
-            })),
-            { role: 'user', content: body.message }
-        ];
-
-        const response = await fetch(GROQ_API_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
-                messages,
-                temperature: 0.7,
-                max_tokens: 400,
-            }),
-        });
-
-        if (!response.ok) {
-            return new Response(
-                JSON.stringify({ success: false, error: 'AI is busy, please try again' }),
-                { status: 500, headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-
-        const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || '';
-
+        // If both failed or not configured
         return new Response(
-            JSON.stringify({ success: true, reply: reply.trim(), provider: 'groq' }),
-            { headers: { 'Content-Type': 'application/json' } }
+            JSON.stringify({ success: false, error: 'All AI services failed. Check API keys.' }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
 
     } catch (error) {
