@@ -200,7 +200,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                 // Clean query for better image search: Remove command words but KEEP "photo" as it can be part of "synthesis" (photosynthesis)
                 // We use a phrase-based cleaner for common starts, and then a lighter keyword remover
                 let query = userMessage.content
-                    .replace(/^(show|give|fetch|display)\s+(me\s+)?(an?|the\s+)?(images?|pics?|pictures?|diagrams?|sketches?)\s+(of\s+)?/i, '')
+                    .replace(/^(show|give|fetch|display|find|search)\s+(me\s+)?(an?|the\s+)?(images?|pics?|pictures?|photos?|diagrams?|sketches?|maps?|charts?)\s+(of\s+)?/i, '')
                     .replace(/\b(diagrams?|drawings?|sketches?)\b/gi, '') // Remove these styles as we append better ones
                     .trim();
 
