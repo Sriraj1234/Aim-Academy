@@ -1,7 +1,5 @@
-'use client';
-
-import React, { useState } from 'react';
-import { FaBell, FaPaperPlane, FaUsers, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaBell, FaPaperPlane, FaUsers, FaCheckCircle, FaTimesCircle, FaInfoCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 export default function AdminNotificationsPage() {
@@ -9,6 +7,23 @@ export default function AdminNotificationsPage() {
     const [body, setBody] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ sent?: number; failed?: number } | null>(null);
+    const [stats, setStats] = useState<{ totalUsers: number, eligibleUsers: number, withToken: number } | null>(null);
+
+    useEffect(() => {
+        fetchStats();
+    }, []);
+
+    const fetchStats = async () => {
+        try {
+            const res = await fetch('/api/notifications/stats');
+            const data = await res.json();
+            if (res.ok) {
+                setStats(data);
+            }
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+        }
+    }
 
     // Predefined templates
     const templates = [
@@ -86,6 +101,22 @@ export default function AdminNotificationsPage() {
                             <h1 className="text-2xl font-bold">Push Notifications</h1>
                             <p className="text-white/80 text-sm">Sabhi subscribed users ko notification bhejo</p>
                         </div>
+                    </div>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                        <div className="text-2xl font-bold text-gray-800">{stats?.totalUsers || 0}</div>
+                        <div className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Users</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                        <div className="text-2xl font-bold text-indigo-600">{stats?.withToken || 0}</div>
+                        <div className="text-xs text-gray-500 font-medium uppercase tracking-wider">With Token</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center">
+                        <div className="text-2xl font-bold text-green-600">{stats?.eligibleUsers || 0}</div>
+                        <div className="text-xs text-gray-500 font-medium uppercase tracking-wider">Eligible</div>
                     </div>
                 </div>
 
@@ -171,7 +202,7 @@ export default function AdminNotificationsPage() {
                                     <FaCheckCircle />
                                     <span>{result.sent} sent</span>
                                 </div>
-                                {result.failed > 0 && (
+                                {result.failed && result.failed > 0 && (
                                     <div className="flex items-center gap-1 text-red-500">
                                         <FaTimesCircle />
                                         <span>{result.failed} failed</span>
@@ -183,10 +214,20 @@ export default function AdminNotificationsPage() {
                 </div>
 
                 {/* Info */}
-                <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <p className="text-xs text-amber-800">
-                        ⚠️ Notifications sirf unhi users ko jaayengi jinhone app mein "Enable Notifications" kiya hai.
-                    </p>
+                <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200 flex gap-3 items-start">
+                    <FaInfoCircle className="text-amber-500 mt-0.5 flex-shrink-0" />
+                    <div className="space-y-1">
+                        <p className="text-sm font-medium text-amber-800">
+                            Why 0 users sent?
+                        </p>
+                        <p className="text-xs text-amber-700">
+                            Notifications are only sent to users who have:
+                            <br />1. Logged in and granted notification permission (FCM token saved).
+                            <br />2. Have 'notificationsEnabled' set to true.
+                            <br />
+                            <strong>Solution:</strong> Ask users to login and click "Enable Notifications" in their profile/header settings.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
