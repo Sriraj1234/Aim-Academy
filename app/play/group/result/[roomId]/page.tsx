@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { FaTrophy, FaHome, FaMedal, FaStar, FaCheckCircle, FaTimesCircle, FaChartPie, FaUser } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 
 interface PlayerResult {
     id: string;
@@ -28,6 +29,7 @@ export default function ResultPage() {
     const [questions, setQuestions] = useState<QuestionData[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'leaderboard' | 'analysis'>('leaderboard');
+    const { user } = useAuth(); // Get current user
 
     useEffect(() => {
         if (!roomId) return;
@@ -38,7 +40,8 @@ export default function ResultPage() {
 
             if (snap.exists()) {
                 const data = snap.data();
-                setQuestions(data.questions || []);
+                const roomQuestions = data.questions || [];
+                setQuestions(roomQuestions);
                 const players = Object.values(data.players || {}) as any[];
 
                 // Calculate scores
@@ -48,7 +51,7 @@ export default function ResultPage() {
                     Object.keys(answers).forEach(qIndex => {
                         const qIdx = parseInt(qIndex);
                         const ansIdx = answers[qIdx];
-                        if (data.questions[qIdx]?.correctAnswer === ansIdx) {
+                        if (roomQuestions[qIdx]?.correctAnswer === ansIdx) {
                             correctCount++;
                         }
                     });
@@ -58,20 +61,63 @@ export default function ResultPage() {
                         name: p.name,
                         photoURL: p.photoURL,
                         score: correctCount * 10, // 10 pts per question
-                        accuracy: (correctCount / (data.questions.length || 1)) * 100,
-                        answers: answers
+                        accuracy: (correctCount / (roomQuestions.length || 1)) * 100,
+                        answers: answers,
+                        userId: p.userId // Ensure userId is captured
                     };
                 });
 
                 // Sort by score DESC
                 results.sort((a, b) => b.score - a.score);
                 setLeaderboard(results);
+
+                // --- SAVE MISTAKES LOGIC ---
+                // Identify the current user's player entry
+                // We check by auth user ID (strongest) or fallback to name if needed (but auth is best for mistakes)
+                if (user) {
+                    const myPlayer = results.find(p => p.userId === user.uid);
+
+                    if (myPlayer) {
+                        const mistakesToSave: any[] = [];
+
+                        roomQuestions.forEach((q: any, index: number) => {
+                            const myAnswer = myPlayer.answers[index];
+                            // Check if answered AND incorrect
+                            if (myAnswer !== undefined && myAnswer !== q.correctAnswer) {
+                                mistakesToSave.push({
+                                    id: q.id || `group_q_${index}_${roomId}`, // Fallback ID if missing
+                                    question: q.question,
+                                    options: q.options,
+                                    correctAnswer: q.correctAnswer,
+                                    userAnswer: myAnswer,
+                                    subject: data.subject || 'General',
+                                    chapter: data.chapter || 'Group Quiz',
+                                    timestamp: Date.now(),
+                                    difficulty: 'medium' // Default for group
+                                });
+                            }
+                        });
+
+                        if (mistakesToSave.length > 0) {
+                            console.log(`Saving ${mistakesToSave.length} mistakes to notebook...`);
+                            // We use map to execute parallel writes
+                            const savePromises = mistakesToSave.map(async (m) => {
+                                // Save to users/{uid}/mistakes/{questionId}
+                                const mistakeRef = doc(db, 'users', user.uid, 'mistakes', m.id);
+                                await setDoc(mistakeRef, m, { merge: true });
+                            });
+
+                            // Non-blocking wait (catch errors silently to not break UI)
+                            Promise.all(savePromises).catch(e => console.error("Error saving mistakes:", e));
+                        }
+                    }
+                }
             }
             setLoading(false);
         };
 
         fetchResults();
-    }, [roomId]);
+    }, [roomId, user]); // Added user dependency
 
     // Double-Tap Back Logic
     const [showExitWarning, setShowExitWarning] = useState(false);
