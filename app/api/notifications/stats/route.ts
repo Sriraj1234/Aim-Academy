@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, getInitError } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +27,7 @@ export async function GET() {
             withToken,
             debug: {
                 initialized: adminDb.collection('users').id !== 'mock', // Check if not mock
+                error: getInitError(),
                 env: {
                     projectId: process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Missing',
                     clientEmail: process.env.FIREBASE_CLIENT_EMAIL ? 'Set' : 'Missing',
