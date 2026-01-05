@@ -11,7 +11,7 @@ export async function GET() {
         let eligibleUsers = 0;
         let withToken = 0;
 
-        usersSnapshot.forEach(doc => {
+        usersSnapshot.forEach((doc: any) => {
             const data = doc.data();
             if (data.fcmToken) {
                 withToken++;
