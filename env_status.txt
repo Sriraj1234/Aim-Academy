@@ -1,0 +1,5 @@
+Checking Environment Keys:
+[OK] GROQ_API_KEY is set (Length: 56)
+[OK] GEMINI_API_KEY is set (Length: 39)
+[OK] NEXT_PUBLIC_FIREBASE_API_KEY is set (Length: 39)
+[OK] NEXT_PUBLIC_FIREBASE_PROJECT_ID is set (Length: 9)
