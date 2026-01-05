@@ -128,22 +128,22 @@ export const StatsOverview = () => {
                     className={`relative overflow-hidden bg-white p-2.5 md:p-3 rounded-xl shadow-pw-sm border border-pw-border border-l-4 ${stat.borderColor} group cursor-default hover:shadow-pw-md transition-shadow`}
                 >
                     <div className="relative z-10 flex flex-col min-w-0">
-                        <div className={`w-7 h-7 md:w-8 md:h-8 mb-2 rounded-lg ${stat.iconBg} flex items-center justify-center ${stat.iconColor} shrink-0`}>
+                        <div className={`w-6 h-6 md:w-8 md:h-8 mb-2 rounded-lg ${stat.iconBg} flex items-center justify-center ${stat.iconColor} shrink-0`}>
                             <stat.icon className="text-xs md:text-sm" />
                         </div>
 
                         <div className="flex items-baseline gap-1 min-w-0">
-                            <span className="text-lg md:text-2xl font-black text-pw-violet tabular-nums truncate">
+                            <span className="text-base md:text-2xl font-black text-pw-violet tabular-nums truncate">
                                 {stat.value}
                             </span>
                             {stat.suffix && (
-                                <span className="text-xs md:text-base font-bold text-gray-400 shrink-0">
+                                <span className="text-[10px] md:text-base font-bold text-gray-400 shrink-0">
                                     {stat.suffix}
                                 </span>
                             )}
                         </div>
 
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
+                        <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5 truncate">
                             {stat.label}
                         </p>
                     </div>
