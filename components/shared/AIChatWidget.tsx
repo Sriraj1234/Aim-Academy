@@ -38,6 +38,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
     const [isListening, setIsListening] = useState(false);
     const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false);
     const [streamingText, setStreamingText] = useState('');
+    const [currentStatus, setCurrentStatus] = useState<string | null>(null); // For AI Status (Searching, Thinking...)
     // Gallery Modal State
     const [galleryImages, setGalleryImages] = useState<{ title: string; image: string }[]>([]);
     const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
@@ -138,152 +139,17 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
         play('click');
 
         try {
-
-            const lowerInput = userMessage.content.toLowerCase();
-            let searchContextParts: string[] = [];
-            let imageResults: any[] = [];
-
-            // --- Smart Intent Detection ---
-            // 1. Image Intent: Explicit requests OR Educational topics that benefit from visuals
-            const explicitImageKeywords = ['show', 'image', 'photo', 'pic', 'tasveer', 'diagram', 'drawing', 'sketch', 'map', 'chart'];
-            const eduVisualKeywords = ['structure', 'anatomy', 'mechanism', 'cycle', 'process', 'parts of', 'schematic', 'layout'];
-
-            const isImageIntent = explicitImageKeywords.some(k => lowerInput.includes(k)) ||
-                eduVisualKeywords.some(k => lowerInput.includes(k));
-
-            // 2. Web Intent: Factual, Time-sensitive, or specific queries
-            // Comprehensive list of Hindi, Hinglish, and English triggers
-            const webKeywords = [
-                // English triggers
-                'search', 'google', 'current', 'latest', 'news', 'syllabus', 'omr', 'pattern', 'exam date',
-                'who is', 'what is the', 'when is', 'where is', 'how many', 'how much',
-                'weather', 'minister', 'president', 'ceo', 'founder', 'capital', 'population',
-                'price', 'cost', 'salary', 'result', 'admit card', 'date sheet',
-                // Hindi/Hinglish triggers
-                'kon hai', 'kaun hai', 'kya hai', 'kab hai', 'kahan hai', 'kitna hai', 'kitne',
-                'vartman', 'abhi', 'aaj', 'kal', 'mantri', 'mukhyamantri', 'cm', 'pm',
-                'home minister', 'education minister', 'finance minister',
-                'rajdhani', 'jansankhya', 'daam', 'kimat', 'result kab', 'exam kab',
-                'bihar', 'india', 'bharat', 'state', 'district', 'jila',
-                'yojana', 'scheme', 'sarkari', 'government', 'vacancy', 'bharti',
-                // Question patterns (will trigger for any "who/what/when" style questions)
-                'batao', 'bataiye', 'bata do', 'tell me about'
-            ];
-            const isWebIntent = !isImageIntent && webKeywords.some(k => lowerInput.includes(k));
-            const shouldFetchWeb = webKeywords.some(k => lowerInput.includes(k));
-
-            // --- AI Memory: Detect Weak Subject Mentions ---
-            const weakSubjectPatterns = [
-                /weak in (\w+)/i,
-                /problem in (\w+)/i,
-                /struggle with (\w+)/i,
-                /(\w+) samajh nahi aata/i,
-                /(\w+) mushkil hai/i,
-                /(\w+) difficult/i,
-            ];
-            for (const pattern of weakSubjectPatterns) {
-                const match = lowerInput.match(pattern);
-                if (match && match[1]) {
-                    const subject = match[1].charAt(0).toUpperCase() + match[1].slice(1);
-                    const currentWeak = userProfile?.aiMemory?.weakSubjects || [];
-                    if (!currentWeak.includes(subject)) {
-                        const updatedMemory = {
-                            weakSubjects: [...currentWeak, subject].slice(-5), // Keep last 5
-                            topicsStudied: userProfile?.aiMemory?.topicsStudied || [],
-                            preferences: userProfile?.aiMemory?.preferences || { language: 'hinglish', answerLength: 'short' },
-                            lastInteraction: Date.now(),
-                        };
-                        updateProfile({ aiMemory: updatedMemory });
-                        console.log(`[AI Memory] Added "${subject}" to weak subjects.`);
-                    }
-                    break; // Only detect one per message
-                }
-            }
-
-            // --- Parallel Fetching (Agentic Behavior) ---
-            const promises = [];
-
-            if (isImageIntent) {
-                setStreamingText('🔍 Searching for visual aids...');
-                // Clean query for better image search: Remove command words but KEEP "photo" as it can be part of "synthesis" (photosynthesis)
-                // We use a phrase-based cleaner for common starts, and then a lighter keyword remover
-                let query = userMessage.content
-                    .replace(/^(show|give|fetch|display|find|search)\s+(me\s+)?(an?|the\s+)?(images?|pics?|pictures?|photos?|diagrams?|sketches?|maps?|charts?)\s+(of\s+)?/i, '')
-                    .replace(/\b(diagrams?|drawings?|sketches?)\b/gi, '') // Remove these styles as we append better ones
-                    .trim();
-
-                // If the user just typed "photo synthesis", we don't want to strip "photo" globally.
-
-                promises.push(
-                    fetch('/api/search', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            query: `${query} scientific diagram labeled`, // Enforce educational quality
-                            type: 'image'
-                        })
-                    }).then(res => res.json()).then(data => {
-                        if (data.results && data.results.length > 0) {
-                            imageResults = data.results;
-                            searchContextParts.push(`[SYSTEM: I have displayed ${data.results.length} related images/diagrams to the user. Reference them in your explanation if helpful.]`);
-
-                            // Immediately show images in chat stream
-                            const imgMsg: Message = {
-                                id: Date.now().toString() + '_img',
-                                role: 'assistant',
-                                content: 'Found these visuals for you:',
-                                timestamp: new Date(),
-                                images: data.results
-                            };
-                            setMessages(prev => [...prev, imgMsg]);
-                        }
-                    }).catch(err => console.error("Image search failed", err))
-                );
-            }
-
-            if (shouldFetchWeb || isWebIntent) {
-                if (!isImageIntent) setStreamingText('🌐 Verifying information...'); // Only show if not already showing image search
-                const query = userMessage.content.replace(/(search|for|google|web|internet|find|about)/gi, '').trim();
-                promises.push(
-                    fetch('/api/search', {
-                        method: 'POST',
-                        body: JSON.stringify({ query: query || userMessage.content, type: 'text' })
-                    }).then(res => res.json()).then(data => {
-                        if (data.results && data.results.length > 0) {
-                            const snippets = data.results.map((r: any) => `- ${r.title}: ${r.description}`).join('\n');
-                            searchContextParts.push(`[SYSTEM: Real-time search results for "${query}":\n${snippets}\nUse this verified info to answer accurately.]`);
-                        } else {
-                            searchContextParts.push(`[SYSTEM: The web search for "${query}" FAILED to return any results and returned an empty list. Do NOT guess the answer based on your internal knowledge cutoff. Explicitly tell the user you cannot verify the current information online right now.]`);
-                        }
-                    }).catch(err => console.error("Web search failed", err))
-                );
-            }
-
-            // Wait for all "tools" to finish
-            if (promises.length > 0) {
-                await Promise.all(promises);
-            }
-
-            // Construct Final Context
-            let finalContext = userMessage.content;
-            if (searchContextParts.length > 0) {
-                finalContext = `${searchContextParts.join('\n\n')}\n\nUser Question: ${userMessage.content}`;
-            }
-
-            // Clear loading text before starting AI stream
-            if (promises.length > 0) setStreamingText('');
-
             const history = messages.slice(-6).map(m => ({
                 role: m.role === 'assistant' ? 'model' : 'user',
                 content: m.content
             }));
 
-
-            // Use streaming
+            // Send to Server Agent (Handles Search & Images internally)
             const response = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: finalContext, // Send context included
+                    message: userMessage.content,
                     history,
                     context: effectiveContext,
                     stream: true,
@@ -295,6 +161,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                 const reader = response.body?.getReader();
                 const decoder = new TextDecoder();
                 let fullText = '';
+                let serverImages: any[] = [];
 
                 if (reader) {
                     while (true) {
@@ -311,9 +178,31 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
 
                                 try {
                                     const parsed = JSON.parse(data);
+
+                                    // Handle Status Updates
+                                    if (parsed.status) {
+                                        setCurrentStatus(parsed.status);
+                                        // Optional: You could allow the status to just show separately 
+                                        // or update 'streamingText' to be the status if no text yet.
+                                    }
+
+                                    // Handle Text Chunks
                                     if (parsed.text) {
                                         fullText += parsed.text;
                                         setStreamingText(fullText);
+                                        setCurrentStatus(null); // Clear status once text starts? Or keep it?
+                                        // Let's clear "Searching" status once text appears, 
+                                        // but "Thinking" might be redundant.
+                                    }
+
+                                    // Handle Images (Immediate)
+                                    if (parsed.images) {
+                                        serverImages = parsed.images;
+                                        // We can't easily append to 'messages' state mid-stream without causing re-renders/dupes
+                                        // So we wait until the end to attach images OR we could show a "Found images" toast.
+                                        // detailed implementation: let's just hold them for the final message.
+                                        // BUT, to give immediate feedback, let's update a ref or temporary state if we wanted.
+                                        // For now, sticking to standard flow: Images appear with the answer.
                                     }
                                 } catch {
                                     // Skip malformed JSON
@@ -330,13 +219,15 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         role: 'assistant',
                         content: fullText,
                         timestamp: new Date(),
+                        images: serverImages.length > 0 ? serverImages : undefined
                     };
                     setMessages(prev => [...prev, botMessage]);
                     setStreamingText('');
+                    setCurrentStatus(null);
                     try { play('success'); } catch (e) { console.error('Sound error:', e); }
                 }
             } else {
-                // Handle JSON response (Groq fallback or error)
+                // Handle JSON response (Standard Agent Response)
                 const data = await response.json();
                 if (data.success) {
                     const botMessage: Message = {
@@ -344,6 +235,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                         role: 'assistant',
                         content: data.reply,
                         timestamp: new Date(),
+                        images: data.images // Attach server-provided images
                     };
                     setMessages(prev => [...prev, botMessage]);
                     try { play('success'); } catch (e) { console.error('Sound error:', e); }
@@ -640,6 +532,27 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 </motion.div>
                             ))}
 
+                            {/* Status Indicator (Searching/Thinking) */}
+                            {currentStatus && !streamingText && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex items-center gap-3 px-4 py-2"
+                                >
+                                    <div className="relative w-8 h-8">
+                                        {currentStatus.includes('web') && <span className="text-2xl animate-bounce absolute">🌐</span>}
+                                        {currentStatus.includes('image') && <span className="text-2xl animate-bounce absolute">🖼️</span>}
+                                        {(currentStatus === 'thinking' || currentStatus === 'analyzing') && <span className="text-2xl animate-spin absolute">⚙️</span>}
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-500 animate-pulse">
+                                        {currentStatus === 'searching_web' && "Browsing the web..."}
+                                        {currentStatus === 'searching_image' && "Finding visual aids..."}
+                                        {currentStatus === 'thinking' && "Thinking..."}
+                                        {currentStatus === 'analyzing' && "Analyzing intent..."}
+                                    </span>
+                                </motion.div>
+                            )}
+
                             {/* Streaming indicator */}
                             {streamingText && (
                                 <motion.div
@@ -744,7 +657,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 AI can make mistakes. Please verify important info.
                             </div>
                         </div>
-                    </motion.div>
+                    </motion.div >
                 )}
             </AnimatePresence >
 
