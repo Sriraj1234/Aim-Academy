@@ -2,6 +2,7 @@ import admin from 'firebase-admin';
 
 // Lazy initialization to prevent build-time errors
 let initialized = false;
+let initError: string | null = null;
 
 function initializeFirebaseAdmin() {
     if (initialized || admin.apps.length > 0) {
@@ -42,9 +43,14 @@ function initializeFirebaseAdmin() {
 
         initialized = true;
         console.log('Firebase Admin initialized successfully');
-    } catch (error) {
+    } catch (error: any) {
         console.error('Firebase Admin initialization error:', error);
+        initError = error.message || String(error);
     }
+}
+
+export function getInitError() {
+    return initError;
 }
 
 // Lazy getters for services
