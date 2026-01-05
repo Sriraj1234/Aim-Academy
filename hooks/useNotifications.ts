@@ -35,14 +35,21 @@ export const useNotifications = () => {
                 return null;
             }
 
-            // Register service worker
-            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            // Get existing or register new service worker
+            let registration = await navigator.serviceWorker.getRegistration();
+
+            if (!registration) {
+                console.log('[FCM] No existing SW found, registering new one...');
+                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            } else {
+                console.log('[FCM] Using existing service worker:', registration.scope);
+            }
 
             // Wait for service worker to be active
             if (registration.installing) {
                 console.log('[FCM] Service worker installing...');
                 await new Promise<void>((resolve) => {
-                    registration.installing!.addEventListener('statechange', (e) => {
+                    registration.installing?.addEventListener('statechange', (e) => {
                         if ((e.target as ServiceWorker).state === 'activated') {
                             console.log('[FCM] Service worker activated');
                             resolve();
@@ -52,14 +59,14 @@ export const useNotifications = () => {
             } else if (registration.waiting) {
                 console.log('[FCM] Service worker waiting...');
                 await new Promise<void>((resolve) => {
-                    registration.waiting!.addEventListener('statechange', (e) => {
+                    registration.waiting?.addEventListener('statechange', (e) => {
                         if ((e.target as ServiceWorker).state === 'activated') {
                             resolve();
                         }
                     });
                 });
             } else if (registration.active) {
-                console.log('[FCM] Service worker already active');
+                console.log('[FCM] Service worker active');
             }
 
             // Small delay to ensure SW is fully ready
