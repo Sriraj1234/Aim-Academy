@@ -227,8 +227,8 @@ export const useFriends = () => {
 
         if (lastInviteTime) {
             const diff = now - parseInt(lastInviteTime);
-            if (diff < 60000) { // 60 seconds
-                const remaining = Math.ceil((60000 - diff) / 1000);
+            if (diff < 10000) { // 10 seconds
+                const remaining = Math.ceil((10000 - diff) / 1000);
                 throw new Error(`Please wait ${remaining}s before sending another invite.`);
             }
         }
