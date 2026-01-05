@@ -16,10 +16,8 @@ import {
     AIM_BUDDY_INSTRUCTION
 } from '@/lib/gemini';
 import { adminDb } from '@/lib/firebase-admin';
-
-// Fallback to Groq
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+import { getGroqChatCompletion } from '@/lib/groq';
+import { performWebSearch, performImageSearch } from '@/lib/search';
 
 interface ChatMessage {
     role: 'user' | 'assistant' | 'model';
@@ -55,10 +53,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Check if streaming is requested
-        const wantStream = body.stream === true;
-
-        // --- NEW: Fetch Syllabus Data ---
+        // --- Fetch Syllabus Context ---
         let syllabusInfo = '';
         let subjects: string[] = [];
         let chapterSummary = '';
@@ -68,7 +63,6 @@ export async function POST(request: NextRequest) {
             const classNum = body.context?.class || '10';
             const taxonomyKey = `${board}_${classNum}`;
 
-            // Use Firebase Admin SDK syntax
             const taxDoc = await adminDb.collection('metadata').doc('taxonomy').get();
             if (taxDoc.exists) {
                 const taxonomy = taxDoc.data();
@@ -78,32 +72,31 @@ export async function POST(request: NextRequest) {
                     subjects = syllabusData.subjects;
                     syllabusInfo = `\n\n**Available Subjects in Your ${body.context?.board?.toUpperCase() || 'CBSE'} Class ${classNum} Syllabus:**\n${subjects.join(', ')}`;
 
-                    // Build chapter summary (limited to avoid token overflow)
+                    // Build detailed chapter list for "Full Syllabus Knowledge"
                     if (syllabusData.chapters) {
-                        const chapterList = subjects.slice(0, 5).map(sub => {
+                        const allChapters = subjects.map(sub => {
                             const chapters = syllabusData.chapters[sub] || [];
-                            const count = chapters.length;
-                            return `- ${sub}: ${count} chapters`;
+                            // Format: "Physics: Light, Human Eye, Electricity..."
+                            return `**${sub}**: ${chapters.join(', ')}`;
                         }).join('\n');
-                        chapterSummary = `\n\n**Chapter Counts:**\n${chapterList}`;
+
+                        chapterSummary = `\n\n**FULL SYLLABUS (Reference This):**\n${allChapters}`;
                     }
                 }
             }
         } catch (err) {
             console.error('Failed to fetch taxonomy:', err);
-            // Continue without syllabus data
         }
 
-        // --- Enhanced Context with Personalization ---
+        // --- Build System Context ---
         const userName = body.context?.name || 'Student';
         const userClass = body.context?.class || '10';
         const userBoard = body.context?.board?.toUpperCase() || 'CBSE';
         const userStream = body.context?.stream;
 
-        let contextInfo = `**Student Profile:**
+        let contextInfo = `\n\n**User Profile:**
 - Name: ${userName}
-- Board: ${userBoard}
-- Class: ${userClass}${userStream ? `\n- Stream: ${userStream}` : ''}`;
+- Class: ${userClass} (${userBoard} Board)${userStream ? `\n- Stream: ${userStream}` : ''}`;
 
         if (body.context?.subject) contextInfo += `\n- Current Subject: ${body.context.subject}`;
         if (body.context?.chapter) contextInfo += `\n- Current Chapter: ${body.context.chapter}`;
@@ -119,162 +112,164 @@ export async function POST(request: NextRequest) {
 
         contextInfo += `\n\n**FORMATTING RULE:** Break long answers into short, readable parts (bullet points or short paragraphs). Adapt difficulty to Class ${userClass}.`;
 
-        contextInfo += `\n\n**FORMATTING RULE:** Break long answers into short, readable parts (bullet points or short paragraphs). Adapt difficulty to Class ${userClass}.`;
 
         // ----------------------------------------------------
-        // PRIORITY 1: Groq (Llama 3) - User Requested Primary
+        // STREAMING RESPONSE HANDLER 
         // ----------------------------------------------------
-        let groqSuccess = false;
+        // We always use streaming to provide "Status Updates" (Search Icon, etc.)
 
-        // Only try Groq for text-only (it doesn't support images)
-        if (GROQ_API_KEY && !body.image) {
-            try {
-                const systemPrompt = AIM_BUDDY_INSTRUCTION + (contextInfo ? `\n\n${contextInfo}` : '');
-
-                const messages = [
-                    { role: 'system', content: systemPrompt },
-                    ...(body.history || []).slice(-6).map(m => ({
-                        role: m.role === 'model' ? 'assistant' : m.role,
-                        content: m.content
-                    })),
-                    { role: 'user', content: body.message }
-                ];
-
-                const response = await fetch(GROQ_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${GROQ_API_KEY}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile',
-                        messages,
-                        temperature: 0.7,
-                        max_tokens: 600,
-                    }),
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const reply = data.choices?.[0]?.message?.content || '';
-                    if (reply) {
-                        return new Response(
-                            JSON.stringify({ success: true, reply: reply.trim(), provider: 'groq' }),
-                            { headers: { 'Content-Type': 'application/json' } }
-                        );
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+            async start(controller) {
+                try {
+                    // Helper to send events
+                    const sendEvent = (data: any) => {
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
                     }
-                } else {
-                    const errData = await response.json().catch(() => ({ error: { message: response.statusText } }));
-                    console.warn('Groq returned error, falling back to Gemini:', errData);
-                    // allow fallthrough to Gemini
-                }
-            } catch (error) {
-                console.error('Groq API error, falling back to Gemini:', error);
-                // allow fallthrough to Gemini
-            }
-        }
 
-        // ----------------------------------------------------
-        // PRIORITY 2: Gemini (Fallback or for Image/Multimodal)
-        // ----------------------------------------------------
-        if (isGeminiConfigured()) {
-            try {
-                // Convert history format for Gemini
-                const geminiHistory = (body.history || []).map(msg => ({
-                    role: msg.role === 'assistant' ? 'model' as const : 'user' as const,
-                    parts: [{ text: msg.content }]
-                }));
+                    // ----------------------------------------------------
+                    // AGENTIC FLOW: Intent Detection & Tool Execution
+                    // ----------------------------------------------------
 
-                // Handle multimodal (image) input - Gemini Only
-                if (body.image) {
-                    const model = getMultimodalModel();
-                    const prompt = contextInfo
-                        ? `${contextInfo}\n\nUser's question about this image: ${body.message || 'Please explain this image'}`
-                        : body.message || 'Please explain this image';
+                    let toolResults = '';
+                    let toolImages: any[] = [];
 
-                    const result = await model.generateContent([
-                        prompt,
-                        {
-                            inlineData: {
-                                data: body.image.base64,
-                                mimeType: body.image.mimeType || 'image/jpeg',
+                    if (!body.image) {
+                        // 1. Detect Intent
+                        const intentMessages: any[] = [
+                            {
+                                role: 'system',
+                                content: `You are an Intent Classifier. Your job is to classify the user's latest message into one of these categories:
+- "WEB_SEARCH": If the user is asking for current events, factual data, syllabus info, or dynamic content.
+- "IMAGE_SEARCH": If the user explicitly asks for images OR if the topic is highly visual (e.g., Biology diagrams, Anatomy, Chemical Structures, Physics setups) where an image would help understanding. Example: "Explain Cockroach anatomy", "Photosynthesis process".
+- "CHAT": For general conversation, coding help, or explaining non-visual concepts.
+
+Respond ONLY with the category value.`
                             },
-                        },
-                    ]);
+                            ...(body.history || []).slice(-2).map(m => ({
+                                role: m.role === 'model' ? 'assistant' : m.role,
+                                content: m.content
+                            })),
+                            { role: 'user', content: body.message }
+                        ];
 
-                    const reply = result.response.text();
-                    return new Response(
-                        JSON.stringify({ success: true, reply, provider: 'gemini' }),
-                        { headers: { 'Content-Type': 'application/json' } }
-                    );
-                }
+                        const intentCheck = await getGroqChatCompletion(intentMessages, 0.1, 10);
+                        const intent = intentCheck.reply.trim().toUpperCase();
 
-                // Text-only chat (Fallback from Groq)
-                const model = getTextModel();
+                        // 2. Execute Tools
+                        // Enhanced regex for biology/visual topics
+                        const visualKeywords = /image|photo|diagram|sketch|map|structure|anatomy|cycle|mechanism/i;
 
-                // Add context to the first message if available
-                const userMessage = contextInfo
-                    ? `${contextInfo}\n\n${body.message}`
-                    : body.message;
+                        if (intent.includes('IMAGE') || body.message.match(visualKeywords)) {
+                            sendEvent({ status: 'searching_image' });
 
-                if (wantStream) {
-                    // Streaming response
-                    const chat = model.startChat({ history: geminiHistory });
-                    const result = await chat.sendMessageStream(userMessage);
+                            // If implicit (no "show me"), use the full message as query but clean it slightly
+                            let query = body.message.replace(/show|me|images?|photos?|diagrams?|sketches?/gi, '').trim();
 
-                    const encoder = new TextEncoder();
-                    const stream = new ReadableStream({
-                        async start(controller) {
-                            try {
-                                for await (const chunk of result.stream) {
-                                    const text = chunk.text();
-                                    if (text) {
-                                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
-                                    }
-                                }
-                                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-                                controller.close();
-                            } catch (error) {
-                                controller.error(error);
+                            // For specific biology topics, make query specific to find better diagrams
+                            if (query.match(/cockroach|digestive|heart|brain|flower|plant|anatomy|cell/i)) {
+                                query += " scientific diagram";
+                            }
+
+                            toolImages = await performImageSearch(query);
+                            if (toolImages.length > 0) {
+                                toolResults += `\n[SYSTEM: Found ${toolImages.length} images for "${query}". Refer to them.]`;
+                                sendEvent({ images: toolImages });
                             }
                         }
-                    });
 
-                    return new Response(stream, {
-                        headers: {
-                            'Content-Type': 'text/event-stream',
-                            'Cache-Control': 'no-cache',
-                            'Connection': 'keep-alive',
-                        },
-                    });
-                } else {
-                    // Non-streaming response
-                    const chat = model.startChat({ history: geminiHistory });
-                    const result = await chat.sendMessage(userMessage);
-                    const reply = result.response.text();
+                        else if (intent.includes('WEB') || body.message.match(/current|latest|news|who is|price|date/i)) {
+                            sendEvent({ status: 'searching_web' });
+                            const query = body.message.replace(/search|find|google|about/gi, '').trim();
+                            const searchResults = await performWebSearch(query);
 
-                    return new Response(
-                        JSON.stringify({ success: true, reply, provider: 'gemini' }),
-                        { headers: { 'Content-Type': 'application/json' } }
-                    );
+                            if (searchResults.length > 0) {
+                                const snippets = searchResults.map((r: any) => `- ${r.title}: ${r.description} (Source: ${r.source})`).join('\n');
+                                toolResults += `\n[SYSTEM: Web Results for "${query}":\n${snippets}\nUse this verified info.]`;
+                            } else {
+                                toolResults += `\n[SYSTEM: Search returned nothing.]`;
+                            }
+                        }
+                    }
+
+                    // ----------------------------------------------------
+                    // GENERATE RESPONSE (Groq Llama 3.3)
+                    // ----------------------------------------------------
+                    sendEvent({ status: 'thinking' });
+
+                    if (!body.image) {
+                        const systemPrompt = AIM_BUDDY_INSTRUCTION + (contextInfo ? `\n\n${contextInfo}` : '') + toolResults;
+
+                        const groqMessages: any[] = [
+                            { role: 'system', content: systemPrompt },
+                            ...(body.history || []).slice(-6).map(m => ({
+                                role: m.role === 'model' ? 'assistant' : m.role,
+                                content: m.content
+                            })),
+                            { role: 'user', content: body.message }
+                        ];
+
+                        const groqResult = await getGroqChatCompletion(groqMessages);
+
+                        if (groqResult.success && groqResult.reply) {
+                            sendEvent({ text: groqResult.reply });
+                            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                            controller.close();
+                            return;
+                        } else {
+                            sendEvent({ debug_error: `Groq Failed: ${groqResult.error}` });
+                        }
+                    }
+
+                    // ----------------------------------------------------
+                    // FALLBACK: Gemini (Multimodal or Error)
+                    // ----------------------------------------------------
+                    if (isGeminiConfigured()) {
+                        const model = body.image ? getMultimodalModel() : getTextModel();
+                        const prompt = contextInfo ? `${contextInfo}\n\n${body.message}` : body.message;
+
+                        if (body.image) {
+                            sendEvent({ status: 'analyzing_image' });
+                            const result = await model.generateContent([
+                                prompt,
+                                { inlineData: { data: body.image.base64, mimeType: body.image.mimeType || 'image/jpeg' } }
+                            ]);
+                            const text = result.response.text();
+                            sendEvent({ text });
+                        } else {
+                            // Fallback Chat
+                            const chat = model.startChat({
+                                history: (body.history || []).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }))
+                            });
+                            const result = await chat.sendMessageStream(prompt);
+                            for await (const chunk of result.stream) {
+                                const text = chunk.text();
+                                if (text) sendEvent({ text });
+                            }
+                        }
+                        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                        controller.close();
+                        return;
+                    }
+
+                    sendEvent({ error: 'All AI services failed.' });
+                    controller.close();
+
+                } catch (error: any) {
+                    console.error('Stream Error:', error);
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: error.message })}\n\n`));
+                    controller.close();
                 }
-            } catch (geminiError: any) {
-                console.error('Gemini error:', geminiError);
-                return new Response(
-                    JSON.stringify({
-                        success: false,
-                        error: `Gemini Error: ${geminiError?.message || 'Unknown'}`
-                    }),
-                    { status: 500, headers: { 'Content-Type': 'application/json' } }
-                );
             }
-        }
+        });
 
-        // If both failed or not configured
-        return new Response(
-            JSON.stringify({ success: false, error: 'All AI services failed. Check API keys.' }),
-            { status: 500, headers: { 'Content-Type': 'application/json' } }
-        );
+        return new Response(stream, {
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            },
+        });
 
     } catch (error) {
         console.error('Chat API error:', error);
