@@ -108,6 +108,7 @@ export interface UserProfile {
         questionsSolved?: number;
     };
     gamification?: GamificationStats;
+    enrolledBatches?: string[]; // List of Batch IDs
     bookmarkedQuestions?: string[];
     aiMemory?: AIMemory; // AI Personalization Memory
     coordinates?: {
@@ -213,4 +214,27 @@ export interface VideoResource {
     views?: number;
     hasQuiz?: boolean;
     linkedQuizChapter?: string;
+}
+
+export interface TeacherProfile {
+    email: string;
+    name: string;
+    subject: string;
+    authorizedBy: string; // Admin Email
+    authorizedAt: number;
+    phone?: string;
+    status: 'active' | 'revoked';
+}
+
+export interface Batch {
+    id: string;
+    name: string;
+    description: string;
+    subjects: string[];
+    startDate: string;
+    endDate: string;
+    status: 'active' | 'upcoming' | 'completed';
+    thumbnailUrl?: string;
+    price?: number;
+    teacherIds: string[];
 }
