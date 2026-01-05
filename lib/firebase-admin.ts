@@ -23,20 +23,37 @@ function initializeFirebaseAdmin() {
         // Handle different formats of private key
         // Vercel may double-escape the newlines
         if (privateKey) {
-            // Remove surrounding quotes if present
-            if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-                privateKey = privateKey.slice(1, -1);
+            try {
+                // First try to process as a JSON string if it's quoted
+                // This handles complex escaping better than regex
+                const cleanKey = privateKey.trim();
+                if (cleanKey.startsWith('"') && cleanKey.endsWith('"')) {
+                    // User might have pasted the raw JSON string value including quotes
+                    if (!cleanKey.includes('\\n') && cleanKey.includes('\n')) {
+                        // Already has newlines, just strip quotes
+                        privateKey = cleanKey.slice(1, -1);
+                    } else {
+                        // Has escaped newlines, standard JSON parse should fix it
+                        // Wrapping in {} to parse valid JSON if it's just a string
+                        const parsed = JSON.parse(`{"key": ${cleanKey}}`);
+                        privateKey = parsed.key;
+                    }
+                } else {
+                    // Standard unquoted copy-paste (newlines usually lost or escaped)
+                    privateKey = cleanKey.replace(/\\n/g, '\n');
+                }
+            } catch (e) {
+                // Fallback to manual cleaning
+                console.warn('Failed to auto-parse private key, falling back to regex');
+                privateKey = privateKey!.replace(/^"|"$/g, '').replace(/\\n/g, '\n');
             }
-
-            // Replace literal \n with actual newlines
-            privateKey = privateKey.replace(/\\n/g, '\n');
         }
 
         admin.initializeApp({
             credential: admin.credential.cert({
                 projectId,
                 clientEmail,
-                privateKey,
+                privateKey: privateKey!,
             }),
             databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
         });
