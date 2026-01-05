@@ -1,7 +1,7 @@
 'use client'; // Fix syntax error closing tag
 
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaUserFriends, FaUserPlus, FaTimes, FaCheck, FaSearch, FaGamepad, FaEnvelope, FaShareAlt } from 'react-icons/fa'
 import { useFriends } from '@/hooks/useFriends'
@@ -16,6 +16,48 @@ interface FriendsDrawerProps {
     inviteLoading?: boolean
     onPlayWithFriend?: (friend: any) => void
 }
+
+const InviteButton = ({ friendUid, onInvite, loading }: { friendUid: string, onInvite: (uid: string) => void, loading?: boolean }) => {
+    const [cooldown, setCooldown] = useState(0);
+
+    // Initial check
+    useEffect(() => {
+        const checkCooldown = () => {
+            const last = localStorage.getItem(`last_invite_${friendUid}`);
+            if (last) {
+                const diff = Date.now() - parseInt(last);
+                if (diff < 10000) {
+                    setCooldown(Math.ceil((10000 - diff) / 1000));
+                } else {
+                    setCooldown(0);
+                }
+            }
+        };
+        checkCooldown();
+        const interval = setInterval(checkCooldown, 1000);
+        return () => clearInterval(interval);
+    }, [friendUid]);
+
+    return (
+        <button
+            onClick={() => {
+                if (cooldown > 0) return;
+                onInvite(friendUid);
+                // Optimistically start cooldown
+                setCooldown(10);
+            }}
+            disabled={cooldown > 0 || loading}
+            className={`p-2 rounded-lg border transition-all flex items-center justify-center w-9 h-9 ${cooldown > 0
+                ? 'bg-gray-100 text-gray-400 border-transparent cursor-not-allowed'
+                : 'bg-pw-surface dark:bg-slate-800 text-pw-indigo border-pw-border dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 hover:border-pw-indigo hover:shadow-sm'
+                }`}
+            title="Send Invite"
+        >
+            {loading ? <span className="animate-spin text-xs">C</span> :
+                cooldown > 0 ? <span className="text-[10px] font-bold">{cooldown}s</span> : <FaShareAlt />}
+        </button>
+    );
+};
 
 export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: externalInviteLoading, onPlayWithFriend }: FriendsDrawerProps) => {
     const { user, userProfile } = useAuth();
@@ -198,13 +240,11 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                         </button>
                                                     )}
                                                     {onInvite && (
-                                                        <button
-                                                            onClick={() => onInvite(friend.uid)}
-                                                            className="p-2 rounded-lg bg-pw-surface dark:bg-slate-800 text-pw-indigo border border-pw-border dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 hover:border-pw-indigo hover:shadow-sm transition-all"
-                                                            title="Send Invite"
-                                                        >
-                                                            {externalInviteLoading ? <span className="animate-spin">C</span> : <FaShareAlt />}
-                                                        </button>
+                                                        <InviteButton
+                                                            friendUid={friend.uid}
+                                                            onInvite={onInvite}
+                                                            loading={externalInviteLoading}
+                                                        />
                                                     )}
                                                 </div>
                                             </motion.div>
