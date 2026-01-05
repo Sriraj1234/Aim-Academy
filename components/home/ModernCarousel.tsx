@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket } from 'react-icons/fa'
+import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket, FaYoutube } from 'react-icons/fa'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 
@@ -62,6 +62,17 @@ const adSlides: Slide[] = [
         ctaLink: "/demos",
         bgClass: "bg-gradient-to-br from-orange-500 to-red-600",
         icon: FaStar
+    },
+    {
+        id: 6,
+        type: 'ad',
+        title: "Free Study Hub",
+        subtitle: "No Ads • Just Learning",
+        description: "We've curated the best free educational videos for you. (Note: We do not claim rights to content; we just organize it to save your time!)",
+        ctaText: "Start Learning",
+        ctaLink: "/study-hub",
+        bgClass: "bg-gradient-to-br from-red-600 to-pink-600",
+        icon: FaYoutube
     }
 ]
 
