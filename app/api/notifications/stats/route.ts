@@ -24,7 +24,15 @@ export async function GET() {
         return NextResponse.json({
             totalUsers,
             eligibleUsers,
-            withToken
+            withToken,
+            debug: {
+                initialized: adminDb.collection('users').id !== 'mock', // Check if not mock
+                env: {
+                    projectId: process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Missing',
+                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL ? 'Set' : 'Missing',
+                    privateKey: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Missing'
+                }
+            }
         });
 
     } catch (error: any) {
