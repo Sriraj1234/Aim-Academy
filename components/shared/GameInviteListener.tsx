@@ -10,6 +10,7 @@ export const GameInviteListener = () => {
     const { activeInvites, clearGameInvite } = useFriends();
     const router = useRouter();
     const [currentInvite, setCurrentInvite] = useState<any>(null);
+    const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'accepted' | 'declined'; text: string } | null>(null);
 
     useEffect(() => {
         // If we have invites and aren't showing one, show the first one
@@ -21,6 +22,13 @@ export const GameInviteListener = () => {
             setCurrentInvite(null);
         }
     }, [activeInvites, currentInvite]);
+
+    // Auto-clear feedback after 2 seconds
+    useEffect(() => {
+        if (!feedbackMessage) return;
+        const timer = setTimeout(() => setFeedbackMessage(null), 2000);
+        return () => clearTimeout(timer);
+    }, [feedbackMessage]);
 
     const handleAccept = async () => {
         if (!currentInvite) return;
@@ -38,6 +46,7 @@ export const GameInviteListener = () => {
         // Clear invite
         await clearGameInvite(inviteId);
         setCurrentInvite(null);
+        setFeedbackMessage({ type: 'accepted', text: '✅ Invite Accepted!' });
 
         // Navigate to lobby
         router.push(`/play/group/lobby/${roomId}`);
@@ -47,6 +56,7 @@ export const GameInviteListener = () => {
         if (!currentInvite) return;
         await clearGameInvite(currentInvite.id);
         setCurrentInvite(null);
+        setFeedbackMessage({ type: 'declined', text: '❌ Invite Declined' });
     };
 
     useEffect(() => {
@@ -58,6 +68,27 @@ export const GameInviteListener = () => {
 
         return () => clearTimeout(timer);
     }, [currentInvite]);
+
+    // Show feedback toast if no invite but feedback exists
+    if (!currentInvite && feedbackMessage) {
+        return (
+            <AnimatePresence>
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="fixed inset-x-0 top-0 z-[100] flex justify-center px-4 pt-4 sm:pt-6 pointer-events-none"
+                >
+                    <div className={`px-4 py-3 rounded-xl shadow-lg font-semibold text-sm pointer-events-auto ${feedbackMessage.type === 'accepted'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-red-500 text-white'
+                        }`}>
+                        {feedbackMessage.text}
+                    </div>
+                </motion.div>
+            </AnimatePresence>
+        );
+    }
 
     if (!currentInvite) return null;
 
