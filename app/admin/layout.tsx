@@ -4,19 +4,18 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HiHome, HiUpload, HiDatabase, HiUsers, HiChartBar } from 'react-icons/hi'
-import { FaYoutube, FaPuzzlePiece, FaBell } from 'react-icons/fa'
+import { FaYoutube, FaPuzzlePiece, FaBell, FaUserShield, FaChalkboardTeacher } from 'react-icons/fa'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
 
     const navItems = [
         { label: 'Dashboard', href: '/admin', icon: HiChartBar },
+        { label: 'Super Admin', href: '/admin/super', icon: FaUserShield },
         { label: 'Upload Questions', href: '/admin/upload', icon: HiUpload },
         { label: 'Study Hub Manager', href: '/admin/study-hub', icon: FaYoutube },
         { label: 'Mind Game Manager', href: '/admin/mind-game', icon: FaPuzzlePiece },
         { label: 'Notification Manager', href: '/admin/notifications', icon: FaBell },
-        // { label: 'Manage Users', href: '/admin/users', icon: HiUsers }, // Future
-        // { label: 'Metadata', href: '/admin/metadata', icon: HiDatabase }, // Future
     ]
 
     return (
