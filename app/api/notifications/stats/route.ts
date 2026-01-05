@@ -31,7 +31,8 @@ export async function GET() {
                 env: {
                     projectId: process.env.FIREBASE_PROJECT_ID ? 'Set' : 'Missing',
                     clientEmail: process.env.FIREBASE_CLIENT_EMAIL ? 'Set' : 'Missing',
-                    privateKey: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Missing'
+                    privateKey: process.env.FIREBASE_PRIVATE_KEY ? 'Set' : 'Missing',
+                    keyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0
                 }
             }
         });
