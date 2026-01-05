@@ -54,9 +54,11 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
 
         let isMounted = true;
 
-        // Generate a FRESH UID for this specific connection attempt
-        const base = stableId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
-        const sessionUid = `${base}_${Date.now().toString().slice(-6)}`;
+        // Generate a DETERMINISTIC UID for this specific connection attempt
+        // We REMOVE the random timestamp to prevent "phantom echo users" in React Strict Mode
+        // If a previous connection exists, Agora will handle the collision (kick old or reject new)
+        const base = stableId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 15);
+        const sessionUid = base; // Deterministic UID
 
         console.log('[Voice] Initializing new session with UID:', sessionUid);
 
