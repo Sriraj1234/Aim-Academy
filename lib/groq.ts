@@ -1,7 +1,7 @@
 // Groq AI Service Utility
 // Using Groq's ultra-fast LPU for AI explanations
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+// GROQ_API_KEY will be read from process.env inside functions
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export interface ExplanationRequest {
@@ -22,6 +22,7 @@ export interface ExplanationResponse {
 }
 
 export async function getAIExplanation(request: ExplanationRequest): Promise<ExplanationResponse> {
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
     if (!GROQ_API_KEY) {
         return {
             explanation: '',
@@ -127,6 +128,65 @@ Be brief, friendly, and encouraging!`;
             explanation: '',
             success: false,
             error: 'Failed to get explanation. Please try again.'
+        };
+    }
+
+}
+
+export interface ChatMessage {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+}
+
+export async function getGroqChatCompletion(
+    messages: ChatMessage[],
+    temperature: number = 0.7,
+    maxTokens: number = 1024
+): Promise<{ reply: string; success: boolean; error?: string }> {
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+    if (!GROQ_API_KEY) {
+        console.error("Groq Error: API key missing in getGroqChatCompletion");
+        return { reply: '', success: false, error: 'API key not configured' };
+    }
+
+    try {
+        const response = await fetch(GROQ_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages,
+                temperature,
+                max_tokens: maxTokens,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Groq Chat API error:', errorData);
+            return {
+                reply: '',
+                success: false,
+                error: `API error: ${response.status}`
+            };
+        }
+
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content || '';
+
+        return {
+            reply: reply.trim(),
+            success: true
+        };
+    } catch (error) {
+        console.error('Groq Chat execute failed:', error);
+        return {
+            reply: '',
+            success: false,
+            error: 'Failed to get chat response'
         };
     }
 }
