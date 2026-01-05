@@ -6,8 +6,35 @@ import { usePathname } from 'next/navigation'
 import { HiHome, HiUpload, HiDatabase, HiUsers, HiChartBar } from 'react-icons/hi'
 import { FaYoutube, FaPuzzlePiece, FaBell, FaUserShield, FaChalkboardTeacher } from 'react-icons/fa'
 
+import { useAuth } from '@/context/AuthContext'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { FaLock } from 'react-icons/fa'
+
+const AUTHORIZED_EMAILS = [
+    'jayant.kgp81@gmail.com',
+    'jayantkumar1985kh@gmail.com'
+];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
+    const { user, loading } = useAuth()
+    const router = useRouter()
+    const [isAuthorized, setIsAuthorized] = useState(false)
+
+    useEffect(() => {
+        if (!loading) {
+            if (user?.email && AUTHORIZED_EMAILS.includes(user.email)) {
+                setIsAuthorized(true);
+            } else if (user?.email) {
+                // Logged in but not authorized
+                setIsAuthorized(false);
+            } else {
+                // Not logged in
+                setIsAuthorized(false)
+            }
+        }
+    }, [user, loading])
 
     const navItems = [
         { label: 'Dashboard', href: '/admin', icon: HiChartBar },
@@ -17,6 +44,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { label: 'Mind Game Manager', href: '/admin/mind-game', icon: FaPuzzlePiece },
         { label: 'Notification Manager', href: '/admin/notifications', icon: FaBell },
     ]
+
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+    }
+
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+                    <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FaLock className="text-indigo-600 text-2xl" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Admin Access Required</h2>
+                    <p className="text-gray-500 mb-6">Please log in with an authorized administrative account to access this panel.</p>
+                    <Link href="/" className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-colors">
+                        Return Home
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    if (!isAuthorized) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-red-50 p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-red-100">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FaUserShield className="text-red-600 text-2xl" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+                    <p className="text-gray-500 mb-4">You are not authorized to access the Admin Panel.</p>
+                    <p className="text-xs text-gray-400 bg-gray-50 p-2 rounded mb-6 font-mono">
+                        {user.email} is not in the whitelist.
+                    </p>
+                    <Link href="/" className="inline-block bg-white text-gray-700 border border-gray-300 px-6 py-2 rounded-lg font-bold hover:bg-gray-50 transition-colors">
+                        Back to App
+                    </Link>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="flex min-h-screen bg-slate-50">
