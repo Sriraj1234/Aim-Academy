@@ -58,10 +58,10 @@ export const GameInviteListener = () => {
                 animate={{ opacity: 1, scale: 1, y: 0, x: '-50%' }}
                 exit={{ opacity: 0, scale: 0.8, y: -20, x: '-50%' }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none md:block md:w-auto md:h-auto md:items-start md:justify-start md:bg-transparent md:inset-auto md:top-6 md:right-6"
-                style={{}} // Remove translateX hack
+                className="fixed top-0 left-0 right-0 z-[100] flex justify-center p-4 pt-6 pointer-events-none"
+                style={{}}
             >
-                <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden ring-1 ring-black/5 pointer-events-auto min-w-[320px] max-w-sm w-full md:w-96">
+                <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden ring-1 ring-black/5 pointer-events-auto w-full max-w-sm">
                     {/* Premium Progress Bar */}
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100">
                         <motion.div
