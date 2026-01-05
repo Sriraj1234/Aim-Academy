@@ -76,7 +76,7 @@ export const AIM_BUDDY_INSTRUCTION = `You are "AIM Buddy", a highly intelligent 
  */
 export function getTextModel() {
     return genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-flash-latest',
         safetySettings,
         generationConfig: defaultConfig,
         systemInstruction: AIM_BUDDY_INSTRUCTION,
@@ -89,7 +89,7 @@ export function getTextModel() {
  */
 export function getMultimodalModel() {
     return genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-flash-latest',
         safetySettings,
         generationConfig: defaultConfig,
         systemInstruction: AIM_BUDDY_INSTRUCTION,
