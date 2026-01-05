@@ -1,46 +1,60 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AgoraRTC, { IAgoraRTCClient, IMicrophoneAudioTrack, IRemoteAudioTrack } from 'agora-rtc-sdk-ng';
 import { AGORA_APP_ID } from '@/lib/agoraConfig';
 import { FaMicrophone, FaMicrophoneSlash, FaHeadphones, FaVolumeUp } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
-
-// Helper to convert String UID to numeric (Agora compatible)
-// Helper to remove special characters for Agora UID compliance if needed
-// But generic string works fine as long as we use user account mode
-// We will just use a clean string
 
 export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string, playerId?: string }) => {
     const { user } = useAuth();
     // Use passed playerId (game specific) or fallback to auth user id or random if generic
     const stableId = playerId || user?.uid || 'guest';
 
+    // State
+    const [volumeLevel, setVolumeLevel] = useState(0);
     const [isConnected, setIsConnected] = useState(false);
     const [micOn, setMicOn] = useState(false);
+    const [speakerOn, setSpeakerOn] = useState(true);
     const [remoteUsersCount, setRemoteUsersCount] = useState(0);
     const [status, setStatus] = useState('Connecting...');
     const [error, setError] = useState<string | null>(null);
 
+    // Refs
     const clientRef = useRef<IAgoraRTCClient | null>(null);
     const localTrackRef = useRef<IMicrophoneAudioTrack | null>(null);
     const remoteTracksRef = useRef<Map<number, IRemoteAudioTrack>>(new Map());
-
-    const [speakerOn, setSpeakerOn] = useState(true);
     const speakerOnRef = useRef(true);
 
+    // Sync ref
     useEffect(() => {
         speakerOnRef.current = speakerOn;
     }, [speakerOn]);
 
+    // Volume Polling
+    useEffect(() => {
+        if (!micOn || !localTrackRef.current) {
+            setVolumeLevel(0);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            if (localTrackRef.current) {
+                const level = localTrackRef.current.getVolumeLevel();
+                setVolumeLevel(level * 100);
+            }
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [micOn]);
+
+    // Agora Logic
     useEffect(() => {
         if (!channelName) return;
 
         let isMounted = true;
 
         // Generate a FRESH UID for this specific connection attempt
-        // This ensures that even if the component re-renders or quick-refreshes,
-        // we never reuse an ID that might be stuck on the server.
         const base = stableId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
         const sessionUid = `${base}_${Date.now().toString().slice(-6)}`;
 
@@ -53,79 +67,46 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
             try {
                 setStatus('Getting token...');
                 const tokenUrl = `/api/agora?channelName=${channelName}&uid=${sessionUid}`;
-                console.log('[Voice] Fetching token from:', tokenUrl);
 
                 const res = await fetch(tokenUrl);
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    console.error('[Voice] Token fetch failed:', res.status, errorText);
-                    throw new Error(`Token Error: ${res.status}`);
-                }
+                if (!res.ok) throw new Error(`Token Error: ${res.status}`);
 
                 const data = await res.json();
-                console.log('[Voice] Token received:', data.token ? 'YES' : 'NO');
+                if (!data.token) throw new Error('No token received');
 
-                if (!data.token) throw new Error('No token received from server');
+                setStatus('Joining...');
 
-                setStatus('Joining channel...');
-
-                // Helper to join with retry
-                const joinWithRetry = async (retries = 1, delay = 1500) => {
-                    try {
-                        console.log(`[Voice] Joining Agora Channel: ${channelName} with UID: ${sessionUid}`);
-                        // Important: Pass sessionUid here
-                        await client.join(AGORA_APP_ID, channelName, data.token, sessionUid);
-                        console.log('[Voice] Join Success!');
-                    } catch (err: any) {
-                        console.error('[Voice] Join Failed:', err);
-                        if ((err.code === "UID_CONFLICT" || err.message?.includes("UID_CONFLICT")) && retries > 0) {
-                            console.warn(`[Voice] UID Conflict detected. Retrying in ${delay}ms...`);
-                            setStatus('Retrying connection...');
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                            await joinWithRetry(retries - 1, delay);
-                        } else {
-                            throw err;
-                        }
-                    }
-                };
-
-                await joinWithRetry();
+                // Join
+                await client.join(AGORA_APP_ID, channelName, data.token, sessionUid);
 
                 if (!isMounted) return;
                 setIsConnected(true);
                 setStatus('Connected');
 
-                // Enable Active Speaker Detection (helps with switching on some devices)
+                // Enable Active Speaker Detection
                 client.enableAudioVolumeIndicator();
 
-                // Create and publish local mic track with MAXIMUM Echo Cancellation
+                // Create Mic Track
                 const micTrack = await AgoraRTC.createMicrophoneAudioTrack({
                     encoderConfig: "speech_standard",
-                    AEC: true, // Echo Cancellation
-                    AGC: true, // Automatic Gain Control
-                    ANS: true  // Noise Suppression
+                    AEC: true,
+                    AGC: true,
+                    ANS: true
                 });
 
                 localTrackRef.current = micTrack;
 
-                // CRITICAL: Never play your own microphone audio locally
-                // This prevents hearing yourself
-                micTrack.setEnabled(false); // Start muted
-
-                // Ensure local track volume is 0 (safety measure, though we never call play())
-                micTrack.setVolume(0);
+                // Start Muted (User preference)
+                micTrack.setEnabled(false);
+                setMicOn(false);
 
                 await client.publish(micTrack);
-                console.log('[Voice] Local mic published (Speech Mode, AEC+AGC+ANS enabled)');
+                console.log('[Voice] Published (Muted)');
 
             } catch (err: any) {
-                console.error('[Voice] Init Critical Error:', err);
+                console.error('[Voice] Error:', err);
                 if (isMounted) {
-                    if (err.code === "UID_CONFLICT" || err.message?.includes("UID_CONFLICT")) {
-                        setError('Device conflict. Please refresh.');
-                    } else {
-                        setError(err.message || 'Connection failed');
-                    }
+                    setError(err.message || 'Connection failed');
                     setStatus('Error');
                 }
             }
@@ -133,36 +114,22 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
 
         // Handle remote user events
         client.on('user-published', async (remoteUser, mediaType) => {
-            console.log('[Voice] User published:', remoteUser.uid, 'Type:', typeof remoteUser.uid, mediaType);
-            console.log('[Voice] My sessionUid:', sessionUid, 'Type:', typeof sessionUid);
-
-            // CRITICAL: Do not subscribe to self
-            // Convert both to strings for reliable comparison
-            const remoteUidStr = String(remoteUser.uid);
-            const myUidStr = String(sessionUid);
-
-            if (remoteUidStr === myUidStr) {
-                console.warn('[Voice] ⚠️ BLOCKED SELF-SUBSCRIPTION - This is YOUR audio, not playing it back to you');
-                return;
-            }
+            if (String(remoteUser.uid) === String(sessionUid)) return;
 
             if (mediaType === 'audio') {
-                console.log('[Voice] ✅ Subscribing to REMOTE user:', remoteUser.uid);
                 await client.subscribe(remoteUser, mediaType);
                 const audioTrack = remoteUser.audioTrack;
                 if (audioTrack) {
                     audioTrack.play();
-                    // Use ref to set initial volume based on current state
+                    // Sync volume with speaker state
                     audioTrack.setVolume(speakerOnRef.current ? 100 : 0);
                     remoteTracksRef.current.set(remoteUser.uid as any, audioTrack);
-                    console.log('[Voice] 🔊 Playing audio from remote user:', remoteUser.uid);
                 }
                 setRemoteUsersCount(remoteTracksRef.current.size);
             }
         });
 
         client.on('user-unpublished', (remoteUser, mediaType) => {
-            console.log('[Voice] User unpublished:', remoteUser.uid);
             if (mediaType === 'audio') {
                 remoteTracksRef.current.delete(remoteUser.uid as any);
                 setRemoteUsersCount(remoteTracksRef.current.size);
@@ -170,38 +137,30 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
         });
 
         client.on('user-left', (remoteUser) => {
-            console.log('[Voice] User left:', remoteUser.uid);
             remoteTracksRef.current.delete(remoteUser.uid as any);
             setRemoteUsersCount(remoteTracksRef.current.size);
         });
 
         init();
 
-        // Cleanup
         return () => {
             isMounted = false;
-            // Separate async cleanup to avoid blocking
+            // Separate async cleanup to avoid blocking the unmount
             const cleanup = async () => {
-                try {
-                    if (localTrackRef.current) {
-                        localTrackRef.current.close();
-                        localTrackRef.current = null;
-                        setMicOn(false);
-                    }
-                    remoteTracksRef.current.forEach(track => track.stop());
-                    remoteTracksRef.current.clear();
-                    if (clientRef.current) {
-                        await clientRef.current.leave();
-                        clientRef.current = null;
-                    }
-                    setIsConnected(false);
-                } catch (e) {
-                    console.error('Cleanup error:', e);
+                if (localTrackRef.current) {
+                    localTrackRef.current.close();
+                    localTrackRef.current = null;
+                }
+                if (clientRef.current) {
+                    await clientRef.current.leave();
+                    clientRef.current = null;
                 }
             };
             cleanup();
+            setMicOn(false);
+            setIsConnected(false);
         };
-    }, [channelName]); // REMOVED speakerOn dependency to prevent re-join loops
+    }, [channelName]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Toggle mic
     const toggleMic = () => {
@@ -209,20 +168,16 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
             const newState = !micOn;
             localTrackRef.current.setEnabled(newState);
             setMicOn(newState);
-            console.log('[Voice] Mic:', newState ? 'ON' : 'OFF');
         }
     };
 
-    // Toggle Speaker (Mute/Unmute incoming audio)
+    // Toggle Speaker 
     const toggleSpeaker = () => {
         const newState = !speakerOn;
         setSpeakerOn(newState);
-
-        // Update all existing remote tracks
         remoteTracksRef.current.forEach(track => {
             track.setVolume(newState ? 100 : 0);
         });
-        console.log('[Voice] Speaker:', newState ? 'ON' : 'OFF');
     };
 
     if (!channelName) return null;
@@ -231,18 +186,25 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
         return (
             <div className="flex items-center gap-2 bg-red-50 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-xs">
                 <FaMicrophoneSlash size={12} />
-                <span>{error.slice(0, 15)}...</span>
+                <span>Error: {error.slice(0, 10)}</span>
+                <button onClick={() => window.location.reload()} className="underline font-bold">Retry</button>
             </div>
         );
     }
 
     return (
         <div className="flex items-center gap-2 bg-white/95 backdrop-blur-xl px-3 py-1.5 rounded-full border border-gray-200/50 shadow-sm text-[11px]">
-            {/* Connection Status - Tiny dot */}
-            <div
-                className={`w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-orange-400 animate-pulse'}`}
-                title={status}
-            />
+            {/* Connection Status & Volume Viz */}
+            <div className="relative w-3 h-3 flex items-center justify-center">
+                <div
+                    className={`absolute inset-0 rounded-full opacity-50 transition-all duration-75 ${isConnected ? 'bg-green-500' : 'bg-orange-400'}`}
+                    style={{ transform: `scale(${1 + Math.min(volumeLevel, 1)})` }}
+                />
+                <div
+                    className={`w-2 h-2 rounded-full z-10 ${isConnected ? 'bg-green-500' : 'bg-orange-400 animate-pulse'}`}
+                    title={status}
+                />
+            </div>
 
             <div className="h-4 w-[1px] bg-gray-200 mx-1"></div>
 
@@ -250,13 +212,18 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
             <button
                 onClick={toggleMic}
                 disabled={!isConnected}
-                className={`p-2 rounded-full transition-all active:scale-90 flex items-center justify-center ${micOn
+                className={`group relative p-2 rounded-full transition-all active:scale-90 flex items-center justify-center ${micOn
                     ? 'bg-pw-indigo text-white shadow-sm'
                     : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     } ${!isConnected ? 'opacity-50' : ''}`}
                 title={micOn ? 'Mute Mic' : 'Unmute Mic'}
             >
                 {micOn ? <FaMicrophone size={12} /> : <FaMicrophoneSlash size={12} />}
+
+                {/* Ping animation if talking */}
+                {micOn && volumeLevel > 0.1 && (
+                    <span className="absolute inset-0 rounded-full border border-white/50 animate-ping"></span>
+                )}
             </button>
 
             {/* Speaker Toggle */}
@@ -274,9 +241,9 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
 
             {/* Remote Users Count */}
             {(remoteUsersCount > 0) && (
-                <div className="ml-1 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
-                    <span className="text-green-600 font-bold tabular-nums">{remoteUsersCount}</span>
+                <div className="ml-1 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md transition-all">
                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                    <span className="text-green-600 font-bold tabular-nums">{remoteUsersCount}</span>
                 </div>
             )}
         </div>
