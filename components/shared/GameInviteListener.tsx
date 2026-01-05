@@ -63,15 +63,20 @@ export const GameInviteListener = () => {
 
     return (
         <AnimatePresence>
+            {/* Full-screen overlay container for centering */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: -20, x: '-50%' }}
-                animate={{ opacity: 1, scale: 1, y: 0, x: '-50%' }}
-                exit={{ opacity: 0, scale: 0.8, y: -20, x: '-50%' }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="fixed top-0 left-0 right-0 z-[100] flex justify-center p-4 pt-6 pointer-events-none"
-                style={{}}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-x-0 top-0 z-[100] flex justify-center px-4 pt-4 sm:pt-6 pointer-events-none"
             >
-                <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden ring-1 ring-black/5 pointer-events-auto w-full max-w-sm">
+                {/* The actual popup card */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/50 dark:border-slate-700 shadow-2xl rounded-2xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 relative overflow-hidden ring-1 ring-black/5 pointer-events-auto w-full max-w-[calc(100vw-2rem)] sm:max-w-sm">
                     {/* Premium Progress Bar */}
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100">
                         <motion.div
@@ -118,7 +123,7 @@ export const GameInviteListener = () => {
                             <FaCheck size={14} />
                         </button>
                     </div>
-                </div>
+                </motion.div>
             </motion.div>
         </AnimatePresence>
     );
