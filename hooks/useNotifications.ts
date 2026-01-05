@@ -143,10 +143,31 @@ export const useNotifications = () => {
         const unsubscribe = onMessage(messaging, (payload) => {
             console.log('Foreground message received:', payload);
 
-            // Show toast notification for foreground messages
             const title = payload.notification?.title || 'Padhaku';
             const body = payload.notification?.body || '';
+            const icon = '/padhaku-192.png';
+
+            // 1. Show UI Toast
             toast.success(`${title}: ${body}`, { duration: 5000 });
+
+            // 2. Play Notification Sound
+            try {
+                const audio = new Audio('/notification.mp3'); // We need to add this file or use external
+                audio.play().catch(e => console.log('Audio play failed (interaction needed):', e));
+            } catch (e) { }
+
+            // 3. Trigger System Notification (for Sound/Vibration)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.showNotification(title, {
+                        body: body,
+                        icon: icon,
+                        vibrate: [100, 50, 100],
+                        data: payload.data,
+                        actions: [{ action: 'open', title: 'Open' }]
+                    } as any);
+                });
+            }
         });
 
         return () => {
