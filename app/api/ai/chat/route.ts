@@ -140,9 +140,9 @@ export async function POST(request: NextRequest) {
                             {
                                 role: 'system',
                                 content: `You are an Intent Classifier. Your job is to classify the user's latest message into one of these categories:
-- "WEB_SEARCH": If the user is asking for current events, factual data, syllabus info, or dynamic content.
-- "IMAGE_SEARCH": If the user explicitly asks for images OR if the topic is highly visual (e.g., Biology diagrams, Anatomy, Chemical Structures, Physics setups) where an image would help understanding. Example: "Explain Cockroach anatomy", "Photosynthesis process".
-- "CHAT": For general conversation, coding help, or explaining non-visual concepts.
+- "WEB_SEARCH": If the user is asking for specific facts, current events, dates, or dynamic syllabus info.
+- "IMAGE_SEARCH": If the user asks for images OR if the topic is NATURALLY VISUAL (e.g., "Anatomy of Heart", "Map of India", "Solar System", "Chemical Structure", "Pythagoras Theorem Diagram"). **Rule: If an image would make the explanation 10x better, choose IMAGE_SEARCH.**
+- "CHAT": For general conversation, coding help, or purely theoretical concepts.
 
 Respond ONLY with the category value.`
                             },
@@ -158,7 +158,7 @@ Respond ONLY with the category value.`
 
                         // 2. Execute Tools
                         // Enhanced regex for biology/visual topics
-                        const visualKeywords = /image|photo|diagram|sketch|map|structure|anatomy|cycle|mechanism/i;
+                        const visualKeywords = /image|photo|diagram|sketch|map|structure|anatomy|cycle|mechanism|graph|figure|draw|show|look like/i;
 
                         if (intent.includes('IMAGE') || body.message.match(visualKeywords)) {
                             sendEvent({ status: 'searching_image' });
