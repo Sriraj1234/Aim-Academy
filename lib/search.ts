@@ -1,5 +1,4 @@
-import { execFile } from 'child_process';
-import path from 'path';
+import { GOOGLE_IMG_SCRAP } from 'google-img-scrap';
 
 // DuckDuckGo Instant Answer API
 export async function performWebSearch(query: string): Promise<any[]> {
@@ -47,19 +46,6 @@ export async function performWebSearch(query: string): Promise<any[]> {
             }
         }
 
-        // If DDG empty, try scraper
-        if (results.length === 0) {
-            const scraperResults = await scrapeGoogle(query, 'text');
-            if (scraperResults && scraperResults.length > 0) {
-                return scraperResults.map((r: any) => ({
-                    title: r.title || 'Result',
-                    description: `Source: ${r.originalUrl || 'Web'}`,
-                    url: r.originalUrl || '',
-                    source: 'Google'
-                }));
-            }
-        }
-
         return results;
     } catch (error) {
         console.error('Web Search Error:', error);
@@ -67,35 +53,26 @@ export async function performWebSearch(query: string): Promise<any[]> {
     }
 }
 
-// Google Image Scraper Helper
-async function scrapeGoogle(query: string, type: string): Promise<any[]> {
-    return new Promise<any[]>((resolve) => {
-        const scriptPath = path.join(process.cwd(), 'scripts', 'scrape.cjs');
-        execFile('node', [scriptPath, query, type], { timeout: 10000 }, (error, stdout, stderr) => {
-            if (error) {
-                console.error('[Scraper] Error:', stderr);
-                resolve([]);
-                return;
-            }
-            try {
-                const data = JSON.parse(stdout);
-                resolve(data || []);
-            } catch (parseError) {
-                resolve([]);
-            }
-        });
-    });
-}
-
 export async function performImageSearch(query: string): Promise<any[]> {
-    const rawResults = await scrapeGoogle(query, 'image');
-    if (rawResults && rawResults.length > 0) {
-        return rawResults.map((r: any) => ({
-            title: r.title || "Image",
-            image: r.url,
-            thumbnail: r.thumbnail || r.url,
-            url: r.url
-        }));
+    try {
+        const result = await GOOGLE_IMG_SCRAP({
+            search: query,
+            limit: 10,
+            safeSearch: true,
+            excludeDomains: ["stock.adobe.com", "shutterstock.com", "alamy.com", "istockphoto.com"]
+        });
+
+        if (result && result.result) {
+            return result.result.map((r: any) => ({
+                title: r.title || "Image",
+                image: r.url,
+                thumbnail: r.thumbnail || r.url,
+                url: r.url
+            }));
+        }
+        return [];
+    } catch (error) {
+        console.error('Image Search Error:', error);
+        return [];
     }
-    return [];
 }
