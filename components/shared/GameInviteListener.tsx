@@ -49,6 +49,16 @@ export const GameInviteListener = () => {
         setCurrentInvite(null);
     };
 
+    useEffect(() => {
+        if (!currentInvite) return;
+
+        const timer = setTimeout(() => {
+            handleReject();
+        }, 10000); // 10 seconds auto-dismiss
+
+        return () => clearTimeout(timer);
+    }, [currentInvite]);
+
     if (!currentInvite) return null;
 
     return (
@@ -67,7 +77,7 @@ export const GameInviteListener = () => {
                         <motion.div
                             initial={{ width: '100%' }}
                             animate={{ width: '0%' }}
-                            transition={{ duration: 60, ease: 'linear' }}
+                            transition={{ duration: 10, ease: 'linear' }} // 10s visual timer
                             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
                         />
                     </div>
