@@ -33,6 +33,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
     const [loading, setLoading] = useState(false);
     const [summary, setSummary] = useState<Summary | null>(null);
     const [error, setError] = useState('');
+    const [language, setLanguage] = useState<'english' | 'hindi' | 'hinglish'>('hinglish');
     const [useWebResearch, setUseWebResearch] = useState(false);
     const [sources, setSources] = useState<string[]>([]);
 
@@ -53,7 +54,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                 body: JSON.stringify({
                     subject,
                     chapter,
-                    language: 'hinglish',
+                    language, // Send selected language
                     classLevel: userProfile?.class || '10',
                     board: userProfile?.board || 'CBSE',
                     name: userProfile?.displayName,
@@ -84,6 +85,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
         setSummary(null);
         setError('');
         setSources([]);
+        setLanguage('hinglish');
     };
 
     return (
@@ -176,6 +178,42 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                                 placeholder="e.g., Photosynthesis, The French Revolution..."
                                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-emerald-500/50"
                                             />
+                                        </div>
+
+                                        {/* Language Selection */}
+                                        <div>
+                                            <label className="text-xs text-white/60 uppercase tracking-wider font-bold block mb-2">
+                                                Language Mode
+                                            </label>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <button
+                                                    onClick={() => setLanguage('english')}
+                                                    className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${language === 'english'
+                                                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                                                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    🇬🇧 English
+                                                </button>
+                                                <button
+                                                    onClick={() => setLanguage('hindi')}
+                                                    className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${language === 'hindi'
+                                                        ? 'bg-orange-500/20 border-orange-500 text-orange-400'
+                                                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    🇮🇳 Hindi
+                                                </button>
+                                                <button
+                                                    onClick={() => setLanguage('hinglish')}
+                                                    className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${language === 'hinglish'
+                                                        ? 'bg-purple-500/20 border-purple-500 text-purple-400'
+                                                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    🗣️ Hinglish
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {error && (
