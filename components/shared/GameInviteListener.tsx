@@ -28,7 +28,7 @@ export const GameInviteListener = () => {
         // Check if already in a game/lobby
         const isInGame = window.location.pathname.includes('/play/group/');
         if (isInGame) {
-            const confirmed = window.confirm("You are already in a room. Do you want to leave this room and join the new one?");
+            const confirmed = window.confirm("⚠️ You are already in a lobby!\n\nDo you want to LEAVE your current lobby to join this invite?");
             if (!confirmed) return;
         }
 
@@ -58,10 +58,10 @@ export const GameInviteListener = () => {
                 animate={{ opacity: 1, scale: 1, y: 0, x: '-50%' }}
                 exit={{ opacity: 0, scale: 0.8, y: -20, x: '-50%' }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="fixed top-6 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm md:w-full md:right-6 md:left-auto md:translate-x-0"
-                style={{ translateX: '-50%' }} // Safe fallback for mobile centering
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none md:block md:w-auto md:h-auto md:items-start md:justify-start md:bg-transparent md:inset-auto md:top-6 md:right-6"
+                style={{}} // Remove translateX hack
             >
-                <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden ring-1 ring-black/5">
+                <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden ring-1 ring-black/5 pointer-events-auto min-w-[320px] max-w-sm w-full md:w-96">
                     {/* Premium Progress Bar */}
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100">
                         <motion.div
