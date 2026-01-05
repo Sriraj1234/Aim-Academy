@@ -44,7 +44,7 @@ export default function SuperAdminDashboard() {
     // Authorize New Teacher
     const handleAuthorize = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newTeacher.email || !newTeacher.name || !newTeacher.subject) {
+        if (!newTeacher.email || !newTeacher.name) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -55,7 +55,7 @@ export default function SuperAdminDashboard() {
             const teacherData: TeacherProfile = {
                 email: emailKey,
                 name: newTeacher.name,
-                subject: newTeacher.subject,
+                subject: 'All Subjects', // Global Access
                 phone: newTeacher.phone,
                 authorizedBy: user?.email || 'unknown',
                 authorizedAt: Date.now(),
@@ -101,50 +101,62 @@ export default function SuperAdminDashboard() {
                     <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                         <FaPlus className="text-indigo-600" /> Authorize New Teacher
                     </h2>
-                    <form onSubmit={handleAuthorize} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input
-                            type="email"
-                            placeholder="Teacher Email (Gmail)"
-                            value={newTeacher.email}
-                            onChange={e => setNewTeacher({ ...newTeacher, email: e.target.value })}
-                            className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                            required
-                        />
-                        <input
-                            type="text"
-                            placeholder="Full Name"
-                            value={newTeacher.name}
-                            onChange={e => setNewTeacher({ ...newTeacher, name: e.target.value })}
-                            className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                            required
-                        />
-                        <select
-                            value={newTeacher.subject}
-                            onChange={e => setNewTeacher({ ...newTeacher, subject: e.target.value })}
-                            className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                            required
-                        >
-                            <option value="">Select Subject</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="Science">Science</option>
-                            <option value="English">English</option>
-                            <option value="Social Science">Social Science</option>
-                            <option value="Hindi">Hindi</option>
-                            <option value="Sanskrit">Sanskrit</option>
-                        </select>
-                        <input
-                            type="tel"
-                            placeholder="Phone (Optional)"
-                            value={newTeacher.phone}
-                            onChange={e => setNewTeacher({ ...newTeacher, phone: e.target.value })}
-                            className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                        />
-                        <button
-                            type="submit"
-                            className="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors"
-                        >
-                            Authorize Access
-                        </button>
+                    <form onSubmit={handleAuthorize} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Email Field - Priority */}
+                            <div className="col-span-1 md:col-span-2">
+                                <label className="block text-sm font-bold text-gray-700 mb-1">
+                                    Authorized Gmail Address <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    placeholder="e.g. teacher@gmail.com"
+                                    value={newTeacher.email}
+                                    onChange={e => setNewTeacher({ ...newTeacher, email: e.target.value })}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    required
+                                />
+                                <p className="text-xs text-gray-500 mt-1">This Google email will be whitelisted for Teacher Dashboard access.</p>
+                            </div>
+
+                            {/* Other Details */}
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+                                <input
+                                    type="text"
+                                    placeholder="Teacher Name"
+                                    value={newTeacher.name}
+                                    onChange={e => setNewTeacher({ ...newTeacher, name: e.target.value })}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    required
+                                />
+                            </div>
+
+                            {/* Subject is now Global */}
+                            <div className="hidden">
+                                <input type="hidden" value="All Subjects" />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Phone (Optional)</label>
+                                <input
+                                    type="tel"
+                                    placeholder="Phone Number"
+                                    value={newTeacher.phone}
+                                    onChange={e => setNewTeacher({ ...newTeacher, phone: e.target.value })}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                            >
+                                <FaPlus /> Authorize Gmail Access
+                            </button>
+                        </div>
                     </form>
                 </section>
 
