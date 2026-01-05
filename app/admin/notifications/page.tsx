@@ -253,6 +253,11 @@ export default function AdminNotificationsPage() {
                             <p className="font-bold text-gray-900">Backend Diagnostics (Server):</p>
                             <div className="pl-4">
                                 <p>Firebase Admin Init: {(stats as any)?.debug?.initialized ? '✅ Success' : '❌ FAILED (Mock Mode)'}</p>
+                                {!(stats as any)?.debug?.initialized && (
+                                    <p className="text-red-500 text-xs mt-1 mb-2 font-mono bg-red-50 p-2 rounded border border-red-100 break-all">
+                                        Error: {(stats as any)?.debug?.error || 'Unknown Error'}
+                                    </p>
+                                )}
                                 <p>Project ID: {(stats as any)?.debug?.env?.projectId || 'Unknown'}</p>
                                 <p>Client Email: {(stats as any)?.debug?.env?.clientEmail || 'Unknown'}</p>
                                 <p>Private Key: {(stats as any)?.debug?.env?.privateKey || 'Unknown'}</p>
