@@ -232,6 +232,73 @@ export default function AdminNotificationsPage() {
                     </div>
                 </div>
             </div>
+            <div className="mt-8 border-t pt-8">
+                <details className="bg-gray-100 rounded-xl p-4 cursor-pointer group">
+                    <summary className="font-bold text-gray-700 flex items-center gap-2 select-none">
+                        <FaInfoCircle /> Debug & Configuration
+                    </summary>
+                    <div className="mt-4 space-y-4 text-sm font-mono text-gray-600 bg-white p-4 rounded-lg shadow-inner overflow-x-auto">
+                        <div>
+                            <p className="font-bold text-gray-900">Environment Variables:</p>
+                            <div className="pl-4">
+                                <p>NEXT_PUBLIC_FIREBASE_VAPID_KEY: {process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ? '✅ Configured' : '❌ Missing (Using Fallback)'}</p>
+                                <p>Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '❌ Missing'}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="font-bold text-gray-900">Service Worker Status:</p>
+                            <NotificationDebugger />
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+    );
+}
+
+function NotificationDebugger() {
+    const [status, setStatus] = useState<any>({});
+    const [token, setToken] = useState<string | null>(null);
+
+    useEffect(() => {
+        checkSW();
+    }, []);
+
+    const checkSW = async () => {
+        if (typeof window === 'undefined') return;
+
+        const info: any = {
+            supported: 'serviceWorker' in navigator && 'Notification' in window,
+            permission: Notification.permission,
+        };
+
+        if (info.supported) {
+            const reg = await navigator.serviceWorker.getRegistration();
+            info.hasRegistration = !!reg;
+            info.scope = reg?.scope;
+            info.scriptURL = reg?.active?.scriptURL;
+            info.state = reg?.active?.state;
+        }
+
+        setStatus(info);
+    };
+
+    const copyToken = () => {
+        // Logic to get token manually if needed, or just instruct user to check console
+        // For now just show status
+        // We can import useNotifications if we want to display token
+    };
+
+    return (
+        <div className="pl-4 space-y-1">
+            <p>Supported: {status.supported ? '✅ Yes' : '❌ No'}</p>
+            <p>Permission: {status.permission}</p>
+            <p>Registration: {status.hasRegistration ? '✅ Active' : '❌ Missing'}</p>
+            <p>Script URL: {status.scriptURL || 'N/A'}</p>
+            <div className="mt-2 text-xs text-gray-400">
+                If Script URL is "sw.js" but notifications fail, ensure next.config.ts imports firebase-messaging-sw.js.
+            </div>
         </div>
     );
 }
