@@ -10,6 +10,18 @@ export const ModernModeGrid = () => {
 
     const modes = [
         {
+            id: 'batches',
+            title: 'My Batches',
+            desc: 'View your enrolled courses',
+            icon: FaYoutube,
+            gradient: 'from-rose-500 to-red-500',
+            shadow: 'shadow-rose-500/20',
+            bgGlow: 'bg-rose-500',
+            badge: 'NEW',
+            badgeColor: 'bg-red-600 animate-pulse',
+            delay: 0.1
+        },
+        {
             id: 'group',
             title: 'Play with Friends',
             desc: 'Compete in real-time with your classmates!',
@@ -19,7 +31,7 @@ export const ModernModeGrid = () => {
             bgGlow: 'bg-pw-indigo',
             badge: 'HOT',
             badgeColor: 'bg-pw-red',
-            delay: 0.1
+            delay: 0.15
         },
         {
             id: 'mistakes',
@@ -31,7 +43,7 @@ export const ModernModeGrid = () => {
             bgGlow: 'bg-orange-500',
             badge: 'NEW',
             badgeColor: 'bg-red-500',
-            delay: 0.15
+            delay: 0.2
         },
         {
             id: 'subject',
@@ -43,7 +55,7 @@ export const ModernModeGrid = () => {
             bgGlow: 'bg-blue-500',
             badge: null,
             badgeColor: '',
-            delay: 0.2
+            delay: 0.25
         },
         {
             id: 'chapter',
@@ -88,10 +100,11 @@ export const ModernModeGrid = () => {
                     <Link
                         href={
                             mode.id === 'group' ? '/play/group' :
-                                mode.id === 'mistakes' ? '/mistakes' :
-                                    mode.id === 'subject' ? '/play/selection?mode=subject' :
-                                        mode.id === 'study-hub' ? '/study-hub' : // NEW ROUTE
-                                            '/play/selection'
+                                mode.id === 'batches' ? '/batches' :
+                                    mode.id === 'mistakes' ? '/mistakes' :
+                                        mode.id === 'subject' ? '/play/selection?mode=subject' :
+                                            mode.id === 'study-hub' ? '/study-hub' :
+                                                '/play/selection'
                         }
                         key={mode.id}
                         className="block w-full"
@@ -268,4 +281,3 @@ export const ModernModeGrid = () => {
         </div>
     )
 }
-
