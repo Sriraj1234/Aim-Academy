@@ -125,10 +125,10 @@ export const GamificationCard = () => {
                 </div>
 
                 {/* Main Stats Area - Compact Grid */}
-                <div className="flex items-start gap-4">
+                <div className="flex items-center sm:items-start gap-3 md:gap-4">
 
-                    {/* Level Circular Progress (Left) - Smaller */}
-                    <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
+                    {/* Level Circular Progress (Left) - Smaller on mobile */}
+                    <div className="relative w-14 h-14 md:w-20 md:h-20 flex-shrink-0">
                         {/* SVG Circle - PW Colors */}
                         <svg className="w-full h-full transform -rotate-90">
                             {/* Track */}
@@ -167,14 +167,14 @@ export const GamificationCard = () => {
 
                     {/* XP & Level Info (Right) - Ensure min-w-0 */}
                     <div className="flex-1 w-full min-w-0 flex flex-col justify-center h-full pt-1">
-                        <div className="flex justify-between items-end mb-1.5">
-                            <div>
-                                <p className="text-lg md:text-xl font-black text-pw-violet flex items-center gap-1.5 leading-none">
+                        <div className="flex justify-between items-end mb-1.5 gap-2">
+                            <div className="min-w-0">
+                                <p className="text-base md:text-xl font-black text-pw-violet flex items-center gap-1.5 leading-none truncate">
                                     {stats.xp} <span className="text-[10px] font-bold text-gray-400 self-end mb-0.5">XP</span>
                                 </p>
                             </div>
                             <div className="text-right shrink-0 leading-none">
-                                <p className="text-xs font-bold text-pw-indigo">{xpNeeded} XP Left</p>
+                                <p className="text-[10px] md:text-xs font-bold text-pw-indigo">{xpNeeded} XP Left</p>
                             </div>
                         </div>
 
