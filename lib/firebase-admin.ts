@@ -66,6 +66,7 @@ export const adminDb = {
             console.warn('Firebase Admin not initialized, returning mock');
             // Return a mock that won't crash
             return {
+                id: 'mock',
                 doc: () => ({
                     get: async () => ({ exists: false, data: () => null }),
                     set: async () => { },
@@ -75,10 +76,16 @@ export const adminDb = {
                 where: () => ({
                     get: async () => ({
                         docs: [],
+                        size: 0,
                         forEach: (callback: (doc: any) => void) => { }
                     })
+                }),
+                get: async () => ({
+                    docs: [],
+                    size: 0,
+                    forEach: (callback: (doc: any) => void) => { }
                 })
-            };
+            } as any;
         }
         return admin.firestore().collection(name);
     }
