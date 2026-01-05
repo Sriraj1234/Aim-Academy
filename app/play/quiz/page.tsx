@@ -268,40 +268,42 @@ export default function QuizPage() {
             </AnimatePresence>
 
             {/* Header - PW Style */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-pw-border shadow-pw-sm font-sans">
-                <div className="max-w-5xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between relative">
-                    <div className="flex items-center gap-3 md:gap-4 relative z-10 bg-white/50 backdrop-blur-sm rounded-r-xl pr-2">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-pw-border shadow-pw-sm font-sans transition-all">
+                <div className="max-w-5xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between relative gap-2">
+                    <div className="flex items-center gap-2 md:gap-4 relative z-10 bg-white/50 backdrop-blur-sm rounded-r-xl pr-2 shrink-0">
                         <button
                             onClick={() => router.back()}
                             className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl hover:bg-pw-surface text-gray-500 transition-colors"
                         >
                             <FaChevronLeft className="text-sm md:text-base" />
                         </button>
-                        <div className="flex flex-col">
-                            <h1 className="font-bold text-base md:text-lg text-pw-violet leading-tight capitalize truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">
+                        <div className="flex flex-col text-left">
+                            <h1 className="font-bold text-sm md:text-lg text-pw-violet leading-tight capitalize truncate max-w-[80px] sm:max-w-[120px] md:max-w-xs">
                                 {question.subject}
                             </h1>
-                            <p className="text-[10px] md:text-xs text-pw-indigo font-medium uppercase tracking-wider truncate max-w-[100px] md:max-w-none">
+                            <p className="text-[10px] md:text-xs text-pw-indigo font-medium uppercase tracking-wider truncate max-w-[80px] sm:max-w-[120px] md:max-w-xs">
                                 {question.mainSubject || question.subSubject || 'General'}
                             </p>
                         </div>
                     </div>
 
-                    {/* Centered Timer - Visible on all screens now with responsive width */}
-                    <div className="absolute left-1/2 -translate-x-1/2 w-28 sm:w-32 md:w-48 top-1/2 -translate-y-1/2">
-                        <ModernTimer duration={totalTime} current={timeLeft} className="w-full scale-90 md:scale-100 origin-center" />
+                    {/* Timer - Flex grow to take available space but centered properly if possible, or just placed nicely */}
+                    <div className="flex-1 flex justify-center items-center min-w-0">
+                        <div className="w-20 sm:w-28 md:w-48">
+                            <ModernTimer duration={totalTime} current={timeLeft} className="w-full scale-100 origin-center" />
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 md:gap-3 relative z-10 bg-white/50 backdrop-blur-sm rounded-l-xl pl-2">
+                    <div className="flex items-center gap-1.5 md:gap-3 relative z-10 bg-white/50 backdrop-blur-sm rounded-l-xl pl-2 shrink-0">
                         <button
                             onClick={() => toggleBookmark(question.id)}
-                            className={`w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl transition-colors ${bookmarks.includes(question.id) ? 'bg-pw-red/10 text-pw-red' : 'bg-pw-surface text-gray-400 hover:text-pw-indigo'}`}
+                            className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl transition-colors ${bookmarks.includes(question.id) ? 'bg-pw-red/10 text-pw-red' : 'bg-pw-surface text-gray-400 hover:text-pw-indigo'}`}
                         >
-                            {bookmarks.includes(question.id) ? <FaBookmark size={14} /> : <FaRegBookmark size={14} />}
+                            {bookmarks.includes(question.id) ? <FaBookmark size={12} className="md:text-sm" /> : <FaRegBookmark size={12} className="md:text-sm" />}
                         </button>
 
                         <button
-                            className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-pw-surface text-gray-600 hover:bg-pw-border transition-colors border border-pw-border"
+                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-pw-surface text-gray-600 hover:bg-pw-border transition-colors border border-pw-border"
                             onClick={isRunning ? pauseTimer : resumeTimer}
                         >
                             {isRunning ? <FaPause className="text-[10px] md:text-xs" /> : <FaPlay className="text-[10px] md:text-xs" />}
@@ -320,10 +322,10 @@ export default function QuizPage() {
                 </div>
             </header>
 
-            <main className="pt-20 md:pt-24 px-3 md:px-4 max-w-3xl mx-auto relative z-10 pb-36 md:pb-32">
+            <main className="pt-20 md:pt-28 px-4 md:px-4 max-w-3xl mx-auto relative z-10 pb-40 md:pb-32">
                 {/* Stats Row */}
-                <div className="flex items-center justify-between mb-6 md:mb-8 px-1">
-                    <span className="text-xs md:text-sm font-bold text-pw-indigo uppercase tracking-widest bg-pw-indigo/5 px-2 md:px-3 py-1 rounded-lg">
+                <div className="flex items-center justify-between mb-4 md:mb-8 px-1">
+                    <span className="text-[10px] md:text-sm font-bold text-pw-indigo uppercase tracking-widest bg-pw-indigo/5 px-2 md:px-3 py-1 rounded-lg">
                         Ques {currentQuestionIndex + 1} <span className="text-gray-400">/ {questions.length}</span>
                     </span>
                     <div className="flex items-center gap-2 md:gap-3">
@@ -336,7 +338,7 @@ export default function QuizPage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-[1.5rem] md:rounded-3xl p-5 md:p-8 shadow-pw-lg border border-pw-border mb-8 relative overflow-hidden">
+                <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-pw-lg border border-pw-border mb-8 relative overflow-hidden">
                     {/* Decorative Top Accent */}
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pw-indigo via-pw-violet to-pw-indigo opacity-50" />
 
@@ -345,9 +347,9 @@ export default function QuizPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         key={currentQuestionIndex + '-text'}
-                        className="mb-6 md:mb-8"
+                        className="mb-6 md:mb-8 text-left"
                     >
-                        <h2 className="text-lg md:text-2xl font-display font-bold text-pw-violet leading-relaxed mb-4 md:mb-6">
+                        <h2 className="text-base md:text-2xl font-display font-bold text-pw-violet leading-relaxed mb-3 md:mb-6 text-left">
                             {question.question}
                         </h2>
 
@@ -400,52 +402,54 @@ export default function QuizPage() {
 
 
                 {/* Floating Bottom Bar */}
-                <div className="fixed bottom-2 md:bottom-4 left-2 right-2 md:left-4 md:right-4 z-40 max-w-3xl mx-auto">
-                    <div className="bg-white/90 backdrop-blur-md p-2 md:p-4 rounded-[1.5rem] shadow-pw-xl border border-pw-border flex items-center justify-between gap-2 md:gap-4">
+                <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-white via-white to-transparent pointer-events-none">
+                    <div className="max-w-3xl mx-auto pointer-events-auto">
+                        <div className="bg-white/90 backdrop-blur-md p-2 md:p-4 rounded-[1.5rem] shadow-pw-xl border border-pw-border flex items-center justify-between gap-2 md:gap-4">
 
-                        {/* Previous Button */}
-                        <Button
-                            variant="ghost"
-                            onClick={prevQuestion}
-                            disabled={currentQuestionIndex === 0}
-                            className="w-12 h-12 md:w-auto md:px-6 rounded-full shrink-0 flex items-center justify-center hover:bg-pw-surface"
-                        >
-                            <FaStepBackward />
-                            <span className="hidden md:inline ml-2">Prev</span>
-                        </Button>
-
-                        {/* Lock Answer (Center) */}
-                        <div className="flex-grow">
+                            {/* Previous Button */}
                             <Button
-                                fullWidth
-                                size="xl"
-                                disabled={selectedOption === null && !isLocked}
-                                onClick={handleLockAnswer}
-                                className={`
-                                    rounded-xl text-lg shadow-lg transition-all h-12 font-bold
-                                    ${isLocked
-                                        ? 'bg-pw-surface text-gray-400 cursor-not-allowed shadow-none border border-pw-border'
-                                        : 'bg-pw-indigo hover:bg-pw-violet text-white shadow-pw-indigo/30'
-                                    }
-                                `}
+                                variant="ghost"
+                                onClick={prevQuestion}
+                                disabled={currentQuestionIndex === 0}
+                                className="w-10 h-10 md:w-auto md:px-6 rounded-full shrink-0 flex items-center justify-center hover:bg-pw-surface"
                             >
-                                {isLocked ? 'Next Question...' : 'Lock Answer'}
+                                <FaStepBackward />
+                                <span className="hidden md:inline ml-2">Prev</span>
+                            </Button>
+
+                            {/* Lock Answer (Center) */}
+                            <div className="flex-grow">
+                                <Button
+                                    fullWidth
+                                    size="xl"
+                                    disabled={selectedOption === null && !isLocked}
+                                    onClick={handleLockAnswer}
+                                    className={`
+                                        rounded-xl text-sm md:text-lg shadow-lg transition-all h-10 md:h-12 font-bold
+                                        ${isLocked
+                                            ? 'bg-pw-surface text-gray-400 cursor-not-allowed shadow-none border border-pw-border'
+                                            : 'bg-pw-indigo hover:bg-pw-violet text-white shadow-pw-indigo/30'
+                                        }
+                                    `}
+                                >
+                                    {isLocked ? 'Next Question...' : 'Lock Answer'}
+                                </Button>
+                            </div>
+
+                            {/* Skip Button */}
+                            <Button
+                                variant="secondary"
+                                onClick={() => {
+                                    setIsLocked(false)
+                                    setSelectedOption(null)
+                                    skipQuestion()
+                                }}
+                                className="w-10 h-10 md:w-auto md:px-6 rounded-full md:rounded-2xl shrink-0 flex items-center justify-center text-gray-500 hover:text-gray-700"
+                            >
+                                <span className="hidden md:inline mr-2">Skip</span>
+                                <FaStepForward />
                             </Button>
                         </div>
-
-                        {/* Skip Button */}
-                        <Button
-                            variant="secondary"
-                            onClick={() => {
-                                setIsLocked(false)
-                                setSelectedOption(null)
-                                skipQuestion()
-                            }}
-                            className="w-12 h-12 md:w-auto md:px-6 rounded-full md:rounded-2xl shrink-0 flex items-center justify-center text-gray-500 hover:text-gray-700"
-                        >
-                            <span className="hidden md:inline mr-2">Skip</span>
-                            <FaStepForward />
-                        </Button>
                     </div>
                 </div>
             </main >
