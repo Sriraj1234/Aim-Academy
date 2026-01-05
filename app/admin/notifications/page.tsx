@@ -261,6 +261,8 @@ export default function AdminNotificationsPage() {
                                 <p>Project ID: {(stats as any)?.debug?.env?.projectId || 'Unknown'}</p>
                                 <p>Client Email: {(stats as any)?.debug?.env?.clientEmail || 'Unknown'}</p>
                                 <p>Private Key: {(stats as any)?.debug?.env?.privateKey || 'Unknown'}</p>
+                                <p>Key Length: {(stats as any)?.debug?.env?.keyLength || 0} chars (Should be ~1700)</p>
+                                <p className="font-mono text-xs bg-gray-50 p-1 rounded mt-1">Preview: {(stats as any)?.debug?.env?.keyPreview || 'N/A'}</p>
                             </div>
                         </div>
                     </div>
