@@ -391,27 +391,51 @@ input[type='number'] {
 }
 
 /* Base styles / Reset */
-/* Note: Tailwind v4 handles standard element resets internally or via @layer base if needed.
-   For now, keeping explicit transitions as per original globals.css */
+/* PERFORMANCE: Remove blanket transitions - they cause jank */
+/* Only apply transitions to specific interactive elements */
 
-* {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
+/* Hardware acceleration for smoother animations */
+.transform,
+[class*="animate-"],
+.glass,
+.glass-dark,
+.pw-card,
+.glass-card {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
+/* Interactive elements get fast transitions */
 button,
 a,
 input,
 select,
 textarea {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
+  transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* Cards and surfaces get slightly slower transitions */
+.pw-card,
+.glass-card {
+  transition: transform 200ms ease, box-shadow 200ms ease;
 }
 
 button {
   font-family: inherit;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .shimmer {
@@ -419,4 +443,33 @@ button {
   animation: var(--animate-shimmer);
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 1000px 100%;
+}
+
+/* Custom scrollbar for flashcards and other scroll areas */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Perspective for 3D card flips */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
