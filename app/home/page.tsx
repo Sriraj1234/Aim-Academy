@@ -40,8 +40,8 @@ export default function DashboardPage() {
                             <AIPerformanceCard />
 
                             {/* Stats Overview */}
-                            <div className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-md">
-                                <h3 className="text-lg font-bold text-pw-violet mb-4 flex items-center gap-2">
+                            <div className="bg-white rounded-2xl p-3 md:p-5 border border-pw-border shadow-pw-md">
+                                <h3 className="text-lg font-bold text-pw-violet mb-3 md:mb-4 flex items-center gap-2">
                                     <span className="text-xl">📊</span> Overview
                                 </h3>
                                 <StatsOverview />
