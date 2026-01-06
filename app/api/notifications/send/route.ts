@@ -125,7 +125,7 @@ export async function PUT(request: NextRequest) {
             .get();
 
         const tokens: string[] = [];
-        usersSnapshot.forEach(doc => {
+        usersSnapshot.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
             const token = doc.data().fcmToken;
             if (token) tokens.push(token);
         });
@@ -168,11 +168,24 @@ export async function PUT(request: NextRequest) {
         const response = await adminMessaging.sendEachForMulticast(message);
         console.log(`Bulk notification sent: ${response.successCount} success, ${response.failureCount} failures`);
 
+        // Log detailed failure info
+        if (response.failureCount > 0) {
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    console.error(`❌ Token ${idx} failed:`, resp.error?.code, resp.error?.message);
+                }
+            });
+        }
+
         return NextResponse.json({
             success: true,
             sent: response.successCount,
             failed: response.failureCount,
             notificationId: docRef.id,
+            // Include failure details in response for debugging
+            failureDetails: response.responses
+                .filter(r => !r.success)
+                .map((r, i) => ({ tokenIndex: i, code: r.error?.code, message: r.error?.message }))
         });
 
     } catch (error: any) {
