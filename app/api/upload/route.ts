@@ -40,6 +40,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ url: result.secure_url });
     } catch (error) {
         console.error("❌ Upload Route Crash:", error);
-        return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+        console.error("❌ Upload Route Crash:", error);
+        return NextResponse.json({
+            error: error instanceof Error ? error.message : "Unknown upload error",
+            details: error
+        }, { status: 500 });
     }
 }
