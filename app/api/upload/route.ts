@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
         const file = formData.get('file') as File;
 
         if (!file) {
-            return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+            return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
         const arrayBuffer = await file.arrayBuffer();
@@ -15,7 +15,10 @@ export async function POST(req: NextRequest) {
 
         const result = await new Promise<any>((resolve, reject) => {
             cloudinary.uploader.upload_stream(
-                { folder: 'aim_academy/lens_snaps' },
+                {
+                    folder: 'batches',
+                    resource_type: 'auto'
+                },
                 (error, result) => {
                     if (error) reject(error);
                     else resolve(result);
@@ -24,9 +27,8 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ url: result.secure_url });
-
-    } catch (error: any) {
-        console.error("Upload Error:", error);
+    } catch (error) {
+        console.error("Upload error:", error);
         return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 }
