@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaMoon, FaWifi, FaGraduationCap, FaFileAlt, FaShoppingCart, FaBolt, FaHandsHelping, FaBook, FaLaptopCode, FaDesktop, FaBookOpen, FaDownload, FaShareAlt, FaUserCircle, FaGem, FaCamera, FaLightbulb, FaPaperPlane, FaInfoCircle, FaHeadset, FaShieldAlt } from 'react-icons/fa';
+import { FaTimes, FaMoon, FaWifi, FaGraduationCap, FaFileAlt, FaShoppingCart, FaBolt, FaHandsHelping, FaBook, FaLaptopCode, FaDesktop, FaBookOpen, FaDownload, FaShareAlt, FaUserCircle, FaGem, FaCamera, FaLightbulb, FaPaperPlane, FaInfoCircle, FaHeadset, FaShieldAlt, FaChalkboardTeacher } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import Link from 'next/link';
@@ -33,6 +33,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         { icon: FaBook, label: 'Wisdom Book', href: '/wisdom', isNew: true },
         { icon: FaHandsHelping, label: 'AI Guru', href: '/live-guru' },
         { icon: FaGraduationCap, label: 'Leaderboard', href: '/leaderboard' },
+        { icon: FaChalkboardTeacher, label: 'Teacher Panel', href: '/teachers/admin' },
         { icon: FaMoon, label: 'Settings', isDivider: true },
         { icon: FaLightbulb, label: 'Request Feature', action: () => setIsRequestOpen(true) },
         { icon: FaMoon, label: 'Dark Mode', isToggle: true, action: toggleTheme },
