@@ -9,11 +9,8 @@ if (fs.existsSync(envLocalPath)) {
     console.log('Keys found in .env.local:');
     Object.keys(envConfig).forEach(key => {
         const val = envConfig[key];
-        console.log(`${key}: ${val ? val.substring(0, 5) + '...' : 'empty'}`);
-        if (key === 'GROQ_API_KEY') {
-            const cleanVal = val.trim();
-            console.log(`GROQ_API_KEY length: ${cleanVal.length}`);
-            console.log(`GROQ_API_KEY starts with: ${cleanVal.substring(0, 4)}`);
+        if (key.includes('CLOUDINARY') || key.includes('KEY')) {
+            console.log(`${key}: ${val ? val.substring(0, 5) + '...' : 'empty'}`);
         }
     });
 } else {
