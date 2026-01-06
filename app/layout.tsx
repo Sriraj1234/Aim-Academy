@@ -13,6 +13,7 @@ import { NotificationPrompt } from '@/components/shared/NotificationPrompt'
 
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SoundProvider } from '@/context/SoundContext'
+import { AdSense } from '@/components/shared/AdSense'
 
 const outfit = Outfit({
   variable: '--font-outfit',
@@ -46,6 +47,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Padhaku",
   },
+  other: {
+    "google-adsense-account": "ca-pub-5831377967238754",
+  },
 }
 
 export const viewport = {
@@ -73,6 +77,7 @@ export default function RootLayout({
         className={`${outfit.variable} ${spaceGrotesk.variable} ${notoSans.variable} antialiased selection:bg-purple-500 selection:text-white overflow-x-hidden w-full`}
         suppressHydrationWarning
       >
+        <AdSense />
         <AuthProvider>
           <ThemeProvider>
             <QuizProvider>
