@@ -65,10 +65,15 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
         clientRef.current = client;
 
-        const init = async () => {
+        const init = async (retryCount = 0) => {
             try {
-                setStatus('Getting token...');
-                const tokenUrl = `/api/agora?channelName=${channelName}&uid=${sessionUid}`;
+                // If retrying, append random suffix to avoid conflict
+                const currentUid = retryCount > 0
+                    ? `${sessionUid}_${Math.floor(Math.random() * 1000)}`
+                    : sessionUid;
+
+                setStatus(retryCount > 0 ? 'Retrying...' : 'Getting token...');
+                const tokenUrl = `/api/agora?channelName=${channelName}&uid=${currentUid}`;
 
                 const res = await fetch(tokenUrl);
                 if (!res.ok) throw new Error(`Token Error: ${res.status}`);
@@ -79,7 +84,7 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
                 setStatus('Joining...');
 
                 // Join
-                await client.join(AGORA_APP_ID, channelName, data.token, sessionUid);
+                await client.join(AGORA_APP_ID, channelName, data.token, currentUid);
 
                 if (!isMounted) return;
                 setIsConnected(true);
@@ -107,6 +112,14 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
 
             } catch (err: any) {
                 console.error('[Voice] Error:', err);
+
+                // Handle UID Conflict (e.g. creating multiple tabs or strict mode race)
+                if (err.code === 'UID_CONFLICT' && retryCount < 2) {
+                    console.log('[Voice] UID Conflict, retrying with new UID...');
+                    await init(retryCount + 1);
+                    return;
+                }
+
                 if (isMounted) {
                     setError(err.message || 'Connection failed');
                     setStatus('Error');
