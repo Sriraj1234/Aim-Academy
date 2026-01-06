@@ -19,10 +19,10 @@ export default function StorePage() {
     useEffect(() => {
         const fetchBatches = async () => {
             try {
-                // Fetch all active batches
+                // Fetch all active and upcoming batches
                 const q = query(
                     collection(db, 'batches'),
-                    where('status', '==', 'active'),
+                    where('status', 'in', ['active', 'upcoming']),
                     // orderBy('createdAt', 'desc') // Requires index, avoiding for now to prevent errors
                 );
 
