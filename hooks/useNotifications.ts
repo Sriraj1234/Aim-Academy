@@ -28,7 +28,21 @@ export const useNotifications = () => {
     const saveToken = useCallback(async () => {
         try {
             const messaging = getMessaging(app);
-            const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || 'BIXVNyIxta1PgGJ0sldAJo7_4e_um_1FxIgXNTOUp7RU4quMpE1uSN0y-ZLuESg2zVHr_O9t36WjoOLZ5uISMMs';
+            // Using hardcoded key to prevent environment variable caching issues
+            const vapidKey = 'BCph9csjTz0IwHdajt6xfzIYE_0feFWkqJsJNTEIJBXBEDPZMdi8lJneckXUn0RWgIXu5ywM3qoBb7XTFfb2Tic';
+
+            // Force unregister old workers to clear bad state
+            if ('serviceWorker' in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (const reg of regs) {
+                    // unregister if it's the old one or if we want to force refresh
+                    // console.log('Found SW:', reg.scope);
+                    // await reg.unregister(); 
+                    // actually, let's not unregister potentially valid ones unless we are sure.
+                    // But for debugging, maybe we should?
+                    // Let's rely on update instead.
+                }
+            }
 
             if (!vapidKey) {
                 console.error('VAPID key not configured');
