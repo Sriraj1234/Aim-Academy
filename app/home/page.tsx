@@ -60,7 +60,9 @@ export default function DashboardPage() {
 
                         {/* Right Column: AI Tools & Extras */}
                         <div className="space-y-6">
-                            <OfflineTuitionCard />
+                            <div className="hidden lg:block">
+                                <OfflineTuitionCard />
+                            </div>
 
                             <div className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-md">
                                 <h3 className="text-lg font-bold text-pw-violet mb-4 flex items-center gap-2">
@@ -77,6 +79,12 @@ export default function DashboardPage() {
                             <BookmarkedQuestionsSection />
                             <NotesSection />
                         </div>
+
+                        {/* Mobile Only: Offline Tuition at Bottom */}
+                        <div className="px-4 max-w-7xl mx-auto block lg:hidden pb-6">
+                            <OfflineTuitionCard />
+                        </div>
+
                     </div>
                 </div>
             </main>
