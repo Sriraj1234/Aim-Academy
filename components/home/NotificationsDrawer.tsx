@@ -88,8 +88,26 @@ export const NotificationsDrawer = ({ isOpen, onClose }: NotificationsDrawerProp
     }
 
     const clearAll = async () => {
-        // Mark all as read locally
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        if (!user?.uid || notifications.length === 0) return;
+
+        try {
+            // Import writeBatch and deleteDoc
+            const { writeBatch, deleteDoc, doc } = await import('firebase/firestore');
+            const batch = writeBatch(db);
+
+            // Delete all notifications
+            notifications.forEach((notif) => {
+                const notifRef = doc(db, 'notifications', notif.id);
+                batch.delete(notifRef);
+            });
+
+            await batch.commit();
+
+            // Clear local state
+            setNotifications([]);
+        } catch (error) {
+            console.error('Error clearing notifications:', error);
+        }
     }
 
     const markAsRead = async (id: string) => {
