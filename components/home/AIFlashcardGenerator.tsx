@@ -119,27 +119,33 @@ export const AIFlashcardGenerator = () => {
     // 1. Flashcard Display (Inside Modal)
     const renderFlashcardView = () => (
         <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span className="p-1.5 bg-yellow-500/20 text-yellow-400 rounded-lg"><FaLightbulb /></span>
-                    {topic}
+            {/* Header - responsive */}
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 truncate max-w-[60%]">
+                    <span className="p-1 sm:p-1.5 bg-yellow-500/20 text-yellow-400 rounded-lg shrink-0"><FaLightbulb className="text-sm sm:text-base" /></span>
+                    <span className="truncate">{topic}</span>
                 </h3>
-                <button onClick={resetToGenerator} className="text-xs font-bold text-white/60 hover:text-white flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-all">
-                    <FaRedo className="text-[10px]" /> New
+                <button onClick={resetToGenerator} className="text-[10px] sm:text-xs font-bold text-white/60 hover:text-white flex items-center gap-1.5 sm:gap-2 bg-white/5 hover:bg-white/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-all shrink-0">
+                    <FaRedo className="text-[8px] sm:text-[10px]" /> New
                 </button>
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
-                <div className="relative w-full max-w-sm aspect-[4/3] perspective-1000 group cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+            {/* Flashcard container - responsive height */}
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[250px] sm:min-h-[300px] md:min-h-[350px]">
+                {/* Card wrapper - responsive sizing */}
+                <div
+                    className="relative w-full max-w-[280px] sm:max-w-sm md:max-w-md h-[200px] sm:h-[240px] md:h-[280px] perspective-1000 group cursor-pointer"
+                    onClick={() => setIsFlipped(!isFlipped)}
+                >
                     <motion.div
-                        className="absolute inset-0 rounded-[2rem] shadow-2xl backface-hidden transition-all duration-500"
+                        className="absolute inset-0 rounded-xl sm:rounded-2xl md:rounded-[2rem] shadow-2xl backface-hidden transition-all duration-500"
                         animate={{ rotateY: isFlipped ? 180 : 0 }}
                         initial={false}
                         transition={{ duration: 0.5, type: "spring", stiffness: 260, damping: 20 }}
                         style={{ transformStyle: 'preserve-3d' }}
                     >
                         {/* Front */}
-                        <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-[2rem] p-6 flex flex-col items-center justify-center text-white backface-hidden shadow-inner ring-1 ring-white/20 overflow-hidden ${isFlipped ? 'invisible' : ''}`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-4 sm:p-5 md:p-6 flex flex-col items-center justify-center text-white backface-hidden shadow-inner ring-1 ring-white/20 overflow-hidden ${isFlipped ? 'invisible' : ''}`}>
                             {/* Background Image */}
                             {flashcards[currentIndex].imageUrl && (
                                 <div
@@ -149,31 +155,50 @@ export const AIFlashcardGenerator = () => {
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
 
-                            <div className="absolute top-4 left-4 text-white/60 font-bold text-[10px] tracking-[0.2em] uppercase z-10">Term</div>
-                            <h4 className="text-2xl font-black text-center drop-shadow-lg leading-tight z-10">{flashcards[currentIndex].term}</h4>
-                            <div className="absolute bottom-4 opacity-80 text-[10px] bg-black/30 px-3 py-1 rounded-full z-10 backdrop-blur-sm">Tap to Flip</div>
+                            <div className="absolute top-2 sm:top-3 md:top-4 left-3 sm:left-4 text-white/60 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase z-10">Term</div>
+                            <h4 className="text-lg sm:text-xl md:text-2xl font-black text-center drop-shadow-lg leading-tight z-10 px-2">{flashcards[currentIndex].term}</h4>
+                            <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 opacity-80 text-[8px] sm:text-[9px] md:text-[10px] bg-black/30 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full z-10 backdrop-blur-sm">Tap to Flip</div>
                         </div>
 
                         {/* Back */}
-                        <div className={`absolute inset-0 bg-[#0f0a1f] rounded-[2rem] p-5 flex flex-col text-white backface-hidden border border-white/10 shadow-xl overflow-hidden ${!isFlipped ? 'invisible' : ''}`} style={{ transform: 'rotateY(180deg)' }}>
-                            <div className="text-emerald-400 font-bold text-[10px] tracking-[0.2em] uppercase mb-2">Definition</div>
-                            <p className="text-sm font-medium leading-relaxed text-white/90 flex-1 overflow-y-auto custom-scrollbar">{flashcards[currentIndex].definition}</p>
+                        <div
+                            className={`absolute inset-0 bg-[#0f0a1f] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-3 sm:p-4 md:p-5 flex flex-col text-white backface-hidden border border-white/10 shadow-xl ${!isFlipped ? 'invisible' : ''}`}
+                            style={{ transform: 'rotateY(180deg)' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="text-emerald-400 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase mb-1.5 sm:mb-2 shrink-0">Definition</div>
+                            <div
+                                className="flex-1 overflow-y-scroll custom-scrollbar overscroll-contain pr-1 sm:pr-2"
+                                style={{
+                                    touchAction: 'pan-y',
+                                    maxHeight: 'calc(100% - 40px)',
+                                    WebkitOverflowScrolling: 'touch'
+                                }}
+                                onWheel={(e) => e.stopPropagation()}
+                            >
+                                <p className="text-xs sm:text-sm font-medium leading-relaxed text-white/90">{flashcards[currentIndex].definition}</p>
 
-                            {flashcards[currentIndex].example && (
-                                <div className="mt-3 pt-3 border-t border-white/10">
-                                    <div className="text-yellow-400 font-bold text-[10px] tracking-[0.2em] uppercase mb-1">💡 Example</div>
-                                    <p className="text-xs text-white/70 leading-relaxed">{flashcards[currentIndex].example}</p>
-                                </div>
-                            )}
+                                {flashcards[currentIndex].example && (
+                                    <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-white/10">
+                                        <div className="text-yellow-400 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase mb-1">💡 Example</div>
+                                        <p className="text-[10px] sm:text-xs text-white/70 leading-relaxed">{flashcards[currentIndex].example}</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="text-center text-[8px] sm:text-[9px] md:text-[10px] text-white/30 mt-1.5 sm:mt-2 shrink-0">↕️ Scroll to read more</div>
                         </div>
                     </motion.div>
                 </div>
 
-                {/* Controls */}
-                <div className="flex items-center gap-6 mt-8">
-                    <button onClick={prevCard} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 text-white flex items-center justify-center transition-colors"><FaArrowLeft /></button>
-                    <span className="text-white/40 text-xs font-mono">{currentIndex + 1} / {flashcards.length}</span>
-                    <button onClick={nextCard} className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-105 transition-transform"><FaArrowRight /></button>
+                {/* Controls - responsive */}
+                <div className="flex items-center gap-4 sm:gap-5 md:gap-6 mt-5 sm:mt-6 md:mt-8">
+                    <button onClick={prevCard} className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-white/20 text-white flex items-center justify-center transition-colors active:scale-95">
+                        <FaArrowLeft className="text-sm sm:text-base" />
+                    </button>
+                    <span className="text-white/40 text-[10px] sm:text-xs font-mono">{currentIndex + 1} / {flashcards.length}</span>
+                    <button onClick={nextCard} className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform">
+                        <FaArrowRight className="text-sm sm:text-base" />
+                    </button>
                 </div>
             </div>
         </div>
