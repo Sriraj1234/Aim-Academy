@@ -190,7 +190,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                             </button>
                                         </div>
                                     ) : (
-                                        filteredFriends.map((friend: Friend, idx: number) => (
+                                        friends.map((friend: Friend, idx: number) => (
                                             <motion.div
                                                 key={friend.uid}
                                                 initial={{ opacity: 0, y: 10 }}
