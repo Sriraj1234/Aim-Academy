@@ -63,3 +63,13 @@ export const uploadBatchThumbnail = async (file: File) => {
         throw error;
     }
 };
+
+export const deleteBatch = async (batchId: string) => {
+    try {
+        await deleteDoc(doc(db, BATCHES_COLLECTION, batchId));
+        console.log(`Batch ${batchId} deleted successfully`);
+    } catch (error) {
+        console.error("Error deleting batch:", error);
+        throw error;
+    }
+};

@@ -4,9 +4,10 @@ import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { FaChalkboardTeacher, FaPlus, FaLayerGroup, FaLock } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaPlus, FaLayerGroup, FaLock, FaTrash } from 'react-icons/fa';
 import BatchForm from '@/components/teachers/BatchForm';
-import { getBatchesByTeacher } from '@/utils/batchService';
+import BatchContentManager from '@/components/teachers/BatchContentManager';
+import { getBatchesByTeacher, deleteBatch } from '@/utils/batchService';
 import { Batch } from '@/data/types';
 import { toast } from 'react-hot-toast';
 
@@ -19,6 +20,9 @@ export default function TeacherAdminPage() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [myBatches, setMyBatches] = useState<Batch[]>([]);
 
+    // Content Management State
+    const [activeBatchForContent, setActiveBatchForContent] = useState<{ id: string, name: string } | null>(null);
+
     const fetchBatches = async (email: string) => {
         try {
             const batches = await getBatchesByTeacher(email);
@@ -26,6 +30,21 @@ export default function TeacherAdminPage() {
         } catch (error) {
             console.error(error);
             toast.error("Failed to load batches");
+        }
+    };
+
+    const handleDeleteBatch = async (batchId: string, batchName: string) => {
+        if (!confirm(`Are you sure you want to delete "${batchName}"? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            await deleteBatch(batchId);
+            toast.success("Batch deleted successfully");
+            if (user?.email) fetchBatches(user.email);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete batch");
         }
     };
 
@@ -116,8 +135,8 @@ export default function TeacherAdminPage() {
                         <button
                             onClick={() => setActiveTab('batches')}
                             className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'batches'
-                                    ? 'border-brand-500 text-brand-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-brand-500 text-brand-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             My Batches ({myBatches.length})
@@ -160,7 +179,28 @@ export default function TeacherAdminPage() {
 
                                     <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
                                         <span className="bg-gray-100 px-2 py-1 rounded">{batch.subjects.length} Subjects</span>
-                                        <span className="font-bold text-brand-600">₹{batch.price}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-brand-600">₹{batch.price}</span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveBatchForContent({ id: batch.id, name: batch.name });
+                                                }}
+                                                className="px-2 py-1 text-xs bg-brand-50 text-brand-600 font-bold rounded hover:bg-brand-100 transition-colors"
+                                            >
+                                                Manage Content
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteBatch(batch.id, batch.name);
+                                                }}
+                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                                title="Delete Batch"
+                                            >
+                                                <FaTrash size={12} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -185,6 +225,19 @@ export default function TeacherAdminPage() {
                                 if (user?.email) fetchBatches(user.email);
                             }} />
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Batch Content Manager Modal */}
+            {activeBatchForContent && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-3xl h-[80vh] shadow-2xl overflow-hidden">
+                        <BatchContentManager
+                            batchId={activeBatchForContent.id}
+                            batchName={activeBatchForContent.name}
+                            onClose={() => setActiveBatchForContent(null)}
+                        />
                     </div>
                 </div>
             )}
