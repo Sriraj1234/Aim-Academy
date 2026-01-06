@@ -32,6 +32,7 @@ export const useNotifications = () => {
 
             if (!vapidKey) {
                 console.error('VAPID key not configured');
+                toast.error('System Error: VAPID key missing. Contact support.');
                 return null;
             }
 
@@ -40,7 +41,13 @@ export const useNotifications = () => {
 
             if (!registration) {
                 console.log('[FCM] No existing SW found, registering new one...');
-                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                try {
+                    registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                } catch (swError: any) {
+                    console.error('SW Registration failed:', swError);
+                    toast.error(`Service Worker Error: ${swError?.message || 'Unknown'}`);
+                    return null;
+                }
             } else {
                 console.log('[FCM] Using existing service worker:', registration.scope);
             }
@@ -90,9 +97,19 @@ export const useNotifications = () => {
                     console.log('FCM token saved to Firestore');
                 }
                 return token;
+            } else {
+                toast.error('Failed to generate FCM token. Check network.');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error getting/saving token:', error);
+            const msg = error?.message || 'Unknown error';
+            if (msg.includes('permission')) {
+                toast.error('Notification permission denied by browser.');
+            } else if (msg.includes('no active Service Worker')) {
+                toast.error('System Error: Service Worker not active.');
+            } else {
+                toast.error(`Notification Error: ${msg}`);
+            }
         }
         return null;
     }, [user]);
@@ -101,6 +118,7 @@ export const useNotifications = () => {
     const requestPermission = useCallback(async () => {
         if (!isSupported) {
             console.log('Notifications not supported');
+            toast.error('Notifications not supported on this device/browser.');
             return null;
         }
 
@@ -109,13 +127,17 @@ export const useNotifications = () => {
             setPermission(result);
 
             if (result === 'granted') {
-                return await saveToken();
+                toast.loading('Enabling notifications...');
+                const token = await saveToken();
+                if (token) toast.success('Notifications enabled successfully!');
+                return token;
             } else {
                 console.log('Notification permission denied');
-                toast.error('Please enable notifications to stay updated!');
+                toast.error('Permission denied. Please enable notifications in your browser settings.');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error requesting notification permission:', error);
+            toast.error(`Permission Error: ${error?.message || 'Unknown'}`);
         }
 
         return null;
