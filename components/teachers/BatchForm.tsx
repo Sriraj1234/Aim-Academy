@@ -39,9 +39,9 @@ export default function BatchForm({ onSuccess }: { onSuccess: () => void }) {
             reset();
             setThumbnail(null);
             onSuccess();
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error("Failed to create batch.");
+            toast.error(error.message || "Failed to create batch.");
         } finally {
             setLoading(false);
         }
