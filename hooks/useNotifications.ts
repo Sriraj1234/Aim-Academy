@@ -79,8 +79,21 @@ export const useNotifications = () => {
             // Small delay to ensure SW is fully ready
             await new Promise(resolve => setTimeout(resolve, 100));
 
+            // Sanitize VAPID key (convert from Base64URL to Base64)
+            // This prevents "Failed to execute 'atob' on 'Window'" error
+            let validVapidKey = vapidKey;
+            try {
+                // Check if it needs conversion (contains - or _)
+                if (validVapidKey.includes('-') || validVapidKey.includes('_')) {
+                    validVapidKey = validVapidKey.replace(/-/g, '+').replace(/_/g, '/');
+                    // Add padding if needed
+                    const padding = '='.repeat((4 - validVapidKey.length % 4) % 4);
+                    validVapidKey += padding;
+                }
+            } catch (e) { console.error('Error rewriting VAPID key', e); }
+
             const token = await getToken(messaging, {
-                vapidKey,
+                vapidKey: validVapidKey,
                 serviceWorkerRegistration: registration
             });
 
