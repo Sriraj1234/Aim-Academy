@@ -60,16 +60,14 @@ export const NotesSection = () => {
     }, [user, userProfile?.class])
 
     const handleDownload = async (note: Note) => {
-        // Increment download count
+        // Increment download count (Fire and forget)
         try {
-            await updateDoc(doc(db, 'notes', note.id), {
+            updateDoc(doc(db, 'notes', note.id), {
                 downloadCount: increment(1)
-            })
+            });
         } catch (e) {
             console.error('Failed to update download count', e)
         }
-        // Open PDF in new tab
-        window.open(note.pdfUrl, '_blank')
     }
 
     if (!user) return null
@@ -114,14 +112,17 @@ export const NotesSection = () => {
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {notes.map((note, index) => (
-                        <motion.button
+                        <motion.a
                             key={note.id}
+                            href={note.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.05 }}
                             whileHover={{ y: -2 }}
                             onClick={() => handleDownload(note)}
-                            className="flex flex-col items-center p-4 bg-pw-surface rounded-xl border border-pw-border hover:shadow-md transition-all text-center group overflow-hidden"
+                            className="flex flex-col items-center p-4 bg-pw-surface rounded-xl border border-pw-border hover:shadow-md transition-all text-center group overflow-hidden cursor-pointer"
                         >
                             <div className="text-3xl mb-2">
                                 {subjectIcons[note.subject.toLowerCase()] || '📄'}
@@ -136,7 +137,7 @@ export const NotesSection = () => {
                                 <FaDownload size={10} />
                                 <span>{note.downloadCount || 0}</span>
                             </div>
-                        </motion.button>
+                        </motion.a>
                     ))}
                 </div>
             )}
