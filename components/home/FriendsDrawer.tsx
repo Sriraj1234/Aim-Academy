@@ -147,7 +147,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                 className={`flex-1 py-3 text-sm font-bold transition-colors relative ${activeTab === 'friends' ? 'text-pw-indigo' : 'text-gray-400 hover:text-gray-600 dark:hover:text-slate-300'}`}
                             >
                                 Friends
-                                <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] ${activeTab === 'friends' ? 'bg-pw-indigo/10 text-pw-indigo' : 'bg-gray-100 dark:bg-slate-800 text-gray-500'}`}>{friends.length}</span>
+                                <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] ${activeTab === 'friends' ? 'bg-pw-indigo/10 text-pw-indigo' : 'bg-gray-100 dark:bg-slate-800 text-gray-500'}`}>{(friends || []).length}</span>
                                 {activeTab === 'friends' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 w-full h-0.5 bg-pw-indigo rounded-t-full" />}
                             </button>
                             <button
@@ -190,7 +190,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                             </button>
                                         </div>
                                     ) : (
-                                        friends.map((friend, idx) => (
+                                        filteredFriends.map((friend: Friend, idx: number) => (
                                             <motion.div
                                                 key={friend.uid}
                                                 initial={{ opacity: 0, y: 10 }}
