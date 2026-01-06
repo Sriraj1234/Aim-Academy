@@ -171,6 +171,7 @@ export interface GameInvite {
     fromPhoto?: string;
     roomId: string;
     timestamp: number;
+    status?: 'pending' | 'accepted' | 'rejected';
 }
 
 export type Taxonomy = Record<string, CategoryData>;
