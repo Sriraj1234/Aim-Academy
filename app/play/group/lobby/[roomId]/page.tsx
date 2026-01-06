@@ -46,27 +46,22 @@ export default function LobbyPage() {
     // Fix: Use ref to track intentional navigation to prevent auto-leave
     const isNavigatingRef = useRef(false);
 
-    // 0. Double-Tap Back Logic
-    const [showExitWarning, setShowExitWarning] = useState(false);
+    // 0. Back Button Interception
+    const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
 
     useEffect(() => {
         // Push state to intercept back button
         window.history.pushState(null, '', window.location.href);
 
-        const handlePopState = () => {
-            // Check if we should allow exit
-            const isWarningVisible = document.getElementById('exit-warning');
+        const handlePopState = (event: PopStateEvent) => {
+            // Prevent default back
+            event.preventDefault();
 
-            if (isWarningVisible) {
-                // Second tap: Allow exit
-                isNavigatingRef.current = true; // Mark as intentional
-                router.push('/play/group');
-            } else {
-                // First tap: Prevent exit, show warning
-                window.history.pushState(null, '', window.location.href);
-                setShowExitWarning(true);
-                setTimeout(() => setShowExitWarning(false), 2000);
-            }
+            // Re-push state so URL doesn't change
+            window.history.pushState(null, '', window.location.href);
+
+            // Show Confirmation
+            setShowLeaveConfirmation(true);
         };
 
         window.addEventListener('popstate', handlePopState);
@@ -74,7 +69,7 @@ export default function LobbyPage() {
         return () => {
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [router]);
+    }, []);
 
     // 1. Initial Check & Auto-Leave Cleanup
     useEffect(() => {
@@ -529,16 +524,45 @@ export default function LobbyPage() {
                 </div>
 
                 {/* Exit Warning Toast */}
+                {/* Exit Confirmation Modal */}
                 <AnimatePresence>
-                    {showExitWarning && (
-                        <div id="exit-warning" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none">
+                    {showLeaveConfirmation && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                className="bg-black/80 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-md font-bold text-sm tracking-wide border border-white/20 whitespace-nowrap"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                                onClick={() => setShowLeaveConfirmation(false)}
+                            />
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="bg-white rounded-[2rem] p-6 md:p-8 w-full max-w-sm shadow-2xl relative z-10 border border-pw-border"
                             >
-                                Press Back again to leave lobby 🚪
+                                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-2xl">
+                                    <FaSignOutAlt />
+                                </div>
+                                <h3 className="text-xl font-bold text-center text-pw-violet mb-2">Leave Lobby?</h3>
+                                <p className="text-gray-500 text-center mb-8 text-sm leading-relaxed">
+                                    You will be removed from the group and won't be able to rejoin if the game starts.
+                                </p>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowLeaveConfirmation(false)}
+                                        className="flex-1 py-3.5 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                                    >
+                                        Stay
+                                    </button>
+                                    <button
+                                        onClick={handleLeave}
+                                        className="flex-1 py-3.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20 transition-colors"
+                                    >
+                                        Leave
+                                    </button>
+                                </div>
                             </motion.div>
                         </div>
                     )}
