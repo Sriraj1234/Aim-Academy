@@ -41,9 +41,21 @@ export const getBatchesByTeacher = async (teacherEmail: string) => {
 
 export const uploadBatchThumbnail = async (file: File) => {
     try {
-        const storageRef = ref(storage, `batches/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        return await getDownloadURL(snapshot.ref);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Upload failed');
+        }
+
+        return data.url;
     } catch (error) {
         console.error("Error uploading thumbnail:", error);
         throw error;
