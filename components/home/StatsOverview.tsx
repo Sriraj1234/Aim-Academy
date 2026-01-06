@@ -117,7 +117,7 @@ export const StatsOverview = () => {
     ]
 
     return (
-        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3`}>
+        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-1.5 md:gap-3`}>
             {stats.map((stat, index) => (
                 <motion.div
                     key={index}
@@ -125,25 +125,25 @@ export const StatsOverview = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ delay: index * 0.05, type: "spring", stiffness: 200 }}
                     whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                    className={`relative overflow-hidden bg-white p-2.5 md:p-3 rounded-xl shadow-pw-sm border border-pw-border border-l-4 ${stat.borderColor} group cursor-default hover:shadow-pw-md transition-shadow`}
+                    className={`relative overflow-hidden bg-white p-2 md:p-3 rounded-xl shadow-pw-sm border border-pw-border border-l-4 ${stat.borderColor} group cursor-default hover:shadow-pw-md transition-shadow`}
                 >
                     <div className="relative z-10 flex flex-col min-w-0">
-                        <div className={`w-6 h-6 md:w-8 md:h-8 mb-2 rounded-lg ${stat.iconBg} flex items-center justify-center ${stat.iconColor} shrink-0`}>
-                            <stat.icon className="text-xs md:text-sm" />
+                        <div className={`w-5 h-5 md:w-8 md:h-8 mb-1.5 md:mb-2 rounded-lg ${stat.iconBg} flex items-center justify-center ${stat.iconColor} shrink-0`}>
+                            <stat.icon className="text-[10px] md:text-sm" />
                         </div>
 
                         <div className="flex items-baseline gap-1 min-w-0">
-                            <span className="text-base md:text-2xl font-black text-pw-violet tabular-nums truncate">
+                            <span className="text-sm md:text-2xl font-black text-pw-violet tabular-nums truncate">
                                 {stat.value}
                             </span>
                             {stat.suffix && (
-                                <span className="text-[10px] md:text-base font-bold text-gray-400 shrink-0">
+                                <span className="text-[9px] md:text-base font-bold text-gray-400 shrink-0">
                                     {stat.suffix}
                                 </span>
                             )}
                         </div>
 
-                        <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5 truncate">
+                        <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5 truncate">
                             {stat.label}
                         </p>
                     </div>
