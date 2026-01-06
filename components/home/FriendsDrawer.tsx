@@ -8,6 +8,7 @@ import { useFriends } from '@/hooks/useFriends'
 import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/hooks/useSound'
 import { LocalStudentsSection } from '@/components/home/LocalStudentsSection'
+import { Friend } from '@/data/types'
 
 interface FriendsDrawerProps {
     isOpen: boolean
