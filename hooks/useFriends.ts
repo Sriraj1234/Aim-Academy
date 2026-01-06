@@ -22,6 +22,7 @@ export const useFriends = () => {
     const [friends, setFriends] = useState<Friend[]>([]);
     const [requests, setRequests] = useState<FriendRequest[]>([]);
     const [activeInvites, setActiveInvites] = useState<GameInvite[]>([]);
+    const [sentInvites, setSentInvites] = useState<GameInvite[]>([]); // New listener for sent invites
     const [loading, setLoading] = useState(true);
     // Changed to string for detailed status ('online', 'in-lobby', 'playing') or null if offline
     const [onlineUsers, setOnlineUsers] = useState<Record<string, string | null>>({});
@@ -113,10 +114,40 @@ export const useFriends = () => {
             console.error("Error fetching game invites:", error);
         });
 
+        // Listen to SENT Game Invites (to track responses)
+        const sentInvitesQuery = query(collection(db, 'game_invites'), where('fromUid', '==', user.uid));
+        // Note: The previous implementation stored invites in `users/{uid}/game_invites`.
+        // To listen to responses efficiently without querying EVERY user, we arguably need a central `game_invites` collection 
+        // OR we need to know who we sent it to.
+        // BUT, the current system sends to `users/{friendUid}/game_invites`.
+        // So the sender cannot easily "listen" to a single collection unless we duplicate data or change structure.
+
+        // Plan adjustment:
+        // 1. When sending, ALSO write to `users/{myUid}/sent_invites/{friendUid}`?
+        // 2. Or better, use a root `game_invites` collection where:
+        //    docId = auto
+        //    fields = { fromUid, toUid, roomId, status, timestamp }
+        //    Receiver listens to `where(toUid == me)`
+        //    Sender listens to `where(fromUid == me)`
+
+        // Changing DB schema entirely is risky mid-flight.
+        // Alternative: Sender keeps a local "sent" list in localStorage? No, cross-device issue.
+        // Alternative: Sender writes a copy to `users/{senderUid}/sent_Game_invites`? 
+
+        // Let's go with the copy approach for now as it fits the "user subcollection" pattern used elsewhere.
+        // `users/{myUid}/sent_game_invites`
+
+        const sentGameInvitesRef = collection(db, 'users', user.uid, 'sent_game_invites');
+        const unsubSentInvites = onSnapshot(sentGameInvitesRef, (snapshot) => {
+            const sentList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GameInvite));
+            setSentInvites(sentList);
+        });
+
         return () => {
             unsubFriends();
             unsubRequests();
             unsubGameInvites();
+            unsubSentInvites();
             // Cleanup RTDB listeners
             Object.values(rtdbUnsubscribes).forEach(unsub => unsub());
         };
@@ -238,15 +269,53 @@ export const useFriends = () => {
             fromName: userProfile.displayName || 'Unknown',
             fromPhoto: userProfile.photoURL || '',
             roomId: roomId,
-            timestamp: now
+            timestamp: now,
+            status: 'pending'
         };
 
-        await setDoc(doc(collection(db, 'users', friendUid, 'game_invites')), invite);
+        const newInviteRef = doc(collection(db, 'users', friendUid, 'game_invites'));
+        await setDoc(newInviteRef, invite);
+
+        // Also save to my "sent_game_invites" to track status
+        // Use same ID so we can correlate
+        await setDoc(doc(db, 'users', user.uid, 'sent_game_invites', newInviteRef.id), {
+            ...invite,
+            toUid: friendUid // Store who we sent it to
+        });
 
         // Update Local Storage
         localStorage.setItem(STORAGE_KEY, now.toString());
     };
 
+    const respondToGameInvite = async (inviteId: string, response: 'accepted' | 'rejected', fromUid: string) => {
+        if (!user) return;
+
+        // 1. Update the invite in MY inbox (so UI updates)
+        const myInviteRef = doc(db, 'users', user.uid, 'game_invites', inviteId);
+        // We actually just want to remove it from our inbox eventually, but first update logic?
+        // Actually, if we just delete it from our inbox, how does the sender know?
+
+        // The sender is listening to `users/{senderUid}/sent_game_invites/{inviteId}`
+        // So we need to write to THAT location.
+
+        try {
+            const senderInviteRef = doc(db, 'users', fromUid, 'sent_game_invites', inviteId);
+            await setDoc(senderInviteRef, { status: response }, { merge: true });
+        } catch (e) {
+            console.error("Could not notify sender:", e);
+        }
+
+        // 2. Delete from my inbox
+        await deleteDoc(myInviteRef);
+    }
+
+    // For cleaning up my own sent invites that are done
+    const clearSentInvite = async (inviteId: string) => {
+        if (!user) return;
+        await deleteDoc(doc(db, 'users', user.uid, 'sent_game_invites', inviteId));
+    }
+
+    // Deprecated? No, used for simple clear
     const clearGameInvite = async (inviteId: string) => {
         if (!user) return;
         await deleteDoc(doc(db, 'users', user.uid, 'game_invites', inviteId));
@@ -267,15 +336,17 @@ export const useFriends = () => {
     };
 
     return {
-        friends,
         requests,
         activeInvites,
+        sentInvites,
         loading,
         onlineUsers,
         sendFriendRequest,
         acceptFriendRequest,
         rejectFriendRequest,
         sendGameInvite,
+        respondToGameInvite,
+        clearSentInvite,
         clearGameInvite,
         removeFriend
     };
