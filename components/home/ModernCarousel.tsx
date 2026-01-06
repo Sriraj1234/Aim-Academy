@@ -44,13 +44,13 @@ const adSlides: Slide[] = [
     {
         id: 3,
         type: 'ad',
-        title: "Free Mock Tests",
-        subtitle: "Win Scholarships",
-        description: "Attempt our weekly All India Mock Test and stand a chance to win 100% scholarship.",
-        ctaText: "Start Test",
+        title: "Weekly All India Mock Test",
+        subtitle: "Compete & Win",
+        description: "Test your preparation against students across India. Win scholarships and prizes.",
+        ctaText: "Register Now",
         ctaLink: "/play/selection",
-        bgClass: "bg-gradient-to-br from-emerald-500 to-teal-600",
-        icon: FaBolt
+        bgClass: "bg-gradient-to-br from-indigo-500 to-blue-600",
+        icon: FaTrophy
     },
     {
         id: 4,
