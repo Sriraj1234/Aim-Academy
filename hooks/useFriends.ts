@@ -336,6 +336,7 @@ export const useFriends = () => {
     };
 
     return {
+        friends,
         requests,
         activeInvites,
         sentInvites,
