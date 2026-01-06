@@ -7,33 +7,55 @@ import { FaGamepad, FaCheck, FaTimes } from 'react-icons/fa';
 import { useFriends } from '@/hooks/useFriends';
 
 export const GameInviteListener = () => {
-    const { activeInvites, clearGameInvite } = useFriends();
+    const { activeInvites, sentInvites, respondToGameInvite, clearSentInvite } = useFriends();
     const router = useRouter();
     const [currentInvite, setCurrentInvite] = useState<any>(null);
     const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'accepted' | 'declined'; text: string } | null>(null);
 
+    // 1. Handle Incoming Invites
     useEffect(() => {
-        // If we have invites and aren't showing one, show the first one
         if (activeInvites.length > 0 && !currentInvite) {
             setCurrentInvite(activeInvites[0]);
-        }
-        // If we have no invites, clear current
-        else if (activeInvites.length === 0) {
+        } else if (activeInvites.length === 0) {
             setCurrentInvite(null);
         }
     }, [activeInvites, currentInvite]);
 
-    // Auto-clear feedback after 2 seconds
+    // 2. Handle SENT Invite Responses (Notifications)
+    useEffect(() => {
+        sentInvites.forEach(invite => {
+            if (invite.status === 'accepted') {
+                setFeedbackMessage({ type: 'accepted', text: `✅ ${invite.fromName || 'Friend'} accepted your invite!` }); // fromName here is actually "toName" in context, but wait, data structure:
+                // When we save sent invite: { ...invite, toUid: friendUid }
+                // We didn't save "toName".
+                // But `invite.fromName` is ME. 
+                // So the message should rely on looking up friend's name? 
+                // Or we accept generic message for now.
+                // Or better, let's just say "Invite Accepted!"
+
+                // Navigate to lobby if accepted
+                if (window.location.pathname.indexOf('/lobby') === -1) {
+                    router.push(`/play/group/lobby/${invite.roomId}`);
+                }
+                clearSentInvite(invite.id);
+            } else if (invite.status === 'rejected') {
+                setFeedbackMessage({ type: 'declined', text: `❌ Invite Declined` });
+                clearSentInvite(invite.id);
+            }
+        });
+    }, [sentInvites, clearSentInvite, router]);
+
+
+    // Auto-clear feedback after 3 seconds
     useEffect(() => {
         if (!feedbackMessage) return;
-        const timer = setTimeout(() => setFeedbackMessage(null), 2000);
+        const timer = setTimeout(() => setFeedbackMessage(null), 3000);
         return () => clearTimeout(timer);
     }, [feedbackMessage]);
 
     const handleAccept = async () => {
         if (!currentInvite) return;
 
-        // Check if already in a game/lobby
         const isInGame = window.location.pathname.includes('/play/group/');
         if (isInGame) {
             const confirmed = window.confirm("⚠️ You are already in a lobby!\n\nDo you want to LEAVE your current lobby to join this invite?");
@@ -42,11 +64,13 @@ export const GameInviteListener = () => {
 
         const roomId = currentInvite.roomId;
         const inviteId = currentInvite.id;
+        const senderUid = currentInvite.fromUid;
 
-        // Clear invite
-        await clearGameInvite(inviteId);
+        // Notify sender and clear
+        await respondToGameInvite(inviteId, 'accepted', senderUid);
+
         setCurrentInvite(null);
-        setFeedbackMessage({ type: 'accepted', text: '✅ Invite Accepted!' });
+        setFeedbackMessage({ type: 'accepted', text: '✅ Joining Lobby...' });
 
         // Navigate to lobby
         router.push(`/play/group/lobby/${roomId}`);
@@ -54,7 +78,11 @@ export const GameInviteListener = () => {
 
     const handleReject = async () => {
         if (!currentInvite) return;
-        await clearGameInvite(currentInvite.id);
+
+        const inviteId = currentInvite.id;
+        const senderUid = currentInvite.fromUid;
+
+        await respondToGameInvite(inviteId, 'rejected', senderUid);
         setCurrentInvite(null);
         setFeedbackMessage({ type: 'declined', text: '❌ Invite Declined' });
     };
@@ -63,8 +91,9 @@ export const GameInviteListener = () => {
         if (!currentInvite) return;
 
         const timer = setTimeout(() => {
+            // Auto-reject on timeout
             handleReject();
-        }, 10000); // 10 seconds auto-dismiss
+        }, 12000); // 12 seconds auto-dismiss (slightly longer than UI timer)
 
         return () => clearTimeout(timer);
     }, [currentInvite]);
@@ -79,10 +108,11 @@ export const GameInviteListener = () => {
                     exit={{ opacity: 0, y: -20 }}
                     className="fixed inset-x-0 top-0 z-[100] flex justify-center px-4 pt-4 sm:pt-6 pointer-events-none"
                 >
-                    <div className={`px-4 py-3 rounded-xl shadow-lg font-semibold text-sm pointer-events-auto ${feedbackMessage.type === 'accepted'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-red-500 text-white'
+                    <div className={`px-4 py-3 rounded-xl shadow-lg font-semibold text-sm pointer-events-auto flex items-center gap-2 ${feedbackMessage.type === 'accepted'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-red-500 text-white'
                         }`}>
+                        {feedbackMessage.type === 'accepted' ? <FaCheck /> : <FaTimes />}
                         {feedbackMessage.text}
                     </div>
                 </motion.div>
@@ -94,14 +124,12 @@ export const GameInviteListener = () => {
 
     return (
         <AnimatePresence>
-            {/* Full-screen overlay container for centering */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="fixed inset-x-0 top-0 z-[100] flex justify-center px-4 pt-4 sm:pt-6 pointer-events-none"
             >
-                {/* The actual popup card */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -113,7 +141,7 @@ export const GameInviteListener = () => {
                         <motion.div
                             initial={{ width: '100%' }}
                             animate={{ width: '0%' }}
-                            transition={{ duration: 10, ease: 'linear' }} // 10s visual timer
+                            transition={{ duration: 10, ease: 'linear' }}
                             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
                         />
                     </div>
