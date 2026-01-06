@@ -168,7 +168,7 @@ export default function ProfilePage() {
                                 {user?.photoURL ? (
                                     <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    user?.email?.[0].toUpperCase() || 'T'
+                                    (user?.email && user.email.length > 0) ? user.email[0].toUpperCase() : 'T'
                                 )}
                             </div>
                         </div>
@@ -372,10 +372,10 @@ export default function ProfilePage() {
                                 <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-pw-indigo">
                                     <FaUserFriends className="text-lg" />
                                 </div>
-                                <h3 className="font-bold text-lg text-pw-violet">My Squad ({friends.length})</h3>
+                                <h3 className="font-bold text-lg text-pw-violet">My Squad ({(friends || []).length})</h3>
                             </div>
 
-                            {friends.length === 0 ? (
+                            {(friends || []).length === 0 ? (
                                 <div className="text-center py-6 bg-pw-surface rounded-2xl border border-dashed border-gray-200">
                                     <p className="text-gray-500 font-medium text-sm">No friends added yet.</p>
                                     <Link href="/play/group" className="text-pw-indigo text-xs font-bold hover:underline mt-1 inline-block">
