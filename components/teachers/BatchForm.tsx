@@ -47,6 +47,62 @@ export default function BatchForm({ onSuccess }: { onSuccess: () => void }) {
         }
     };
 
+    // Compression Helper
+    const compressImage = (file: File): Promise<File> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    const newWidth = (img.width > MAX_WIDTH) ? MAX_WIDTH : img.width;
+                    const newHeight = (img.width > MAX_WIDTH) ? (img.height * scaleSize) : img.height;
+
+                    canvas.width = newWidth;
+                    canvas.height = newHeight;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, newWidth, newHeight);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const newFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+                            resolve(newFile);
+                        } else {
+                            reject(new Error('Canvas is empty'));
+                        }
+                    }, 'image/jpeg', 0.8);
+                };
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            try {
+                if (file.size > 1 * 1024 * 1024) { // Only compress if > 1MB
+                    const compressed = await compressImage(file);
+                    setThumbnail(compressed);
+                    toast.success("Image optimized for upload!");
+                } else {
+                    setThumbnail(file);
+                }
+            } catch (err) {
+                console.error("Compression failed", err);
+                setThumbnail(file); // Fallback to original
+            }
+        }
+    };
+
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
@@ -87,11 +143,11 @@ export default function BatchForm({ onSuccess }: { onSuccess: () => void }) {
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
+                        onChange={handleFileChange}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
                     <FaUpload className="mx-auto text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-500">{thumbnail ? thumbnail.name : "Click to upload image"}</span>
+                    <span className="text-sm text-gray-500">{thumbnail ? `Selected: ${thumbnail.name} (${(thumbnail.size / 1024).toFixed(0)}KB)` : "Click to upload image"}</span>
                 </div>
             </div>
 
