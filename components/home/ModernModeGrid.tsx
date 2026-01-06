@@ -249,35 +249,7 @@ export const ModernModeGrid = () => {
                 </Link>
             </div>
 
-            {/* Coming Soon Banner */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5 }}
-                className="relative bg-gradient-to-r from-pw-violet to-pw-indigo border border-white/10 rounded-2xl p-6 overflow-hidden shadow-pw-md"
-            >
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOCAxOC04LjA1OSAxOC0xOC04LjA1OS0xOC0xOC0xOHptMCAzMmMtNy43MzIgMC0xNC02LjI2OC0xNC0xNHM2LjI2OC0xNCAxNC0xNCAxNCA2LjI2OCAxNCAxNC02LjI2OCAxNC0xNCAxNHoiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii4wNSIvPjwvZz48L3N2Zz4=')] opacity-10" />
 
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center shadow-lg backdrop-blur-sm border border-white/10">
-                            <FaClock className="text-2xl text-white" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-bold text-white/70 uppercase tracking-widest">Coming Soon</span>
-                                <span className="flex items-center gap-1 text-xs font-bold text-yellow-300">
-                                    <FaStar /> Exclusive
-                                </span>
-                            </div>
-                            <h3 className="text-xl font-bold text-white">Weekly All-India Mock Tests</h3>
-                        </div>
-                    </div>
-                    <button className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white font-bold text-sm transition-all hover:scale-105 hover:shadow-[0_0_15px_rgba(255,215,0,0.3)]">
-                        Notify Me
-                    </button>
-                </div>
-            </motion.div>
         </div>
     )
 }
