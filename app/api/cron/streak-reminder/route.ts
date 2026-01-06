@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         const tokens: string[] = [];
         const usersToNotify: string[] = [];
 
-        usersSnapshot.forEach(doc => {
+        usersSnapshot.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
             const data = doc.data();
             const token = data.fcmToken;
             const lastPracticeDate = data.lastPracticeDate;
