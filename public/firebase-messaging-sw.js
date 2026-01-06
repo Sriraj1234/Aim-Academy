@@ -1,13 +1,13 @@
 // Firebase Cloud Messaging Service Worker
 // This file MUST be in public/ and named exactly firebase-messaging-sw.js
 
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.0.0/firebase-messaging-compat.js');
 
 // Firebase Configuration for aim-83922 project
 // These values match .env.local
 const firebaseConfig = {
-    apiKey: "AIzaSyBJbsR_XlzPzHNDdSGqdqZJQRww4VQZhVc",
+    apiKey: "AIzaSyCPEYuY8TTYShOtfXYZcllBl_Vm6su",
     authDomain: "aim-83922.firebaseapp.com",
     projectId: "aim-83922",
     storageBucket: "aim-83922.firebasestorage.app",
