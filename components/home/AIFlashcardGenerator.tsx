@@ -43,6 +43,18 @@ export const AIFlashcardGenerator = () => {
         }
     }, []);
 
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
+
     const generateFlashcards = async () => {
         if (!topic.trim()) return;
 
