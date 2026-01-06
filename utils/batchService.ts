@@ -44,6 +44,8 @@ export const uploadBatchThumbnail = async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
 
+        console.log(`Client Upload Service: Starting upload for ${file.name} (${file.size} bytes, ${file.type})`);
+
         const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
