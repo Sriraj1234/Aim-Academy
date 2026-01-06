@@ -30,112 +30,49 @@ export const useNotifications = () => {
             const messaging = getMessaging(app);
             // Using hardcoded key to prevent environment variable caching issues
             const vapidKey = 'BCph9csjTz0IwHdajt6xfzIYE_0feFWkqJsJNTEIJBXBEDPZMdi8lJneckXUn0RWgIXu5ywM3qoBb7XTFfb2Tic';
+            console.log('Using VAPID Key:', vapidKey.substring(0, 10) + '...');
 
-            // Force unregister old workers to clear bad state
             if ('serviceWorker' in navigator) {
-                const regs = await navigator.serviceWorker.getRegistrations();
-                for (const reg of regs) {
-                    // unregister if it's the old one or if we want to force refresh
-                    // console.log('Found SW:', reg.scope);
-                    // await reg.unregister(); 
-                    // actually, let's not unregister potentially valid ones unless we are sure.
-                    // But for debugging, maybe we should?
-                    // Let's rely on update instead.
+                // Check if SW is already registered
+                let registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+
+                if (!registration) {
+                    console.log('Registering new Service Worker...');
+                    // Add timestamp to force update
+                    registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js?t=' + Date.now());
+                } else {
+                    console.log('Updating existing Service Worker...');
+                    await registration.update();
                 }
-            }
 
-            if (!vapidKey) {
-                console.error('VAPID key not configured');
-                toast.error('System Error: VAPID key missing. Contact support.');
-                return null;
-            }
+                // Wait for it to be ready
+                await navigator.serviceWorker.ready;
 
-            // Get existing or register new service worker
-            let registration = await navigator.serviceWorker.getRegistration();
-
-            if (!registration) {
-                console.log('[FCM] No existing SW found, registering new one...');
-                try {
-                    registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                } catch (swError: any) {
-                    console.error('SW Registration failed:', swError);
-                    toast.error(`Service Worker Error: ${swError?.message || 'Unknown'}`);
-                    return null;
-                }
-            } else {
-                console.log('[FCM] Using existing service worker:', registration.scope);
-            }
-
-            // Wait for service worker to be active
-            if (registration.installing) {
-                console.log('[FCM] Service worker installing...');
-                await new Promise<void>((resolve) => {
-                    registration.installing?.addEventListener('statechange', (e) => {
-                        if ((e.target as ServiceWorker).state === 'activated') {
-                            console.log('[FCM] Service worker activated');
-                            resolve();
-                        }
-                    });
+                // Explicitly pass VAPID key to getToken
+                const token = await getToken(messaging, {
+                    vapidKey,
+                    serviceWorkerRegistration: registration
                 });
-            } else if (registration.waiting) {
-                console.log('[FCM] Service worker waiting...');
-                await new Promise<void>((resolve) => {
-                    registration.waiting?.addEventListener('statechange', (e) => {
-                        if ((e.target as ServiceWorker).state === 'activated') {
-                            resolve();
-                        }
-                    });
-                });
-            } else if (registration.active) {
-                console.log('[FCM] Service worker active');
-            }
 
-            // Small delay to ensure SW is fully ready
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            // Sanitize VAPID key (convert from Base64URL to Base64)
-            // This prevents "Failed to execute 'atob' on 'Window'" error
-            let validVapidKey = vapidKey;
-            try {
-                // Check if it needs conversion (contains - or _)
-                if (validVapidKey.includes('-') || validVapidKey.includes('_')) {
-                    validVapidKey = validVapidKey.replace(/-/g, '+').replace(/_/g, '/');
-                    // Add padding if needed
-                    const padding = '='.repeat((4 - validVapidKey.length % 4) % 4);
-                    validVapidKey += padding;
+                if (token) {
+                    setFcmToken(token);
+                    if (user?.uid) {
+                        await updateDoc(doc(db, 'users', user.uid), {
+                            fcmToken: token,
+                            notificationsEnabled: true,
+                            lastTokenUpdate: new Date().toISOString()
+                        });
+                    }
+                    return token;
                 }
-            } catch (e) { console.error('Error rewriting VAPID key', e); }
-
-            const token = await getToken(messaging, {
-                vapidKey: validVapidKey,
-                serviceWorkerRegistration: registration
-            });
-
-            if (token) {
-                console.log('FCM Token:', token);
-                setFcmToken(token);
-
-                if (user?.uid) {
-                    await updateDoc(doc(db, 'users', user.uid), {
-                        fcmToken: token,
-                        notificationsEnabled: true,
-                        lastTokenUpdate: new Date().toISOString()
-                    });
-                    console.log('FCM token saved to Firestore');
-                }
-                return token;
-            } else {
-                toast.error('Failed to generate FCM token. Check network.');
             }
         } catch (error: any) {
-            console.error('Error getting/saving token:', error);
-            const msg = error?.message || 'Unknown error';
-            if (msg.includes('permission')) {
-                toast.error('Notification permission denied by browser.');
-            } else if (msg.includes('no active Service Worker')) {
-                toast.error('System Error: Service Worker not active.');
+            console.error('FCM Error Details:', error);
+            // Specifically handling the "missing credentials" error which is often a VAPID mismatch
+            if (error.code === 'messaging/token-subscribe-failed') {
+                toast.error('Notification Error: VAPID Key Mismatch. Please clear site data and try again.');
             } else {
-                toast.error(`Notification Error: ${msg}`);
+                toast.error(`Notification Error: ${error.message}`);
             }
         }
         return null;
