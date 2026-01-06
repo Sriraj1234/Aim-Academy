@@ -6,31 +6,35 @@ import { AuthProvider } from '@/context/AuthContext'
 import { QuizProvider } from '@/context/QuizContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { ThemeProvider } from '@/context/ThemeContext'
-import { GameInviteListener } from '@/components/shared/GameInviteListener'
-import { PresenceListener } from '@/components/shared/PresenceListener'
-import { InstallPrompt } from '@/components/shared/InstallPrompt'
-import { NotificationPrompt } from '@/components/shared/NotificationPrompt'
+import { ClientLayoutWrapper } from '@/components/shared/ClientLayoutWrapper'
 
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SoundProvider } from '@/context/SoundContext'
 import { AdSense } from '@/components/shared/AdSense'
 
+// Fonts with display swap for faster text rendering
 const outfit = Outfit({
   variable: '--font-outfit',
   subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  preload: true,
 })
 
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-space',
   subsets: ['latin'],
   weight: ['400', '600', '700'],
+  display: 'swap',
+  preload: true,
 })
 
 const notoSans = Noto_Sans({
   variable: '--font-noto',
   subsets: ['latin', 'devanagari'],
   weight: ['400', '500', '600'],
+  display: 'swap',
+  preload: true,
 })
 
 export const metadata: Metadata = {
@@ -83,10 +87,7 @@ export default function RootLayout({
             <QuizProvider>
               <LanguageProvider>
                 <SoundProvider>
-                  <PresenceListener />
-                  <GameInviteListener />
-                  <InstallPrompt />
-                  <NotificationPrompt delay={10000} />
+                  <ClientLayoutWrapper />
                   <Toaster position="top-center" toastOptions={{ duration: 3000, style: { background: '#333', color: '#fff', borderRadius: '12px' } }} />
                   <div className="relative w-full max-w-full overflow-x-hidden">
                     {children}
