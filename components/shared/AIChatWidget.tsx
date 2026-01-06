@@ -512,8 +512,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                         {msg.images && msg.images.length > 0 && (
                                             <div className="mt-2 flex gap-2 overflow-x-auto pb-2 px-1 snap-x scrollbar-hide">
                                                 {msg.images.map((img, idx) => (
-                                                    <div key={idx} className="flex-shrink-0 w-40 snap-center">
-                                                        <div className="rounded-xl overflow-hidden shadow-md aspect-video bg-gray-100">
+                                                    <div key={idx} className="flex-shrink-0 w-32 sm:w-40 md:w-48 snap-center">
+                                                        <div className="rounded-xl overflow-hidden shadow-md aspect-video bg-gray-100 cursor-pointer hover:shadow-lg transition-shadow">
                                                             <img
                                                                 src={img.image}
                                                                 alt={img.title}
@@ -524,6 +524,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                                                 }}
                                                             />
                                                         </div>
+                                                        <p className="text-[10px] text-gray-500 mt-1 line-clamp-1 text-center">{img.title}</p>
                                                     </div>
                                                 ))}
                                             </div>
