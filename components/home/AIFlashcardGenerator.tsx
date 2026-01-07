@@ -180,13 +180,21 @@ export const AIFlashcardGenerator = () => {
                         >
                             <div className="text-emerald-400 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase mb-1.5 sm:mb-2 shrink-0">Definition</div>
                             <div
-                                className="flex-1 overflow-y-scroll custom-scrollbar overscroll-contain pr-1 sm:pr-2"
+                                className="flex-1 overflow-y-auto custom-scrollbar overscroll-contain pr-1 sm:pr-2"
                                 style={{
                                     touchAction: 'pan-y',
                                     maxHeight: 'calc(100% - 40px)',
                                     WebkitOverflowScrolling: 'touch'
                                 }}
-                                onWheel={(e) => e.stopPropagation()}
+                                onWheel={(e) => {
+                                    e.stopPropagation();
+                                    // Optional: Stop propagation but allow default only if it scrolls
+                                }}
+                                onTouchMove={(e) => {
+                                    // Critical for mobile: prevent pulling the page
+                                    e.stopPropagation();
+                                }}
+                                onScroll={(e) => e.stopPropagation()}
                             >
                                 <p className="text-xs sm:text-sm font-medium leading-relaxed text-white/90">{flashcards[currentIndex].definition}</p>
 
