@@ -19,28 +19,11 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 // Handle background messages (when app is not in focus)
-messaging.onBackgroundMessage((payload) => {
-    console.log('[FCM SW] Background message received:', payload);
-
-    const notificationTitle = payload.notification?.title || 'Padhaku';
-    const notificationOptions = {
-        body: payload.notification?.body || 'You have a new notification!',
-        icon: '/padhaku-192.png',
-        badge: '/padhaku-192.png',
-        vibrate: [100, 50, 100],
-        tag: payload.data?.tag || 'default',
-        data: {
-            click_action: payload.data?.click_action || '/home',
-            ...payload.data
-        },
-        actions: [
-            { action: 'open', title: 'Open' },
-            { action: 'dismiss', title: 'Dismiss' }
-        ]
-    };
-
-    self.registration.showNotification(notificationTitle, notificationOptions);
-});
+// Note: We rely on the FCM SDK and Browser to handle the default notification display.
+// Implementing onBackgroundMessage with showNotification will cause DUPLICATE notifications.
+// messaging.onBackgroundMessage((payload) => {
+//     console.log('[FCM SW] Background message received:', payload);
+// });
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
@@ -49,7 +32,8 @@ self.addEventListener('notificationclick', (event) => {
 
     if (event.action === 'dismiss') return;
 
-    const urlToOpen = event.notification.data?.click_action || '/home';
+    // Use click_action from data, or fcmOptions link, or default
+    const urlToOpen = event.notification.data?.click_action || event.notification.data?.FCM_MSG?.notification?.click_action || '/home';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
@@ -68,21 +52,7 @@ self.addEventListener('notificationclick', (event) => {
     );
 });
 
-// Handle push event (fallback)
-self.addEventListener('push', (event) => {
-    console.log('[FCM SW] Push event received');
-
-    if (event.data) {
-        const payload = event.data.json();
-        const title = payload.notification?.title || 'Padhaku';
-        const options = {
-            body: payload.notification?.body || 'New notification',
-            icon: '/padhaku-192.png',
-            badge: '/padhaku-192.png',
-        };
-
-        event.waitUntil(self.registration.showNotification(title, options));
-    }
-});
+// Remove manual 'push' listener as it conflicts with Firebase SDK
+// self.addEventListener('push', ...) -> REMOVED
 
 console.log('[FCM SW] Service Worker loaded successfully');
