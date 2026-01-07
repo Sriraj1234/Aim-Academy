@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { FaClock, FaCalendarAlt, FaPlayCircle, FaBell, FaCheckCircle } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc, updateDoc, increment } from 'firebase/firestore';
 
 export const LiveQuizBanner = () => {
     const [quizzes, setQuizzes] = useState<LiveQuiz[]>([]);
@@ -70,7 +70,12 @@ const QuizCard = ({ quiz, isLive, index }: { quiz: LiveQuiz, isLive: boolean, in
                 email: user.email,
                 timestamp: Date.now()
             });
-            // Also add to global user reminders if needed, but this is enough for Cloud Functions
+
+            // Increment 'participantsCount' on the main quiz document for Admin visibility
+            const quizRef = doc(db, 'live_quizzes', quiz.id);
+            await updateDoc(quizRef, {
+                participantsCount: increment(1)
+            });
         } catch (e) {
             console.error(e);
             setReminderSet(false);
