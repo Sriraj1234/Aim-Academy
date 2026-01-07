@@ -114,7 +114,7 @@ export const NotesSection = () => {
                     {notes.map((note, index) => (
                         <motion.a
                             key={note.id}
-                            href={note.pdfUrl}
+                            href={`https://docs.google.com/viewer?url=${encodeURIComponent(note.pdfUrl)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             initial={{ opacity: 0, scale: 0.9 }}
