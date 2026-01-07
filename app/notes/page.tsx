@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/shared/Header';
-import { FaFilePdf, FaFlask, FaProjectDiagram, FaBookOpen } from 'react-icons/fa';
+import { FaFilePdf, FaFlask, FaProjectDiagram, FaBookOpen, FaDownload } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
@@ -13,6 +13,7 @@ export default function NotesPage() {
     const [activeTab, setActiveTab] = useState<TabType>('notes');
     const [notes, setNotes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedResource, setSelectedResource] = useState<any | null>(null);
 
     useEffect(() => {
         const fetchNotes = async () => {
@@ -82,17 +83,7 @@ export default function NotesPage() {
                                     key={item.id}
                                     onClick={() => {
                                         if (item.pdfUrl) {
-                                            const getOptimizedUrl = (url: string) => {
-                                                if (!url) return '';
-                                                if (!url) return '';
-                                                // Remove fl_inline if present, as it can break PDF loading on some devices
-                                                return url.replace('/fl_inline/', '/');
-                                            };
-
-                                            // Use Google Docs Viewer for robust mobile/desktop PDF support
-                                            const cleanUrl = item.pdfUrl.replace('/fl_inline/', '/'); // Ensure clean URL
-                                            const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(cleanUrl)}`;
-                                            window.open(viewerUrl, '_blank', 'noopener,noreferrer');
+                                            setSelectedResource(item);
                                         } else {
                                             alert("No PDF link attached.");
                                         }
@@ -161,6 +152,60 @@ export default function NotesPage() {
                     </div>
                 )}
             </main>
+
+            {/* PDF Viewer Modal */}
+            {selectedResource && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedResource(null)}>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white w-full max-w-4xl h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-800">{selectedResource.title}</h3>
+                                <p className="text-xs text-gray-500 capitalize">{selectedResource.subject} • {selectedResource.board}</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <a
+                                    href={selectedResource.pdfUrl.replace('/upload/', '/upload/fl_attachment/')}
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-4 py-2 bg-pw-indigo text-white text-sm font-bold rounded-lg hover:bg-pw-violet transition-colors flex items-center gap-2"
+                                >
+                                    <FaFilePdf /> Download
+                                </a>
+                                <button
+                                    onClick={() => setSelectedResource(null)}
+                                    className="p-2 hover:bg-gray-200 rounded-lg text-gray-500"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Viewer */}
+                        <div className="flex-1 bg-gray-100 relative">
+                            {/* Cloudinary PDF Viewer Fix: Force fl_inline */}
+                            <iframe
+                                src={selectedResource.pdfUrl.includes('/fl_inline/')
+                                    ? selectedResource.pdfUrl
+                                    : selectedResource.pdfUrl.replace('/upload/', '/upload/fl_inline/')}
+                                className="w-full h-full"
+                                title="PDF Viewer"
+                            />
+                            {/* Fallback Message */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 opacity-50">
+                                <p className="text-gray-400 text-sm">Loading Preview...</p>
+                                <p className="text-gray-400 text-xs mt-1">If blank, please Download</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }
