@@ -130,7 +130,10 @@ export async function PUT(request: NextRequest) {
             if (token) tokens.push(token);
         });
 
-        if (tokens.length === 0) {
+        // Deduplicate tokens to prevent multiple notifications to the same device
+        const uniqueTokens = Array.from(new Set(tokens));
+
+        if (uniqueTokens.length === 0) {
             return NextResponse.json({ success: true, sent: 0 });
         }
 
@@ -144,7 +147,7 @@ export async function PUT(request: NextRequest) {
             targetUserId: null, // null = sent to all users
             clickAction: '/home',
             isBulk: true,
-            recipientCount: tokens.length
+            recipientCount: uniqueTokens.length
         };
 
         const docRef = await adminDb.collection('notifications').add(notificationDoc);
@@ -152,7 +155,7 @@ export async function PUT(request: NextRequest) {
 
         // Send multicast message
         const message = {
-            tokens,
+            tokens: uniqueTokens,
             notification: {
                 title,
                 body,
