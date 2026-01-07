@@ -89,8 +89,10 @@ export default function NotesPage() {
                                                 return url.replace('/fl_inline/', '/');
                                             };
 
-                                            const viewUrl = getOptimizedUrl(item.pdfUrl);
-                                            window.open(viewUrl, '_blank', 'noopener,noreferrer');
+                                            // Use Google Docs Viewer for robust mobile/desktop PDF support
+                                            const cleanUrl = item.pdfUrl.replace('/fl_inline/', '/'); // Ensure clean URL
+                                            const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(cleanUrl)}`;
+                                            window.open(viewerUrl, '_blank', 'noopener,noreferrer');
                                         } else {
                                             alert("No PDF link attached.");
                                         }
