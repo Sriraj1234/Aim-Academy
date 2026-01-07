@@ -84,8 +84,9 @@ export default function NotesPage() {
                                         if (item.pdfUrl) {
                                             const getOptimizedUrl = (url: string) => {
                                                 if (!url) return '';
-                                                // Inject fl_inline to ensure browser tries to view it instead of failing or downloading
-                                                return url.replace('/image/upload/', '/image/upload/fl_inline/');
+                                                if (!url) return '';
+                                                // Remove fl_inline if present, as it can break PDF loading on some devices
+                                                return url.replace('/fl_inline/', '/');
                                             };
 
                                             const viewUrl = getOptimizedUrl(item.pdfUrl);
