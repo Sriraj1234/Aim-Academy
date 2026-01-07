@@ -52,17 +52,7 @@ const adSlides: Slide[] = [
         bgClass: "bg-gradient-to-br from-indigo-500 to-blue-600",
         icon: FaTrophy
     },
-    {
-        id: 4,
-        type: 'ad',
-        title: "Science 3D Models",
-        subtitle: "New Feature",
-        description: "Experience Physics and Biology like never before with our interactive 3D modules.",
-        ctaText: "Explore Now",
-        ctaLink: "/demos",
-        bgClass: "bg-gradient-to-br from-orange-500 to-red-600",
-        icon: FaStar
-    },
+
     {
         id: 6,
         type: 'ad',
