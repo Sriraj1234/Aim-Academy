@@ -4,6 +4,10 @@ import { Header } from '@/components/shared/Header'
 import { DashboardHeader } from '@/components/home/DashboardHeader'
 import { StatsOverview } from '@/components/home/StatsOverview'
 import { ModernModeGrid } from '@/components/home/ModernModeGrid'
+import { AIQuestionGenerator } from '@/components/home/AIQuestionGenerator'
+import { AIFlashcardGenerator } from '@/components/home/AIFlashcardGenerator'
+import { ChapterSummary } from '@/components/home/ChapterSummary'
+import { LiveQuizBanner } from '@/components/home/LiveQuizBanner'
 import { ModernCarousel } from '@/components/home/ModernCarousel'
 import { DailyChallengeCard } from '@/components/home/DailyChallengeCard'
 import { GamificationCard } from '@/components/home/GamificationCard'
@@ -13,9 +17,6 @@ import { NotesSection } from '@/components/home/NotesSection'
 import { AIPerformanceCard } from '@/components/home/AIPerformanceCard'
 import { OfflineTuitionCard } from '@/components/home/OfflineTuitionCard'
 import { Footer } from '@/components/shared/Footer'
-import { AIQuestionGenerator } from '@/components/home/AIQuestionGenerator'
-import { AIFlashcardGenerator } from '@/components/home/AIFlashcardGenerator'
-import { ChapterSummary } from '@/components/home/ChapterSummary'
 
 
 export default function DashboardPage() {
@@ -36,9 +37,6 @@ export default function DashboardPage() {
                         {/* Left Column */}
                         <div className="lg:col-span-2 space-y-6">
 
-                            <GamificationCard />
-                            <AIPerformanceCard />
-
                             {/* Stats Overview */}
                             <div className="bg-white rounded-2xl p-3 md:p-5 border border-pw-border shadow-pw-md">
                                 <h3 className="text-lg font-bold text-pw-violet mb-3 md:mb-4 flex items-center gap-2">
@@ -46,6 +44,11 @@ export default function DashboardPage() {
                                 </h3>
                                 <StatsOverview />
                             </div>
+
+                            <LiveQuizBanner />
+
+                            <GamificationCard />
+                            <AIPerformanceCard />
 
                             {/* Study Modes */}
                             <div className="space-y-4">
