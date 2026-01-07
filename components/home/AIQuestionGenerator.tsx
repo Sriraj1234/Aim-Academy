@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { FaRobot, FaTimes, FaPlay, FaSpinner, FaCheck, FaBolt, FaUserGraduate, FaLanguage } from 'react-icons/fa';
@@ -46,6 +46,13 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
     const [error, setError] = useState('');
     const router = useRouter();
 
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     const generateQuestions = async () => {
         if (!contextUser) {
             setError('Please login to use AI features');
@@ -77,15 +84,17 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
 
             const data = await response.json();
 
-            if (data.success && data.questions) {
-                setQuestions(data.questions);
-            } else {
-                setError(data.error || 'Failed to generate questions');
+            if (mounted) {
+                if (data.success && data.questions) {
+                    setQuestions(data.questions);
+                } else {
+                    setError(data.error || 'Failed to generate questions');
+                }
             }
         } catch {
-            setError('Network error. Please try again.');
+            if (mounted) setError('Network error. Please try again.');
         } finally {
-            setLoading(false);
+            if (mounted) setLoading(false);
         }
     };
 
