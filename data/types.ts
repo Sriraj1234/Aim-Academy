@@ -239,3 +239,47 @@ export interface Batch {
     price?: number;
     teacherIds: string[];
 }
+
+export interface LiveQuiz {
+    id: string;
+    title: string;
+    description?: string;
+    type: 'global' | 'batch';
+    targetBatches?: string[]; // IDs of batches if type is 'batch'
+    allowedClasses?: string[]; // e.g. ['9', '10', '11']
+    allowedStreams?: string[]; // e.g. ['science', 'commerce', 'arts'] - Only for 11/12
+    subject?: string; // Main subject or 'Mixed'
+
+    // Scheduling
+    startTime: number; // Timestamp
+    endTime: number;   // Timestamp (Quiz window closes)
+    duration: number;  // In minutes (How long user has once they start)
+
+    // Content
+    questions: Question[]; // Or string[] of IDs if we want to fetch, but embedding is easier for live
+    totalMarks: number;
+
+    // Meta
+    createdBy: string; // Admin or Teacher ID
+    createdAt: number;
+    status: 'scheduled' | 'live' | 'ended';
+
+    // Results
+    participantsCount?: number;
+}
+
+export interface LiveQuizResult {
+    id: string; // result ID
+    quizId: string;
+    userId: string;
+    userName: string;
+    userPhoto?: string;
+
+    score: number;
+    accuracy: number;
+    timeTaken: number; // Seconds
+    submittedAt: number;
+
+    answers: { questionId: string; selectedOption: number | null; isCorrect: boolean }[];
+    rank?: number;
+}
