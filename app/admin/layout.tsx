@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HiHome, HiUpload, HiDatabase, HiUsers, HiChartBar } from 'react-icons/hi'
-import { FaYoutube, FaPuzzlePiece, FaBell, FaUserShield, FaChalkboardTeacher } from 'react-icons/fa'
+import { FaYoutube, FaPuzzlePiece, FaBell, FaUserShield, FaChalkboardTeacher, FaClock } from 'react-icons/fa'
 
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -40,6 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { label: 'Dashboard', href: '/admin', icon: HiChartBar },
         { label: 'Super Admin', href: '/admin/super', icon: FaUserShield },
         { label: 'Upload Questions', href: '/admin/upload', icon: HiUpload },
+        { label: 'Live Quiz Manager', href: '/admin/live-quizzes', icon: FaClock },
         { label: 'Study Hub Manager', href: '/admin/study-hub', icon: FaYoutube },
         { label: 'Mind Game Manager', href: '/admin/mind-game', icon: FaPuzzlePiece },
         { label: 'Notification Manager', href: '/admin/notifications', icon: FaBell },
