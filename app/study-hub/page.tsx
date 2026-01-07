@@ -322,64 +322,97 @@ export default function StudyHubPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
+                        className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-sm flex items-center justify-center p-0 md:p-8"
                         onClick={() => setSelectedVideo(null)}
                     >
-                        <div className="w-full max-w-4xl bg-black rounded-3xl overflow-hidden shadow-2xl relative border border-gray-800" onClick={e => e.stopPropagation()}>
-                            <div className="aspect-video">
+                        <div
+                            id="video-container"
+                            className="w-full md:max-w-4xl bg-black md:rounded-3xl overflow-hidden shadow-2xl relative md:border md:border-gray-800 flex flex-col h-full md:h-auto"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {/* Close Button Mobile Overlay */}
+                            <button
+                                onClick={() => setSelectedVideo(null)}
+                                className="absolute top-4 right-4 z-20 md:hidden bg-black/50 p-2 rounded-full text-white backdrop-blur-md"
+                            >
+                                <FaExclamationCircle className="rotate-45" size={20} />
+                            </button>
+
+                            <div className="relative aspect-video w-full bg-black flex-shrink-0 mt-auto md:mt-0">
                                 <iframe
                                     className="w-full h-full"
-                                    src={`https://www.youtube.com/embed/${selectedVideo?.videoId}?autoplay=1&rel=0`}
+                                    src={`https://www.youtube.com/embed/${selectedVideo?.videoId}?autoplay=1&rel=0&playsinline=1&modestbranding=1`}
                                     title={selectedVideo?.title}
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 />
                             </div>
-                            <div className="p-4 bg-gray-900 text-white flex flex-col md:flex-row justify-between items-start gap-4">
-                                <div>
-                                    <h3 className="font-bold text-lg mb-1">{selectedVideo?.title}</h3>
-                                    <p className="text-sm text-gray-400 mb-4">
-                                        By <span className="text-white font-bold">{selectedVideo?.teacherName}</span> • {selectedVideo?.channelName} • {selectedVideo?.views || 0} views
+
+                            <div className="p-4 bg-gray-900 text-white flex flex-col md:flex-row justify-between items-start gap-4 overflow-y-auto flex-1 md:flex-none mb-auto md:mb-0">
+                                <div className="w-full">
+                                    <h3 className="font-bold text-base md:text-lg mb-1 leading-snug">{selectedVideo?.title}</h3>
+                                    <p className="text-xs md:text-sm text-gray-400 mb-4">
+                                        By <span className="text-white font-bold">{selectedVideo?.teacherName}</span> • {selectedVideo?.channelName}
                                     </p>
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                                    {/* Rotate / Fullscreen Toggle */}
+                                    <button
+                                        onClick={() => {
+                                            const elem = document.getElementById('video-container');
+                                            if (!document.fullscreenElement) {
+                                                elem?.requestFullscreen().catch(err => {
+                                                    // Fallback for iOS usually involves native controls, but we can try rotating content visually if needed
+                                                    // For now, just rely on standard API
+                                                    console.log(err);
+                                                });
+                                                // Lock orientation to landscape if supported
+                                                if (screen.orientation && 'lock' in screen.orientation) {
+                                                    // @ts-ignore
+                                                    screen.orientation.lock('landscape').catch(() => { });
+                                                }
+                                            } else {
+                                                document.exitFullscreen();
+                                                if (screen.orientation && 'unlock' in screen.orientation) {
+                                                    screen.orientation.unlock();
+                                                }
+                                            }
+                                        }}
+                                        className="flex-1 md:flex-none px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 border border-gray-700"
+                                    >
+                                        <FaPlay className="rotate-90 text-[10px]" /> Fullscreen
+                                    </button>
+
                                     {/* Mark as Complete Button */}
                                     <button
                                         onClick={(e) => selectedVideo && toggleCompletion(e, selectedVideo.id)}
-                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${selectedVideo && completedVideoIds.has(selectedVideo.id)
+                                        className={`flex-1 md:flex-none px-3 py-2 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${selectedVideo && completedVideoIds.has(selectedVideo.id)
                                             ? 'bg-green-600 text-white hover:bg-green-700'
                                             : 'bg-white/10 hover:bg-white/20 text-gray-300'
                                             }`}
                                     >
                                         {selectedVideo && completedVideoIds.has(selectedVideo.id) ? (
                                             <>
-                                                <FaCheck /> Completed
+                                                <FaCheck /> Done
                                             </>
                                         ) : (
                                             <>
-                                                <div className="w-4 h-4 rounded-full border-2 border-current" /> Mark as Done
+                                                <div className="w-4 h-4 rounded-full border-2 border-current" /> Mark Done
                                             </>
                                         )}
                                     </button>
 
-                                    {/* Link with updated HREF logic for better safety */}
+                                    {/* Quiz Link */}
                                     {selectedVideo?.hasQuiz && (
                                         <a
                                             href={`/play/selection?mode=chapter&board=${selectedVideo?.board}&class=${selectedVideo?.classLevel}&subject=${selectedVideo?.subject}&chapter=${encodeURIComponent(selectedVideo?.linkedQuizChapter || selectedVideo?.chapter || '')}`}
-                                            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-sm font-bold transition-all flex items-center gap-2 animate-pulse"
+                                            className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 animate-pulse whitespace-nowrap"
                                         >
-                                            <FaBolt /> Take Quiz
+                                            <FaBolt /> Quiz
                                         </a>
                                     )}
-
-                                    <button
-                                        onClick={() => setSelectedVideo(null)}
-                                        className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors"
-                                    >
-                                        Close
-                                    </button>
                                 </div>
                             </div>
                         </div>
