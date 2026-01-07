@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, where, getDoc } from 'firebase/firestore';
 import { LiveQuiz } from '@/data/types';
 import Link from 'next/link';
 import { FaClock, FaCalendarAlt, FaPlayCircle, FaBell, FaCheckCircle } from 'react-icons/fa';
@@ -56,6 +56,26 @@ export const LiveQuizBanner = () => {
 const QuizCard = ({ quiz, isLive, index }: { quiz: LiveQuiz, isLive: boolean, index: number }) => {
     const { user } = useAuth(); // Assume useAuth is verified imported
     const [reminderSet, setReminderSet] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        const checkReminder = async () => {
+            if (user) {
+                try {
+                    const docSnap = await getDoc(doc(db, 'live_quizzes', quiz.id, 'reminders', user.uid));
+                    if (docSnap.exists()) {
+                        setReminderSet(true);
+                    }
+                } catch (e) {
+                    // silently fail or log
+                }
+            }
+        };
+
+        checkReminder();
+        return () => setMounted(false);
+    }, [user, quiz.id]);
 
     const handleNotify = async () => {
         if (!user) {
@@ -78,7 +98,7 @@ const QuizCard = ({ quiz, isLive, index }: { quiz: LiveQuiz, isLive: boolean, in
             });
         } catch (e) {
             console.error(e);
-            setReminderSet(false);
+            if (mounted) setReminderSet(false);
         }
     };
 
