@@ -70,6 +70,11 @@ export const ModernCarousel = () => {
     const { user, userProfile } = useAuth()
     const [current, setCurrent] = useState(0)
     const [isHovered, setIsHovered] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     // Dynamic First Slide Data
     const name = user?.displayName?.split(' ')[0] || userProfile?.displayName?.split(' ')[0] || 'Topper'
@@ -190,6 +195,15 @@ export const ModernCarousel = () => {
         )
     }
 
+    if (!mounted) {
+        return (
+            <section className="w-full max-w-7xl mx-auto mb-8 font-sans relative">
+                <div className="relative w-full aspect-[16/9] md:aspect-[21/9] md:rounded-2xl overflow-hidden bg-gray-900/10 animate-pulse border border-pw-border">
+                </div>
+            </section>
+        )
+    }
+
     return (
         <section
             className="w-full max-w-7xl mx-auto mb-8 font-sans relative"
@@ -279,3 +293,4 @@ export const ModernCarousel = () => {
         </section>
     )
 }
+
