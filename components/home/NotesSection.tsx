@@ -24,6 +24,7 @@ export const NotesSection = () => {
     const { user, userProfile } = useAuth()
     const [notes, setNotes] = useState<Note[]>([])
     const [loading, setLoading] = useState(true)
+    const [selectedNote, setSelectedNote] = useState<Note | null>(null)
 
     useEffect(() => {
         const fetchNotes = async () => {
@@ -59,8 +60,9 @@ export const NotesSection = () => {
         fetchNotes()
     }, [user, userProfile?.class])
 
-    const handleDownload = async (note: Note) => {
-        // Increment download count (Fire and forget)
+
+    const handleViewNote = async (note: Note) => {
+        setSelectedNote(note);
         try {
             updateDoc(doc(db, 'notes', note.id), {
                 downloadCount: increment(1)
@@ -73,74 +75,126 @@ export const NotesSection = () => {
     if (!user) return null
 
     return (
-        <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-3xl p-4 md:p-6 shadow-pw-md border border-pw-border"
-        >
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                        <FaBook className="text-emerald-600" />
+        <>
+            <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-3xl p-4 md:p-6 shadow-pw-md border border-pw-border"
+            >
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                            <FaBook className="text-emerald-600" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-pw-violet">Study Notes</h2>
+                            <p className="text-xs text-gray-500">Download PDFs for quick revision</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-lg font-bold text-pw-violet">Study Notes</h2>
-                        <p className="text-xs text-gray-500">Download PDFs for quick revision</p>
-                    </div>
-                </div>
-                {notes.length > 0 && (
-                    <Link
-                        href="/notes"
-                        className="text-xs font-bold text-pw-indigo hover:underline flex items-center gap-1"
-                    >
-                        View All <FaChevronRight size={10} />
-                    </Link>
-                )}
-            </div>
-
-            {loading ? (
-                <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 border-2 border-pw-indigo border-t-transparent rounded-full animate-spin" />
-                </div>
-            ) : notes.length === 0 ? (
-                <div className="text-center py-8 bg-pw-surface rounded-2xl border border-dashed border-gray-200">
-                    <FaBook className="text-3xl text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm font-medium">No notes available yet</p>
-                    <p className="text-gray-400 text-xs mt-1">Check back soon for study materials!</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {notes.map((note, index) => (
-                        <motion.a
-                            key={note.id}
-                            href={`https://docs.google.com/viewer?url=${encodeURIComponent(note.pdfUrl)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: index * 0.05 }}
-                            whileHover={{ y: -2 }}
-                            onClick={() => handleDownload(note)}
-                            className="flex flex-col items-center p-4 bg-pw-surface rounded-xl border border-pw-border hover:shadow-md transition-all text-center group overflow-hidden cursor-pointer"
+                    {notes.length > 0 && (
+                        <Link
+                            href="/notes"
+                            className="text-xs font-bold text-pw-indigo hover:underline flex items-center gap-1"
                         >
-                            <div className="text-3xl mb-2">
-                                {subjectIcons[note.subject.toLowerCase()] || '📄'}
+                            View All <FaChevronRight size={10} />
+                        </Link>
+                    )}
+                </div>
+
+                {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="w-6 h-6 border-2 border-pw-indigo border-t-transparent rounded-full animate-spin" />
+                    </div>
+                ) : notes.length === 0 ? (
+                    <div className="text-center py-8 bg-pw-surface rounded-2xl border border-dashed border-gray-200">
+                        <FaBook className="text-3xl text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm font-medium">No notes available yet</p>
+                        <p className="text-gray-400 text-xs mt-1">Check back soon for study materials!</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {notes.map((note, index) => (
+                            <motion.div
+                                key={note.id}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: index * 0.05 }}
+                                whileHover={{ y: -2 }}
+                                onClick={() => handleViewNote(note)}
+                                className="flex flex-col items-center p-4 bg-pw-surface rounded-xl border border-pw-border hover:shadow-md transition-all text-center group overflow-hidden cursor-pointer"
+                            >
+                                <div className="text-3xl mb-2">
+                                    {subjectIcons[note.subject.toLowerCase()] || '📄'}
+                                </div>
+                                <h3 className="text-sm font-bold text-gray-800 line-clamp-2 mb-1 w-full break-words">
+                                    {note.title}
+                                </h3>
+                                <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full font-bold uppercase mb-2 truncate max-w-full">
+                                    {note.subject}
+                                </span>
+                                <div className="flex items-center gap-1 text-xs text-gray-400 group-hover:text-pw-indigo transition-colors">
+                                    <FaDownload size={10} />
+                                    <span>{note.downloadCount || 0}</span>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </motion.section>
+
+            {/* PDF Viewer Modal */}
+            {selectedNote && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedNote(null)}>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white w-full max-w-4xl h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-800">{selectedNote.title}</h3>
+                                <p className="text-xs text-gray-500">{selectedNote.subject}</p>
                             </div>
-                            <h3 className="text-sm font-bold text-gray-800 line-clamp-2 mb-1 w-full break-words">
-                                {note.title}
-                            </h3>
-                            <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full font-bold uppercase mb-2 truncate max-w-full">
-                                {note.subject}
-                            </span>
-                            <div className="flex items-center gap-1 text-xs text-gray-400 group-hover:text-pw-indigo transition-colors">
-                                <FaDownload size={10} />
-                                <span>{note.downloadCount || 0}</span>
+                            <div className="flex gap-2">
+                                <a
+                                    href={selectedNote.pdfUrl}
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-4 py-2 bg-pw-indigo text-white text-sm font-bold rounded-lg hover:bg-pw-violet transition-colors flex items-center gap-2"
+                                >
+                                    <FaDownload /> Download
+                                </a>
+                                <button
+                                    onClick={() => setSelectedNote(null)}
+                                    className="p-2 hover:bg-gray-200 rounded-lg text-gray-500"
+                                >
+                                    ✕
+                                </button>
                             </div>
-                        </motion.a>
-                    ))}
+                        </div>
+
+                        {/* Viewer */}
+                        <div className="flex-1 bg-gray-100 relative">
+                            <iframe
+                                src={selectedNote.pdfUrl.includes('/fl_inline/')
+                                    ? selectedNote.pdfUrl
+                                    : selectedNote.pdfUrl.replace('/upload/', '/upload/fl_inline/')}
+                                className="w-full h-full"
+                                title="PDF Viewer"
+                            />
+                            {/* Fallback Message for Mobile/Blocked Frames */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 opacity-50">
+                                <p className="text-gray-400 text-sm">Loading Preview...</p>
+                                <p className="text-gray-400 text-xs mt-1">If empty, please click Download</p>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
             )}
-        </motion.section>
+        </>
     )
 }
