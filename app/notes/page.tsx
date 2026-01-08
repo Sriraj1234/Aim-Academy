@@ -5,11 +5,13 @@ import { Header } from '@/components/shared/Header';
 import { FaFilePdf, FaFlask, FaProjectDiagram, FaBookOpen, FaDownload } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, where } from 'firebase/firestore';
+import { useAuth } from '@/hooks/useAuth';
 
 type TabType = 'formulas' | 'mindmaps' | 'notes';
 
 export default function NotesPage() {
+    const { userProfile } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('notes');
     const [notes, setNotes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -18,8 +20,18 @@ export default function NotesPage() {
     useEffect(() => {
         const fetchNotes = async () => {
             try {
-                // Fetch all notes for now (can add filters later)
-                const q = query(collection(db, 'notes'), orderBy('uploadedAt', 'desc'));
+                const notesRef = collection(db, 'notes');
+                const constraints: any[] = [orderBy('uploadedAt', 'desc')];
+
+                // Filter by Board & Class
+                if (userProfile?.board) {
+                    constraints.push(where('board', '==', userProfile.board.toLowerCase()));
+                }
+                if (userProfile?.class) {
+                    constraints.push(where('class', '==', userProfile.class));
+                }
+
+                const q = query(notesRef, ...constraints);
                 const snapshot = await getDocs(q);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const fetchedNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
@@ -105,8 +117,8 @@ export default function NotesPage() {
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 if (item.pdfUrl) {
-                                                    // fl_attachment forces download
-                                                    const downloadUrl = item.pdfUrl.replace('/image/upload/', '/image/upload/fl_attachment/');
+                                                    // Just open the URL directly
+                                                    const downloadUrl = item.pdfUrl;
                                                     window.open(downloadUrl, '_blank');
                                                 }
                                             }}
@@ -170,7 +182,7 @@ export default function NotesPage() {
                             </div>
                             <div className="flex gap-2">
                                 <a
-                                    href={selectedResource.pdfUrl.replace('/upload/', '/upload/fl_attachment/')}
+                                    href={selectedResource.pdfUrl}
                                     download
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -189,19 +201,46 @@ export default function NotesPage() {
 
                         {/* Viewer */}
                         <div className="flex-1 bg-gray-100 relative">
-                            {/* Cloudinary PDF Viewer Fix: Force fl_inline */}
-                            <iframe
-                                src={selectedResource.pdfUrl.includes('/fl_inline/')
-                                    ? selectedResource.pdfUrl
-                                    : selectedResource.pdfUrl.replace('/upload/', '/upload/fl_inline/')}
-                                className="w-full h-full"
-                                title="PDF Viewer"
-                            />
-                            {/* Fallback Message */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 opacity-50">
-                                <p className="text-gray-400 text-sm">Loading Preview...</p>
-                                <p className="text-gray-400 text-xs mt-1">If blank, please Download</p>
-                            </div>
+                            {/* Check if it's a RAW upload (contains /raw/upload/) */}
+                            {selectedResource.pdfUrl.includes('/raw/upload/') ? (
+                                // For RAW uploads, use Google Docs Viewer
+                                <iframe
+                                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(selectedResource.pdfUrl)}&embedded=true`}
+                                    className="w-full h-full border-0"
+                                    title={selectedResource.title}
+                                >
+                                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                                        <p className="text-gray-500 font-medium mb-2">Unable to display PDF.</p>
+                                        <a
+                                            href={selectedResource.pdfUrl}
+                                            className="text-pw-indigo font-bold hover:underline"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Click here to Open in New Tab
+                                        </a>
+                                    </div>
+                                </iframe>
+                            ) : (
+                                // For image-type uploads, try object first
+                                <object
+                                    data={selectedResource.pdfUrl}
+                                    type="application/pdf"
+                                    className="w-full h-full relative z-10"
+                                >
+                                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                                        <p className="text-gray-500 font-medium mb-2">Unable to display PDF directly.</p>
+                                        <a
+                                            href={selectedResource.pdfUrl}
+                                            className="text-pw-indigo font-bold hover:underline"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Click here to Open in New Tab
+                                        </a>
+                                    </div>
+                                </object>
+                            )}
                         </div>
                     </motion.div>
                 </div>
