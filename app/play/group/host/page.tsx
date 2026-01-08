@@ -227,6 +227,15 @@ function HostGameContent() {
             const randomId = doc(collection(db, 'questions')).id;
             const constraints: any[] = [];
 
+            // 1. Isolation Filters (Board & Class)
+            if (userProfile?.board) {
+                constraints.push(where('board', '==', userProfile.board.toLowerCase()));
+            }
+            if (userProfile?.class) {
+                // Handle both string/number variance
+                constraints.push(where('class', 'in', [String(userProfile.class), Number(userProfile.class)]));
+            }
+
             if (selectedChapter && selectedChapter !== 'All Mixed') {
                 constraints.push(where('subject', '==', selectedSubject));
                 constraints.push(where('chapter', '==', selectedChapter));
