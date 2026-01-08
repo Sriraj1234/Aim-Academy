@@ -37,7 +37,10 @@ export const NotesSection = () => {
                 const notesRef = collection(db, 'notes')
                 const constraints: any[] = [orderBy('uploadedAt', 'desc'), limit(6)]
 
-                // Filter by user's class if available
+                // Filter by Board & Class
+                if (userProfile?.board) {
+                    constraints.unshift(where('board', '==', userProfile.board.toLowerCase()))
+                }
                 if (userProfile?.class) {
                     constraints.unshift(where('class', '==', userProfile.class))
                 }
@@ -179,18 +182,48 @@ export const NotesSection = () => {
 
                         {/* Viewer */}
                         <div className="flex-1 bg-gray-100 relative">
-                            <iframe
-                                src={selectedNote.pdfUrl.includes('/fl_inline/')
-                                    ? selectedNote.pdfUrl
-                                    : selectedNote.pdfUrl.replace('/upload/', '/upload/fl_inline/')}
-                                className="w-full h-full"
-                                title="PDF Viewer"
-                            />
-                            {/* Fallback Message for Mobile/Blocked Frames */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 opacity-50">
-                                <p className="text-gray-400 text-sm">Loading Preview...</p>
-                                <p className="text-gray-400 text-xs mt-1">If empty, please click Download</p>
-                            </div>
+                            {/* Check if it's a RAW upload (contains /raw/upload/) */}
+                            {selectedNote.pdfUrl.includes('/raw/upload/') ? (
+                                // For RAW uploads, use Google Docs Viewer
+                                <iframe
+                                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(selectedNote.pdfUrl)}&embedded=true`}
+                                    className="w-full h-full border-0"
+                                    title={selectedNote.title}
+                                >
+                                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                                        <p className="text-gray-500 font-medium mb-2">Unable to display PDF.</p>
+                                        <a
+                                            href={selectedNote.pdfUrl}
+                                            className="text-pw-indigo font-bold hover:underline"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Click here to Open in New Tab
+                                        </a>
+                                    </div>
+                                </iframe>
+                            ) : (
+                                // For image-type uploads, use object with fl_inline
+                                <object
+                                    data={selectedNote.pdfUrl.includes('/fl_inline/')
+                                        ? selectedNote.pdfUrl
+                                        : selectedNote.pdfUrl.replace('/upload/', '/upload/fl_inline/')}
+                                    type="application/pdf"
+                                    className="w-full h-full relative z-10"
+                                >
+                                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                                        <p className="text-gray-500 font-medium mb-2">Unable to display PDF directly.</p>
+                                        <a
+                                            href={selectedNote.pdfUrl}
+                                            className="text-pw-indigo font-bold hover:underline"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Click here to Open in New Tab
+                                        </a>
+                                    </div>
+                                </object>
+                            )}
                         </div>
                     </motion.div>
                 </div>
