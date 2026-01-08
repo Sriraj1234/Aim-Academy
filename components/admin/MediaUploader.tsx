@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { CldUploadWidget } from 'next-cloudinary';
-import { FaCloudUploadAlt, FaFilePdf, FaImage, FaCheckCircle } from 'react-icons/fa';
+import { FaCloudUploadAlt, FaFilePdf, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 
 interface MediaUploaderProps {
     onUploadSuccess: (url: string, type: 'image' | 'video' | 'raw') => void;
@@ -11,68 +11,190 @@ interface MediaUploaderProps {
 
 export const MediaUploader = ({ onUploadSuccess, folder = 'padhaku_notes' }: MediaUploaderProps) => {
     const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+    const [result, setResult] = useState<any | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadType, setUploadType] = useState<'image' | 'pdf'>('image');
+    const pdfInputRef = useRef<HTMLInputElement>(null);
 
-    // Using CldUploadWidget for easy integration
-    // Preset 'ml_default' or user needs to create an unsigned preset in Cloudinary dashboard if using unsigned upload
-    // But for better security/easier usage with credentials we can use signed or default if configured.
-    // Standard approach with next-cloudinary often uses upload presets.
-    // We'll try to use a default or assume 'unsigned_upload' preset exists, 
-    // OR we can rely on next-cloudinary's ability if configured.
-    // Actually, simplest is to use CldUploadWidget with an unsigned preset.
-    // User didn't give a preset. I'll prompt them if it fails, but often 'default' works or we create a standard upload wrapper.
+    // Direct PDF upload using our server API (bypasses Cloudinary preset issues)
+    const handlePdfUpload = async (file: File) => {
+        if (!file) return;
 
-    // Let's assume standard 'unsigned' preset or we might need to ask user to create one called 'padhaku_preset'.
-    // However, `next-cloudinary` simplifies this.
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', folder);
+
+            const response = await fetch('/api/upload-pdf', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.url) {
+                console.log("✅ PDF Upload Success:", data);
+                setUploadedUrl(data.url);
+                setResult({ info: { resource_type: 'raw', format: 'pdf', secure_url: data.url } });
+                onUploadSuccess(data.url, 'raw');
+            } else {
+                console.error("❌ PDF Upload Failed:", data.error);
+                alert("PDF upload failed: " + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error("❌ PDF Upload Error:", error);
+            alert("PDF upload failed. Please try again.");
+        } finally {
+            setUploading(false);
+        }
+    };
 
     return (
         <div className="w-full">
-            <CldUploadWidget
-                uploadPreset="padhaku_uploads" // We will ask user to create this, or use 'ml_default'
-                options={{
-                    sources: ['local', 'url'],
-                    folder: folder,
-                    clientAllowedFormats: ['png', 'jpeg', 'jpg', 'pdf', 'webp'],
-                    maxFileSize: 10000000, // 10MB
-                }}
-                onSuccess={(result: any) => {
-                    console.log("Upload Success:", result);
-                    if (result.info?.secure_url) {
-                        setUploadedUrl(result.info.secure_url);
-                        onUploadSuccess(result.info.secure_url, result.info.resource_type);
-                    }
-                }}
-                onError={(error) => {
-                    console.error("Upload Error:", error);
-                    // If preset fails, we might show a message
-                }}
-            >
-                {({ open }) => {
-                    return (
+            {/* Toggle between Image and PDF mode */}
+            <div className="flex gap-2 mb-3 justify-center">
+                <button
+                    type="button"
+                    onClick={() => setUploadType('image')}
+                    className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${uploadType === 'image'
+                            ? 'bg-pw-indigo text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                >
+                    🖼️ Image
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setUploadType('pdf')}
+                    className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${uploadType === 'pdf'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                >
+                    📄 PDF
+                </button>
+            </div>
+
+            {uploadType === 'pdf' ? (
+                // Direct PDF upload (server-side, guaranteed RAW type)
+                <div
+                    onClick={() => !uploading && pdfInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all group ${uploading
+                            ? 'border-gray-300 bg-gray-50'
+                            : 'border-red-300 hover:bg-red-50'
+                        }`}
+                >
+                    <input
+                        ref={pdfInputRef}
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePdfUpload(file);
+                        }}
+                    />
+
+                    {uploading ? (
+                        <>
+                            <FaSpinner className="text-4xl text-red-400 animate-spin mb-3" />
+                            <p className="text-sm font-bold text-gray-700">Uploading PDF...</p>
+                        </>
+                    ) : uploadedUrl && result?.info?.format === 'pdf' ? (
+                        <div className="text-center w-full">
+                            <FaCheckCircle className="text-4xl text-green-500 mb-2 mx-auto" />
+                            <p className="text-sm text-gray-600 font-medium">PDF Uploaded! ✓</p>
+                            <div className="mt-2 text-[10px] bg-green-50 p-2 rounded text-center">
+                                <p><strong>Type:</strong> RAW (Correct!)</p>
+                            </div>
+                            <div className="flex gap-2 justify-center mt-3">
+                                <a
+                                    href={uploadedUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded hover:bg-red-600"
+                                >
+                                    Open PDF
+                                </a>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setUploadedUrl(null); setResult(null); }}
+                                    className="text-xs text-gray-400 hover:text-red-500 underline"
+                                >
+                                    Replace
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <FaFilePdf className="text-4xl text-red-400 group-hover:text-red-500 transition-colors mb-3" />
+                            <p className="text-sm font-bold text-gray-700">Click to upload PDF</p>
+                            <p className="text-xs text-gray-400 mt-1">Max 15MB • Will open correctly ✓</p>
+                        </>
+                    )}
+                </div>
+            ) : (
+                // Image upload via Cloudinary widget
+                <CldUploadWidget
+                    uploadPreset="padhaku_uploads"
+                    options={{
+                        sources: ['local', 'url'],
+                        folder: folder,
+                        clientAllowedFormats: ['png', 'jpeg', 'jpg', 'webp', 'gif'],
+                        maxFileSize: 10000000,
+                        resourceType: 'image',
+                    }}
+                    onSuccess={(result: any) => {
+                        console.log("Image Upload Success:", result);
+                        if (result.info?.secure_url) {
+                            setUploadedUrl(result.info.secure_url);
+                            setResult(result);
+                            onUploadSuccess(result.info.secure_url, 'image');
+                        }
+                    }}
+                    onError={(error) => {
+                        console.error("Image Upload Error:", error);
+                    }}
+                >
+                    {({ open }) => (
                         <div
                             onClick={() => open()}
                             className="border-2 border-dashed border-pw-indigo/30 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-pw-indigo/5 transition-all group"
                         >
-                            {uploadedUrl ? (
-                                <div className="text-center">
+                            {uploadedUrl && result?.info?.resource_type === 'image' ? (
+                                <div className="text-center w-full">
                                     <FaCheckCircle className="text-4xl text-green-500 mb-2 mx-auto" />
-                                    <p className="text-sm text-gray-600 font-medium break-all">{uploadedUrl}</p>
-                                    <p className="text-xs text-pw-indigo mt-2">Click to replace</p>
+                                    <p className="text-sm text-gray-600 font-medium truncate max-w-[200px] mx-auto">Image Uploaded! ✓</p>
+                                    <div className="flex gap-2 justify-center mt-3">
+                                        <a
+                                            href={uploadedUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="px-3 py-1 bg-pw-indigo text-white text-xs font-bold rounded hover:bg-pw-violet"
+                                        >
+                                            View Image
+                                        </a>
+                                        <button className="text-xs text-gray-400 hover:text-pw-indigo underline">
+                                            Replace
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <>
                                     <FaCloudUploadAlt className="text-4xl text-pw-indigo/50 group-hover:text-pw-indigo transition-colors mb-3" />
-                                    <p className="text-sm font-bold text-gray-700">Click to upload file</p>
-                                    <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG supported</p>
+                                    <p className="text-sm font-bold text-gray-700">Click to upload image</p>
+                                    <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP supported</p>
                                 </>
                             )}
                         </div>
-                    );
-                }}
-            </CldUploadWidget>
+                    )}
+                </CldUploadWidget>
+            )}
 
-            {/* Fallback note if preset missing */}
             <p className="text-[10px] text-gray-400 text-center mt-2">
-                *Requires Cloudinary Upload Preset 'padhaku_uploads'
+                {uploadType === 'pdf' ? '📄 PDFs upload directly via server' : '🖼️ Images use Cloudinary widget'}
             </p>
         </div>
     );
