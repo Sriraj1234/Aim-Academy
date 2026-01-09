@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, where, getDoc } from 'firebase/firestore';
 import { LiveQuiz } from '@/data/types';
 import Link from 'next/link';
-import { FaClock, FaCalendarAlt, FaPlayCircle, FaBell, FaCheckCircle } from 'react-icons/fa';
+import { FaClock, FaCalendarAlt, FaPlayCircle, FaBell, FaCheckCircle, FaTrophy } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { setDoc, doc, updateDoc, increment } from 'firebase/firestore';
@@ -225,10 +225,10 @@ const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
 
                     {isResultReady && (
                         <Link
-                            href={`/play/result`} // In a real app, this would be /play/result/[resultId] or /play/live/[quizId]/result
+                            href={`/play/result?mode=live&quizId=${quiz.id}`}
                             className="px-6 py-2 bg-pw-indigo text-white font-bold rounded-xl shadow-lg hover:bg-pw-violet transition-colors flex items-center gap-2"
                         >
-                            <FaCheckCircle /> View Result
+                            <FaTrophy /> View Leaderboard
                         </Link>
                     )}
                 </div>
