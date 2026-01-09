@@ -98,7 +98,7 @@ function CustomizeModal({
 
 function HostGameContent() {
     const router = useRouter();
-    const { user, userProfile } = useAuth();
+    const { user, userProfile, incrementUsage } = useAuth();
     const [step, setStep] = useState<'subject' | 'chapter' | 'confirm'>('subject');
     const [selectedSubject, setSelectedSubject] = useState('');
     const [selectedChapter, setSelectedChapter] = useState('');
@@ -286,6 +286,9 @@ function HostGameContent() {
                 localStorage.setItem(`room_host_${roomId}`, 'true');
                 localStorage.setItem(`player_name_${roomId}`, hostName);
                 localStorage.setItem(`player_id_${roomId}`, user.uid);
+
+                // Track Usage
+                incrementUsage('group_play');
 
                 router.push(`/play/group/lobby/${roomId}`);
             }
