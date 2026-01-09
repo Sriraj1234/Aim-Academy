@@ -21,6 +21,8 @@ const DailyChallengeCard = dynamic(() => import('@/components/home/DailyChalleng
 const AIQuestionGenerator = dynamic(() => import('@/components/home/AIQuestionGenerator').then(m => m.AIQuestionGenerator), { loading: () => <div className="h-20 bg-gray-100 rounded-2xl animate-pulse" /> })
 const AIFlashcardGenerator = dynamic(() => import('@/components/home/AIFlashcardGenerator').then(m => m.AIFlashcardGenerator))
 const ChapterSummary = dynamic(() => import('@/components/home/ChapterSummary').then(m => m.ChapterSummary))
+const TrialReminderModal = dynamic(() => import('@/components/subscription/TrialReminderModal').then(m => m.TrialReminderModal))
+
 
 
 export default function DashboardPage() {
@@ -125,7 +127,9 @@ export default function DashboardPage() {
             <DailyChallengeCard />
 
 
+
             <AIChatWidget />
+            <TrialReminderModal />
 
             <Footer />
         </div>
