@@ -22,6 +22,8 @@ const AIQuestionGenerator = dynamic(() => import('@/components/home/AIQuestionGe
 const AIFlashcardGenerator = dynamic(() => import('@/components/home/AIFlashcardGenerator').then(m => m.AIFlashcardGenerator))
 const ChapterSummary = dynamic(() => import('@/components/home/ChapterSummary').then(m => m.ChapterSummary))
 const TrialReminderModal = dynamic(() => import('@/components/subscription/TrialReminderModal').then(m => m.TrialReminderModal))
+const ExamCountdown = dynamic(() => import('@/components/home/ExamCountdown').then(m => m.ExamCountdown), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" /> })
+
 
 
 
@@ -53,6 +55,15 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Left Column */}
                         <div className="lg:col-span-2 space-y-6">
+
+                            {/* Exam Countdown Widget */}
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.1 }}
+                            >
+                                <ExamCountdown />
+                            </motion.div>
 
                             {/* Stats Overview */}
                             <motion.div
