@@ -4,10 +4,22 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaUsers, FaPlay, FaWifi, FaArrowLeft, FaChevronRight } from 'react-icons/fa';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 
 export default function GroupPlayPage() {
     const router = useRouter();
+    const { checkAccess } = useAuth();
     const [joinCode, setJoinCode] = useState('');
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+    const handleHostClick = () => {
+        if (checkAccess('group_play')) {
+            router.push('/play/group/host');
+        } else {
+            setShowUpgradeModal(true);
+        }
+    };
 
     const handleJoin = () => {
         if (joinCode.length === 6) {
@@ -61,7 +73,7 @@ export default function GroupPlayPage() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2 }}
-                            onClick={() => router.push('/play/group/host')}
+                            onClick={handleHostClick}
                             className="group relative bg-white hover:bg-gradient-to-br hover:from-pw-indigo hover:to-pw-violet border border-pw-border hover:border-pw-indigo/20 p-8 rounded-[2rem] text-left shadow-pw-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col md:flex-row items-center md:items-start gap-6 overflow-hidden"
                         >
                             <div className="w-16 h-16 rounded-2xl bg-pw-surface border border-pw-border flex items-center justify-center text-2xl text-pw-indigo group-hover:bg-white/20 group-hover:text-white group-hover:border-white/20 transition-colors shrink-0">
@@ -120,6 +132,11 @@ export default function GroupPlayPage() {
                     </div>
                 </div>
             </div>
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                featureName="Multiplayer Hosting"
+            />
         </div>
     );
 }
