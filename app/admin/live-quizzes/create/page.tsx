@@ -484,14 +484,20 @@ export default function CreateLiveQuizPage() {
                                                             </div>
                                                             <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">{q.question}</p>
                                                             {/* Show Options */}
-                                                            {q.options && q.options.length > 0 && (
-                                                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                                            {/* Show Options - Enhanced Display */}
+                                                            {q.options && q.options.length > 0 ? (
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                                                                     {q.options.map((opt, idx) => (
-                                                                        <div key={idx} className={`text-xs px-2 py-1 rounded border ${q.correctAnswer === idx ? 'bg-green-50 border-green-200 text-green-700 font-bold' : 'bg-gray-50 border-gray-100 text-gray-500'}`}>
-                                                                            <span className="opacity-50 mr-1">{String.fromCharCode(65 + idx)}.</span> {opt}
+                                                                        <div key={idx} className={`text-xs px-3 py-2 rounded-lg border flex items-start gap-2 ${q.correctAnswer === idx ? 'bg-green-50 border-green-200 text-green-800 font-bold shadow-sm' : 'bg-gray-50 border-gray-100 text-gray-600'}`}>
+                                                                            <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] border ${q.correctAnswer === idx ? 'border-green-300 bg-white' : 'border-gray-300 bg-white'}`}>
+                                                                                {String.fromCharCode(65 + idx)}
+                                                                            </span>
+                                                                            <span>{opt}</span>
                                                                         </div>
                                                                     ))}
                                                                 </div>
+                                                            ) : (
+                                                                <div className="mt-2 text-xs text-red-400 italic">No options available for this question</div>
                                                             )}
                                                         </div>
                                                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-pw-indigo border-pw-indigo text-white' : 'border-gray-200 text-transparent'}`}>
@@ -521,7 +527,17 @@ export default function CreateLiveQuizPage() {
                                         <div key={q.id} className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-100 shadow-sm">
                                             <div className="flex-1 truncate pr-4">
                                                 <span className="text-xs font-bold text-pw-indigo mr-2">Q{i + 1}</span>
-                                                <span className="text-sm text-gray-600">{q.question}</span>
+                                                <span className="text-sm text-gray-600 font-medium">{q.question}</span>
+                                                {/* Options in Selected List for Verification */}
+                                                {q.options && q.options.length > 0 && (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 ml-8">
+                                                        {q.options.map((opt, idx) => (
+                                                            <div key={idx} className={`text-[10px] px-2 py-1 rounded border ${q.correctAnswer === idx ? 'bg-green-50 border-green-200 text-green-700 font-bold' : 'bg-gray-50 border-gray-100 text-gray-500'}`}>
+                                                                <span className="opacity-50 mr-1">{String.fromCharCode(65 + idx)}.</span> {opt}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                             <button
                                                 onClick={() => setSelectedQuestions(prev => prev.filter(sq => sq.id !== q.id))}
