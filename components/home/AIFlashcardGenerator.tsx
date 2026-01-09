@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { FaLightbulb, FaSpinner, FaArrowLeft, FaArrowRight, FaRedo, FaTrash, FaTimes } from 'react-icons/fa';
+import { UpgradeModal } from '../subscription/UpgradeModal';
 
 interface Flashcard {
     term: string;
@@ -22,7 +23,10 @@ const STORAGE_KEY = 'aim_flashcards';
 
 export const AIFlashcardGenerator = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { userProfile } = useAuth();
+    const { userProfile, checkAccess, incrementUsage } = useAuth();
+
+    // Subscription Modal
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     const [topic, setTopic] = useState('');
     const [language, setLanguage] = useState<'english' | 'hindi' | 'hinglish'>('english');
@@ -58,6 +62,13 @@ export const AIFlashcardGenerator = () => {
     const generateFlashcards = async () => {
         if (!topic.trim()) return;
 
+        // CHECK SUBSCRIPTION LIMIT
+        const hasAccess = checkAccess('flashcards');
+        if (!hasAccess) {
+            setShowUpgradeModal(true);
+            return;
+        }
+
         setLoading(true);
         try {
             const res = await fetch('/api/ai/flashcards', {
@@ -88,6 +99,9 @@ export const AIFlashcardGenerator = () => {
                 const updated = [newSet, ...savedSets.slice(0, 4)];
                 setSavedSets(updated);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+                // Track Usage
+                incrementUsage('flashcards');
             }
         } catch (error) {
             console.error('Failed to generate flashcards:', error);
@@ -280,6 +294,12 @@ export const AIFlashcardGenerator = () => {
 
     return (
         <>
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                featureName="Flashcard Generator"
+            />
+
             {/* Trigger Button */}
             <motion.button
                 whileHover={{ scale: 1.02 }}
