@@ -24,10 +24,16 @@ interface AuthContextType {
     logout: () => Promise<void>
     updateProfile: (data: Partial<UserProfile>) => Promise<void>
     addXP: (amount: number) => Promise<void>
+    // Subscription Helpers
+    // Subscription Helpers
+    checkAccess: (feature: 'ai_chat' | 'flashcards' | 'group_play') => boolean
+    incrementUsage: (feature: 'ai_chat' | 'flashcards' | 'group_play') => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
-    addXP: async () => { }
+    addXP: async () => { },
+    checkAccess: () => false,
+    incrementUsage: async () => { }
 } as unknown as AuthContextType)
 
 // Helper: Get or Create Device ID
@@ -158,6 +164,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             // For specific task, omitting complex sync for brevity unless requested
                         }
 
+                        // --- DAILY LIMIT RESET LOGIC ---
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        if (profileData.dailyLimits?.date !== todayStr) {
+                            // Reset limits locally and in DB
+                            const newLimits = {
+                                date: todayStr,
+                                aiChatCount: 0,
+                                flashcardGenCount: 0,
+                                groupPlayCount: 0
+                            };
+                            // We don't await this to keep UI snappy, fire and forget-ish or optimistic
+                            updateDoc(docRef, { dailyLimits: newLimits });
+                            profileData.dailyLimits = newLimits;
+                        }
+
                         setUserProfile({ ...profileData, gamification });
                     } else {
                         // --- SAFETY CHECK (PREVENT OVERWRITE) ---
@@ -188,7 +209,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             },
                             activeDevices: [{
                                 deviceId, deviceName, lastActive: Date.now()
-                            }]
+                            }],
+                            subscription: {
+                                plan: 'free',
+                                status: 'active',
+                                startDate: Date.now()
+                            },
+                            dailyLimits: {
+                                date: new Date().toISOString().split('T')[0],
+                                aiChatCount: 0,
+                                flashcardGenCount: 0,
+                                groupPlayCount: 0
+                            }
                         }
                         setDoc(docRef, newProfile).then(() => {
                             isRegistered = true;
@@ -336,8 +368,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
+    const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play'): boolean => {
+        if (!userProfile) return false;
+
+        const isPro = userProfile.subscription?.plan === 'pro';
+        const limits = userProfile.dailyLimits || { aiChatCount: 0, flashcardGenCount: 0, groupPlayCount: 0 };
+
+        if (feature === 'ai_chat') return isPro ? true : limits.aiChatCount < 10;
+        if (feature === 'flashcards') return limits.flashcardGenCount < (isPro ? 10 : 3);
+        if (feature === 'group_play') return isPro ? true : (limits.groupPlayCount || 0) < 3;
+
+        return false;
+    }
+
+    const incrementUsage = async (feature: 'ai_chat' | 'flashcards' | 'group_play') => {
+        if (!user) return;
+
+        const docRef = doc(db, 'users', user.uid);
+
+        // Define field map
+        const fieldMap = {
+            'ai_chat': 'aiChatCount',
+            'flashcards': 'flashcardGenCount',
+            'group_play': 'groupPlayCount'
+        };
+        const fieldName = fieldMap[feature];
+
+        try {
+
+            const currentLimits = userProfile?.dailyLimits || {
+                date: new Date().toISOString().split('T')[0],
+                aiChatCount: 0,
+                flashcardGenCount: 0,
+                groupPlayCount: 0
+            };
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const currentVal = (currentLimits as any)[fieldName] || 0;
+
+            const updatePayload = {
+                [`dailyLimits.${fieldName}`]: currentVal + 1
+            };
+
+            await updateDoc(docRef, updatePayload);
+        } catch (e) {
+            console.error("Failed to update usage", e);
+        }
+    }
+
     return (
-        <AuthContext.Provider value={{ user, userProfile, loading, signInWithGoogle, loginWithEmail, signupWithEmail, logout, updateProfile, addXP }}>
+        <AuthContext.Provider value={{ user, userProfile, loading, signInWithGoogle, loginWithEmail, signupWithEmail, logout, updateProfile, addXP, checkAccess, incrementUsage }}>
             {children}
         </AuthContext.Provider>
     )
