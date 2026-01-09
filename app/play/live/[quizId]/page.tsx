@@ -26,6 +26,32 @@ export default function LiveQuizPlayerPage() {
     const [answers, setAnswers] = useState<Record<string, number>>({});
     const [timeLeft, setTimeLeft] = useState(0);
 
+    // Back Button Protection State
+    const [backPressCount, setBackPressCount] = useState(0);
+
+    useEffect(() => {
+        // Prevent accidental back navigation
+        if (status === 'active') {
+            history.pushState(null, '', location.href);
+            const handlePopState = () => {
+                if (backPressCount === 0) {
+                    history.pushState(null, '', location.href);
+                    setBackPressCount(1);
+                    // Use a toast or simple alert in a real app, strict alert for now
+                    alert("⚠️ Warning: If you go back again, you will exit the quiz and lose your progress!");
+
+                    // Reset count after 3 seconds so they have to double tap quickly-ish
+                    setTimeout(() => setBackPressCount(0), 3000);
+                } else {
+                    // Allow exit, redirect to home
+                    router.push('/home');
+                }
+            };
+            window.addEventListener('popstate', handlePopState);
+            return () => window.removeEventListener('popstate', handlePopState);
+        }
+    }, [status, backPressCount, router]);
+
     useEffect(() => {
         if (!quizId) return;
 
@@ -36,16 +62,12 @@ export default function LiveQuizPlayerPage() {
 
                 if (snap.exists()) {
                     const data = { id: snap.id, ...snap.data() } as LiveQuiz;
-
-                    // Safeguard: Ensure questions exists
-                    if (!data.questions) {
-                        data.questions = [];
-                    }
+                    if (!data.questions) data.questions = [];
 
                     setQuiz(data);
 
                     if (data.questions.length === 0) {
-                        setStatus('error'); // Cannot play a quiz with no questions
+                        setStatus('error');
                         return;
                     }
 
@@ -53,20 +75,19 @@ export default function LiveQuizPlayerPage() {
                     if (now < data.startTime) {
                         setStatus('waiting');
                     } else if (now > data.endTime) {
-                        setStatus('completed'); // Or 'missed'
+                        setStatus('completed');
                     } else {
-                        // Check if user already submitted? (Optional: Implement check here)
-                        setStatus('active');
-                        // Calculate remaining time relative to end time OR fixed duration
-                        // For a live quiz, usually everyone ends at same time OR user has X mins from start
-                        // Let's assume strict window: End Time - Now
-                        // OR if user starts late, they get min(duration, endTime - now)
+                        // Check previous submission here if needed
 
+                        setStatus('active');
+                        // STRICT TIMER LOGIC
                         const maxDurationMs = data.duration * 60 * 1000;
                         const timeUntilClose = data.endTime - now;
 
-                        // We give them proper duration, but capped at window close
-                        setTimeLeft(Math.min(maxDurationMs, timeUntilClose) / 1000);
+                        // The User's allowed End Time is the sooner of (Now + Duration) OR (Quiz Global End Time)
+                        // Actually, to display countdown properly, we just need the remaining seconds
+                        const allowedSeconds = Math.min(maxDurationMs, timeUntilClose) / 1000;
+                        setTimeLeft(allowedSeconds);
                     }
                 } else {
                     setStatus('error');
@@ -82,9 +103,17 @@ export default function LiveQuizPlayerPage() {
         fetchQuiz();
     }, [quizId]);
 
-    // Timer Logic
+    // Robust Timer: Decrement based on previous state is okay for short items, 
+    // but better to sync with a target time if we want extreme precision. 
+    // Given the constraints, the existing interval approach is acceptable if we re-sync or check edge cases.
+    // Let's stick to the simple interval for UI smootness but enforce the "0" check strongly.
     useEffect(() => {
-        if (status !== 'active' || timeLeft <= 0) return;
+        if (status !== 'active') return;
+
+        if (timeLeft <= 0) {
+            handleSubmit();
+            return;
+        }
 
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
@@ -101,15 +130,19 @@ export default function LiveQuizPlayerPage() {
     }, [status, timeLeft]);
 
 
-    const handleOptionSelect = (qId: string, optIndex: number) => {
-        setAnswers(prev => ({ ...prev, [qId]: optIndex }));
+    const handleOptionSelect = (qId: string | undefined, optIndex: number, fallbackIndex: number) => {
+        const key = qId || `q-${fallbackIndex}`;
+        console.log("Option selected:", key, optIndex); // Debugging
+        setAnswers(prev => ({ ...prev, [key]: optIndex }));
     };
 
     const handleSubmit = async () => {
-        if (!quiz || !user) return;
+        if (!quiz || !user || status === 'completed') return;
+
+        // Prevent double submission
         setStatus('completed');
 
-        // Calculate Score
+        // Calculate Score (Internal logic, not shown to user yet)
         let score = 0;
         let correctCount = 0;
         const resultAnswers = quiz.questions.map(q => {
@@ -122,7 +155,6 @@ export default function LiveQuizPlayerPage() {
             return { questionId: q.id, selectedOption: selected ?? null, isCorrect };
         });
 
-        // Save Result
         const resultData: Omit<LiveQuizResult, 'id'> = {
             quizId: quiz.id,
             userId: user.uid,
@@ -137,8 +169,7 @@ export default function LiveQuizPlayerPage() {
 
         try {
             await addDoc(collection(db, 'live_quiz_results'), resultData);
-            // Redirect to result page (could comprise specific live result page)
-            setTimeout(() => router.push('/play/result'), 2000); // For now redirect to standard result or custom
+            // DO NOT redirect immediately. Show success screen.
         } catch (e) {
             console.error("Submit error", e);
         }
@@ -147,6 +178,7 @@ export default function LiveQuizPlayerPage() {
     if (loading) return <div className="min-h-screen flex items-center justify-center text-pw-indigo">Loading...</div>;
 
     if (status === 'waiting') {
+        // ... existing waiting view ...
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-pw-surface">
                 <FaClock className="text-6xl text-pw-indigo mb-4 animate-bounce" />
@@ -159,12 +191,62 @@ export default function LiveQuizPlayerPage() {
         );
     }
 
-    if (status === 'completed' || status === 'error') {
+    if (status === 'completed') {
+        // NEW SUCCESS SCREEN
+        const resultTime = new Date(quiz!.endTime + (10 * 60 * 1000)); // End Time + 10 mins
+
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-pw-surface">
-                <FaCheckCircle className="text-6xl text-green-500 mb-4" />
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">Quiz Ended</h1>
-                <p className="text-gray-500">Redirecting to results...</p>
+            <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-white">
+                <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6"
+                >
+                    <FaCheckCircle className="text-5xl text-green-600" />
+                </motion.div>
+
+                <h1 className="text-3xl font-black text-gray-900 mb-2">Quiz Submitted!</h1>
+                <p className="text-gray-500 font-medium max-w-md mb-8">
+                    Your responses have been recorded successfully.
+                </p>
+
+                <div className="bg-pw-surface p-6 rounded-2xl border border-pw-border max-w-sm w-full space-y-4 mb-8">
+                    <div className="flex items-start gap-3 text-left">
+                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg mt-1">
+                            <FaClock />
+                        </div>
+                        <div>
+                            <p className="font-bold text-gray-800">Results Pending</p>
+                            <p className="text-sm text-gray-500">
+                                Results will be calculated and declared at <span className="text-pw-indigo font-bold">{resultTime.toLocaleTimeString()}</span> (10 mins after quiz ends).
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-3 text-left">
+                        <div className="p-2 bg-purple-100 text-purple-600 rounded-lg mt-1">
+                            <FaExclamationTriangle />
+                        </div>
+                        <div>
+                            <p className="font-bold text-gray-800">24-Hour Access</p>
+                            <p className="text-sm text-gray-500">
+                                You can view your rank and score for up to 24 hours after declaration.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <Button onClick={() => router.push('/home')} className="bg-pw-indigo hover:bg-pw-violet text-white px-8 py-3 rounded-xl shadow-lg">
+                    Return to Dashboard
+                </Button>
+            </div>
+        );
+    }
+
+    if (status === 'error') {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-8 text-center bg-pw-surface">
+                <h1 className="text-xl font-bold text-red-500">Error Loading Quiz</h1>
+                <Button onClick={() => router.push('/home')} className="mt-4">Go Back</Button>
             </div>
         );
     }
@@ -205,8 +287,8 @@ export default function LiveQuizPlayerPage() {
                                     key={idx}
                                     label={String.fromCharCode(65 + idx)}
                                     optionText={opt}
-                                    selected={answers[currentQ.id] === idx}
-                                    onClick={() => handleOptionSelect(currentQ.id, idx)}
+                                    selected={answers[currentQ.id || `q-${currentQIndex}`] === idx}
+                                    onClick={() => handleOptionSelect(currentQ.id, idx, currentQIndex)}
                                     disabled={false}
                                 />
                             ))}
