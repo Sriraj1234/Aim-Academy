@@ -136,7 +136,13 @@ export default function OnboardingPage() {
     }
 
     const handleFinish = async () => {
-        if (!user) return;
+        if (!user) {
+            // User is not logged in yet (came from Get Started)
+            // Save state to local storage so we can restore it later (optional enhancement for later, but for now just redirect)
+            // alert("Please login to complete your profile setup.");
+            router.push('/login?message=Please login to complete setup');
+            return;
+        }
         setIsLoading(true);
         try {
             const profileData: any = {
