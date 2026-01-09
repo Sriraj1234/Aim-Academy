@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ScoreCircle } from '@/components/result/ScoreCircle'
 import { ReviewList } from '@/components/result/ReviewList'
@@ -12,8 +12,9 @@ import { FaHome, FaChartBar, FaUser, FaGamepad, FaBullseye, FaCheckCircle, FaClo
 import { useQuiz } from '@/hooks/useQuiz'
 import { useAuth } from '@/hooks/useAuth'
 import { db } from '@/lib/firebase'
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
-import { Question } from '@/data/types'
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore'
+import { Question, LiveQuizResult } from '@/data/types'
+import { Leaderboard } from '@/components/result/Leaderboard'
 
 const ResultPage = () => {
     const { questions: ctxQuestions, answers: ctxAnswers, calculateScore: ctxCalculateScore, startTime, endTime } = useQuiz()
@@ -53,9 +54,69 @@ const ResultPage = () => {
         xpEarned: number
     } | null>(null)
 
-    // Data Fetching & persistence Logic
+    // Live Quiz Logic
+    const searchParams = useSearchParams()
+    const mode = searchParams.get('mode')
+    const liveQuizId = searchParams.get('quizId')
+
+    const [leaderboardData, setLeaderboardData] = useState<any[]>([])
+    const [currentUserEntry, setCurrentUserEntry] = useState<any>(null)
+
     useEffect(() => {
         const loadResult = async () => {
+            if (mode === 'live' && liveQuizId) {
+                try {
+                    // Fetch all results for this quiz
+                    const q = query(
+                        collection(db, 'live_quiz_results'),
+                        where('quizId', '==', liveQuizId)
+                    )
+                    const snapshot = await getDocs(q)
+                    const results: LiveQuizResult[] = snapshot.docs.map(d => d.data() as LiveQuizResult)
+
+                    // Sort: Score (Desc) -> Accuracy (Desc) -> Time (Asc)
+                    results.sort((a, b) => {
+                        if (b.score !== a.score) return b.score - a.score
+                        if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy
+                        return a.timeTaken - b.timeTaken
+                    })
+
+                    // Assign Ranks
+                    const rankedData = results.map((r, i) => ({
+                        userId: r.userId,
+                        userName: r.userName,
+                        userPhoto: r.userPhoto,
+                        score: r.score,
+                        accuracy: r.accuracy,
+                        timeTaken: r.timeTaken,
+                        rank: i + 1,
+                        isCurrentUser: user?.uid === r.userId
+                    }))
+
+                    setLeaderboardData(rankedData)
+
+                    const myEntry = rankedData.find(r => r.userId === user?.uid)
+                    if (myEntry) {
+                        setCurrentUserEntry(myEntry)
+                        // Also set main quiz data for the standard view if needed, 
+                        // but for live we primarily want the leaderboard.
+                        // We can construct a partial quizData to show the standard score card too.
+                        setQuizData({
+                            questions: [], // We might not have questions here unless we fetch the quiz too
+                            answers: [],
+                            score: myEntry.score,
+                            timeString: `${Math.floor(myEntry.timeTaken / 60)}m ${Math.floor(myEntry.timeTaken % 60)}s`,
+                            xpEarned: 0 // Live quizzes might handle XP differently
+                        })
+                    }
+
+                } catch (error) {
+                    console.error("Failed to load live results", error)
+                }
+                setLoading(false)
+                return
+            }
+
             // 1. Try Context First (Fastest)
             if (ctxQuestions.length > 0) {
                 const durationMs = endTime - startTime;
@@ -131,7 +192,7 @@ const ResultPage = () => {
         }
 
         loadResult()
-    }, [ctxQuestions, user, ctxAnswers])
+    }, [ctxQuestions, user, ctxAnswers, mode, liveQuizId])
 
     // Effect for confetti
     useEffect(() => {
@@ -151,7 +212,55 @@ const ResultPage = () => {
         )
     }
 
-    // No Data State
+    // Live Mode - Show leaderboard even if user hasn't participated
+    if (mode === 'live' && leaderboardData.length > 0) {
+        return (
+            <div className="min-h-screen bg-pw-surface text-pw-violet pb-32 overflow-x-hidden font-sans">
+                {/* Background Ambience */}
+                <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                    <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-pw-lavender/20 blur-[120px] rounded-full mix-blend-multiply" />
+                    <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-100/40 blur-[100px] rounded-full mix-blend-multiply" />
+                </div>
+
+                <main className="relative pt-8 px-4 max-w-2xl mx-auto z-10">
+                    {/* User's Score Card (if participated) */}
+                    {currentUserEntry && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-white rounded-2xl p-6 border border-pw-border shadow-pw-lg mb-6"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Your Rank</p>
+                                    <p className="text-4xl font-black text-pw-indigo">#{currentUserEntry.rank}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-2xl font-bold text-pw-violet">{currentUserEntry.score} pts</p>
+                                    <p className="text-sm text-gray-500">{Math.round(currentUserEntry.accuracy)}% accuracy</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Leaderboard */}
+                    <Leaderboard entries={leaderboardData} currentUserEntry={currentUserEntry} />
+
+                    {/* Bottom Actions */}
+                    <div className="mt-8 flex flex-col gap-3">
+                        <Link href="/home" className="w-full">
+                            <Button fullWidth className="h-14 bg-pw-indigo hover:bg-pw-violet text-white shadow-lg text-sm font-bold tracking-wide rounded-xl border-none">
+                                <FaHome className="mr-2" />
+                                BACK TO HOME
+                            </Button>
+                        </Link>
+                    </div>
+                </main>
+            </div>
+        )
+    }
+
+    // No Data State (for non-live mode)
     if (!quizData) {
         return (
             <div className="min-h-screen bg-pw-surface flex flex-col items-center justify-center text-center px-6">
@@ -377,6 +486,13 @@ const ResultPage = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* Live Leaderboard Section */}
+                    {mode === 'live' && leaderboardData.length > 0 && (
+                        <div className="mt-8 mb-20 w-full">
+                            <Leaderboard entries={leaderboardData} currentUserEntry={currentUserEntry} />
+                        </div>
+                    )}
                 </motion.div>
             </main>
 
