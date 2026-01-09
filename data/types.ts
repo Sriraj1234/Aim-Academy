@@ -115,6 +115,22 @@ export interface UserProfile {
         lat: number;
         lng: number;
     };
+
+    // Subscription & Limits
+    subscription?: {
+        plan: 'free' | 'pro';
+        status: 'active' | 'expired' | 'canceled';
+        startDate: number;
+        expiryDate?: number;
+        autoRenew?: boolean;
+    };
+    dailyLimits?: {
+        date: string; // 'YYYY-MM-DD' to track resets
+        aiChatCount: number;
+        flashcardGenCount: number;
+        groupPlayCount: number;
+    };
+
     viewedVideoIds?: string[]; // Study Hub Tracking
     activeDevices?: {
         deviceId: string;
