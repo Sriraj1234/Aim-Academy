@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,7 +16,7 @@ import { collection, query, orderBy, limit, getDocs, where } from 'firebase/fire
 import { Question, LiveQuizResult } from '@/data/types'
 import { Leaderboard } from '@/components/result/Leaderboard'
 
-const ResultPage = () => {
+const ResultContent = () => {
     const { questions: ctxQuestions, answers: ctxAnswers, calculateScore: ctxCalculateScore, startTime, endTime } = useQuiz()
     const { user } = useAuth()
     const router = useRouter()
@@ -532,4 +532,19 @@ const ResultPage = () => {
         </div >
     )
 }
+
+
+const ResultPage = () => {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-pw-surface flex flex-col items-center justify-center space-y-4">
+                <FaSpinner className="animate-spin text-4xl text-pw-indigo" />
+                <p className="text-pw-violet/70 text-sm animate-pulse font-medium">Loading result...</p>
+            </div>
+        }>
+            <ResultContent />
+        </Suspense>
+    )
+}
+
 export default ResultPage
