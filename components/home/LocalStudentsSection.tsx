@@ -1,5 +1,5 @@
 import { useLocalStudents } from '@/hooks/useLocalStudents';
-import { FaUserPlus, FaCheck, FaTrophy } from 'react-icons/fa';
+import { FaUserPlus, FaCheck, FaTrophy, FaCrown, FaFire } from 'react-icons/fa';
 import { useState } from 'react';
 
 interface LocalStudentsSectionProps {
@@ -63,12 +63,25 @@ export const LocalStudentsSection = ({
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${student.rank <= 3 ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'}`}>
                                 {student.rank}
                             </div>
-                            <img
-                                src={student.photoURL || `https://ui-avatars.com/api/?name=${student.displayName}`}
-                                alt={student.displayName}
-                                className="w-8 h-8 rounded-full bg-gray-200 object-cover"
-                                referrerPolicy="no-referrer"
-                            />
+                            <div className="relative">
+                                <img
+                                    src={student.photoURL || `https://ui-avatars.com/api/?name=${student.displayName}`}
+                                    alt={student.displayName}
+                                    className="w-8 h-8 rounded-full bg-gray-200 object-cover"
+                                    referrerPolicy="no-referrer"
+                                />
+                                {/* Badge Overlay */}
+                                {student.subscription?.plan === 'pro' && student.subscription?.status === 'active' && (
+                                    <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[8px] p-0.5 rounded-full border border-white flex items-center justify-center" title="Pro Scholar">
+                                        <FaCrown />
+                                    </div>
+                                )}
+                                {student.subscription?.plan !== 'pro' && (student.gamification?.currentStreak || 0) >= 30 && (
+                                    <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] p-0.5 rounded-full border border-white flex items-center justify-center" title="Monthly Master">
+                                        <FaFire />
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-bold text-gray-800 truncate">{student.displayName}</p>
                                 <p className="text-[10px] text-gray-500 font-medium flex items-center gap-2">
