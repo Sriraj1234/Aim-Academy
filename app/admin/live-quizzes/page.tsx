@@ -108,6 +108,13 @@ export default function LiveQuizAdminPage() {
                                     >
                                         <FaTrash />
                                     </button>
+                                    <Link
+                                        href={`/admin/live-quizzes/results/${quiz.id}`}
+                                        className="p-3 text-pw-indigo hover:bg-pw-indigo/10 rounded-xl transition-colors"
+                                        title="View Results"
+                                    >
+                                        <FaClock /> {/* Using Clock or Chart icon for results */}
+                                    </Link>
                                 </div>
                             </div>
                         ))}
