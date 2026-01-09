@@ -11,6 +11,8 @@ import { useLanguage } from '@/context/LanguageContext'
 import { HiArrowLeft, HiChevronRight } from 'react-icons/hi'
 import { FaUserEdit, FaHistory, FaGlobe, FaQuestionCircle, FaSignOutAlt, FaCrown, FaStar, FaBolt, FaMapMarkerAlt, FaUserFriends, FaTrash, FaFire } from 'react-icons/fa'
 import { Button } from '@/components/shared/Button'
+import { BadgeSection } from '@/components/profile/BadgeSection'
+import { Badge } from '@/data/types'
 
 import { collection, query, where, getCountFromServer } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -135,6 +137,55 @@ export default function ProfilePage() {
         return parts.join(', ')
     }
 
+    // Define Badges Logic
+    const allBadges: Badge[] = [
+        {
+            id: 'pro_member',
+            name: 'Pro Scholar',
+            description: 'Active Pro Subscription',
+            icon: 'FaCrown',
+            color: 'text-amber-500',
+            condition: 'pro',
+            isUnlocked: userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.status === 'active'
+        },
+        {
+            id: 'streak_7',
+            name: 'Week Warrior',
+            description: '7 Day Study Streak',
+            icon: 'FaFire',
+            color: 'text-orange-500',
+            condition: 'streak_7',
+            isUnlocked: (userProfile?.gamification?.currentStreak || 0) >= 7
+        },
+        {
+            id: 'streak_30',
+            name: 'Monthly Master',
+            description: '30 Day Study Streak',
+            icon: 'FaFire',
+            color: 'text-red-500',
+            condition: 'streak_30',
+            isUnlocked: (userProfile?.gamification?.currentStreak || 0) >= 30
+        },
+        {
+            id: 'accuracy_80',
+            name: 'Sharp Shooter',
+            description: 'Avg Score > 80%',
+            icon: 'FaBullseye',
+            color: 'text-pw-indigo',
+            condition: 'accuracy_80',
+            isUnlocked: (userProfile?.stats?.avgScore || 0) >= 80
+        },
+        {
+            id: 'night_owl',
+            name: 'Night Owl',
+            description: 'Study hard at night',
+            icon: 'FaMoon',
+            color: 'text-blue-600',
+            condition: 'quiz_master_50', // Reusing type for now, logically handled here
+            isUnlocked: false // Placeholder for now, could check activity logs
+        }
+    ];
+
     return (
         <div className="min-h-screen bg-pw-surface text-gray-800 flex flex-col font-sans">
             {/* Ambient Background */}
@@ -163,7 +214,7 @@ export default function ProfilePage() {
                     <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-br from-pw-indigo to-pw-violet opacity-10" />
 
                     <div className="flex flex-col items-center relative z-10 -mt-2">
-                        <div className="w-28 h-28 rounded-full p-1 bg-white shadow-xl mb-4">
+                        <div className="w-28 h-28 rounded-full p-1 bg-white shadow-xl mb-4 relative">
                             <div className="w-full h-full rounded-full bg-gradient-to-br from-pw-indigo to-pw-violet flex items-center justify-center text-4xl font-bold text-white shadow-inner overflow-hidden">
                                 {user?.photoURL ? (
                                     <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
@@ -171,6 +222,21 @@ export default function ProfilePage() {
                                     (user?.email && user.email.length > 0) ? user.email[0].toUpperCase() : 'T'
                                 )}
                             </div>
+
+                            {/* Pro Badge Overlay */}
+                            {userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.status === 'active' && (
+                                <div className="absolute -bottom-1 -right-1 w-10 h-10 bg-amber-500 rounded-full border-4 border-white flex items-center justify-center shadow-md z-20" title="Pro Scholar">
+                                    <FaCrown className="text-white text-sm" />
+                                </div>
+                            )}
+
+                            {/* Streak Badge Overlay (if not Pro, or secondary) */}
+                            {/* Note: Showing only highest priority badge to avoid clutter */}
+                            {userProfile?.subscription?.plan !== 'pro' && (userProfile?.gamification?.currentStreak || 0) >= 30 && (
+                                <div className="absolute -bottom-1 -right-1 w-10 h-10 bg-red-500 rounded-full border-4 border-white flex items-center justify-center shadow-md z-20" title="Monthly Master">
+                                    <FaFire className="text-white text-sm" />
+                                </div>
+                            )}
                         </div>
 
                         {isEditing ? (
@@ -331,6 +397,9 @@ export default function ProfilePage() {
                                 </motion.div>
                             ))}
                         </motion.div>
+
+                        {/* Badge Section */}
+                        <BadgeSection badges={allBadges} />
 
                         {/* Menu Section */}
                         <motion.div
