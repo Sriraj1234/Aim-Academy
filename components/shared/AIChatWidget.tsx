@@ -13,6 +13,7 @@ import { useSound } from '@/hooks/useSound';
 import { useAuth } from '@/context/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { UpgradeModal } from '../subscription/UpgradeModal';
 
 interface Message {
     id: string;
@@ -43,6 +44,9 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
     const [galleryImages, setGalleryImages] = useState<{ title: string; image: string }[]>([]);
     const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
+    // Subscription Modal
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null); // Changed to textarea
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,7 +55,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
     // Hooks
     const { speak, stop, isSpeaking, isSupported: ttsSupported } = useSpeech();
     const { play } = useSound();
-    const { userProfile, updateProfile } = useAuth(); // Get user profile and update function
+    const { userProfile, updateProfile, checkAccess, incrementUsage } = useAuth();
 
     // Determine effective context (including AI memory)
     const effectiveContext = {
@@ -125,6 +129,13 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
     const sendMessage = useCallback(async () => {
         if (!input.trim() || loading) return;
 
+        // CHECK SUBSCRIPTION LIMIT
+        const hasAccess = checkAccess('ai_chat');
+        if (!hasAccess) {
+            setShowUpgradeModal(true);
+            return;
+        }
+
         const userMessage: Message = {
             id: Date.now().toString(),
             role: 'user',
@@ -136,7 +147,11 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
         setInput('');
         setLoading(true);
         setStreamingText('');
+        setStreamingText('');
         play('click');
+
+        // Track Usage (Optimistic)
+        incrementUsage('ai_chat');
 
         try {
             const history = messages.slice(-6).map(m => ({
@@ -256,7 +271,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
         } finally {
             setLoading(false);
         }
-    }, [input, loading, messages, effectiveContext, play]); // Updated deps
+    }, [input, loading, messages, effectiveContext, play, checkAccess, incrementUsage]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -273,6 +288,12 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
 
     return (
         <>
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                featureName="AI Chat"
+            />
+
             {/* Floating Button */}
             <AnimatePresence>
                 {!isOpen && (
