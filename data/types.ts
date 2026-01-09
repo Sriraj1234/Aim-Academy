@@ -299,3 +299,13 @@ export interface LiveQuizResult {
     answers: { questionId: string; selectedOption: number | null; isCorrect: boolean }[];
     rank?: number;
 }
+
+export interface Badge {
+    id: string;
+    name: string;
+    description: string;
+    icon: string; // React-icon name or identifier
+    color: string;
+    condition: 'pro' | 'streak_7' | 'streak_30' | 'accuracy_80' | 'quiz_master_50';
+    isUnlocked?: boolean; // Hydrated at runtime
+}
