@@ -115,6 +115,7 @@ export interface UserProfile {
         lat: number;
         lng: number;
     };
+    examDate?: number; // Timestamp for custom exam countdown
 
     // Subscription & Limits
     subscription?: {
