@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaUserFriends, FaUserPlus, FaTimes, FaCheck, FaSearch, FaGamepad, FaEnvelope, FaShareAlt } from 'react-icons/fa'
+import { FaUserFriends, FaUserPlus, FaTimes, FaCheck, FaSearch, FaGamepad, FaEnvelope, FaShareAlt, FaCrown, FaFire } from 'react-icons/fa'
 import { useFriends } from '@/hooks/useFriends'
 import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/hooks/useSound'
@@ -216,6 +216,18 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                         }`}>
                                                         {onlineUsers[friend.uid] && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
                                                     </div>
+
+                                                    {/* Badge Overlay (Top Right) */}
+                                                    {friend.subscription?.plan === 'pro' && friend.subscription?.status === 'active' && (
+                                                        <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-[8px] p-0.5 rounded-full border border-white flex items-center justify-center z-10" title="Pro Scholar">
+                                                            <FaCrown />
+                                                        </div>
+                                                    )}
+                                                    {friend.subscription?.plan !== 'pro' && (friend.gamification?.currentStreak || 0) >= 30 && (
+                                                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] p-0.5 rounded-full border border-white flex items-center justify-center z-10" title="Monthly Master">
+                                                            <FaFire />
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="font-bold text-pw-violet dark:text-white truncate">{friend.displayName}</h3>
