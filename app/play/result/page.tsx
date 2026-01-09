@@ -18,7 +18,7 @@ import { Leaderboard } from '@/components/result/Leaderboard'
 
 const ResultContent = () => {
     const { questions: ctxQuestions, answers: ctxAnswers, calculateScore: ctxCalculateScore, startTime, endTime } = useQuiz()
-    const { user } = useAuth()
+    const { user, userProfile } = useAuth()
     const router = useRouter()
 
     const [loading, setLoading] = useState(true)
@@ -90,7 +90,12 @@ const ResultContent = () => {
                         accuracy: r.accuracy,
                         timeTaken: r.timeTaken,
                         rank: i + 1,
-                        isCurrentUser: user?.uid === r.userId
+                        rank: i + 1,
+                        isCurrentUser: user?.uid === r.userId,
+                        badge: (user?.uid === r.userId) ?
+                            (userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.status === 'active' ? 'pro' :
+                                (userProfile?.gamification?.currentStreak || 0) >= 30 ? 'streak' : null)
+                            : null
                     }))
 
                     setLeaderboardData(rankedData)
@@ -192,7 +197,7 @@ const ResultContent = () => {
         }
 
         loadResult()
-    }, [ctxQuestions, user, ctxAnswers, mode, liveQuizId])
+    }, [ctxQuestions, user, userProfile, ctxAnswers, mode, liveQuizId])
 
     // Effect for confetti
     useEffect(() => {
