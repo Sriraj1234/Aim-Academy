@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FaCrown, FaMedal, FaUser, FaClock, FaBullseye } from 'react-icons/fa';
+import { FaCrown, FaMedal, FaUser, FaClock, FaBullseye, FaFire } from 'react-icons/fa';
 import Image from 'next/image';
 
 interface LeaderboardEntry {
@@ -11,6 +11,7 @@ interface LeaderboardEntry {
     timeTaken: number;
     rank: number;
     isCurrentUser: boolean;
+    badge?: 'pro' | 'streak' | null;
 }
 
 interface LeaderboardProps {
@@ -88,6 +89,17 @@ export const Leaderboard = ({ entries, currentUserEntry }: LeaderboardProps) => 
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-400">
                                                 <FaUser size={12} />
+                                            </div>
+                                        )}
+                                        {/* Badge Overlay */}
+                                        {entry.badge === 'pro' && (
+                                            <div className="absolute bottom-0 right-0 bg-amber-500 text-white text-[6px] p-0.5 rounded-full border border-white" title="Pro Scholar">
+                                                <FaCrown />
+                                            </div>
+                                        )}
+                                        {entry.badge === 'streak' && (
+                                            <div className="absolute bottom-0 right-0 bg-red-500 text-white text-[6px] p-0.5 rounded-full border border-white" title="Streak Master">
+                                                <FaFire />
                                             </div>
                                         )}
                                     </div>
