@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { FaCalendarAlt, FaClock, FaFire, FaEdit, FaTimes, FaCheck } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
@@ -46,19 +46,21 @@ export const ExamCountdown = () => {
     const [customDate, setCustomDate] = useState('');
     const [saving, setSaving] = useState(false);
 
-    // Get exam date from profile or use board default
-    const getExamDate = (): Date | null => {
-        if (userProfile?.examDate) {
+    // Memoize exam date calculation to prevent re-renders and ensure stability
+    const examDate = useMemo(() => {
+        if (!userProfile) return null;
+
+        if (userProfile.examDate) {
             return new Date(userProfile.examDate);
         }
 
-        const board = userProfile?.board || 'other';
-        const defaultDate = BOARD_EXAM_DATES[board] || BOARD_EXAM_DATES['other'];
-        return new Date(defaultDate);
-    };
+        const board = (userProfile.board || 'other').toLowerCase();
+        // Ensure strictly matched key or fallback
+        const dateString = BOARD_EXAM_DATES[board] || BOARD_EXAM_DATES['other'];
+        return new Date(dateString);
+    }, [userProfile]);
 
     useEffect(() => {
-        const examDate = getExamDate();
         if (!examDate) return;
 
         const calculateTimeLeft = () => {
@@ -81,7 +83,7 @@ export const ExamCountdown = () => {
         calculateTimeLeft();
         const timer = setInterval(calculateTimeLeft, 1000);
         return () => clearInterval(timer);
-    }, [userProfile?.examDate, userProfile?.board]);
+    }, [examDate]); // Only re-run if calculated date changes
 
     const getMotivationalMessage = () => {
         if (!timeLeft) return MOTIVATIONAL_MESSAGES[0];
@@ -110,7 +112,7 @@ export const ExamCountdown = () => {
     };
 
     const motivation = getMotivationalMessage();
-    const examDate = getExamDate();
+
 
     if (!userProfile || !timeLeft) return null;
 
