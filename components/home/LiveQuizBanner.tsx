@@ -10,79 +10,80 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { setDoc, doc, updateDoc, increment } from 'firebase/firestore';
 
-const { user, userProfile } = useAuth();
-const [quizzes, setQuizzes] = useState<LiveQuiz[]>([]);
-const [loading, setLoading] = useState(true);
+export const LiveQuizBanner = () => {
+    const { user, userProfile } = useAuth();
+    const [quizzes, setQuizzes] = useState<LiveQuiz[]>([]);
+    const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-    const q = query(
-        collection(db, 'live_quizzes'),
-        orderBy('startTime', 'desc')
-    );
+    useEffect(() => {
+        const q = query(
+            collection(db, 'live_quizzes'),
+            orderBy('startTime', 'desc')
+        );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LiveQuiz));
-        const now = Date.now();
-        const OneDayMs = 24 * 60 * 60 * 1000;
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LiveQuiz));
+            const now = Date.now();
+            const OneDayMs = 24 * 60 * 60 * 1000;
 
-        const relevantQuizzes = data.filter(q => {
-            // 1. Time Filter
-            if (q.endTime + OneDayMs <= now) return false;
+            const relevantQuizzes = data.filter(q => {
+                // 1. Time Filter
+                if (q.endTime + OneDayMs <= now) return false;
 
-            // 2. Targeting Filter (Board/Class) based on User Profile
-            if (userProfile) {
-                // Filter by Target Board
-                if (q.targetBoard && q.targetBoard !== 'all') {
-                    if (userProfile.board && q.targetBoard !== userProfile.board) return false;
+                // 2. Targeting Filter (Board/Class) based on User Profile
+                if (userProfile) {
+                    // Filter by Target Board
+                    if (q.targetBoard && q.targetBoard !== 'all') {
+                        if (userProfile.board && q.targetBoard !== userProfile.board) return false;
+                    }
+
+                    // Filter by Class
+                    if (q.allowedClasses && q.allowedClasses.length > 0) {
+                        if (userProfile.class && !q.allowedClasses.includes(userProfile.class)) return false;
+                    }
+                } else {
+                    // Start of Logic for Guest/Non-Profile users
+                    // If targetBoard is specific, hide it? Or show all?
+                    // User request implies strict visibility ("usi... me visible hoga").
+                    // So we hide specific quizzes if not logged in or no profile.
+                    if (q.targetBoard && q.targetBoard !== 'all') return false;
                 }
 
-                // Filter by Class
-                if (q.allowedClasses && q.allowedClasses.length > 0) {
-                    if (userProfile.class && !q.allowedClasses.includes(userProfile.class)) return false;
-                }
-            } else {
-                // Start of Logic for Guest/Non-Profile users
-                // If targetBoard is specific, hide it? Or show all?
-                // User request implies strict visibility ("usi... me visible hoga").
-                // So we hide specific quizzes if not logged in or no profile.
-                if (q.targetBoard && q.targetBoard !== 'all') return false;
-            }
+                return true;
+            });
 
-            return true;
+            // Sort: Live first, then Upcoming (nearest), then Ended (most recent)
+            relevantQuizzes.sort((a, b) => {
+                const aLive = now >= a.startTime && now <= a.endTime;
+                const bLive = now >= b.startTime && now <= b.endTime;
+                if (aLive && !bLive) return -1;
+                if (!aLive && bLive) return 1;
+                return a.startTime - b.startTime;
+            });
+
+            setQuizzes(relevantQuizzes);
+            setLoading(false);
         });
 
-        // Sort: Live first, then Upcoming (nearest), then Ended (most recent)
-        relevantQuizzes.sort((a, b) => {
-            const aLive = now >= a.startTime && now <= a.endTime;
-            const bLive = now >= b.startTime && now <= b.endTime;
-            if (aLive && !bLive) return -1;
-            if (!aLive && bLive) return 1;
-            return a.startTime - b.startTime;
-        });
+        return () => unsubscribe();
+    }, [userProfile]); // Re-run when userProfile loads/changes
 
-        setQuizzes(relevantQuizzes);
-        setLoading(false);
-    });
+    if (loading || quizzes.length === 0) return null;
 
-    return () => unsubscribe();
-}, [userProfile]); // Re-run when userProfile loads/changes
-
-if (loading || quizzes.length === 0) return null;
-
-return (
-    <div className="space-y-4">
-        <h3 className="text-xl font-bold text-pw-violet pl-3 border-l-4 border-red-500 animate-pulse">
-            Live Events
-        </h3>
-        <div className="grid gap-4">
-            {quizzes.map((quiz, index) => {
-                return (
-                    <QuizCard key={quiz.id} quiz={quiz} index={index} />
-                );
-            })}
+    return (
+        <div className="space-y-4">
+            <h3 className="text-xl font-bold text-pw-violet pl-3 border-l-4 border-red-500 animate-pulse">
+                Live Events
+            </h3>
+            <div className="grid gap-4">
+                {quizzes.map((quiz, index) => {
+                    return (
+                        <QuizCard key={quiz.id} quiz={quiz} index={index} />
+                    );
+                })}
+            </div>
         </div>
-    </div>
-);
+    );
 };
 
 const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
