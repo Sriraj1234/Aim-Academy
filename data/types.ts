@@ -168,6 +168,8 @@ export interface Friend {
     displayName: string;
     photoURL?: string;
     createdAt: number;
+    subscription?: { plan?: string; status?: string };
+    gamification?: { currentStreak?: number };
 }
 
 export interface FriendRequest {
