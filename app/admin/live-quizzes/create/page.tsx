@@ -482,7 +482,17 @@ export default function CreateLiveQuizPage() {
                                                                 <span className="text-[10px] font-bold uppercase text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{q.board}</span>
                                                                 <span className="text-[10px] font-bold uppercase text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{q.subject}</span>
                                                             </div>
-                                                            <p className="text-sm font-bold text-gray-800 line-clamp-2">{q.question}</p>
+                                                            <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">{q.question}</p>
+                                                            {/* Show Options */}
+                                                            {q.options && q.options.length > 0 && (
+                                                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                                                    {q.options.map((opt, idx) => (
+                                                                        <div key={idx} className={`text-xs px-2 py-1 rounded border ${q.correctAnswer === idx ? 'bg-green-50 border-green-200 text-green-700 font-bold' : 'bg-gray-50 border-gray-100 text-gray-500'}`}>
+                                                                            <span className="opacity-50 mr-1">{String.fromCharCode(65 + idx)}.</span> {opt}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-pw-indigo border-pw-indigo text-white' : 'border-gray-200 text-transparent'}`}>
                                                             <FaCheck className="text-xs" />
