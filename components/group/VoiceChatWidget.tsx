@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import AgoraRTC, { IAgoraRTCClient, IMicrophoneAudioTrack, IRemoteAudioTrack } from 'agora-rtc-sdk-ng';
 import { AGORA_APP_ID } from '@/lib/agoraConfig';
-import { FaMicrophone, FaMicrophoneSlash, FaHeadphones, FaVolumeUp } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaHeadphones, FaVolumeUp, FaLock } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
+import { UpgradeModal } from '../subscription/UpgradeModal';
 
 export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string, playerId?: string }) => {
-    const { user } = useAuth();
+    const { user, userProfile } = useAuth();
     // Use passed playerId (game specific) or fallback to auth user id or random if generic
     const stableId = playerId || user?.uid || 'guest';
 
@@ -19,6 +20,9 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
     const [remoteUsersCount, setRemoteUsersCount] = useState(0);
     const [status, setStatus] = useState('Connecting...');
     const [error, setError] = useState<string | null>(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+    const isPro = userProfile?.subscription?.plan === 'pro';
 
     // Refs
     const clientRef = useRef<IAgoraRTCClient | null>(null);
@@ -179,6 +183,11 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
 
     // Toggle mic
     const toggleMic = () => {
+        if (!isPro) {
+            setShowUpgradeModal(true);
+            return;
+        }
+
         if (localTrackRef.current) {
             const newState = !micOn;
             localTrackRef.current.setEnabled(newState);
@@ -239,6 +248,7 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
                 {micOn && volumeLevel > 0.1 && (
                     <span className="absolute inset-0 rounded-full border border-white/50 animate-ping"></span>
                 )}
+                {!isPro && <span className="absolute -top-1 -right-1 bg-gray-900 text-yellow-400 text-[8px] p-0.5 rounded-full border border-white"><FaLock /></span>}
             </button>
 
             {/* Speaker Toggle */}
@@ -261,6 +271,12 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
                     <span className="text-green-600 font-bold tabular-nums">{remoteUsersCount}</span>
                 </div>
             )}
+
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                featureName="Voice Chat"
+            />
         </div>
     );
 };
