@@ -23,6 +23,7 @@ export default function CreateLiveQuizPage() {
     const [duration, setDuration] = useState(30);
     const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
     const [selectedStreams, setSelectedStreams] = useState<string[]>([]);
+    const [targetBoard, setTargetBoard] = useState('cbse'); // Default to CBSE
     const [subject, setSubject] = useState('Mixed');
     const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
 
@@ -59,15 +60,35 @@ export default function CreateLiveQuizPage() {
         // Fetch Questions for Selection
         const fetchQuestions = async () => {
             let constraints: any[] = [limit(500), orderBy('createdAt', 'desc')];
-            if (filterBoard !== 'all') constraints.push(where('board', '==', filterBoard));
+
+            // Filter by Target Board
+            if (targetBoard !== 'all') constraints.push(where('board', '==', targetBoard));
+
+            // Filter by Subject (if selected) - using local input or quiz subject? 
+            // Better to keep the Search filter for subject flexibility, 
+            // BUT user said "wahi question show honge... jis board or class ko maine select kiya".
+            // So Board and Class must be strict. Subject usually follows quiz subject but Mixed quizzes exist.
+            // Let's keep subject flexible via filterSubject, but enforce Board and Class.
             if (filterSubject !== 'all') constraints.push(where('subject', '==', filterSubject));
 
+            // Filter by Class (if selected)
+            if (selectedClasses.length > 0) {
+                // Firestore 'in' query supports up to 10 items
+                const classes = selectedClasses.slice(0, 10);
+                constraints.push(where('class', 'in', classes));
+            }
+
             const q = query(collection(db, 'questions'), ...constraints);
-            const snap = await getDocs(q);
-            setAvailableQuestions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Question)));
+            try {
+                const snap = await getDocs(q);
+                setAvailableQuestions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Question)));
+            } catch (error) {
+                console.error("Error fetching questions:", error);
+                // Fallback for compound index errors or "in" query limits
+            }
         };
         fetchQuestions();
-    }, [filterBoard, filterSubject]);
+    }, [targetBoard, filterSubject, selectedClasses]);
 
 
     const handleToggleQuestion = (question: Question) => {
@@ -126,6 +147,7 @@ export default function CreateLiveQuizPage() {
                 allowedClasses: selectedClasses,
                 allowedStreams: selectedStreams,
                 subject,
+                targetBoard, // Save the board
                 startTime: startTime.getTime(),
                 endTime: startTime.getTime() + (duration * 60 * 1000) + (10 * 60 * 1000), // End time is technically window close, giving 10 mins buffer or handled via Logic
                 duration,
@@ -180,6 +202,21 @@ export default function CreateLiveQuizPage() {
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pw-indigo/20 outline-none font-medium h-24"
                                 placeholder="Optional description..."
                             />
+                        </div>
+
+                        {/* Target Board Selection */}
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Target Board</label>
+                            <select
+                                value={targetBoard}
+                                onChange={(e) => setTargetBoard(e.target.value)}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pw-indigo/20 outline-none font-medium capitalize"
+                            >
+                                <option value="cbse">CBSE</option>
+                                <option value="icse">ICSE</option>
+                                <option value="bseb">BSEB (Bihar Board)</option>
+                                <option value="all">All Boards (Generic)</option>
+                            </select>
                         </div>
 
                         <div>
@@ -439,16 +476,9 @@ export default function CreateLiveQuizPage() {
                                             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-pw-indigo/20"
                                         />
                                     </div>
-                                    <select
-                                        value={filterBoard}
-                                        onChange={(e) => setFilterBoard(e.target.value)}
-                                        className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none"
-                                    >
-                                        <option value="all">All Boards</option>
-                                        <option value="cbse">CBSE</option>
-                                        <option value="icse">ICSE</option>
-                                        <option value="bseb">BSEB (Bihar Board)</option>
-                                    </select>
+
+                                    {/* Board Filter Removed from here as it relies on Quiz Settings now */}
+                                    {/* Subject Filter kept for narrowing down */}
                                     <select
                                         value={filterSubject}
                                         onChange={(e) => setFilterSubject(e.target.value)}
