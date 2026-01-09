@@ -57,7 +57,7 @@ export const Header = () => {
                                 <Link href="/login" className="hidden sm:block">
                                     <Button variant="ghost" size="sm" className="text-pw-violet hover:bg-pw-lavender/20">Login</Button>
                                 </Link>
-                                <Link href="/onboarding">
+                                <Link href="/login">
                                     <Button size="sm" className="bg-pw-indigo hover:bg-pw-violet text-white border-0 shadow-pw-md text-xs md:text-sm px-3 md:px-4">Get Started</Button>
                                 </Link>
                             </>
