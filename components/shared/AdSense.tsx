@@ -3,14 +3,20 @@
 import Script from 'next/script'
 import { usePathname } from 'next/navigation'
 
+import { useAuth } from '@/context/AuthContext'
+
 type Props = {
     pId?: string
 }
 
 export const AdSense = ({ pId }: Props) => {
+    const { userProfile } = useAuth()
     const pathname = usePathname()
+
     // Use prop if provided, otherwise fallback to env var, or null
     const publisherId = pId || process.env.NEXT_PUBLIC_ADSENSE_PID
+
+    const isPro = userProfile?.subscription?.plan === 'pro'
 
     // Routes where ads ARE allowed (High value content only)
     const allowedRoutes = [
@@ -21,7 +27,7 @@ export const AdSense = ({ pId }: Props) => {
 
     const shouldShowAds = allowedRoutes.some(route => pathname?.startsWith(route))
 
-    if (!publisherId || !shouldShowAds) return null
+    if (!publisherId || !shouldShowAds || isPro) return null
 
     return (
         <Script
