@@ -41,7 +41,7 @@ export const ModernOptionButton = ({
     let labelBg = 'bg-pw-surface text-gray-500'
     let gradientBorder = ''
 
-    if (selected && correct === null) {
+    if (selected && (correct === null || correct === undefined)) {
         // Selected but not locked - Vibrant selection state
         borderColor = 'border-pw-indigo'
         bgColor = 'bg-pw-surface'
@@ -92,7 +92,7 @@ export const ModernOptionButton = ({
                     flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center font-bold text-lg transition-all duration-300
                     ${labelBg}
                 `}
-                animate={selected && correct === null ? { scale: [1, 1.1, 1] } : {}}
+                animate={selected && (correct === null || correct === undefined) ? { scale: [1, 1.1, 1] } : {}}
                 transition={{ repeat: Infinity, duration: 1.5 }}
             >
                 {correct === true ? <FaCheck className="text-lg" /> :
@@ -119,7 +119,7 @@ export const ModernOptionButton = ({
             </AnimatePresence>
 
             {/* Pulse ring on selection */}
-            {selected && correct === null && (
+            {selected && (correct === null || correct === undefined) && (
                 <motion.div
                     className="absolute inset-0 rounded-2xl border-2 border-pw-indigo pointer-events-none"
                     animate={{ opacity: [0.5, 0, 0.5], scale: [1, 1.02, 1] }}
