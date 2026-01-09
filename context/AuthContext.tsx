@@ -26,14 +26,17 @@ interface AuthContextType {
     addXP: (amount: number) => Promise<void>
     // Subscription Helpers
     // Subscription Helpers
+    // Subscription Helpers
     checkAccess: (feature: 'ai_chat' | 'flashcards' | 'group_play') => boolean
     incrementUsage: (feature: 'ai_chat' | 'flashcards' | 'group_play') => Promise<void>
+    isInTrial: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
     addXP: async () => { },
     checkAccess: () => false,
-    incrementUsage: async () => { }
+    incrementUsage: async () => { },
+    isInTrial: false
 } as unknown as AuthContextType)
 
 // Helper: Get or Create Device ID
@@ -368,15 +371,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }
 
+    const isInTrial = userProfile ? (Date.now() - (userProfile.createdAt || 0) < 7 * 24 * 60 * 60 * 1000) && userProfile.subscription?.plan !== 'pro' : false;
+
     const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play'): boolean => {
         if (!userProfile) return false;
 
         const isPro = userProfile.subscription?.plan === 'pro';
+
+        // Grant access if Pro OR in Trial
+        if (isPro || isInTrial) {
+            // Exceptions: Limits might still apply if we want to limit trial users? 
+            // Usually trial = full access. Let's give full access.
+            // BUT for flashcards explicitly check limit if we want strictness? No, full Pro experience.
+            if (feature === 'flashcards' && isInTrial) return (userProfile.dailyLimits?.flashcardGenCount || 0) < 10; // Trial users get Pro limit (10) not unlimited? existing pro is 10?
+            // Wait, existing check was:
+            // if (feature === 'flashcards') return limits.flashcardGenCount < (isPro ? 10 : 3);
+            // I should respect that structure.
+
+            if (feature === 'flashcards') return (userProfile.dailyLimits?.flashcardGenCount || 0) < 10;
+            return true;
+        }
+
+        // Free User Logic
         const limits = userProfile.dailyLimits || { aiChatCount: 0, flashcardGenCount: 0, groupPlayCount: 0 };
 
-        if (feature === 'ai_chat') return isPro ? true : limits.aiChatCount < 10;
-        if (feature === 'flashcards') return limits.flashcardGenCount < (isPro ? 10 : 3);
-        if (feature === 'group_play') return isPro ? true : (limits.groupPlayCount || 0) < 3;
+        if (feature === 'ai_chat') return limits.aiChatCount < 10;
+        if (feature === 'flashcards') return limits.flashcardGenCount < 3;
+        if (feature === 'group_play') return (limits.groupPlayCount || 0) < 3;
 
         return false;
     }
@@ -417,7 +438,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, userProfile, loading, signInWithGoogle, loginWithEmail, signupWithEmail, logout, updateProfile, addXP, checkAccess, incrementUsage }}>
+        <AuthContext.Provider value={{ user, userProfile, loading, signInWithGoogle, loginWithEmail, signupWithEmail, logout, updateProfile, addXP, checkAccess, incrementUsage, isInTrial }}>
             {children}
         </AuthContext.Provider>
     )
