@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react'
 import { SidebarDrawer } from './SidebarDrawer'
 
 export const Header = () => {
-    const { user, userProfile } = useAuth()
+    const { user, userProfile, isInTrial } = useAuth()
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -48,16 +48,31 @@ export const Header = () => {
                         {mounted && user ? (
                             <>
                                 {userProfile?.subscription?.plan !== 'pro' && (
-                                    <Link href="/pro">
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
-                                        >
-                                            <FaCrown className="text-sm" />
-                                            <span className="text-xs font-bold whitespace-nowrap">Try Pro</span>
-                                        </motion.button>
-                                    </Link>
+                                    isInTrial ? (
+                                        <Link href="/pro">
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
+                                            >
+                                                <FaCrown className="text-sm" />
+                                                <span className="text-xs font-bold whitespace-nowrap">
+                                                    Trial: {Math.ceil((7 * 24 * 60 * 60 * 1000 - (Date.now() - (userProfile?.createdAt || 0))) / (24 * 60 * 60 * 1000))}d Left
+                                                </span>
+                                            </motion.button>
+                                        </Link>
+                                    ) : (
+                                        <Link href="/pro">
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
+                                            >
+                                                <FaCrown className="text-sm" />
+                                                <span className="text-xs font-bold whitespace-nowrap">Try Pro</span>
+                                            </motion.button>
+                                        </Link>
+                                    )
                                 )}
 
                                 <Link href="/profile">
