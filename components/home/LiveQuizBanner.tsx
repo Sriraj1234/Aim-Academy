@@ -15,17 +15,36 @@ export const LiveQuizBanner = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const now = Date.now();
-        // Simple query for now, filtering client side for more complex time logic or multiple statuses
+        // Query logic: Fetch all, then filter client side for complex time windows
+        // In a real app with many quizzes, we'd want a more specific compound query or cloud function
         const q = query(
             collection(db, 'live_quizzes'),
-            orderBy('startTime', 'asc') // Show nearest first
+            orderBy('startTime', 'desc') // Newest first
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LiveQuiz));
-            const activeOrUpcoming = data.filter(q => q.endTime > Date.now());
-            setQuizzes(activeOrUpcoming);
+            const now = Date.now();
+            const OneDayMs = 24 * 60 * 60 * 1000;
+
+            const relevantQuizzes = data.filter(q => {
+                // Keep if:
+                // 1. Not started yet (Upcoming)
+                // 2. Currently Live (now <= endTime)
+                // 3. Ended but within 24 hours (now <= endTime + 24h)
+                return q.endTime + OneDayMs > now;
+            });
+
+            // Sort: Live first, then Upcoming (nearest), then Ended (most recent)
+            relevantQuizzes.sort((a, b) => {
+                const aLive = now >= a.startTime && now <= a.endTime;
+                const bLive = now >= b.startTime && now <= b.endTime;
+                if (aLive && !bLive) return -1;
+                if (!aLive && bLive) return 1;
+                return a.startTime - b.startTime;
+            });
+
+            setQuizzes(relevantQuizzes);
             setLoading(false);
         });
 
@@ -41,11 +60,8 @@ export const LiveQuizBanner = () => {
             </h3>
             <div className="grid gap-4">
                 {quizzes.map((quiz, index) => {
-                    const now = Date.now();
-                    const isLive = now >= quiz.startTime && now <= quiz.endTime;
-
                     return (
-                        <QuizCard key={quiz.id} quiz={quiz} isLive={isLive} index={index} />
+                        <QuizCard key={quiz.id} quiz={quiz} index={index} />
                     );
                 })}
             </div>
@@ -53,29 +69,35 @@ export const LiveQuizBanner = () => {
     );
 };
 
-const QuizCard = ({ quiz, isLive, index }: { quiz: LiveQuiz, isLive: boolean, index: number }) => {
-    const { user } = useAuth(); // Assume useAuth is verified imported
+const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
+    const { user } = useAuth();
     const [reminderSet, setReminderSet] = useState(false);
     const [mounted, setMounted] = useState(false);
+
+    // Status Logic
+    const now = Date.now();
+    const isUpcoming = now < quiz.startTime;
+    const isLive = now >= quiz.startTime && now <= quiz.endTime;
+    const isEnded = now > quiz.endTime;
+    const isCalculating = isEnded && (now < quiz.endTime + (10 * 60 * 1000)); // 10 mins after end
+    const isResultReady = isEnded && !isCalculating;
 
     useEffect(() => {
         setMounted(true);
         const checkReminder = async () => {
-            if (user) {
+            if (user && isUpcoming) {
                 try {
                     const docSnap = await getDoc(doc(db, 'live_quizzes', quiz.id, 'reminders', user.uid));
                     if (docSnap.exists()) {
                         setReminderSet(true);
                     }
-                } catch (e) {
-                    // silently fail or log
-                }
+                } catch (e) { }
             }
         };
 
         checkReminder();
         return () => setMounted(false);
-    }, [user, quiz.id]);
+    }, [user, quiz.id, isUpcoming]);
 
     const handleNotify = async () => {
         if (!user) {
@@ -83,15 +105,12 @@ const QuizCard = ({ quiz, isLive, index }: { quiz: LiveQuiz, isLive: boolean, in
             return;
         }
         try {
-            // Optimistic Update
             setReminderSet(true);
             await setDoc(doc(db, 'live_quizzes', quiz.id, 'reminders', user.uid), {
                 uid: user.uid,
                 email: user.email,
                 timestamp: Date.now()
             });
-
-            // Increment 'participantsCount' on the main quiz document for Admin visibility
             const quizRef = doc(db, 'live_quizzes', quiz.id);
             await updateDoc(quizRef, {
                 participantsCount: increment(1)
@@ -121,19 +140,25 @@ const QuizCard = ({ quiz, isLive, index }: { quiz: LiveQuiz, isLive: boolean, in
             <div className="flex justify-between items-start gap-4 relative z-10">
                 <div>
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                        {isLive ? (
+                        {isLive && (
                             <span className="px-2 py-0.5 bg-white text-red-600 text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 animate-pulse">
                                 <span className="w-2 h-2 rounded-full bg-red-600"></span> LIVE NOW
                             </span>
-                        ) : (
+                        )}
+                        {isUpcoming && (
                             <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 border border-gray-200">
                                 <FaCalendarAlt /> UPCOMING
                             </span>
                         )}
+                        {isEnded && (
+                            <span className="px-2 py-0.5 bg-gray-800 text-white text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1">
+                                <FaCheckCircle /> ENDED
+                            </span>
+                        )}
+
                         <span className={`text-[10px] font-bold uppercase tracking-wider opacity-80 ${isLive ? 'text-white' : 'text-gray-400'}`}>
                             {quiz.type}
                         </span>
-                        {/* Display Subject and Class */}
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${isLive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
                             {quiz.subject || 'General'}
                         </span>
@@ -150,25 +175,27 @@ const QuizCard = ({ quiz, isLive, index }: { quiz: LiveQuiz, isLive: boolean, in
                         {quiz.description || 'Join now to test your knowledge!'}
                     </p>
 
-                    {!isLive && (
-                        <div className="flex items-center gap-2 text-xs font-medium text-gray-400">
-                            <FaClock />
-                            <span>Starts {new Date(quiz.startTime).toLocaleString()}</span>
-                            <span>•</span>
-                            <span>{quiz.duration} Mins</span>
-                        </div>
-                    )}
+                    <div className="flex items-center gap-2 text-xs font-medium opacity-80">
+                        <FaClock className={isLive ? 'text-white' : 'text-gray-400'} />
+                        <span className={isLive ? 'text-white' : 'text-gray-500'}>
+                            {isUpcoming ? `Starts ${new Date(quiz.startTime).toLocaleString()}` :
+                                isLive ? `Ends ${new Date(quiz.endTime).toLocaleTimeString()}` :
+                                    `Ended ${new Date(quiz.endTime).toLocaleString()}`}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
-                    {isLive ? (
+                    {isLive && (
                         <Link
                             href={`/play/live/${quiz.id}`}
                             className="px-6 py-2 bg-white text-red-600 font-bold rounded-xl shadow-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
                         >
                             <FaPlayCircle /> Join Quiz
                         </Link>
-                    ) : (
+                    )}
+
+                    {isUpcoming && (
                         <button
                             onClick={handleNotify}
                             disabled={reminderSet}
@@ -187,6 +214,22 @@ const QuizCard = ({ quiz, isLive, index }: { quiz: LiveQuiz, isLive: boolean, in
                                 </>
                             )}
                         </button>
+                    )}
+
+                    {isCalculating && (
+                        <button disabled className="px-6 py-2 bg-gray-100 text-gray-500 font-bold rounded-xl cursor-wait flex items-center gap-2">
+                            <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                            Result in 10m
+                        </button>
+                    )}
+
+                    {isResultReady && (
+                        <Link
+                            href={`/play/result`} // In a real app, this would be /play/result/[resultId] or /play/live/[quizId]/result
+                            className="px-6 py-2 bg-pw-indigo text-white font-bold rounded-xl shadow-lg hover:bg-pw-violet transition-colors flex items-center gap-2"
+                        >
+                            <FaCheckCircle /> View Result
+                        </Link>
                     )}
                 </div>
             </div>
