@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { LiveQuiz, Question, LiveQuizResult } from '@/data/types';
 import { ModernTimer } from '@/components/quiz/ModernTimer';
@@ -71,6 +71,20 @@ export default function LiveQuizPlayerPage() {
                         return;
                     }
 
+                    // Check for existing submission
+                    if (user) {
+                        const submissionQuery = query(
+                            collection(db, 'live_quiz_results'),
+                            where('quizId', '==', quizId),
+                            where('userId', '==', user.uid)
+                        );
+                        const submissionSnap = await getDocs(submissionQuery);
+                        if (!submissionSnap.empty) {
+                            setStatus('completed');
+                            return;
+                        }
+                    }
+
                     const now = Date.now();
                     if (now < data.startTime) {
                         setStatus('waiting');
@@ -101,7 +115,7 @@ export default function LiveQuizPlayerPage() {
         };
 
         fetchQuiz();
-    }, [quizId]);
+    }, [quizId, user]);
 
     // Robust Timer: Decrement based on previous state is okay for short items, 
     // but better to sync with a target time if we want extreme precision. 
@@ -235,9 +249,21 @@ export default function LiveQuizPlayerPage() {
                     </div>
                 </div>
 
-                <Button onClick={() => router.push('/home')} className="bg-pw-indigo hover:bg-pw-violet text-white px-8 py-3 rounded-xl shadow-lg">
-                    Return to Dashboard
-                </Button>
+                <div className="flex flex-col gap-3 w-full max-w-sm">
+                    <Button
+                        onClick={() => router.push(`/play/result?mode=live&quizId=${quiz!.id}`)}
+                        className="bg-pw-indigo hover:bg-pw-violet text-white px-8 py-3 rounded-xl shadow-lg border-none"
+                    >
+                        VIEW GLOBAL LEADERBOARD
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.push('/home')}
+                        className="text-pw-indigo hover:bg-pw-indigo/5 border border-pw-indigo/20 px-8 py-3 rounded-xl"
+                    >
+                        Return to Dashboard
+                    </Button>
+                </div>
             </div>
         );
     }
