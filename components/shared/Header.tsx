@@ -6,14 +6,19 @@ import { Button } from './Button'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 
-import { FaUserCircle } from 'react-icons/fa'
-import { useState } from 'react'
+import { FaUserCircle, FaCrown } from 'react-icons/fa'
+import { useState, useEffect } from 'react'
 import { SidebarDrawer } from './SidebarDrawer'
 
 export const Header = () => {
-    const { user } = useAuth()
+    const { user, userProfile } = useAuth()
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     return (
         <>
@@ -40,18 +45,33 @@ export const Header = () => {
                     <div className="flex items-center gap-2 md:gap-3">
                         {/* Theme & Sound Toggles Removed as per request */}
 
-                        {user ? (
-                            <Link href="/profile">
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="flex items-center gap-2 px-2 py-1 md:px-3 md:py-1.5 rounded-full bg-pw-surface hover:bg-pw-lavender/20 border border-pw-border transition-all cursor-pointer"
-                                >
-                                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-pw-indigo to-pw-violet text-white flex items-center justify-center text-xs md:text-sm font-bold shadow-pw-sm">
-                                        {user.email?.[0].toUpperCase() || <FaUserCircle />}
-                                    </div>
-                                </motion.div>
-                            </Link>
+                        {mounted && user ? (
+                            <>
+                                {userProfile?.subscription?.plan !== 'pro' && (
+                                    <Link href="/pro">
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
+                                        >
+                                            <FaCrown className="text-sm" />
+                                            <span className="text-xs font-bold whitespace-nowrap">Try Pro</span>
+                                        </motion.button>
+                                    </Link>
+                                )}
+
+                                <Link href="/profile">
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className="flex items-center gap-2 px-2 py-1 md:px-3 md:py-1.5 rounded-full bg-pw-surface hover:bg-pw-lavender/20 border border-pw-border transition-all cursor-pointer"
+                                    >
+                                        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-pw-indigo to-pw-violet text-white flex items-center justify-center text-xs md:text-sm font-bold shadow-pw-sm">
+                                            {user.email?.[0].toUpperCase() || <FaUserCircle />}
+                                        </div>
+                                    </motion.div>
+                                </Link>
+                            </>
                         ) : (
                             <>
                                 <Link href="/login" className="hidden sm:block">
