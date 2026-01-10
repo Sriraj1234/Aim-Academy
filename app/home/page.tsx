@@ -33,7 +33,7 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-pw-surface pb-20 font-sans selection:bg-pw-indigo selection:text-white">
             <Header />
 
-            <main className="pt-20 pb-20 space-y-6">
+            <main className="pt-16 pb-16 md:pt-20 md:pb-20 space-y-4 md:space-y-6">
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -52,10 +52,10 @@ export default function DashboardPage() {
                     <ModernCarousel />
                 </motion.div>
 
-                <div className="px-4 max-w-7xl mx-auto space-y-6 w-full overflow-x-hidden">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="px-4 max-w-7xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                         {/* Left Column */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="lg:col-span-2 space-y-4 md:space-y-6">
 
                             {/* Exam Countdown Widget */}
                             <motion.div
