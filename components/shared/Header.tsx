@@ -78,16 +78,7 @@ export const Header = () => {
                                     )
                                 )}
 
-                                {/* Referral Button */}
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setIsReferralOpen(true)}
-                                    className="p-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
-                                    title="Refer & Earn"
-                                >
-                                    <FaGift className="text-sm md:text-base" />
-                                </motion.button>
+
 
                                 <Link href="/profile">
                                     <motion.div
