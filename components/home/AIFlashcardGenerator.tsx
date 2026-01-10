@@ -191,24 +191,16 @@ export const AIFlashcardGenerator = () => {
                             className={`absolute inset-0 bg-[#0f0a1f] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-3 sm:p-4 md:p-5 flex flex-col text-white backface-hidden border border-white/10 shadow-xl ${!isFlipped ? 'invisible' : ''}`}
                             style={{ transform: 'rotateY(180deg)' }}
                             onClick={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onTouchMove={(e) => e.stopPropagation()}
                         >
                             <div className="text-emerald-400 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase mb-1.5 sm:mb-2 shrink-0">Definition</div>
                             <div
-                                className="flex-1 overflow-y-auto custom-scrollbar overscroll-contain pr-1 sm:pr-2"
+                                className="flex-1 overflow-y-scroll overflow-x-hidden pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
                                 style={{
-                                    touchAction: 'pan-y',
-                                    maxHeight: 'calc(100% - 40px)',
-                                    WebkitOverflowScrolling: 'touch'
+                                    WebkitOverflowScrolling: 'touch',
+                                    overscrollBehavior: 'contain',
                                 }}
-                                onWheel={(e) => {
-                                    e.stopPropagation();
-                                    // Optional: Stop propagation but allow default only if it scrolls
-                                }}
-                                onTouchMove={(e) => {
-                                    // Critical for mobile: prevent pulling the page
-                                    e.stopPropagation();
-                                }}
-                                onScroll={(e) => e.stopPropagation()}
                             >
                                 <p className="text-xs sm:text-sm font-medium leading-relaxed text-white/90">{flashcards[currentIndex].definition}</p>
 
@@ -345,7 +337,7 @@ export const AIFlashcardGenerator = () => {
                                 <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"><FaTimes className="text-white/60" /></button>
                             </div>
 
-                            <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+                            <div className={`p-5 flex-1 custom-scrollbar ${(!showGenerator && flashcards.length > 0) ? 'overflow-hidden' : 'overflow-y-auto'}`}>
                                 {(!showGenerator && flashcards.length > 0) ? renderFlashcardView() : renderGeneratorForm()}
                             </div>
                         </motion.div>
