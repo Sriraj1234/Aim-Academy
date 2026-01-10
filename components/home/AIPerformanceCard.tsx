@@ -99,24 +99,24 @@ export const AIPerformanceCard = () => {
     }
 
     return (
-        <div className="bg-white rounded-2xl p-4 border border-pw-border shadow-md mb-6 relative overflow-hidden group">
+        <div className="bg-white rounded-2xl p-3 border border-pw-border shadow-md mb-4 relative overflow-hidden group">
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-70" />
 
             {/* Compact Header */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
-                        <FaRobot className="text-sm" />
+                    <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
+                        <FaRobot className="text-xs" />
                     </div>
                     <div>
                         <h3 className="font-bold text-gray-800 text-sm leading-tight">AI Coach</h3>
-                        <p className="text-[10px] text-gray-500 font-medium">Daily Insights</p>
+                        <p className="text-[9px] text-gray-500 font-medium">Daily Insights</p>
                     </div>
                 </div>
                 <button
                     onClick={fetchAnalysis}
                     disabled={loading}
-                    className={`p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-indigo-600 transition-colors ${loading ? 'animate-spin' : ''}`}
+                    className={`p-1 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-indigo-600 transition-colors ${loading ? 'animate-spin' : ''}`}
                 >
                     <FaSync className="text-xs" />
                 </button>
@@ -128,63 +128,63 @@ export const AIPerformanceCard = () => {
                     <div className="h-10 bg-gray-50 rounded-lg w-full" />
                 </div>
             ) : !insights ? (
-                <div className="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    <p className="text-xs text-gray-500 font-medium">Solve quizzes to unlock insights!</p>
+                <div className="text-center py-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <p className="text-[10px] text-gray-500 font-medium">Solve quizzes to unlock insights!</p>
                 </div>
             ) : (
                 <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="space-y-3"
+                    className="space-y-2"
                 >
                     {/* Main Summary - Direct & Clean */}
-                    <div className="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100">
-                        <p className="text-indigo-900 text-xs font-medium leading-relaxed">
+                    <div className="bg-indigo-50/50 rounded-lg p-2.5 border border-indigo-100">
+                        <p className="text-indigo-900 text-[10px] font-medium leading-relaxed">
                             <span className="font-bold text-indigo-700 mr-1">Insight:</span>
                             {insights.summary}
                         </p>
                     </div>
 
                     {/* Tip & Weakness Grid */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-1.5">
                         {/* Tip */}
-                        <div className="bg-emerald-50/50 rounded-xl p-2.5 border border-emerald-100/50">
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <FaLightbulb className="text-emerald-500 text-[10px]" />
-                                <span className="text-emerald-700 font-bold text-[9px] uppercase tracking-wide">Tip</span>
+                        <div className="bg-emerald-50/50 rounded-lg p-2 border border-emerald-100/50">
+                            <div className="flex items-center gap-1 mb-0.5">
+                                <FaLightbulb className="text-emerald-500 text-[9px]" />
+                                <span className="text-emerald-700 font-bold text-[8px] uppercase tracking-wide">Tip</span>
                             </div>
-                            <p className="text-emerald-800 text-[10px] leading-snug line-clamp-2">
+                            <p className="text-emerald-800 text-[9px] leading-snug line-clamp-2">
                                 {insights.tip}
                             </p>
                         </div>
 
                         {/* Focus Area */}
                         {insights.weakAreas.length > 0 ? (
-                            <div className="bg-rose-50/50 rounded-xl p-2.5 border border-rose-100/50">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                    <FaExclamationTriangle className="text-rose-500 text-[10px]" />
-                                    <span className="text-rose-700 font-bold text-[9px] uppercase tracking-wide">Focus</span>
+                            <div className="bg-rose-50/50 rounded-lg p-2 border border-rose-100/50">
+                                <div className="flex items-center gap-1 mb-0.5">
+                                    <FaExclamationTriangle className="text-rose-500 text-[9px]" />
+                                    <span className="text-rose-700 font-bold text-[8px] uppercase tracking-wide">Focus</span>
                                 </div>
-                                <p className="text-rose-800 text-[10px] font-bold truncate">
+                                <p className="text-rose-800 text-[9px] font-bold truncate">
                                     {insights.weakAreas[0].subject}
                                 </p>
-                                <p className="text-rose-600/80 text-[9px]">
+                                <p className="text-rose-600/80 text-[8px]">
                                     {insights.weakAreas[0].accuracy}% Accuracy
                                 </p>
                             </div>
                         ) : (
-                            <div className="bg-blue-50/50 rounded-xl p-2.5 border border-blue-100/50 flex flex-col justify-center">
-                                <div className="flex items-center gap-1.5">
-                                    <FaChartLine className="text-blue-500 text-[10px]" />
-                                    <span className="text-blue-700 font-bold text-[9px] uppercase">All Good!</span>
+                            <div className="bg-blue-50/50 rounded-lg p-2 border border-blue-100/50 flex flex-col justify-center">
+                                <div className="flex items-center gap-1">
+                                    <FaChartLine className="text-blue-500 text-[9px]" />
+                                    <span className="text-blue-700 font-bold text-[8px] uppercase">All Good!</span>
                                 </div>
-                                <p className="text-blue-600 text-[9px] mt-0.5">Keep maintaining your streak.</p>
+                                <p className="text-blue-600 text-[8px] mt-0.5">Keep maintaining your streak.</p>
                             </div>
                         )}
                     </div>
 
                     {/* Footer Motivation */}
-                    <p className="text-gray-400 text-[10px] text-center italic mt-1">
+                    <p className="text-gray-400 text-[9px] text-center italic mt-0.5">
                         "{insights.motivation}"
                     </p>
 
