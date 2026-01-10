@@ -1,29 +1,30 @@
 'use client'
 
 import { Header } from '@/components/shared/Header'
-import { DashboardHeader } from '@/components/home/DashboardHeader'
-import { StatsOverview } from '@/components/home/StatsOverview'
 import { ModernModeGrid } from '@/components/home/ModernModeGrid'
-import { LiveQuizBanner } from '@/components/home/LiveQuizBanner'
 import { ModernCarousel } from '@/components/home/ModernCarousel'
-import { GamificationCard } from '@/components/home/GamificationCard'
 import { AIChatWidget } from '@/components/shared/AIChatWidget'
 import { Footer } from '@/components/shared/Footer'
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
 
+// Components with user/auth data - disable SSR to prevent hydration mismatches
+const DashboardHeader = dynamic(() => import('@/components/home/DashboardHeader').then(m => m.DashboardHeader), { ssr: false })
+const StatsOverview = dynamic(() => import('@/components/home/StatsOverview').then(m => m.StatsOverview), { ssr: false, loading: () => <div className="h-20 bg-gray-100 rounded-xl animate-pulse" /> })
+const LiveQuizBanner = dynamic(() => import('@/components/home/LiveQuizBanner').then(m => m.LiveQuizBanner), { ssr: false })
+const GamificationCard = dynamic(() => import('@/components/home/GamificationCard').then(m => m.GamificationCard), { ssr: false })
+const ExamCountdown = dynamic(() => import('@/components/home/ExamCountdown').then(m => m.ExamCountdown), { loading: () => <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />, ssr: false })
+
 // Lazy Load Heavy/Below-Fold Components
 const OfflineTuitionCard = dynamic(() => import('@/components/home/OfflineTuitionCard').then(m => m.OfflineTuitionCard), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" /> })
-const BookmarkedQuestionsSection = dynamic(() => import('@/components/home/BookmarkedQuestionsSection').then(m => m.BookmarkedQuestionsSection))
-const NotesSection = dynamic(() => import('@/components/home/NotesSection').then(m => m.NotesSection), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" /> })
-const AIPerformanceCard = dynamic(() => import('@/components/home/AIPerformanceCard').then(m => m.AIPerformanceCard))
-const DailyChallengeCard = dynamic(() => import('@/components/home/DailyChallengeCard').then(m => m.DailyChallengeCard))
+const BookmarkedQuestionsSection = dynamic(() => import('@/components/home/BookmarkedQuestionsSection').then(m => m.BookmarkedQuestionsSection), { ssr: false })
+const NotesSection = dynamic(() => import('@/components/home/NotesSection').then(m => m.NotesSection), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />, ssr: false })
+const AIPerformanceCard = dynamic(() => import('@/components/home/AIPerformanceCard').then(m => m.AIPerformanceCard), { ssr: false })
+const DailyChallengeCard = dynamic(() => import('@/components/home/DailyChallengeCard').then(m => m.DailyChallengeCard), { ssr: false })
 const AIQuestionGenerator = dynamic(() => import('@/components/home/AIQuestionGenerator').then(m => m.AIQuestionGenerator), { loading: () => <div className="h-20 bg-gray-100 rounded-2xl animate-pulse" /> })
 const AIFlashcardGenerator = dynamic(() => import('@/components/home/AIFlashcardGenerator').then(m => m.AIFlashcardGenerator))
 const ChapterSummary = dynamic(() => import('@/components/home/ChapterSummary').then(m => m.ChapterSummary))
-const TrialReminderModal = dynamic(() => import('@/components/subscription/TrialReminderModal').then(m => m.TrialReminderModal))
-const ExamCountdown = dynamic(() => import('@/components/home/ExamCountdown').then(m => m.ExamCountdown), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" /> })
-
+const TrialReminderModal = dynamic(() => import('@/components/subscription/TrialReminderModal').then(m => m.TrialReminderModal), { ssr: false })
 
 
 
@@ -84,17 +85,19 @@ export default function DashboardPage() {
                             <AIPerformanceCard />
 
                             {/* Study Modes */}
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="space-y-4"
-                            >
-                                <h3 className="text-xl font-bold text-pw-violet pl-3 border-l-4 border-pw-indigo">
-                                    Study Modes
-                                </h3>
-                                <ModernModeGrid />
-                            </motion.div>
+                            <div id="study-modes" className="space-y-4 pt-4"> {/* Added wrapper for scroll target */}
+                                <motion.div
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="shadow-sm rounded-xl p-1"
+                                >
+                                    <h3 className="text-xl font-bold text-pw-violet pl-3 border-l-4 border-pw-indigo mb-4">
+                                        Study Modes
+                                    </h3>
+                                    <ModernModeGrid />
+                                </motion.div>
+                            </div>
 
 
                         </div>
