@@ -135,9 +135,9 @@ export const ExamCountdown = () => {
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/20 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500/30 rounded-full blur-3xl"></div>
 
-            <div className="relative z-10 p-5 md:p-6 text-white">
+            <div className="relative z-10 p-4 md:p-6 text-white">
                 {/* Header Section */}
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start justify-between mb-4 md:mb-6">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
                             <FaCalendarAlt className="text-xl" />
@@ -199,7 +199,7 @@ export const ExamCountdown = () => {
                 )}
 
                 {/* Counter Grid */}
-                <div className="grid grid-cols-4 gap-3 md:gap-4 mb-6">
+                <div className="grid grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
                     {[
                         { value: timeLeft.days, label: 'Days' },
                         { value: timeLeft.hours, label: 'Hours' },
@@ -208,8 +208,8 @@ export const ExamCountdown = () => {
                     ].map((item, idx) => (
                         <div key={item.label} className="group relative">
                             <div className="absolute inset-0 bg-white/5 rounded-2xl transform transition-transform group-hover:scale-105"></div>
-                            <div className="relative bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-3 md:p-4 text-center shadow-lg group-hover:bg-white/15 transition-colors">
-                                <div className="text-2xl md:text-4xl font-black mb-1 font-mono tracking-tight">
+                            <div className="relative bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 md:p-4 text-center shadow-lg group-hover:bg-white/15 transition-colors">
+                                <div className="text-xl md:text-4xl font-black mb-1 font-mono tracking-tight">
                                     {String(item.value).padStart(2, '0')}
                                 </div>
                                 <div className="text-[10px] md:text-xs font-medium text-white/60 uppercase tracking-widest">
