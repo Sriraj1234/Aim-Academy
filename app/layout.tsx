@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { Toaster } from 'react-hot-toast'
 import { Outfit, Space_Grotesk, Noto_Sans } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
@@ -11,6 +10,7 @@ import { ClientLayoutWrapper } from '@/components/shared/ClientLayoutWrapper'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SoundProvider } from '@/context/SoundContext'
 import { AdSense } from '@/components/shared/AdSense'
+
 
 // Fonts with display swap for faster text rendering
 const outfit = Outfit({
@@ -88,7 +88,6 @@ export default function RootLayout({
               <LanguageProvider>
                 <SoundProvider>
                   <ClientLayoutWrapper />
-                  <Toaster position="top-center" toastOptions={{ duration: 3000, style: { background: '#333', color: '#fff', borderRadius: '12px' } }} />
                   <div className="relative w-full max-w-full overflow-x-hidden">
                     {children}
                   </div>
