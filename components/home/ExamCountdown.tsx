@@ -125,41 +125,46 @@ export const ExamCountdown = () => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-5 text-white relative overflow-hidden shadow-lg mb-6"
+            className="w-full relative overflow-hidden rounded-3xl mb-6 shadow-xl"
         >
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl transform translate-x-20 -translate-y-20" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full blur-2xl transform -translate-x-10 translate-y-10" />
-            </div>
+            {/* Background with Gradient Mesh */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#4F46E5] via-[#7C3AED] to-[#DB2777]"></div>
 
-            <div className="relative z-10">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                            <FaCalendarAlt className="text-lg" />
+            {/* Glass Overlay Pattern */}
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500/30 rounded-full blur-3xl"></div>
+
+            <div className="relative z-10 p-5 md:p-6 text-white">
+                {/* Header Section */}
+                <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
+                            <FaCalendarAlt className="text-xl" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-lg">Board Exam Countdown</h3>
-                            <p className="text-xs text-white/70">
-                                {examDate?.toLocaleDateString('en-IN', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                })}
-                            </p>
+                            <h3 className="font-bold text-lg md:text-xl leading-tight">Board Exam</h3>
+                            <button
+                                onClick={() => setIsEditing(!isEditing)}
+                                className="text-xs md:text-sm text-white/80 hover:text-white flex items-center gap-1.5 mt-0.5 transition-colors group"
+                            >
+                                <span>
+                                    {examDate?.toLocaleDateString('en-IN', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    })}
+                                </span>
+                                <FaEdit className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px]" />
+                            </button>
                         </div>
                     </div>
-                    <button
-                        onClick={() => {
-                            setIsEditing(!isEditing);
-                            setCustomDate(examDate?.toISOString().split('T')[0] || '');
-                        }}
-                        className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                    >
-                        {isEditing ? <FaTimes /> : <FaEdit />}
-                    </button>
+
+                    {/* Motivation Badge */}
+                    <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/10">
+                        <FaFire className="text-orange-300 animate-pulse text-xs" />
+                        <span className="text-xs font-medium">{motivation.message}</span>
+                    </div>
                 </div>
 
                 {/* Date Editor */}
@@ -167,74 +172,74 @@ export const ExamCountdown = () => {
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="mb-4 flex gap-2"
+                        className="mb-6 bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20"
                     >
-                        <input
-                            type="date"
-                            value={customDate}
-                            onChange={(e) => setCustomDate(e.target.value)}
-                            className="flex-1 px-3 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
-                        />
-                        <button
-                            onClick={handleSaveDate}
-                            disabled={saving}
-                            className="px-4 py-2 bg-white text-purple-600 font-bold rounded-lg hover:bg-white/90 transition-colors disabled:opacity-50 flex items-center gap-2"
-                        >
-                            {saving ? (
-                                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                                <FaCheck />
-                            )}
-                            Save
-                        </button>
+                        <p className="text-xs text-white/70 mb-2 font-medium uppercase tracking-wide">Set Exam Date</p>
+                        <div className="flex gap-2">
+                            <input
+                                type="date"
+                                value={customDate}
+                                onChange={(e) => setCustomDate(e.target.value)}
+                                className="flex-1 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:bg-black/30 transition-colors"
+                            />
+                            <button
+                                onClick={handleSaveDate}
+                                disabled={saving}
+                                className="px-4 py-2 bg-white text-indigo-600 font-bold text-sm rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg"
+                            >
+                                {saving ? (
+                                    <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <FaCheck />
+                                )}
+                                <span>Save</span>
+                            </button>
+                        </div>
                     </motion.div>
                 )}
 
-                {/* Countdown Timer */}
-                <div className="grid grid-cols-4 gap-2 mb-4">
+                {/* Counter Grid */}
+                <div className="grid grid-cols-4 gap-3 md:gap-4 mb-6">
                     {[
                         { value: timeLeft.days, label: 'Days' },
                         { value: timeLeft.hours, label: 'Hours' },
                         { value: timeLeft.minutes, label: 'Mins' },
                         { value: timeLeft.seconds, label: 'Secs' }
                     ].map((item, idx) => (
-                        <motion.div
-                            key={item.label}
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: idx * 0.1, type: 'spring' }}
-                            className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center"
-                        >
-                            <div className="text-2xl md:text-3xl font-black">
-                                {String(item.value).padStart(2, '0')}
+                        <div key={item.label} className="group relative">
+                            <div className="absolute inset-0 bg-white/5 rounded-2xl transform transition-transform group-hover:scale-105"></div>
+                            <div className="relative bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-3 md:p-4 text-center shadow-lg group-hover:bg-white/15 transition-colors">
+                                <div className="text-2xl md:text-4xl font-black mb-1 font-mono tracking-tight">
+                                    {String(item.value).padStart(2, '0')}
+                                </div>
+                                <div className="text-[10px] md:text-xs font-medium text-white/60 uppercase tracking-widest">
+                                    {item.label}
+                                </div>
                             </div>
-                            <div className="text-[10px] md:text-xs text-white/70 uppercase tracking-wider">
-                                {item.label}
-                            </div>
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
 
-                {/* Progress Bar */}
-                <div className="mb-3">
-                    <div className="flex justify-between text-xs text-white/70 mb-1">
-                        <span>Preparation Progress</span>
-                        <span>{Math.round(progressPercent)}%</span>
+                {/* Progress Bar & Footer */}
+                <div className="space-y-2">
+                    <div className="flex justify-between items-end px-1">
+                        <span className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Preparation Timeline</span>
+                        <span className="text-sm font-bold">{Math.round(progressPercent)}%</span>
                     </div>
-                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-black/20 rounded-full overflow-hidden p-[2px]">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercent}%` }}
-                            transition={{ duration: 1, delay: 0.5 }}
-                            className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="h-full bg-gradient-to-r from-green-300 to-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]"
                         />
                     </div>
-                </div>
 
-                {/* Motivational Message */}
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
-                    <FaFire className="text-orange-300 animate-pulse" />
-                    <p className="text-sm font-medium">{motivation.message}</p>
+                    {/* Mobile Only Message */}
+                    <div className="md:hidden mt-3 flex items-center justify-center gap-2 text-white/80">
+                        <FaFire className="text-orange-300 text-xs" />
+                        <span className="text-xs">{motivation.message}</span>
+                    </div>
                 </div>
             </div>
         </motion.div>
