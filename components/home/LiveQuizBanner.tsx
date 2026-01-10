@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, where, getDoc } from 'firebase/firestore';
 import { LiveQuiz } from '@/data/types';
 import Link from 'next/link';
-import { FaClock, FaCalendarAlt, FaPlayCircle, FaBell, FaCheckCircle, FaTrophy } from 'react-icons/fa';
+import { FaClock, FaCalendarAlt, FaPlayCircle, FaBell, FaCheckCircle, FaTrophy, FaGift } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { setDoc, doc, updateDoc, increment } from 'firebase/firestore';
@@ -71,9 +71,12 @@ export const LiveQuizBanner = () => {
     if (loading || quizzes.length === 0) return null;
 
     return (
-        <div className="space-y-4">
-            <h3 className="text-xl font-bold text-pw-violet pl-3 border-l-4 border-red-500 animate-pulse">
+        <div className="space-y-4 mb-8">
+            <h3 className="text-xl font-bold text-pw-violet pl-3 border-l-4 border-red-500 animate-pulse flex items-center gap-2">
                 Live Events
+                <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full ml-auto md:ml-2">
+                    Win Exciting Rewards! 🎁
+                </span>
             </h3>
             <div className="grid gap-4">
                 {quizzes.map((quiz, index) => {
@@ -144,7 +147,7 @@ const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
             className={`p-5 rounded-2xl border relative overflow-hidden group ${isLive
-                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg shadow-red-200'
+                ? 'bg-gradient-to-br from-red-600 to-rose-600 text-white shadow-lg shadow-red-200'
                 : 'bg-white border-pw-border hover:border-pw-indigo shadow-pw-md hover:shadow-lg'
                 }`}
         >
@@ -154,16 +157,16 @@ const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
                 </div>
             )}
 
-            <div className="flex justify-between items-start gap-4 relative z-10">
-                <div>
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4 relative z-10">
+                <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
                         {isLive && (
-                            <span className="px-2 py-0.5 bg-white text-red-600 text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 animate-pulse">
+                            <span className="px-2 py-0.5 bg-white text-red-600 text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 animate-pulse shadow-sm">
                                 <span className="w-2 h-2 rounded-full bg-red-600"></span> LIVE NOW
                             </span>
                         )}
                         {isUpcoming && (
-                            <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 border border-gray-200">
+                            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1 border border-gray-200">
                                 <FaCalendarAlt /> UPCOMING
                             </span>
                         )}
@@ -173,42 +176,56 @@ const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
                             </span>
                         )}
 
-                        <span className={`text-[10px] font-bold uppercase tracking-wider opacity-80 ${isLive ? 'text-white' : 'text-gray-400'}`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider opacity-90 ${isLive ? 'text-white' : 'text-gray-500'}`}>
                             {quiz.type}
                         </span>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${isLive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                        <div className="h-4 w-px bg-current opacity-20 mx-1"></div>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${isLive ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600'}`}>
                             {quiz.subject || 'General'}
                         </span>
                         {quiz.allowedClasses && quiz.allowedClasses.length > 0 && (
-                            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${isLive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${isLive ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600'}`}>
                                 Class {quiz.allowedClasses.join(', ')}
                             </span>
                         )}
                     </div>
-                    <h4 className={`text-lg font-bold mb-1 ${isLive ? 'text-white' : 'text-gray-800'}`}>
+
+                    <h4 className={`text-xl md:text-2xl font-black mb-2 leading-tight ${isLive ? 'text-white' : 'text-gray-900'}`}>
                         {quiz.title}
                     </h4>
-                    <p className={`text-sm mb-4 line-clamp-2 ${isLive ? 'text-white/90' : 'text-gray-500'}`}>
+                    <p className={`text-sm mb-4 line-clamp-2 ${isLive ? 'text-white/90' : 'text-gray-600'}`}>
                         {quiz.description || 'Join now to test your knowledge!'}
                     </p>
 
-                    <div className="flex items-center gap-2 text-xs font-medium opacity-80">
-                        <FaClock className={isLive ? 'text-white' : 'text-gray-400'} />
-                        <span className={isLive ? 'text-white' : 'text-gray-500'}>
-                            {isUpcoming ? `Starts ${new Date(quiz.startTime).toLocaleString()}` :
-                                isLive ? `Ends ${new Date(quiz.endTime).toLocaleTimeString()}` :
-                                    `Ended ${new Date(quiz.endTime).toLocaleString()}`}
-                        </span>
+                    {/* Rewards Text Enhancement */}
+                    <div className={`flex items-start gap-2 text-xs font-semibold p-2.5 rounded-xl mb-4 max-w-md ${isLive ? 'bg-white/10 text-white' : 'bg-amber-50 text-amber-900 border border-amber-100'}`}>
+                        <FaGift className={`text-base shrink-0 ${isLive ? 'text-yellow-300' : 'text-amber-500'}`} />
+                        <div>
+                            <span className={isLive ? 'text-yellow-200' : 'text-amber-600'}>Participate & Win:</span>
+                            <span className="ml-1 opacity-95 block md:inline font-normal">Exciting rewards for top performers! 🏆</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs font-medium opacity-90">
+                        <div className={`flex items-center gap-1.5 ${isLive ? 'text-white' : 'text-gray-500'}`}>
+                            <FaClock className={isLive ? 'text-white' : 'text-gray-400'} />
+                            <span>
+                                {isUpcoming ? `Starts: ${new Date(quiz.startTime).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` :
+                                    isLive ? `Ends: ${new Date(quiz.endTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` :
+                                        `Ended: ${new Date(quiz.endTime).toLocaleString('en-IN')}`}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto mt-2 md:mt-0">
                     {isLive && (
                         <Link
                             href={`/play/live/${quiz.id}`}
-                            className="px-6 py-2 bg-white text-red-600 font-bold rounded-xl shadow-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                            className="px-6 py-3 bg-white text-red-600 font-bold rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 group/btn"
                         >
-                            <FaPlayCircle /> Join Quiz
+                            <FaPlayCircle className="text-xl group-hover/btn:scale-110 transition-transform" />
+                            <span>Join Live Quiz</span>
                         </Link>
                     )}
 
@@ -216,9 +233,9 @@ const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
                         <button
                             onClick={handleNotify}
                             disabled={reminderSet}
-                            className={`px-6 py-2 font-bold rounded-xl transition-all flex items-center gap-2 ${reminderSet
+                            className={`px-6 py-2.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${reminderSet
                                 ? 'bg-green-100 text-green-700 cursor-default'
-                                : 'bg-pw-indigo text-white hover:bg-pw-violet shadow-lg shadow-pw-indigo/20 active:scale-95'
+                                : 'bg-pw-indigo text-white hover:bg-pw-violet shadow-lg shadow-pw-indigo/20 active:scale-95 hover:-translate-y-0.5'
                                 }`}
                         >
                             {reminderSet ? (
@@ -234,7 +251,7 @@ const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
                     )}
 
                     {isCalculating && (
-                        <button disabled className="px-6 py-2 bg-gray-100 text-gray-500 font-bold rounded-xl cursor-wait flex items-center gap-2">
+                        <button disabled className="px-6 py-2 bg-gray-100 text-gray-500 font-bold rounded-xl cursor-wait flex items-center justify-center gap-2">
                             <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
                             Result in 10m
                         </button>
@@ -243,7 +260,7 @@ const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
                     {isResultReady && (
                         <Link
                             href={`/play/result?mode=live&quizId=${quiz.id}`}
-                            className="px-6 py-2 bg-pw-indigo text-white font-bold rounded-xl shadow-lg hover:bg-pw-violet transition-colors flex items-center gap-2"
+                            className="px-6 py-2 bg-pw-indigo text-white font-bold rounded-xl shadow-lg hover:bg-pw-violet transition-colors flex items-center justify-center gap-2"
                         >
                             <FaTrophy /> View Leaderboard
                         </Link>
