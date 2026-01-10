@@ -138,6 +138,11 @@ export interface UserProfile {
         deviceName: string;
         lastActive: number;
     }[];
+
+    // Referral System
+    referralCode?: string;      // Unique code for this user (defaults to uid)
+    referredBy?: string;        // UID of the user who referred them
+    referralCount?: number;     // Number of successful referrals
 }
 
 export interface BattleRoom {
@@ -268,6 +273,7 @@ export interface LiveQuiz {
     allowedClasses?: string[]; // e.g. ['9', '10', '11']
     allowedStreams?: string[]; // e.g. ['science', 'commerce', 'arts'] - Only for 11/12
     subject?: string; // Main subject or 'Mixed'
+    targetBoard?: string; // e.g. 'cbse', 'bseb', 'all'
 
     // Scheduling
     startTime: number; // Timestamp
