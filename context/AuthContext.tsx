@@ -198,6 +198,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         // Create New Profile
                         const now = new Date()
                         const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+                        // Check for referral code in localStorage
+                        let referredBy: string | undefined;
+                        if (typeof window !== 'undefined') {
+                            const storedReferralCode = localStorage.getItem('referral_code');
+                            if (storedReferralCode && storedReferralCode !== user.uid) {
+                                referredBy = storedReferralCode;
+                            }
+                        }
+
                         const newProfile: UserProfile = {
                             uid: user.uid,
                             email: user.email || '',
@@ -223,11 +233,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                                 aiChatCount: 0,
                                 flashcardGenCount: 0,
                                 groupPlayCount: 0
-                            }
+                            },
+                            referralCode: user.uid, // Use UID as referral code
+                            referredBy: referredBy,
+                            referralCount: 0
                         }
-                        setDoc(docRef, newProfile).then(() => {
+                        setDoc(docRef, newProfile).then(async () => {
                             isRegistered = true;
                             setUserProfile(newProfile);
+
+                            // If user was referred, credit the referrer
+                            if (referredBy) {
+                                try {
+                                    await fetch('/api/referral/credit', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ referrerId: referredBy, newUserId: user.uid })
+                                    });
+                                    // Clear the referral code from localStorage
+                                    localStorage.removeItem('referral_code');
+                                    console.log('Referral bonus credited to:', referredBy);
+                                } catch (e) {
+                                    console.error('Failed to credit referral:', e);
+                                }
+                            }
                         });
                     }
                     setLoading(false)
