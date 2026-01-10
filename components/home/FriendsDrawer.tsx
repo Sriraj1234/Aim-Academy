@@ -8,6 +8,7 @@ import { useFriends } from '@/hooks/useFriends'
 import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/hooks/useSound'
 import { LocalStudentsSection } from '@/components/home/LocalStudentsSection'
+import { UserBadge } from '@/components/shared/UserBadge'
 import { Friend } from '@/data/types'
 
 interface FriendsDrawerProps {
@@ -208,6 +209,10 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                             referrerPolicy="no-referrer"
                                                         />
                                                     </div>
+
+                                                    {/* User Badge (Top Left) */}
+                                                    <UserBadge size="sm" className="-top-1 -left-1" userProfile={friend} showDefault={false} />
+
                                                     {/* Online Status Indicator */}
                                                     <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center ${onlineUsers[friend.uid] === 'playing' ? 'bg-orange-500' :
                                                         onlineUsers[friend.uid] === 'in-lobby' ? 'bg-blue-500' :
@@ -217,17 +222,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                         {onlineUsers[friend.uid] && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
                                                     </div>
 
-                                                    {/* Badge Overlay (Top Right) */}
-                                                    {friend.subscription?.plan === 'pro' && friend.subscription?.status === 'active' && (
-                                                        <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-[8px] p-0.5 rounded-full border border-white flex items-center justify-center z-10" title="Pro Scholar">
-                                                            <FaCrown />
-                                                        </div>
-                                                    )}
-                                                    {friend.subscription?.plan !== 'pro' && (friend.gamification?.currentStreak || 0) >= 30 && (
-                                                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] p-0.5 rounded-full border border-white flex items-center justify-center z-10" title="Monthly Master">
-                                                            <FaFire />
-                                                        </div>
-                                                    )}
+                                                    {/* Manual badges removed - replaced by UserBadge */}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="font-bold text-pw-violet dark:text-white truncate">{friend.displayName}</h3>
