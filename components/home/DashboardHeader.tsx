@@ -136,16 +136,21 @@ export const DashboardHeader = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-3">
-                    {/* Referral Button */}
+                <div className="flex items-center gap-3">
+                    {/* Notification Button */}
                     <button
-                        onClick={() => setIsReferralOpen(true)}
-                        className="relative p-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full hover:from-amber-500 hover:to-orange-600 transition-all border border-amber-300 shadow-pw-sm group"
-                        title="Refer & Earn"
+                        onClick={() => setIsNotificationsOpen(true)}
+                        className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
                     >
-                        <FaGift className="text-xl group-hover:scale-110 transition-transform" />
+                        <FaBell className="text-xl group-hover:scale-110 transition-transform" />
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                        )}
                     </button>
 
+                    {/* Study Modes Button */}
                     <button
                         onClick={() => {
                             const element = document.getElementById('study-modes');
@@ -159,18 +164,16 @@ export const DashboardHeader = () => {
                         <FaBookReader className="text-xl group-hover:scale-110 transition-transform" />
                     </button>
 
+                    {/* Referral Button */}
                     <button
-                        onClick={() => setIsNotificationsOpen(true)}
-                        className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
+                        onClick={() => setIsReferralOpen(true)}
+                        className="relative p-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full hover:from-amber-500 hover:to-orange-600 transition-all border border-amber-300 shadow-pw-sm group"
+                        title="Refer & Earn"
                     >
-                        <FaBell className="text-xl group-hover:scale-110 transition-transform" />
-                        {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
-                                {unreadCount > 9 ? '9+' : unreadCount}
-                            </span>
-                        )}
+                        <FaGift className="text-xl group-hover:scale-110 transition-transform" />
                     </button>
 
+                    {/* Friends Button */}
                     <button
                         onClick={() => setIsFriendsOpen(true)}
                         className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm"
