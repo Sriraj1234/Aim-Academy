@@ -38,12 +38,25 @@ export const SafeAvatar = ({ src, alt, className }: SafeAvatarProps) => {
     );
 };
 
-// Helper to generate consistent colors from names
+// Helper to generate consistent, vibrant colors from names
 function stringToColor(str: string) {
+    // Predefined vibrant color palette
+    const colors = [
+        '#6366F1', // Indigo
+        '#8B5CF6', // Violet
+        '#EC4899', // Pink
+        '#EF4444', // Red
+        '#F97316', // Orange
+        '#EAB308', // Yellow
+        '#22C55E', // Green
+        '#14B8A6', // Teal
+        '#06B6D4', // Cyan
+        '#3B82F6', // Blue
+    ];
+
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-    return '#' + '00000'.substring(0, 6 - c.length) + c;
+    return colors[Math.abs(hash) % colors.length];
 }
