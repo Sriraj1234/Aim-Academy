@@ -76,6 +76,7 @@ export default function LoginPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
+                    suppressHydrationWarning
                     className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden mb-8 shadow-pw-xl border border-pw-border bg-white"
                 >
                     <Image
