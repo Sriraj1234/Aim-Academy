@@ -9,17 +9,23 @@ interface SafeAvatarProps {
 }
 
 export const SafeAvatar = ({ src, alt, className }: SafeAvatarProps) => {
-    const [imgSrc, setImgSrc] = useState(src || `https://ui-avatars.com/api/?name=${alt}`);
     const [hasError, setHasError] = useState(false);
 
     useEffect(() => {
-        setImgSrc(src || `https://ui-avatars.com/api/?name=${alt}`);
         setHasError(false);
-    }, [src, alt]);
+    }, [src]);
+
+    if (!src || hasError) {
+        return (
+            <div className={`flex items-center justify-center bg-pw-indigo text-white font-bold text-sm uppercase ${className}`} style={{ backgroundColor: stringToColor(alt) }}>
+                {(alt || 'U').charAt(0)}
+            </div>
+        );
+    }
 
     return (
         <img
-            src={hasError ? `https://ui-avatars.com/api/?name=${alt}` : imgSrc}
+            src={src}
             alt={alt}
             className={className}
             referrerPolicy="no-referrer"
@@ -27,3 +33,13 @@ export const SafeAvatar = ({ src, alt, className }: SafeAvatarProps) => {
         />
     );
 };
+
+// Helper to generate consistent colors from names
+function stringToColor(str: string) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
+}
