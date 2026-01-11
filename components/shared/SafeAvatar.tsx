@@ -16,8 +16,12 @@ export const SafeAvatar = ({ src, alt, className }: SafeAvatarProps) => {
     }, [src]);
 
     if (!src || hasError) {
+        // Use absolute inset-0 to fill the parent, or fallback to explicit sizing via className
         return (
-            <div className={`flex items-center justify-center bg-pw-indigo text-white font-bold text-sm uppercase ${className}`} style={{ backgroundColor: stringToColor(alt) }}>
+            <div
+                className={`flex items-center justify-center text-white font-bold text-sm uppercase ${className}`}
+                style={{ backgroundColor: stringToColor(alt) }}
+            >
                 {(alt || 'U').charAt(0)}
             </div>
         );
