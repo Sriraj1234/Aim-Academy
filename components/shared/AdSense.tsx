@@ -20,8 +20,17 @@ export const AdSense = ({ pId }: Props) => {
 
     // Routes where ads ARE allowed (High value content only)
     const allowedRoutes = [
+        '/',
+        '/home',
         '/notes',
         '/study-hub',
+        '/bookmarks',
+        '/mistakes',
+        '/tracker',
+        '/contact',
+        '/about',
+        '/privacy',
+        '/terms',
         '/blog' // Future proofing
     ]
 
