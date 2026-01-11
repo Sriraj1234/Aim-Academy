@@ -51,11 +51,17 @@ export const AIFlashcardGenerator = () => {
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
         } else {
             document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
         }
         return () => {
             document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
         };
     }, [isOpen]);
 
@@ -159,19 +165,22 @@ export const AIFlashcardGenerator = () => {
             {/* Flashcard container - responsive height */}
             <div className="flex-1 flex flex-col items-center justify-center min-h-[250px] sm:min-h-[300px] md:min-h-[350px]">
                 {/* Card wrapper - responsive sizing */}
+                {/* Card wrapper - responsive sizing */}
                 <div
-                    className="relative w-full max-w-[280px] sm:max-w-sm md:max-w-md h-[200px] sm:h-[240px] md:h-[280px] perspective-1000 group cursor-pointer"
-                    onClick={() => setIsFlipped(!isFlipped)}
+                    className="relative w-full max-w-[280px] sm:max-w-sm md:max-w-md h-[200px] sm:h-[240px] md:h-[280px] perspective-1000 group"
                 >
                     <motion.div
-                        className="absolute inset-0 rounded-xl sm:rounded-2xl md:rounded-[2rem] shadow-2xl backface-hidden transition-all duration-500"
+                        className="absolute inset-0 rounded-xl sm:rounded-2xl md:rounded-[2rem] shadow-2xl transition-all duration-500 transform-gpu"
                         animate={{ rotateY: isFlipped ? 180 : 0 }}
                         initial={false}
-                        transition={{ duration: 0.5, type: "spring", stiffness: 260, damping: 20 }}
+                        transition={{ duration: 0.6, type: "spring", stiffness: 200, damping: 25 }}
                         style={{ transformStyle: 'preserve-3d' }}
                     >
-                        {/* Front */}
-                        <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-4 sm:p-5 md:p-6 flex flex-col items-center justify-center text-white backface-hidden shadow-inner ring-1 ring-white/20 overflow-hidden ${isFlipped ? 'invisible' : ''}`}>
+                        {/* Front - Click to Flip */}
+                        <div
+                            onClick={() => setIsFlipped(true)}
+                            className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-4 sm:p-5 md:p-6 flex flex-col items-center justify-center text-white backface-hidden shadow-inner ring-1 ring-white/20 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform ${isFlipped ? 'pointer-events-none' : ''}`}
+                        >
                             {/* Background Image */}
                             {flashcards[currentIndex].imageUrl && (
                                 <div
@@ -186,17 +195,23 @@ export const AIFlashcardGenerator = () => {
                             <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 opacity-80 text-[8px] sm:text-[9px] md:text-[10px] bg-black/30 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full z-10 backdrop-blur-sm">Tap to Flip</div>
                         </div>
 
-                        {/* Back */}
+                        {/* Back - Content Scrollable */}
                         <div
-                            className={`absolute inset-0 bg-[#0f0a1f] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-3 sm:p-4 md:p-5 flex flex-col text-white backface-hidden border border-white/10 shadow-xl ${!isFlipped ? 'invisible' : ''}`}
+                            className={`absolute inset-0 bg-[#0f0a1f] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-3 sm:p-4 md:p-5 flex flex-col text-white backface-hidden border border-white/10 shadow-xl ${!isFlipped ? 'pointer-events-none' : ''}`}
                             style={{ transform: 'rotateY(180deg)' }}
-                            onClick={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onTouchMove={(e) => e.stopPropagation()}
                         >
-                            <div className="text-emerald-400 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase mb-1.5 sm:mb-2 shrink-0">Definition</div>
+                            <div className="flex justify-between items-start mb-2 shrink-0">
+                                <div className="text-emerald-400 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase">Definition</div>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setIsFlipped(false); }}
+                                    className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold text-white/70 transition-colors"
+                                >
+                                    ↩ Flip Back
+                                </button>
+                            </div>
+
                             <div
-                                className="flex-1 overflow-y-scroll overflow-x-hidden pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+                                className="flex-1 overflow-y-auto overflow-x-hidden pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent select-text touch-pan-y"
                                 style={{
                                     WebkitOverflowScrolling: 'touch',
                                     overscrollBehavior: 'contain',
@@ -211,7 +226,6 @@ export const AIFlashcardGenerator = () => {
                                     </div>
                                 )}
                             </div>
-                            <div className="text-center text-[8px] sm:text-[9px] md:text-[10px] text-white/30 mt-1.5 sm:mt-2 shrink-0">↕️ Scroll to read more</div>
                         </div>
                     </motion.div>
                 </div>
