@@ -31,8 +31,14 @@ export const DashboardHeader = () => {
     const [copied, setCopied] = useState(false)
     const [unreadCount, setUnreadCount] = useState(0)
 
-    const timeOfDay = new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'
-    const emoji = new Date().getHours() < 12 ? '🌅' : new Date().getHours() < 18 ? '☀️' : '🌙'
+    const [greeting, setGreeting] = useState({ text: 'Good Morning', emoji: '🌅' })
+
+    useEffect(() => {
+        const hour = new Date().getHours()
+        if (hour < 12) setGreeting({ text: 'Good Morning', emoji: '🌅' })
+        else if (hour < 18) setGreeting({ text: 'Good Afternoon', emoji: '☀️' })
+        else setGreeting({ text: 'Good Evening', emoji: '🌙' })
+    }, [])
 
     // Hooks for instant play
     const { sendGameInvite, requests } = useFriends()
@@ -122,7 +128,7 @@ export const DashboardHeader = () => {
 
                     <div>
                         <p className="text-pw-indigo text-sm font-medium flex items-center gap-1">
-                            {timeOfDay} {emoji}
+                            {greeting.text} {greeting.emoji}
                         </p>
                         <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight">
                             {user?.displayName || 'Scholar'}
