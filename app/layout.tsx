@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Outfit, Space_Grotesk, Noto_Sans } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
@@ -87,7 +88,9 @@ export default function RootLayout({
             <QuizProvider>
               <LanguageProvider>
                 <SoundProvider>
-                  <ClientLayoutWrapper />
+                  <Suspense fallback={null}>
+                    <ClientLayoutWrapper />
+                  </Suspense>
                   <div className="relative w-full max-w-full overflow-x-hidden">
                     {children}
                   </div>
