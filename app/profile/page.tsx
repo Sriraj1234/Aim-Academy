@@ -97,7 +97,7 @@ export default function ProfilePage() {
                 displayName: formData.displayName,
                 board: formData.board,
                 class: formData.class,
-                stream: formData.stream || undefined
+                stream: formData.stream || null
             })
             setIsEditing(false)
         } catch (error) {
