@@ -132,8 +132,8 @@ export default function BookmarksPage() {
                                                         <div
                                                             key={idx}
                                                             className={`p-3 rounded-xl border text-sm font-medium transition-colors ${isAnswer
-                                                                    ? 'bg-green-50 border-green-200 text-green-700'
-                                                                    : 'bg-gray-50 border-gray-100 text-gray-600'
+                                                                ? 'bg-green-50 border-green-200 text-green-700'
+                                                                : 'bg-gray-50 border-gray-100 text-gray-600'
                                                                 }`}
                                                         >
                                                             <span className="mr-2 opacity-50">{String.fromCharCode(65 + idx)}.</span>
@@ -170,6 +170,24 @@ export default function BookmarksPage() {
                     </div>
                 )}
             </main>
+
+            {/* SEO / Educational Content for AdSense */}
+            <section className="max-w-4xl mx-auto px-4 pb-12 text-gray-500 text-sm leading-relaxed">
+                <div className="border-t border-gray-200 pt-8 mt-8">
+                    <h2 className="text-lg font-bold text-gray-800 mb-3">Why Bookmark Questions?</h2>
+                    <p className="mb-4">
+                        Bookmarking is a powerful active recall strategy. By saving difficult or tricky questions, you create a personalized
+                        revision repository. Reviewing these specific questions before exams helps target your weak areas, ensuring
+                        better retention and higher scores.
+                    </p>
+                    <h3 className="font-bold text-gray-800 mb-2">How to use this feature effectively:</h3>
+                    <ul className="list-disc pl-5 space-y-1">
+                        <li><strong>Save Tricky Concepts:</strong> Bookmark questions that stumped you during practice.</li>
+                        <li><strong>Weekly Review:</strong> Revisit your bookmarks every Sunday to test if you've mastered the concept.</li>
+                        <li><strong>Clean Up:</strong> Once you're confident, remove the bookmark to keep your list focused.</li>
+                    </ul>
+                </div>
+            </section>
         </div>
     );
 }
