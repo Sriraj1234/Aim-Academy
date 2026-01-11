@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FaArrowLeft, FaArrowUp, FaCheckCircle, FaCheck, FaReply, FaClock, FaShieldAlt, FaTrash } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowUp, FaCheckCircle, FaCheck, FaReply, FaClock, FaShieldAlt, FaTrash, FaImage, FaTimes, FaSpinner } from 'react-icons/fa';
+import imageCompression from 'browser-image-compression';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { useAnswers, useDiscussions, Discussion } from '@/hooks/useDiscussions';
@@ -24,6 +25,67 @@ export default function DiscussionDetailPage() {
     const [loading, setLoading] = useState(true);
     const [answerText, setAnswerText] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Image Upload State for Answer
+    const [imageState, setImageState] = useState<{
+        file: File | null;
+        preview: string | null;
+        url: string | null;
+        uploading: boolean
+    }>({ file: null, preview: null, url: null, uploading: false });
+
+    const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Preview
+        const objectUrl = URL.createObjectURL(file);
+        setImageState(prev => ({ ...prev, file, preview: objectUrl, uploading: true }));
+
+        try {
+            // Compress Image
+            console.log(`Original size: ${file.size / 1024} KB`);
+            const options = {
+                maxSizeMB: 0.1, // 100KB
+                maxWidthOrHeight: 1280,
+                useWebWorker: true
+            };
+
+            const compressedFile = await imageCompression(file, options);
+            console.log(`Compressed size: ${compressedFile.size / 1024} KB`);
+
+            // Upload directly to existing API
+            const formData = new FormData();
+            formData.append('file', compressedFile);
+            formData.append('folder', 'discussions');
+
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) throw new Error(data.error || 'Upload failed');
+
+            setImageState(prev => ({
+                ...prev,
+                url: data.url,
+                uploading: false
+            }));
+
+            toast.success('Image added!');
+
+        } catch (error) {
+            console.error('Image processing failed:', error);
+            toast.error('Failed to process image');
+            setImageState(prev => ({ ...prev, uploading: false }));
+        }
+    };
+
+    const removeImage = () => {
+        setImageState({ file: null, preview: null, url: null, uploading: false });
+    };
 
     const { answers, addAnswer, markBestAnswer, upvoteAnswer } = useAnswers(discussionId);
 
@@ -55,8 +117,10 @@ export default function DiscussionDetailPage() {
         if (!answerText.trim()) return;
         setSubmitting(true);
         try {
-            await addAnswer(answerText);
+            await addAnswer(answerText, imageState.url || undefined);
             setAnswerText('');
+            removeImage();
+            toast.success('Answer posted!');
         } catch (e) {
             console.error(e);
         } finally {
@@ -136,6 +200,17 @@ export default function DiscussionDetailPage() {
                             <p className="text-gray-700 dark:text-slate-300 whitespace-pre-wrap mb-4">
                                 {discussion.body}
                             </p>
+
+                            {/* Discussion Image */}
+                            {discussion.imageUrls && discussion.imageUrls.length > 0 && (
+                                <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
+                                    <img
+                                        src={discussion.imageUrls[0]}
+                                        alt="Discussion attachment"
+                                        className="w-full h-auto max-h-[500px] object-contain bg-gray-50 dark:bg-slate-800"
+                                    />
+                                </div>
+                            )}
 
                             <div className="flex items-center gap-3 text-sm text-gray-400 pt-4 border-t border-pw-border dark:border-slate-800">
                                 <img
@@ -225,6 +300,17 @@ export default function DiscussionDetailPage() {
                                                 {answer.body}
                                             </p>
 
+                                            {/* Answer Image */}
+                                            {answer.imageUrl && (
+                                                <div className="mb-3 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-800 w-fit max-w-full">
+                                                    <img
+                                                        src={answer.imageUrl}
+                                                        alt="Answer attachment"
+                                                        className="max-h-[300px] object-contain bg-gray-50 dark:bg-slate-800"
+                                                    />
+                                                </div>
+                                            )}
+
                                             <div className="flex items-center gap-3 text-sm text-gray-400">
                                                 <img
                                                     src={answer.authorPhoto || `https://ui-avatars.com/api/?name=${answer.authorName}`}
@@ -267,16 +353,58 @@ export default function DiscussionDetailPage() {
                             rows={4}
                             className="w-full p-4 bg-pw-surface dark:bg-slate-800 border border-pw-border dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-pw-indigo/20 resize-none mb-3"
                         />
-                        <button
-                            onClick={handleSubmitAnswer}
-                            disabled={!answerText.trim() || submitting}
-                            className="bg-pw-indigo text-white px-6 py-2.5 rounded-xl font-bold disabled:opacity-50"
-                        >
-                            {submitting ? 'Posting...' : 'Post Answer'}
-                        </button>
+
+                        {/* Image Preview Area in Form */}
+                        {imageState.preview && (
+                            <div className="mb-3 relative inline-block">
+                                <div className="h-20 w-20 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 relative">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={imageState.preview}
+                                        alt="Preview"
+                                        className={`w-full h-full object-cover ${imageState.uploading ? 'opacity-50' : ''}`}
+                                    />
+                                    {imageState.uploading && (
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <FaSpinner className="animate-spin text-pw-indigo text-xs" />
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={removeImage}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
+                                    disabled={imageState.uploading}
+                                >
+                                    <FaTimes size={10} />
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-2 text-pw-indigo hover:text-pw-violet cursor-pointer text-sm font-bold transition-colors">
+                                <FaImage size={18} />
+                                <span>Add Image</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageSelect}
+                                    disabled={submitting || imageState.uploading}
+                                />
+                            </label>
+
+                            <button
+                                onClick={handleSubmitAnswer}
+                                disabled={!answerText.trim() || submitting || imageState.uploading}
+                                className="bg-pw-indigo text-white px-6 py-2.5 rounded-xl font-bold disabled:opacity-50"
+                            >
+                                {submitting ? 'Posting...' : 'Post Answer'}
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
         </div>
+        </div >
     );
 }
