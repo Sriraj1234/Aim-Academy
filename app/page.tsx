@@ -1,29 +1,43 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { FaGraduationCap, FaMedal, FaRocket, FaUserGraduate, FaLightbulb, FaBrain, FaUsers } from 'react-icons/fa'
 import { HiArrowRight } from 'react-icons/hi'
-import { TbSum } from 'react-icons/tb'
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
-import { Footer } from '@/components/shared/Footer' // Using shared footer
+import { Footer } from '@/components/shared/Footer'
 
 export default function LandingPage() {
   const { t, language, setLanguage } = useLanguage()
   const { user, loading } = useAuth()
   const router = useRouter()
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
-  // Redirect logged-in users to Dashboard
+  // Smart Redirect Logic
   useEffect(() => {
     if (!loading && user) {
+      setIsRedirecting(true)
       router.push('/home')
     }
   }, [user, loading, router])
 
+  // 1. SHOW LOADING SCREEN (For Logged In Users)
+  // While checking auth OR if redirecting, show a blank/loading screen.
+  // This creates the illusion of "Direct Home" for existing users.
+  if (loading || (user && isRedirecting)) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-pw-surface">
+        <div className="w-16 h-16 border-4 border-pw-indigo border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-pw-indigo font-bold animate-pulse">Opening AIM Academy...</p>
+      </div>
+    )
+  }
+
+  // 2. SHOW LANDING PAGE (For Google Bot & New Users)
   return (
     <div className="min-h-screen relative overflow-x-hidden bg-surface-off flex flex-col font-sans">
       {/* Background Grid Pattern */}
@@ -36,8 +50,8 @@ export default function LandingPage() {
             <FaGraduationCap className="text-white text-xl" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-[#110c1d] leading-none">AIM</h1>
-            <span className="text-[10px] tracking-[0.2em] text-[#8b5cf6] font-bold uppercase">Academy</span>
+            <h1 className="text-xl font-bold text-[#110c1d] leading-none">Padhaku</h1>
+            <span className="text-[10px] tracking-[0.2em] text-[#8b5cf6] font-bold uppercase">Learning App</span>
           </div>
         </div>
 
@@ -72,7 +86,7 @@ export default function LandingPage() {
             className="mb-8"
           >
             <h2 className="text-4xl md:text-6xl font-black text-[#110c1d] mb-2 tracking-tight">
-              {t('welcome.titlePrefix')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">AIM Academy</span>
+              {t('welcome.titlePrefix')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Padhaku</span>
             </h2>
             <p className="text-[#64748b] text-lg md:text-xl font-medium max-w-2xl mx-auto mb-8">
               Master Bihar Board exams with interactive quizzes, detailed explanations, and live competitive battles.
