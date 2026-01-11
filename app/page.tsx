@@ -11,6 +11,27 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import { Footer } from '@/components/shared/Footer'
 
+// Animation Variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 100 }
+  }
+}
+
 export default function LandingPage() {
   const { t, language, setLanguage } = useLanguage()
   const { user, loading } = useAuth()
@@ -45,7 +66,11 @@ export default function LandingPage() {
 
       {/* Header */}
       <header className="relative z-10 w-full px-4 sm:px-6 py-4 flex justify-between items-center max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3"
+        >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center shadow-lg transform rotate-3">
             <FaGraduationCap className="text-white text-xl" />
           </div>
@@ -53,9 +78,13 @@ export default function LandingPage() {
             <h1 className="text-xl font-bold text-[#110c1d] leading-none">Padhaku</h1>
             <span className="text-[10px] tracking-[0.2em] text-[#8b5cf6] font-bold uppercase">Learning App</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="flex items-center gap-4">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-4"
+        >
           <div className="bg-white rounded-full p-1 shadow-sm border border-gray-100 flex items-center">
             <button
               onClick={() => setLanguage('hi')}
@@ -70,10 +99,16 @@ export default function LandingPage() {
               Eng
             </button>
           </div>
-          <Link href="/login" className="hidden sm:block px-5 py-2 rounded-full bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors">
-            Login
+          <Link href="/login" className="hidden sm:block">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-5 py-2 rounded-full bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Login
+            </motion.button>
           </Link>
-        </div>
+        </motion.div>
       </header>
 
       <main className="flex-1 w-full">
@@ -81,38 +116,45 @@ export default function LandingPage() {
         {/* HERO SECTION */}
         <section className="relative px-6 pb-12 pt-8 flex flex-col items-center max-w-4xl mx-auto w-full text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
             className="mb-8"
           >
-            <h2 className="text-4xl md:text-6xl font-black text-[#110c1d] mb-2 tracking-tight">
+            <motion.h2 variants={itemVariants} className="text-4xl md:text-6xl font-black text-[#110c1d] mb-2 tracking-tight">
               {t('welcome.titlePrefix')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Padhaku</span>
-            </h2>
-            <p className="text-[#64748b] text-lg md:text-xl font-medium max-w-2xl mx-auto mb-8">
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-[#64748b] text-lg md:text-xl font-medium max-w-2xl mx-auto mb-8">
               Master Bihar Board exams with interactive quizzes, detailed explanations, and live competitive battles.
-            </p>
+            </motion.p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/home">
-                <button
-                  className="w-full sm:w-auto px-8 py-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto px-8 py-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 transition-all flex items-center justify-center gap-2"
                 >
                   Start Learning Free <HiArrowRight />
-                </button>
+                </motion.button>
               </Link>
               <Link href="/about">
-                <button className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-gray-50 text-gray-700 font-bold text-lg rounded-2xl border border-gray-200 transition-all">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-gray-50 text-gray-700 font-bold text-lg rounded-2xl border border-gray-200 transition-all"
+                >
                   Learn More
-                </button>
+                </motion.button>
               </Link>
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* Hero Image */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", delay: 0.4, duration: 0.8 }}
             className="relative w-full aspect-video md:aspect-[21/9] rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 z-10"></div>
@@ -124,7 +166,12 @@ export default function LandingPage() {
               priority
             />
             {/* Floating Stats */}
-            <div className="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur-md p-3 rounded-xl shadow-lg flex items-center gap-3">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur-md p-3 rounded-xl shadow-lg flex items-center gap-3"
+            >
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl">
                 <FaUserGraduate />
               </div>
@@ -132,33 +179,50 @@ export default function LandingPage() {
                 <p className="text-xs font-bold text-gray-500 uppercase">Trusted By</p>
                 <p className="text-lg font-black text-gray-900">10,000+ Students</p>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </section>
 
         {/* STATS SECTION (High Value Content) */}
         <section className="py-20 bg-white border-y border-gray-100">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-8"
+            >
               <StatCard icon={FaUsers} value="10k+" label="Active Learners" color="text-blue-600" bg="bg-blue-50" />
               <StatCard icon={FaGraduationCap} value="500+" label="Toppers Created" color="text-purple-600" bg="bg-purple-50" />
               <StatCard icon={FaBrain} value="1M+" label="Questions Solved" color="text-pink-600" bg="bg-pink-50" />
               <StatCard icon={FaRocket} value="24/7" label="AI Support" color="text-orange-600" bg="bg-orange-50" />
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* VALUES / CONTENT SECTION (AdSense Friendly) */}
         <section className="py-24 bg-surface-off">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
               <h2 className="text-3xl font-bold text-[#110c1d] mb-4">Why Choose Padhaku?</h2>
               <p className="text-gray-500 max-w-2xl mx-auto text-lg">
                 We combine cutting-edge technology with the Bihar Board curriculum to create a learning experience that works.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              className="grid md:grid-cols-3 gap-8"
+            >
               <FeatureCard
                 title="Personalized AI Learning"
                 desc="Our AI adapts to your learning style, identifying weak areas and providing targeted practice questions to improve your score rapidly."
@@ -174,7 +238,7 @@ export default function LandingPage() {
                 desc="From Math to Hindi, we cover every chapter of the Bihar Board Class 10 & 12 syllabus with detailed notes and video resources."
                 icon={<FaGraduationCap />}
               />
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -202,17 +266,24 @@ export default function LandingPage() {
 
 // Components
 const StatCard = ({ icon: Icon, value, label, color, bg }: any) => (
-  <div className="text-center p-6 rounded-2xl hover:bg-gray-50 transition-colors">
+  <motion.div
+    variants={itemVariants}
+    className="text-center p-6 rounded-2xl hover:bg-gray-50 transition-colors"
+  >
     <div className={`w-14 h-14 ${bg} ${color} rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4`}>
       <Icon />
     </div>
     <div className="text-3xl font-black text-gray-900 mb-1">{value}</div>
     <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">{label}</div>
-  </div>
+  </motion.div>
 );
 
 const FeatureCard = ({ title, desc, icon }: any) => (
-  <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+  <motion.div
+    variants={itemVariants}
+    whileHover={{ y: -10 }}
+    className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition-shadow duration-300"
+  >
     <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl mb-6">
       {icon}
     </div>
@@ -220,5 +291,5 @@ const FeatureCard = ({ title, desc, icon }: any) => (
     <p className="text-gray-600 leading-relaxed text-sm">
       {desc}
     </p>
-  </div>
+  </motion.div>
 );
