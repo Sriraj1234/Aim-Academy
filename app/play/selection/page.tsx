@@ -459,32 +459,84 @@ function SelectionContent() {
                                     <p>No chapters found for this subject yet.</p>
                                 </div>
                             ) : (
-                                chapters.map((item: any, idx) => {
-                                    const name = typeof item === 'string' ? item : item.name
-                                    const count = typeof item === 'string' ? 0 : item.count
+                                <>{(() => {
+                                    // Group chapters by section
+                                    const groupedChapters: Record<string, typeof chapters> = {};
+                                    chapters.forEach((item: any) => {
+                                        const section = item.section || 'General';
+                                        if (!groupedChapters[section]) groupedChapters[section] = [];
+                                        groupedChapters[section].push(item);
+                                    });
 
-                                    return (
-                                        <motion.div
-                                            key={idx}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.03 }}
-                                            onClick={() => handleChapterClick(name, count)}
-                                            className="bg-white p-5 rounded-2xl border border-pw-border hover:border-pw-indigo hover:shadow-pw-sm cursor-pointer transition-all flex items-center justify-between group"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-pw-surface text-pw-indigo flex items-center justify-center group-hover:bg-pw-indigo group-hover:text-white Transition-all">
-                                                    <HiBookOpen />
-                                                </div>
-                                                <span className="font-bold text-pw-violet group-hover:text-pw-indigo transition-colors">{name}</span>
+                                    const sections = Object.keys(groupedChapters).sort((a, b) => {
+                                        if (a === 'Poetry') return -1; // Poetry first
+                                        if (b === 'Poetry') return 1;
+                                        if (a === 'General') return 1; // General last
+                                        if (b === 'General') return -1;
+                                        return a.localeCompare(b);
+                                    });
+
+                                    // Flatten if no real sections (only General)
+                                    if (sections.length === 1 && sections[0] === 'General') {
+                                        return chapters.map((item: any, idx: number) => {
+                                            const name = typeof item === 'string' ? item : item.name;
+                                            const count = typeof item === 'string' ? 0 : item.count;
+                                            return (
+                                                <motion.div
+                                                    key={idx}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: idx * 0.03 }}
+                                                    onClick={() => handleChapterClick(name, count)}
+                                                    className="bg-white p-5 rounded-2xl border border-pw-border hover:border-pw-indigo hover:shadow-pw-sm cursor-pointer transition-all flex items-center justify-between group"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-full bg-pw-surface text-pw-indigo flex items-center justify-center group-hover:bg-pw-indigo group-hover:text-white Transition-all">
+                                                            <HiBookOpen />
+                                                        </div>
+                                                        <span className="font-bold text-pw-violet group-hover:text-pw-indigo transition-colors">{name}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {count > 0 && <span className="text-xs bg-pw-surface px-2 py-1 rounded text-gray-500 font-bold border border-pw-border">{count} Qs</span>}
+                                                        <HiChevronRight className="text-gray-300 group-hover:text-pw-indigo" />
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        });
+                                    }
+
+                                    return sections.map((section) => (
+                                        <div key={section} className="col-span-full">
+                                            <h3 className="text-lg font-bold text-pw-violet mb-3 flex items-center gap-2">
+                                                <span className="w-1 h-6 bg-pw-indigo rounded-full"></span>
+                                                {section === 'General' ? 'All Chapters' : section}
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                {groupedChapters[section].map((item: any, idx: number) => {
+                                                    const name = typeof item === 'string' ? item : item.name;
+                                                    const count = typeof item === 'string' ? 0 : item.count;
+                                                    return (
+                                                        <motion.div
+                                                            key={`${section}-${idx}`}
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            onClick={() => handleChapterClick(name, count)}
+                                                            className="bg-white p-4 rounded-xl border border-pw-border hover:border-pw-indigo hover:shadow-md cursor-pointer transition-all flex items-center justify-between group"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${section === 'Poetry' ? 'bg-pink-100 text-pink-600 group-hover:bg-pink-600 group-hover:text-white' : 'bg-pw-surface text-pw-indigo group-hover:bg-pw-indigo group-hover:text-white'}`}>
+                                                                    <HiBookOpen className="text-sm" />
+                                                                </div>
+                                                                <span className="font-bold text-sm text-pw-violet group-hover:text-pw-indigo transition-colors line-clamp-1">{name}</span>
+                                                            </div>
+                                                            <span className="text-[10px] bg-gray-50 px-2 py-1 rounded text-gray-400 font-bold whitespace-nowrap">{count} Qs</span>
+                                                        </motion.div>
+                                                    );
+                                                })}
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                {count > 0 && <span className="text-xs bg-pw-surface px-2 py-1 rounded text-gray-500 font-bold border border-pw-border">{count} Qs</span>}
-                                                <HiChevronRight className="text-gray-300 group-hover:text-pw-indigo" />
-                                            </div>
-                                        </motion.div>
-                                    )
-                                })
+                                        </div>
+                                    ));
+                                })()}</>
                             )}
                         </>
                     )}
