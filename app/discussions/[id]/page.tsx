@@ -405,6 +405,5 @@ export default function DiscussionDetailPage() {
                 )}
             </div>
         </div>
-        </div >
     );
 }
