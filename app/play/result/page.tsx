@@ -90,7 +90,6 @@ const ResultContent = () => {
                         accuracy: r.accuracy,
                         timeTaken: r.timeTaken,
                         rank: i + 1,
-                        rank: i + 1,
                         isCurrentUser: user?.uid === r.userId,
                         badge: (user?.uid === r.userId) ?
                             (userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.status === 'active' ? 'pro' :
@@ -469,7 +468,7 @@ const ResultContent = () => {
                                 {/* Share on WhatsApp */}
                                 <Button
                                     onClick={() => {
-                                        const shareText = `🏆 I just scored ${score}/${totalQuestions} (${accuracy}% accuracy) on AIM Academy! Can you beat me? 💪`;
+                                        const shareText = `🏆 I just scored ${score}/${totalQuestions} (${accuracy}% accuracy) on Padhaku! Can you beat me? 💪`;
                                         const shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
                                         // Try native share first, fallback to WhatsApp link
