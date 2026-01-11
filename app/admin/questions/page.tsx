@@ -433,7 +433,7 @@ export default function QuestionsPage() {
 
                 {/* Folder Breadcrumbs */}
                 {viewMode === 'folder' && (
-                    <div className="mb-6 flex items-center gap-2 text-sm overflow-x-auto pb-2">
+                    <div className="mb-6 flex items-center gap-2 text-sm overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200">
                         {folderPath.map((item, index) => (
                             <React.Fragment key={index}>
                                 <button
