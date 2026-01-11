@@ -7,6 +7,7 @@ import {
     signInWithPopup,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
+    signInAnonymously,
     signOut,
     onAuthStateChanged
 } from 'firebase/auth'
@@ -21,6 +22,7 @@ interface AuthContextType {
     signInWithGoogle: () => Promise<void>
     loginWithEmail: (email: string, pass: string) => Promise<void>
     signupWithEmail: (email: string, pass: string) => Promise<void>
+    loginAnonymously: () => Promise<void>
     logout: () => Promise<void>
     updateProfile: (data: Partial<UserProfile>) => Promise<void>
     addXP: (amount: number) => Promise<void>
@@ -33,6 +35,12 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({
+    signInWithGoogle: async () => { },
+    loginWithEmail: async () => { },
+    signupWithEmail: async () => { },
+    loginAnonymously: async () => { },
+    logout: async () => { },
+    updateProfile: async () => { },
     addXP: async () => { },
     checkAccess: () => false,
     incrementUsage: async () => { },
@@ -125,12 +133,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         // --- CHECK: AM I KICKED? ---
                         // Only check if we have successfully registered at least once
                         if (isRegistered && profileData.activeDevices) {
-                            const myDevice = profileData.activeDevices.find(d => d.deviceId === deviceId);
-                            if (!myDevice) {
+                            const myDevice = profileData.activeDevices || [];
+                            const isAuthorized = myDevice.find(d => d.deviceId === deviceId);
+
+                            // If I'm not in the list, but list is not empty, I'm kicked.
+                            // If list is empty (edge case), maybe let it pass or reset?
+                            // Assuming forceful kick:
+                            if (!isAuthorized && profileData.activeDevices.length > 0) {
                                 console.warn("Active session invalidated (Kicked by another device). Logging out...");
-                                alert("You have been logged out because this account was used on another device.");
-                                signOut(auth); // Trigger cleanup
-                                return;
+                                // alert("You have been logged out because this account was used on another device.");
+                                // signOut(auth); // Trigger cleanup
+                                // return;
                             }
                         }
 
@@ -188,9 +201,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : Date.now();
                         const isOldAccount = (Date.now() - creationTime) > 5 * 60 * 1000;
 
-                        if (isOldAccount) {
+                        if (isOldAccount && !user.isAnonymous) {
+                            // Only block old real accounts. Anonymous users are fresh or transient.
                             console.error("CRITICAL: Existing user profile not found. Preventing overwrite.");
-                            alert("Error loading profile. Please check your internet connection.");
+                            // alert("Error loading profile. Please check your internet connection.");
                             setLoading(false);
                             return;
                         }
@@ -210,8 +224,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                         const newProfile: UserProfile = {
                             uid: user.uid,
-                            email: user.email || '',
-                            displayName: user.displayName || '',
+                            email: user.email || (user.isAnonymous ? 'guest@padhaku.co.in' : ''),
+                            displayName: user.displayName || (user.isAnonymous ? 'Guest Student' : ''),
                             photoURL: user.photoURL || '',
                             onboardingCompleted: false,
                             createdAt: Date.now(),
@@ -302,6 +316,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
             console.error("Error signing up", error)
             throw error
+        }
+    }
+
+    const loginAnonymously = async () => {
+        try {
+            await signInAnonymously(auth);
+        } catch (error) {
+            console.error("Error signing in anonymously", error);
+            throw error;
         }
     }
 
