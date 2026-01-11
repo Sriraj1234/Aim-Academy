@@ -249,12 +249,12 @@ export const DashboardHeader = () => {
                                 <input
                                     type="text"
                                     readOnly
-                                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${user?.uid || ''}`}
+                                    value={`https://padhaku.co.in/?ref=${user?.uid || ''}`}
                                     className="flex-1 bg-transparent text-sm text-gray-700 outline-none truncate"
                                 />
                                 <button
                                     onClick={() => {
-                                        navigator.clipboard.writeText(`${window.location.origin}?ref=${user?.uid || ''}`);
+                                        navigator.clipboard.writeText(`https://padhaku.co.in/?ref=${user?.uid || ''}`);
                                         setCopied(true);
                                         setTimeout(() => setCopied(false), 2000);
                                     }}
@@ -269,7 +269,7 @@ export const DashboardHeader = () => {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => {
-                                    const msg = `🎯 AIM Academy par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\n${window.location.origin}?ref=${user?.uid || ''}`;
+                                    const msg = `🎯 AIM Academy par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\nhttps://padhaku.co.in/?ref=${user?.uid || ''}`;
                                     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
                                 }}
                                 className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
@@ -278,8 +278,8 @@ export const DashboardHeader = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    const msg = `🎯 AIM Academy par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\n${window.location.origin}?ref=${user?.uid || ''}`;
-                                    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin + '?ref=' + (user?.uid || ''))}&text=${encodeURIComponent(msg)}`, '_blank');
+                                    const msg = `🎯 AIM Academy par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\nhttps://padhaku.co.in/?ref=${user?.uid || ''}`;
+                                    window.open(`https://t.me/share/url?url=${encodeURIComponent('https://padhaku.co.in/?ref=' + (user?.uid || ''))}&text=${encodeURIComponent(msg)}`, '_blank');
                                 }}
                                 className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
                             >
