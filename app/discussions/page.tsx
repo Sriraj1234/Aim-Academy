@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlus, FaFilter, FaSearch, FaCheckCircle, FaArrowUp, FaComments, FaClock, FaChevronRight, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaSearch, FaCheckCircle, FaArrowUp, FaComments, FaClock, FaChevronRight, FaTrash, FaImage, FaTimes, FaSpinner } from 'react-icons/fa';
 import { useDiscussions, Discussion } from '@/hooks/useDiscussions';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import imageCompression from 'browser-image-compression';
 
 export default function DiscussionsPage() {
     const { userProfile } = useAuth();
@@ -188,11 +189,23 @@ function DiscussionCard({ discussion, index, formatTime }: { discussion: Discuss
                                     <span className="truncate max-w-[150px]">{discussion.chapter}</span>
                                 )}
                                 <span className="flex items-center gap-1">
-                                    <FaClock className="text-[10px]" />
                                     {formatTime(discussion.createdAt)}
                                 </span>
                                 <span className="ml-auto text-gray-400">by {discussion.authorName}</span>
                             </div>
+
+                            {/* Discussion Image Preview */}
+                            {discussion.imageUrls && discussion.imageUrls.length > 0 && (
+                                <div className="mt-3 relative h-48 w-full rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={discussion.imageUrls[0]}
+                                        alt="Discussion attachment"
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <FaChevronRight className="text-gray-300 group-hover:text-pw-indigo transition-colors self-center" />
@@ -232,11 +245,79 @@ function AskDoubtModal({ onClose, onSubmit, subjects }: {
     const [chapter, setChapter] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // Image Upload State
+    const [imageState, setImageState] = useState<{
+        file: File | null;
+        preview: string | null;
+        url: string | null;
+        uploading: boolean
+    }>({ file: null, preview: null, url: null, uploading: false });
+
+    const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Preview
+        const objectUrl = URL.createObjectURL(file);
+        setImageState(prev => ({ ...prev, file, preview: objectUrl, uploading: true }));
+
+        try {
+            // Compress Image
+            console.log(`Original size: ${file.size / 1024} KB`);
+            const options = {
+                maxSizeMB: 0.1, // 100KB
+                maxWidthOrHeight: 1280,
+                useWebWorker: true
+            };
+
+            const compressedFile = await imageCompression(file, options);
+            console.log(`Compressed size: ${compressedFile.size / 1024} KB`);
+
+            // Upload directly to existing API
+            const formData = new FormData();
+            formData.append('file', compressedFile);
+            formData.append('folder', 'discussions'); // Use correct folder
+
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) throw new Error(data.error || 'Upload failed');
+
+            setImageState(prev => ({
+                ...prev,
+                url: data.url,
+                uploading: false
+            }));
+
+            toast.success('Image compressed & uploaded!');
+
+        } catch (error) {
+            console.error('Image processing failed:', error);
+            toast.error('Failed to process image');
+            setImageState(prev => ({ ...prev, uploading: false }));
+        }
+    };
+
+    const removeImage = () => {
+        setImageState({ file: null, preview: null, url: null, uploading: false });
+    };
+
     const handleSubmit = async () => {
         if (!title || !body || !subject) return;
         setLoading(true);
         try {
-            await onSubmit({ title, body, subject, chapter: chapter || undefined });
+            await onSubmit({
+                title,
+                body,
+                subject,
+                chapter: chapter || undefined,
+                // Add image URLs if present
+                ...(imageState.url ? { imageUrls: [imageState.url] } : {})
+            });
         } catch (e) {
             console.error(e);
         } finally {
@@ -312,6 +393,49 @@ function AskDoubtModal({ onClose, onSubmit, subjects }: {
                     </div>
                 </div>
 
+                {/* Image Upload Section */}
+                <div>
+                    <label className="block text-sm font-bold text-gray-600 dark:text-slate-300 mb-2">
+                        Add Image (Optional)
+                    </label>
+
+                    {!imageState.preview ? (
+                        <label className="flex items-center gap-2 px-4 py-2.5 bg-pw-surface dark:bg-slate-800 border border-dashed border-pw-indigo/50 rounded-xl cursor-pointer hover:bg-pw-indigo/5 transition-colors text-pw-indigo">
+                            <FaImage />
+                            <span className="text-sm font-bold">Select Image (Auto-compress to 100KB)</span>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleImageSelect}
+                            />
+                        </label>
+                    ) : (
+                        <div className="relative inline-block">
+                            <div className="h-24 w-24 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 relative">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={imageState.preview}
+                                    alt="Preview"
+                                    className={`w-full h-full object-cover ${imageState.uploading ? 'opacity-50' : ''}`}
+                                />
+                                {imageState.uploading && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <FaSpinner className="animate-spin text-pw-indigo text-xl" />
+                                    </div>
+                                )}
+                            </div>
+                            <button
+                                onClick={removeImage}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
+                                disabled={imageState.uploading}
+                            >
+                                <FaTimes size={12} />
+                            </button>
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex gap-3 mt-6">
                     <button
                         onClick={onClose}
@@ -321,7 +445,7 @@ function AskDoubtModal({ onClose, onSubmit, subjects }: {
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={!title || !body || !subject || loading}
+                        disabled={!title || !body || !subject || loading || imageState.uploading}
                         className="flex-1 py-2.5 bg-pw-indigo text-white rounded-xl font-bold disabled:opacity-50"
                     >
                         {loading ? 'Posting...' : 'Post Doubt'}
