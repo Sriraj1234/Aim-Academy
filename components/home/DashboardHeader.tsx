@@ -122,7 +122,7 @@ export const DashboardHeader = () => {
                                     </div>
                                 )}
                             </div>
-                            <UserBadge size="md" className="md:w-auto md:h-auto" userProfile={userProfile} showDefault={true} />
+                            <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto" userProfile={userProfile} showDefault={true} />
                         </div>
                     </motion.div>
 
