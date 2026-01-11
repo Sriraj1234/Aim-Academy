@@ -13,6 +13,7 @@ import {
     orderBy
 } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as rtdbTimestamp } from 'firebase/database';
+import { getDoc } from 'firebase/firestore'; // Added getDoc
 import { useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Friend, FriendRequest, UserProfile, GameInvite } from '@/data/types';
@@ -48,14 +49,44 @@ export const useFriends = () => {
         // Keep track of active RTDB listeners to unsubscribe later
         const rtdbUnsubscribes: Record<string, () => void> = {};
 
-        const unsubFriends = onSnapshot(friendsRef, (snapshot) => {
-            const friendsList = snapshot.docs.map(doc => doc.data() as Friend);
-            setFriends(friendsList);
+        const unsubFriends = onSnapshot(friendsRef, async (snapshot) => {
+            const initialFriendsList = snapshot.docs.map(doc => doc.data() as Friend);
+            setFriends(initialFriendsList);
+
+            // Fetch latest data for these friends to ensure badges (subscription/gamification) are up-to-date
+            // This fixes the issue of stale data in the cache
+            if (initialFriendsList.length > 0) {
+                try {
+                    const updatedFriends = await Promise.all(initialFriendsList.map(async (friend) => {
+                        if (!friend.uid) return friend;
+                        try {
+                            const userDocRef = doc(db, 'users', friend.uid);
+                            const userSnap = await getDoc(userDocRef);
+                            if (userSnap.exists()) {
+                                const userData = userSnap.data() as UserProfile;
+                                return {
+                                    ...friend,
+                                    photoURL: userData.photoURL || friend.photoURL,
+                                    displayName: userData.displayName || friend.displayName,
+                                    subscription: userData.subscription ? { plan: userData.subscription.plan, status: userData.subscription.status } : undefined,
+                                    gamification: userData.gamification ? { currentStreak: userData.gamification.currentStreak } : undefined
+                                };
+                            }
+                        } catch (e) {
+                            console.warn(`Failed to refresh data for friend ${friend.uid}`, e);
+                        }
+                        return friend;
+                    }));
+                    setFriends(updatedFriends);
+                } catch (err) {
+                    console.error("Error hydrating friends data:", err);
+                }
+            }
 
             Object.values(rtdbUnsubscribes).forEach(unsub => unsub());
 
-            // 2. Subscribe to new list
-            friendsList.forEach(friend => {
+            // 2. Subscribe to new list  (Use updated list logic if possible, but initial is fine for status)
+            initialFriendsList.forEach(friend => {
                 if (!friend.uid) return;
                 const statusRef = ref(rtdb, `status/${friend.uid}`);
 
@@ -183,7 +214,9 @@ export const useFriends = () => {
             email: user.email || '',
             direction: 'received',
             timestamp: Date.now(),
-            status: 'pending'
+            status: 'pending',
+            subscription: userProfile.subscription ? { plan: userProfile.subscription.plan, status: userProfile.subscription.status } : undefined,
+            gamification: userProfile.gamification ? { currentStreak: userProfile.gamification.currentStreak } : undefined
         };
 
         // 4. Create Request Object for Me (Sent)
@@ -194,7 +227,9 @@ export const useFriends = () => {
             email: targetUser.email || '',
             direction: 'sent',
             timestamp: Date.now(),
-            status: 'pending'
+            status: 'pending',
+            subscription: targetUser.subscription ? { plan: targetUser.subscription.plan, status: targetUser.subscription.status } : undefined,
+            gamification: targetUser.gamification ? { currentStreak: targetUser.gamification.currentStreak } : undefined
         };
 
         // 5. Batch writes (manual)
@@ -215,14 +250,18 @@ export const useFriends = () => {
             uid: request.uid,
             displayName: request.displayName,
             photoURL: request.photoURL,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            subscription: request.subscription,
+            gamification: request.gamification
         };
 
         const friendForThem: Friend = {
             uid: user.uid,
             displayName: userProfile.displayName || '',
             photoURL: userProfile.photoURL || '',
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            subscription: userProfile.subscription ? { plan: userProfile.subscription.plan, status: userProfile.subscription.status } : undefined,
+            gamification: userProfile.gamification ? { currentStreak: userProfile.gamification.currentStreak } : undefined
         };
 
         // 3. Write to Friends Collections
