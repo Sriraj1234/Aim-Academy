@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useSound } from '@/hooks/useSound'
 import { LocalStudentsSection } from '@/components/home/LocalStudentsSection'
 import { UserBadge } from '@/components/shared/UserBadge'
+import { SafeAvatar } from '@/components/shared/SafeAvatar'
 import { Friend } from '@/data/types'
 
 interface FriendsDrawerProps {
@@ -19,25 +20,7 @@ interface FriendsDrawerProps {
     onPlayWithFriend?: (friend: any) => void
 }
 
-const SafeAvatar = ({ src, alt, className }: { src?: string, alt: string, className?: string }) => {
-    const [imgSrc, setImgSrc] = useState(src || `https://ui-avatars.com/api/?name=${alt}`);
-    const [hasError, setHasError] = useState(false);
 
-    useEffect(() => {
-        setImgSrc(src || `https://ui-avatars.com/api/?name=${alt}`);
-        setHasError(false);
-    }, [src, alt]);
-
-    return (
-        <img
-            src={hasError ? `https://ui-avatars.com/api/?name=${alt}` : imgSrc}
-            alt={alt}
-            className={className}
-            referrerPolicy="no-referrer"
-            onError={() => setHasError(true)}
-        />
-    );
-};
 
 const InviteButton = ({ friendUid, onInvite, loading }: { friendUid: string, onInvite: (uid: string) => void, loading?: boolean }) => {
     const [cooldown, setCooldown] = useState(0);
