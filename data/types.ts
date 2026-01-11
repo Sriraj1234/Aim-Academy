@@ -186,6 +186,8 @@ export interface FriendRequest {
     direction: 'sent' | 'received';
     timestamp: number;
     status: 'pending';
+    subscription?: { plan?: string; status?: string };
+    gamification?: { currentStreak?: number };
 }
 
 export interface GameInvite {
