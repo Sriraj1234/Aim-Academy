@@ -205,11 +205,13 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                             >
                                                 <div className="relative">
                                                     <div className="w-12 h-12 rounded-xl p-[2px] bg-gradient-to-br from-pw-indigo to-pw-violet">
-                                                        <SafeAvatar
-                                                            src={friend.photoURL}
-                                                            alt={friend.displayName}
-                                                            className="w-full h-full rounded-[10px] object-cover bg-white"
-                                                        />
+                                                        <div className="w-full h-full rounded-[10px] overflow-hidden bg-white">
+                                                            <SafeAvatar
+                                                                src={friend.photoURL}
+                                                                alt={friend.displayName}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
                                                     </div>
 
                                                     {/* User Badge (Top Left) */}
@@ -281,11 +283,13 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                             >
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <div className="relative shrink-0 w-10 h-10">
-                                                        <SafeAvatar
-                                                            src={req.photoURL}
-                                                            alt={req.displayName}
-                                                            className="w-10 h-10 rounded-full object-cover bg-gray-100 border border-pw-border"
-                                                        />
+                                                        <div className="w-full h-full rounded-full overflow-hidden bg-gray-100 border border-pw-border">
+                                                            <SafeAvatar
+                                                                src={req.photoURL}
+                                                                alt={req.displayName}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
                                                         <UserBadge size="sm" className="-top-1 -right-1" userProfile={req} showDefault={false} />
                                                     </div>
                                                     <div>
