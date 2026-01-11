@@ -25,6 +25,7 @@ const AIQuestionGenerator = dynamic(() => import('@/components/home/AIQuestionGe
 const AIFlashcardGenerator = dynamic(() => import('@/components/home/AIFlashcardGenerator').then(m => m.AIFlashcardGenerator))
 const ChapterSummary = dynamic(() => import('@/components/home/ChapterSummary').then(m => m.ChapterSummary))
 const TrialReminderModal = dynamic(() => import('@/components/subscription/TrialReminderModal').then(m => m.TrialReminderModal), { ssr: false })
+const DiscussionSection = dynamic(() => import('@/components/home/DiscussionSection').then(m => m.DiscussionSection), { ssr: false })
 
 
 
@@ -104,6 +105,8 @@ export default function DashboardPage() {
 
                         {/* Right Column: AI Tools & Extras */}
                         <div className="space-y-6">
+                            <DiscussionSection />
+
                             <div className="hidden lg:block">
                                 <OfflineTuitionCard />
                             </div>
