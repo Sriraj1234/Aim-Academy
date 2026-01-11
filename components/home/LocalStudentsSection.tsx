@@ -65,12 +65,14 @@ export const LocalStudentsSection = ({
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${student.rank <= 3 ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'}`}>
                                 {student.rank}
                             </div>
-                            <div className="relative">
-                                <SafeAvatar
-                                    src={student.photoURL}
-                                    alt={student.displayName || 'Student'}
-                                    className="w-8 h-8 rounded-full bg-gray-200 object-cover"
-                                />
+                            <div className="relative w-8 h-8">
+                                <div className="w-full h-full rounded-full overflow-hidden bg-gray-200">
+                                    <SafeAvatar
+                                        src={student.photoURL}
+                                        alt={student.displayName || 'Student'}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
                                 {/* Badge Overlay */}
                                 <UserBadge size="sm" className="-top-1 -right-1" userProfile={student} showDefault={false} />
                             </div>
