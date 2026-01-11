@@ -1,6 +1,7 @@
 import { useLocalStudents } from '@/hooks/useLocalStudents';
 import { FaUserPlus, FaCheck, FaTrophy } from 'react-icons/fa';
 import { UserBadge } from '@/components/shared/UserBadge';
+import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { useState } from 'react';
 
 interface LocalStudentsSectionProps {
@@ -65,11 +66,10 @@ export const LocalStudentsSection = ({
                                 {student.rank}
                             </div>
                             <div className="relative">
-                                <img
-                                    src={student.photoURL || `https://ui-avatars.com/api/?name=${student.displayName}`}
-                                    alt={student.displayName}
+                                <SafeAvatar
+                                    src={student.photoURL}
+                                    alt={student.displayName || 'Student'}
                                     className="w-8 h-8 rounded-full bg-gray-200 object-cover"
-                                    referrerPolicy="no-referrer"
                                 />
                                 {/* Badge Overlay */}
                                 <UserBadge size="sm" className="-top-1 -right-1" userProfile={student} showDefault={false} />
