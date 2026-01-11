@@ -11,7 +11,7 @@ export const TestimonialsSection = () => {
         {
             name: "Priya Kumari",
             role: "Class 10 Topper",
-            content: "AIM Academy changed the way I study. The live quizzes made learning so fun!",
+            content: "Padhaku changed the way I study. The live quizzes made learning so fun!",
             rating: 5,
             initials: "P",
             gradient: "from-pink-500 to-rose-500"
