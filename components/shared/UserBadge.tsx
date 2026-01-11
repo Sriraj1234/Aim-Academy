@@ -33,7 +33,7 @@ export const UserBadge: React.FC<BadgeProps> = ({ className = '', size = 'md', u
     const isDefault = !isPro && !isStreakMaster;
 
     return (
-        <div className={`absolute -bottom-1 -right-1 bg-white border-2 border-white rounded-full p-0.5 shadow-sm z-10 ${className}`}
+        <div className={`absolute bg-white border-2 border-white rounded-full p-0.5 shadow-sm z-10 ${className}`}
             title={isPro ? "Pro Scholar" : isStreakMaster ? "Monthly Master" : "Scholar"}>
             <div className={`
                 ${containerSize} rounded-full flex items-center justify-center ${textSize} text-white font-bold
