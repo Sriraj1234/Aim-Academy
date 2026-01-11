@@ -19,6 +19,26 @@ interface FriendsDrawerProps {
     onPlayWithFriend?: (friend: any) => void
 }
 
+const SafeAvatar = ({ src, alt, className }: { src?: string, alt: string, className?: string }) => {
+    const [imgSrc, setImgSrc] = useState(src || `https://ui-avatars.com/api/?name=${alt}`);
+    const [hasError, setHasError] = useState(false);
+
+    useEffect(() => {
+        setImgSrc(src || `https://ui-avatars.com/api/?name=${alt}`);
+        setHasError(false);
+    }, [src, alt]);
+
+    return (
+        <img
+            src={hasError ? `https://ui-avatars.com/api/?name=${alt}` : imgSrc}
+            alt={alt}
+            className={className}
+            referrerPolicy="no-referrer"
+            onError={() => setHasError(true)}
+        />
+    );
+};
+
 const InviteButton = ({ friendUid, onInvite, loading }: { friendUid: string, onInvite: (uid: string) => void, loading?: boolean }) => {
     const [cooldown, setCooldown] = useState(0);
 
@@ -202,11 +222,10 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                             >
                                                 <div className="relative">
                                                     <div className="w-12 h-12 rounded-xl p-[2px] bg-gradient-to-br from-pw-indigo to-pw-violet">
-                                                        <img
-                                                            src={friend.photoURL || `https://ui-avatars.com/api/?name=${friend.displayName}`}
+                                                        <SafeAvatar
+                                                            src={friend.photoURL}
+                                                            alt={friend.displayName}
                                                             className="w-full h-full rounded-[10px] object-cover bg-white"
-                                                            alt="avatar"
-                                                            referrerPolicy="no-referrer"
                                                         />
                                                     </div>
 
@@ -278,12 +297,14 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                                 className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-pw-sm border border-pw-border dark:border-slate-800"
                                             >
                                                 <div className="flex items-center gap-3 mb-4">
-                                                    <img
-                                                        src={req.photoURL || `https://ui-avatars.com/api/?name=${req.displayName}`}
-                                                        className="w-10 h-10 rounded-full object-cover bg-gray-100 border border-pw-border"
-                                                        alt="avatar"
-                                                        referrerPolicy="no-referrer"
-                                                    />
+                                                    <div className="relative shrink-0 w-10 h-10">
+                                                        <SafeAvatar
+                                                            src={req.photoURL}
+                                                            alt={req.displayName}
+                                                            className="w-10 h-10 rounded-full object-cover bg-gray-100 border border-pw-border"
+                                                        />
+                                                        <UserBadge size="sm" className="-top-1 -right-1" userProfile={req} showDefault={false} />
+                                                    </div>
                                                     <div>
                                                         <h3 className="font-bold text-pw-violet">{req.displayName}</h3>
                                                         <p className="text-xs text-pw-indigo font-medium">Wants to be your friend</p>
