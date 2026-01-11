@@ -1,5 +1,6 @@
 import { useLocalStudents } from '@/hooks/useLocalStudents';
-import { FaUserPlus, FaCheck, FaTrophy, FaCrown, FaFire } from 'react-icons/fa';
+import { FaUserPlus, FaCheck, FaTrophy } from 'react-icons/fa';
+import { UserBadge } from '@/components/shared/UserBadge';
 import { useState } from 'react';
 
 interface LocalStudentsSectionProps {
@@ -71,16 +72,7 @@ export const LocalStudentsSection = ({
                                     referrerPolicy="no-referrer"
                                 />
                                 {/* Badge Overlay */}
-                                {student.subscription?.plan === 'pro' && student.subscription?.status === 'active' && (
-                                    <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[8px] p-0.5 rounded-full border border-white flex items-center justify-center" title="Pro Scholar">
-                                        <FaCrown />
-                                    </div>
-                                )}
-                                {student.subscription?.plan !== 'pro' && (student.gamification?.currentStreak || 0) >= 30 && (
-                                    <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] p-0.5 rounded-full border border-white flex items-center justify-center" title="Monthly Master">
-                                        <FaFire />
-                                    </div>
-                                )}
+                                <UserBadge size="sm" className="-top-1 -right-1" userProfile={student} showDefault={false} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-bold text-gray-800 truncate">{student.displayName}</p>
