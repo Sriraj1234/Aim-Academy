@@ -11,6 +11,7 @@ import { ClientLayoutWrapper } from '@/components/shared/ClientLayoutWrapper'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SoundProvider } from '@/context/SoundContext'
 import { AdSense } from '@/components/shared/AdSense'
+import { JsonLd } from '@/components/shared/JsonLd'
 
 
 // Fonts with display swap for faster text rendering
@@ -39,8 +40,30 @@ const notoSans = Noto_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Padhaku - Bihar Board Exam Practice',
-  description: 'Master Bihar Board exams with interactive quizzes, detailed explanations, and live competitive battles on Padhaku.',
+  title: {
+    default: 'Padhaku - Best Bihar Board Learning App for Class 10 & 12',
+    template: '%s | Padhaku'
+  },
+  description: 'Master Bihar Board (BSEB) exams with Padhaku. Free online tests, objective questions, viral questions, and chapter-wise notes for Class 10 & 12 Matric/Inter exams 2025.',
+  keywords: [
+    'Bihar Board', 'Class 10', 'Class 12', 'Matric Exam 2025', 'Inter Exam 2025',
+    'Online Test', 'Objective Questions', 'BSEB', 'Bihar School Examination Board',
+    'Padhaku', 'Model Paper 2025', 'Viral Questions'
+  ],
+  authors: [{ name: 'Padhaku Team' }],
+  creator: 'Padhaku Team',
+  publisher: 'Padhaku',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   manifest: "/manifest.json",
   icons: {
     icon: '/padhaku-192.png',
@@ -52,6 +75,29 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Padhaku",
   },
+  openGraph: {
+    type: 'website',
+    locale: 'en_IN',
+    url: 'https://padhaku.co.in',
+    title: 'Padhaku - Ace Your Bihar Board Exams',
+    description: 'Join thousands of students on Padhaku. Practice free objective tests, compete in live quizzes, and get ready for BSEB Matric & Inter exams.',
+    siteName: 'Padhaku',
+    images: [
+      {
+        url: 'https://padhaku.co.in/assets/og-image.png', // We need to ensure this exists or use a fallback
+        width: 1200,
+        height: 630,
+        alt: 'Padhaku Learning App',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Padhaku - Bihar Board Learning App',
+    description: 'Free online tests and viral questions for Bihar Board Class 10 & 12. Start practicing now!',
+    images: ['https://padhaku.co.in/assets/og-image.png'],
+  },
+  category: 'education',
   other: {
     "google-adsense-account": "ca-pub-5831377967238754",
   },
@@ -85,6 +131,7 @@ export default function RootLayout({
         className={`${outfit.variable} ${spaceGrotesk.variable} ${notoSans.variable} antialiased selection:bg-purple-500 selection:text-white overflow-x-hidden w-full`}
         suppressHydrationWarning
       >
+        <JsonLd />
         <AdSense />
         <AuthProvider>
           <ThemeProvider>
