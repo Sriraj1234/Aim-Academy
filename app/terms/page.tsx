@@ -17,7 +17,7 @@ export default function TermsPage() {
                         <div className="prose prose-indigo max-w-none text-gray-600">
                             <h3>1. Agreement to Terms</h3>
                             <p>
-                                These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity (“you”) and Padhaku (AIM Academy) (“we,” “us” or “our”), concerning your access to and use of the Padhaku website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto (collectively, the “Site”).
+                                These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity (“you”) and Padhaku (“we,” “us” or “our”), concerning your access to and use of the Padhaku website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto (collectively, the “Site”).
                             </p>
                             <p>
                                 You agree that by accessing the Site, you have read, understood, and agree to be bound by all of these Terms of Service. If you do not agree with all of these Terms of Service, then you are expressly prohibited from using the Site and you must discontinue use immediately.
