@@ -16,7 +16,7 @@ export default function PrivacyPage() {
 
                         <div className="prose prose-indigo max-w-none text-gray-600">
                             <p>
-                                At Padhaku (AIM Academy), we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our mobile application.
+                                At Padhaku, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our mobile application.
                             </p>
 
                             <h3>1. Information We Collect</h3>
