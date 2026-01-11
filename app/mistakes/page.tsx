@@ -151,6 +151,34 @@ export default function MistakesPage() {
                 )}
 
             </main>
+
+            {/* SEO / Educational Content for AdSense */}
+            <section className="max-w-7xl mx-auto px-4 pb-12 text-gray-500 text-sm leading-relaxed">
+                <div className="bg-white rounded-2xl p-6 border border-pw-border shadow-sm mt-8">
+                    <h2 className="text-lg font-bold text-gray-800 mb-3">The Science of Mistake Analysis</h2>
+                    <p className="mb-4">
+                        Mistake analysis is the fastest way to improve. This "Mistake Notebook" automatically tracks every question you get wrong.
+                        By revisiting these specific problems, you prevent repeating errors in the final exam.
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 className="font-bold text-gray-800 mb-2">Why track mistakes?</h3>
+                            <ul className="list-disc pl-5 space-y-1">
+                                <li>Identify patterns in your errors (e.g., calculation vs. conceptual).</li>
+                                <li>Focus your study time on weak zones rather than what you already know.</li>
+                                <li>Build confidence by turning "weaknesses" into strengths.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-800 mb-2">Pro Tip:</h3>
+                            <p>
+                                Don't just delete mistakes! Try to solve them again without looking at the answer.
+                                Only remove them when you can explain the logic to someone else.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 }
