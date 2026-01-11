@@ -782,10 +782,11 @@ const UploadPage = () => {
                                             onChange={handleChange}
                                             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-pw-indigo focus:ring-2 focus:ring-pw-indigo/20 transition-all outline-none bg-white"
                                         >
-                                            <option value="CBSE">CBSE</option>
-                                            <option value="Bihar Board">Bihar Board</option>
-                                            <option value="ICSE">ICSE</option>
-                                            <option value="State Board">Other State Board</option>
+                                            <option value="cbse">CBSE</option>
+                                            <option value="bseb">Bihar Board</option>
+                                            <option value="icse">ICSE</option>
+                                            <option value="up">UP Board</option>
+                                            <option value="other">Other State Board</option>
                                         </select>
                                     </div>
                                     <div>
@@ -963,17 +964,11 @@ const UploadPage = () => {
                                     className="w-full p-2 rounded-lg border border-gray-200 text-sm font-semibold focus:border-pw-indigo outline-none"
                                 >
                                     <option value="all">Auto Detect (File)</option>
-                                    <option value="CBSE">CBSE</option>
-                                    <option value="BSEB">BSEB (Bihar)</option>
-                                    <option value="ICSE">ICSE</option>
-                                    <option value="UP">UP Board</option>
-                                    <option value="MP">MP Board</option>
-                                    <option value="Maharashtra">Maharashtra Board</option>
-                                    <option value="RBSE">RBSE (Rajasthan)</option>
-                                    <option value="JAC">JAC (Jharkhand)</option>
-                                    <option value="UK">UK Board (Uttarakhand)</option>
-                                    <option value="WB">West Bengal Board</option>
-                                    <option value="State Board">Other State Board</option>
+                                    <option value="cbse">CBSE</option>
+                                    <option value="bseb">BSEB (Bihar)</option>
+                                    <option value="icse">ICSE</option>
+                                    <option value="up">UP Board</option>
+                                    <option value="other">Other State Board</option>
                                 </select>
                             </div>
                             {/* Always show Stream selector but maybe disabled if class < 11? Or just show for all for flexibility */}
