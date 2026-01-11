@@ -15,6 +15,9 @@ export const UserBadge: React.FC<BadgeProps> = ({ className = '', size = 'md', u
     const containerSize = size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-6 h-6' : 'w-5 h-5';
     const textSize = size === 'sm' ? 'text-[8px]' : size === 'lg' ? 'text-xs' : 'text-[10px]';
 
+    // Debugging
+    // console.log("UserBadge Profile:", userProfile?.displayName, userProfile?.subscription);
+
     // 1. Pro Badge (Highest Priority)
     const isPro = userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.status === 'active';
 
