@@ -108,32 +108,45 @@ export const DashboardHeader = () => {
                 className="flex items-center justify-between"
             >
                 <div className="flex items-center gap-4">
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="relative"
-                    >
-                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
-                            <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface">
-                                {user?.photoURL ? (
-                                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet font-bold text-xl">
-                                        {(user?.displayName || 'U')[0]}
-                                    </div>
-                                )}
-                            </div>
-                            <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto" userProfile={userProfile} showDefault={true} />
+                    {!user ? (
+                        <div className="flex items-center gap-2">
+                            <a href="/login" className="px-5 py-2.5 bg-pw-violet text-white font-bold rounded-xl shadow-pw-sm hover:shadow-pw-md transition-all active:scale-95 text-sm">
+                                Login
+                            </a>
+                            <a href="/signup" className="hidden md:block px-5 py-2.5 bg-white border border-pw-border text-pw-indigo font-bold rounded-xl hover:bg-gray-50 transition-all text-sm">
+                                Sign Up
+                            </a>
                         </div>
-                    </motion.div>
+                    ) : (
+                        <>
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                className="relative"
+                            >
+                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
+                                    <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface">
+                                        {user?.photoURL ? (
+                                            <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet font-bold text-xl">
+                                                {(user?.displayName || 'U')[0]}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto" userProfile={userProfile} showDefault={true} />
+                                </div>
+                            </motion.div>
 
-                    <div>
-                        <p className="text-pw-indigo text-sm font-medium flex items-center gap-1" suppressHydrationWarning>
-                            {greeting.text} {greeting.emoji}
-                        </p>
-                        <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight">
-                            {user?.displayName || 'Scholar'}
-                        </h2>
-                    </div>
+                            <div>
+                                <p className="text-pw-indigo text-sm font-medium flex items-center gap-1" suppressHydrationWarning>
+                                    {greeting.text} {greeting.emoji}
+                                </p>
+                                <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight">
+                                    {user?.displayName || 'Scholar'}
+                                </h2>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -269,7 +282,7 @@ export const DashboardHeader = () => {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => {
-                                    const msg = `🎯 AIM Academy par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\nhttps://padhaku.co.in/?ref=${user?.uid || ''}`;
+                                    const msg = `🎯 Padhaku par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\nhttps://padhaku.co.in/?ref=${user?.uid || ''}`;
                                     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
                                 }}
                                 className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
@@ -278,7 +291,7 @@ export const DashboardHeader = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    const msg = `🎯 AIM Academy par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\nhttps://padhaku.co.in/?ref=${user?.uid || ''}`;
+                                    const msg = `🎯 Padhaku par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\nhttps://padhaku.co.in/?ref=${user?.uid || ''}`;
                                     window.open(`https://t.me/share/url?url=${encodeURIComponent('https://padhaku.co.in/?ref=' + (user?.uid || ''))}&text=${encodeURIComponent(msg)}`, '_blank');
                                 }}
                                 className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
