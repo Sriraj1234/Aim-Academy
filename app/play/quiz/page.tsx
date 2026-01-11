@@ -270,18 +270,18 @@ export default function QuizPage() {
             {/* Header - PW Style */}
             <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-pw-border shadow-pw-sm font-sans transition-all">
                 <div className="max-w-5xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between relative gap-2">
-                    <div className="flex items-center gap-2 md:gap-4 relative z-10 bg-white/50 backdrop-blur-sm rounded-r-xl pr-2 shrink-0">
+                    <div className="flex items-center gap-2 md:gap-4 relative z-10 bg-white/50 backdrop-blur-sm rounded-r-xl pr-2 shrink-1 min-w-0">
                         <button
                             onClick={() => router.back()}
-                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl hover:bg-pw-surface text-gray-500 transition-colors"
+                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl hover:bg-pw-surface text-gray-500 transition-colors shrink-0"
                         >
                             <FaChevronLeft className="text-sm md:text-base" />
                         </button>
-                        <div className="flex flex-col text-left">
-                            <h1 className="font-bold text-sm md:text-lg text-pw-violet leading-tight capitalize truncate max-w-[80px] sm:max-w-[120px] md:max-w-xs">
+                        <div className="flex flex-col text-left min-w-0">
+                            <h1 className="font-bold text-sm md:text-lg text-pw-violet leading-tight capitalize truncate">
                                 {question.subject}
                             </h1>
-                            <p className="text-[10px] md:text-xs text-pw-indigo font-medium uppercase tracking-wider truncate max-w-[80px] sm:max-w-[120px] md:max-w-xs">
+                            <p className="text-[10px] md:text-xs text-pw-indigo font-medium uppercase tracking-wider truncate">
                                 {question.mainSubject || question.subSubject || 'General'}
                             </p>
                         </div>
@@ -349,7 +349,7 @@ export default function QuizPage() {
                         key={currentQuestionIndex + '-text'}
                         className="mb-6 md:mb-8 text-left"
                     >
-                        <h2 className="text-base md:text-2xl font-display font-bold text-pw-violet leading-relaxed mb-3 md:mb-6 text-left">
+                        <h2 className="text-xl md:text-2xl font-display font-bold text-pw-violet leading-relaxed mb-3 md:mb-6 text-left">
                             {question.question}
                         </h2>
 
