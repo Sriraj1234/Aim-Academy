@@ -37,6 +37,8 @@ async function rebuild() {
             let subject = (data.subject || 'general').toLowerCase().trim();
             const chapter = (data.chapter || 'general').trim();
 
+            const section = (data.section || 'General').trim();
+
             // board_class key (e.g., bseb_10)
             const board = (data.board || 'other').toLowerCase();
             const classLevel = (data.class || 'other').toString();
@@ -64,7 +66,7 @@ async function rebuild() {
             if (existingChap) {
                 existingChap.count++;
             } else {
-                taxonomy[key].chapters[subject].push({ name: chapter, count: 1 });
+                taxonomy[key].chapters[subject].push({ name: chapter, count: 1, section: section });
             }
         });
 
