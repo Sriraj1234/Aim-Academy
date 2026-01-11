@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         const result = await new Promise<any>((resolve, reject) => {
             cloudinary.uploader.upload_stream(
                 {
-                    folder: 'batches',
+                    folder: (formData.get('folder') as string) || 'batches',
                     resource_type: 'auto'
                 },
                 (error, result) => {
