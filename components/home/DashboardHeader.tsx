@@ -127,7 +127,7 @@ export const DashboardHeader = () => {
                     </motion.div>
 
                     <div>
-                        <p className="text-pw-indigo text-sm font-medium flex items-center gap-1">
+                        <p className="text-pw-indigo text-sm font-medium flex items-center gap-1" suppressHydrationWarning>
                             {greeting.text} {greeting.emoji}
                         </p>
                         <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight">
