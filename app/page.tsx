@@ -32,7 +32,7 @@ export default function LandingPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-pw-surface">
         <div className="w-16 h-16 border-4 border-pw-indigo border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-pw-indigo font-bold animate-pulse">Opening AIM Academy...</p>
+        <p className="mt-4 text-pw-indigo font-bold animate-pulse">Opening Padhaku...</p>
       </div>
     )
   }
@@ -93,8 +93,10 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
-                <button className="w-full sm:w-auto px-8 py-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+              <Link href="/home">
+                <button
+                  className="w-full sm:w-auto px-8 py-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                >
                   Start Learning Free <HiArrowRight />
                 </button>
               </Link>
