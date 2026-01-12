@@ -23,11 +23,18 @@ async function checkKey() {
     const doc = await db.collection('metadata').doc('taxonomy').get();
     if (doc.exists) {
         const data = doc.data();
-        console.log("bseb_12 exists?", !!data['bseb_12']);
         if (data['bseb_12']) {
             console.log("Subjects:", JSON.stringify(data['bseb_12'].subjects));
+            // Check hindi chapters
+            const chapters = data['bseb_12'].chapters['hindi'];
+            if (chapters) {
+                console.log(`Found ${chapters.length} Hindi chapters.`);
+                console.log("First 3 Chapters:", JSON.stringify(chapters.slice(0, 3), null, 2));
+            } else {
+                console.log("No 'hindi' chapters found in taxonomy!");
+            }
         } else {
-            console.log("Keys available:", Object.keys(data));
+            console.log("bseb_12 key MISSING");
         }
     } else {
         console.log("Taxonomy doc missing");
