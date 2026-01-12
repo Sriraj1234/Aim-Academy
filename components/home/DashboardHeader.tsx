@@ -151,11 +151,11 @@ export const DashboardHeader = () => {
                     {/* Notification Button */}
                     <button
                         onClick={() => setIsNotificationsOpen(true)}
-                        className="relative p-2 md:p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
+                        className="relative w-9 h-9 md:w-11 md:h-11 grid place-items-center leading-none bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
                     >
                         <FaBell className="text-lg md:text-xl group-hover:scale-110 transition-transform" />
                         {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-red-500 text-white text-[9px] md:text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
+                            <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-red-500 text-white text-[9px] md:text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm leading-normal">
                                 {unreadCount > 9 ? '9+' : unreadCount}
                             </span>
                         )}
@@ -169,7 +169,7 @@ export const DashboardHeader = () => {
                                 element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             }
                         }}
-                        className="relative p-2 md:p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
+                        className="relative w-9 h-9 md:w-11 md:h-11 grid place-items-center leading-none bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
                         title="Go to Study Modes"
                     >
                         <FaBookReader className="text-lg md:text-xl group-hover:scale-110 transition-transform" />
@@ -178,11 +178,11 @@ export const DashboardHeader = () => {
                     {/* Friends Button */}
                     <button
                         onClick={() => setIsFriendsOpen(true)}
-                        className="relative p-2 md:p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm"
+                        className="relative w-9 h-9 md:w-11 md:h-11 grid place-items-center leading-none bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm"
                     >
                         <FaUserFriends className="text-lg md:text-xl" />
                         {incomingRequests.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-red-500 text-white text-[9px] md:text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
+                            <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-red-500 text-white text-[9px] md:text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm leading-normal">
                                 {incomingRequests.length}
                             </span>
                         )}
