@@ -43,6 +43,7 @@ try {
             console.log(`User ID: ${doc.id}`);
             console.log(`Display Name: ${d.displayName}`);
             console.log(`\n--- DATA FIELDS ---`);
+            console.log(`Board: ${d.board} | Class: ${d.class}`);
             console.log(`Stats (Type): ${typeof d.stats} - ${d.stats ? JSON.stringify(d.stats) : 'MISSING'}`);
             console.log(`Gamification (Type): ${typeof d.gamification} - ${d.gamification ? JSON.stringify(d.gamification) : 'MISSING'}`);
             console.log(`OnboardingCompleted: ${d.onboardingCompleted}`);
