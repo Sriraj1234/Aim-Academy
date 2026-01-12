@@ -154,9 +154,24 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             }
 
             snapshot.forEach(doc => {
+                const data = doc.data();
+
+                // IN-MEMORY CLASS FILTER (Replaces complex Firestore query)
+                if (userProfile?.class) {
+                    const cls = userProfile.class.toString();
+                    const qClass = (data.class || '').toString();
+
+                    // Normalize both sides
+                    const normUserClass = cls.toLowerCase().replace('th', '').trim().split(' ')[0]; // "12" from "12 Science"
+                    const normQClass = qClass.toLowerCase().replace('th', '').trim().split(' ')[0]; // "12" from "12"
+
+                    // If mismatch, skip
+                    if (normUserClass !== normQClass) return;
+                }
+
                 // Ensure we haven't already added it from wrap-around (unlikely order but safe)
                 if (!q.some(existing => existing.id === doc.id)) {
-                    q.push({ id: doc.id, ...doc.data() } as Question)
+                    q.push({ id: doc.id, ...data } as Question)
                 }
             })
 
