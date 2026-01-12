@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion } from 'framer-motion'
-import { FaStar, FaRocket, FaUserFriends, FaBell, FaGift, FaShareAlt, FaCopy, FaCheck, FaWhatsapp, FaTelegram, FaTimes, FaBookReader, FaShieldAlt } from 'react-icons/fa'
+import { FaStar, FaRocket, FaUserFriends, FaBell, FaShareAlt, FaBookReader, FaShieldAlt } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { FriendsDrawer } from './FriendsDrawer'
 import { NotificationsDrawer } from './NotificationsDrawer'
@@ -27,8 +27,6 @@ export const DashboardHeader = () => {
     const { t } = useLanguage()
     const [isFriendsOpen, setIsFriendsOpen] = useState(false)
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
-    const [isReferralOpen, setIsReferralOpen] = useState(false)
-    const [copied, setCopied] = useState(false)
     const [unreadCount, setUnreadCount] = useState(0)
 
     const [greeting, setGreeting] = useState({ text: 'Good Morning', emoji: '🌅' })
@@ -177,15 +175,6 @@ export const DashboardHeader = () => {
                         <FaBookReader className="text-xl group-hover:scale-110 transition-transform" />
                     </button>
 
-                    {/* Referral Button */}
-                    <button
-                        onClick={() => setIsReferralOpen(true)}
-                        className="relative p-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full hover:from-amber-500 hover:to-orange-600 transition-all border border-amber-300 shadow-pw-sm group"
-                        title="Refer & Earn"
-                    >
-                        <FaGift className="text-xl group-hover:scale-110 transition-transform" />
-                    </button>
-
                     {/* Friends Button */}
                     <button
                         onClick={() => setIsFriendsOpen(true)}
@@ -213,103 +202,7 @@ export const DashboardHeader = () => {
                 onClose={() => setIsNotificationsOpen(false)}
             />
 
-            {/* Referral Modal */}
-            {isReferralOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-                    onClick={() => setIsReferralOpen(false)}
-                >
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.9, opacity: 0 }}
-                        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-pw-violet flex items-center gap-2">
-                                <FaGift className="text-amber-500" /> Refer & Earn
-                            </h3>
-                            <button
-                                onClick={() => setIsReferralOpen(false)}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                                <FaTimes className="text-gray-500" />
-                            </button>
-                        </div>
 
-                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 mb-4">
-                            <p className="text-sm text-gray-600 mb-2">🎁 Apne dost ko invite karo aur dono ko milega:</p>
-                            <div className="flex justify-around text-center">
-                                <div>
-                                    <p className="font-bold text-2xl text-amber-600">50 XP</p>
-                                    <p className="text-xs text-gray-500">Aapko</p>
-                                </div>
-                                <div className="w-px bg-amber-200"></div>
-                                <div>
-                                    <p className="font-bold text-2xl text-green-600">🎉 Bonus</p>
-                                    <p className="text-xs text-gray-500">Dost ko</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-2">Tumhara Referral Link:</p>
-                            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-3 border">
-                                <input
-                                    type="text"
-                                    readOnly
-                                    value={`https://padhaku.co.in/?ref=${user?.uid || ''}`}
-                                    className="flex-1 bg-transparent text-sm text-gray-700 outline-none truncate"
-                                />
-                                <button
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(`https://padhaku.co.in/?ref=${user?.uid || ''}`);
-                                        setCopied(true);
-                                        setTimeout(() => setCopied(false), 2000);
-                                    }}
-                                    className={`p-2 rounded-lg transition-all ${copied ? 'bg-green-500 text-white' : 'bg-pw-violet text-white hover:bg-pw-indigo'}`}
-                                >
-                                    {copied ? <FaCheck /> : <FaCopy />}
-                                </button>
-                            </div>
-                            {copied && <p className="text-green-600 text-xs mt-1">✓ Link copied!</p>}
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => {
-                                    const msg = `🎯 Padhaku par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\nhttps://padhaku.co.in/?ref=${user?.uid || ''}`;
-                                    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-                                }}
-                                className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
-                            >
-                                <FaWhatsapp className="text-xl" /> WhatsApp
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const msg = `🎯 Padhaku par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\nhttps://padhaku.co.in/?ref=${user?.uid || ''}`;
-                                    window.open(`https://t.me/share/url?url=${encodeURIComponent('https://padhaku.co.in/?ref=' + (user?.uid || ''))}&text=${encodeURIComponent(msg)}`, '_blank');
-                                }}
-                                className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
-                            >
-                                <FaTelegram className="text-xl" /> Telegram
-                            </button>
-                        </div>
-
-                        {userProfile?.referralCount !== undefined && userProfile.referralCount > 0 && (
-                            <div className="mt-4 text-center p-3 bg-purple-50 rounded-xl border border-purple-200">
-                                <p className="text-sm text-gray-600">
-                                    🏆 Tumne <span className="font-bold text-pw-violet">{userProfile.referralCount}</span> dost invite kiye!
-                                </p>
-                            </div>
-                        )}
-                    </motion.div>
-                </motion.div>
-            )}
         </div>
     )
 }
