@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 
 export const SyllabusBoard = () => {
     const { user, userProfile } = useAuth();
-    const { data: syllabusData, loading: syllabusLoading, error: syllabusError } = useTaxonomy(userProfile?.board, userProfile?.class);
+    const { data: syllabusData, loading: syllabusLoading, error: syllabusError } = useTaxonomy(userProfile?.board, userProfile?.class, userProfile?.stream);
     const [completedChapters, setCompletedChapters] = useState<string[]>([]);
     const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
     const [progressLoading, setProgressLoading] = useState(true);
