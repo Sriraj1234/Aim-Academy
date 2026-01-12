@@ -249,7 +249,9 @@ function SelectionContent() {
 
     const handleConfirmStart = (count: number) => {
         if (customizing) {
-            startQuiz(selectedSubject!, count, customizing.name)
+            // Safely decode and trim chapter name to prevent query mismatch
+            const safeChapterName = decodeURIComponent(customizing.name).trim();
+            startQuiz(selectedSubject!, count, safeChapterName)
             router.push('/play/quiz')
         }
     }
