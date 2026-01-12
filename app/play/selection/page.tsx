@@ -118,9 +118,21 @@ function SelectionContent() {
                 const docSnap = await getDoc(docRef)
                 if (docSnap.exists()) {
                     const fullTaxonomy = docSnap.data() as Taxonomy
-                    const key = `${userProfile?.board || 'cbse'}_${userProfile?.class || '10'}`
+
+                    // Robust Key Generation: Handle "12 Science" -> "12"
+                    const boardKey = (userProfile?.board || 'cbse').toLowerCase();
+                    const rawClass = (userProfile?.class || '10').toString().toLowerCase();
+                    // Extract first token (assumes "12" or "12 science")
+                    const classKey = rawClass.replace('th', '').trim().split(' ')[0];
+
+                    const key = `${boardKey}_${classKey}`
+                    console.log(`[Selection] Fetching taxonomy for key: ${key} (raw: ${rawClass})`);
+
                     if (fullTaxonomy[key]) {
                         setActiveCategories(fullTaxonomy[key])
+                    } else if (fullTaxonomy[`${boardKey}_${rawClass}`]) {
+                        // Fallback: Try exact match if normalized failed (unlikely but safe)
+                        setActiveCategories(fullTaxonomy[`${boardKey}_${rawClass}`])
                     }
                 }
             } catch (error) {
@@ -322,7 +334,7 @@ function SelectionContent() {
                     ) : !selectedSubject && !selectedScience && !selectedSST && !selectedLang ? (
                         /* MAIN SUBJECT VIEW */
                         <>
-                            {subjects.length === 0 && !hasScience ? (
+                            {subjects.length === 0 && !hasScience && !hasSST && !hasLang ? (
                                 <div className="col-span-full py-16 flex flex-col items-center justify-center text-center opacity-70">
                                     <div className="text-gray-400 font-bold">Coming Soon</div>
                                 </div>
