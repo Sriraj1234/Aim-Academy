@@ -84,7 +84,21 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             if (userProfile?.class) {
                 // Robust check: match both "10" (string) and 10 (number)
                 const cls = userProfile.class;
-                constraints.push(where('class', 'in', [cls.toString(), Number(cls)]));
+                // Normalize: "12 Science" -> "12"
+                const normalizedClass = cls.toString().toLowerCase().replace('th', '').trim().split(' ')[0];
+
+                // Query for exact match AND normalized match (covering "12" and "12 Science" cases if data is messy)
+                const classVariants = [
+                    cls.toString(),
+                    Number(cls),
+                    normalizedClass,
+                    Number(normalizedClass)
+                ].filter(v => v !== null && !Number.isNaN(v)); // Filter out NaNs
+
+                // Unique values only
+                const uniqueVariants = Array.from(new Set(classVariants));
+
+                constraints.push(where('class', 'in', uniqueVariants));
             }
 
             // Subject & Chapter Filters
