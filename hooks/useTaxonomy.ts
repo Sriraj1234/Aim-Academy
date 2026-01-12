@@ -40,7 +40,7 @@ const getSubjectDetails = (subjectName: string) => {
     return { icon: '📚', color: 'from-slate-500 to-gray-600' };
 };
 
-export const useTaxonomy = (board: string | undefined, classLevel: string | undefined) => {
+export const useTaxonomy = (board: string | undefined, classLevel: string | undefined, stream?: string) => {
     const [data, setData] = useState<SubjectSyllabus[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -59,7 +59,10 @@ export const useTaxonomy = (board: string | undefined, classLevel: string | unde
 
                 if (docSnap.exists()) {
                     const fullTaxonomy = docSnap.data();
-                    const key = `${board}_${classLevel}`; // e.g. bseb_10
+                    let key = `${board}_${classLevel}`; // e.g. bseb_10
+                    if ((classLevel === '11' || classLevel === '12') && stream) {
+                        key = `${board}_${classLevel}_${stream}`;
+                    }
 
                     if (fullTaxonomy[key]) {
                         const rawData = fullTaxonomy[key] as TaxonomyData;
@@ -104,7 +107,7 @@ export const useTaxonomy = (board: string | undefined, classLevel: string | unde
         };
 
         fetchTaxonomy();
-    }, [board, classLevel]);
+    }, [board, classLevel, stream]);
 
     return { data, loading, error };
 };
