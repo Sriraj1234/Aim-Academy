@@ -319,6 +319,76 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
 
                             {activeTab === 'add' && (
                                 <div className="space-y-6">
+                                    {/* Referral Section */}
+                                    <div className="relative overflow-hidden bg-gradient-to-br from-pw-indigo to-pw-violet p-6 rounded-2xl shadow-pw-lg text-white">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-10 translate-x-10 pointer-events-none" />
+
+                                        <div className="relative z-10">
+                                            <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
+                                                <FaShareAlt className="text-pw-lavender" />
+                                                Refer & Earn
+                                            </h4>
+
+                                            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 mb-4">
+                                                <p className="text-sm text-white/90 mb-2">🎁 Invite friends and earn XP!</p>
+                                                <div className="flex justify-around text-center">
+                                                    <div>
+                                                        <p className="font-bold text-xl text-amber-300">50 XP</p>
+                                                        <p className="text-[10px] text-gray-200">You</p>
+                                                    </div>
+                                                    <div className="w-px bg-white/20"></div>
+                                                    <div>
+                                                        <p className="font-bold text-xl text-green-300">Bonus</p>
+                                                        <p className="text-[10px] text-gray-200">Friend</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-4">
+                                                <p className="text-xs text-pw-lavender mb-2 uppercase font-bold tracking-wider">Your Link</p>
+                                                <div className="bg-white/10 backdrop-blur-md rounded-xl p-1 border border-white/10 flex items-center gap-2">
+                                                    <input
+                                                        readOnly
+                                                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${user?.uid || ''}`}
+                                                        className="flex-1 bg-transparent text-xs text-white px-2 outline-none truncate"
+                                                    />
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(`${window.location.origin}?ref=${user?.uid || ''}`);
+                                                            setSuccess('Link copied!');
+                                                            play('click');
+                                                            setTimeout(() => setSuccess(''), 2000);
+                                                        }}
+                                                        className="px-3 py-1.5 bg-white text-pw-indigo rounded-lg text-xs font-bold hover:bg-pw-lavender transition-colors"
+                                                    >
+                                                        Copy
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        const msg = `🎯 Padhaku par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\n${window.location.origin}?ref=${user?.uid || ''}`;
+                                                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                                                    }}
+                                                    className="flex-1 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                                                >
+                                                    WhatsApp
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        const msg = `🎯 Padhaku par padho aur top karo! Mere saath join karo aur special bonus pao! 🎁\n\n${window.location.origin}?ref=${user?.uid || ''}`;
+                                                        window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin + '?ref=' + (user?.uid || ''))}&text=${encodeURIComponent(msg)}`, '_blank');
+                                                    }}
+                                                    className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                                                >
+                                                    Telegram
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {/* Local Students Section */}
                                     {userProfile?.pincode ? (
                                         <LocalStudentsSection
@@ -375,38 +445,6 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                         </div>
                                         {error && <p className="text-pw-red text-xs mt-3 bg-red-50 p-2 rounded-lg border border-red-100 flex items-center gap-1"><FaTimes className="shrink-0" /> {error}</p>}
                                         {success && <p className="text-green-600 text-xs mt-3 bg-green-50 p-2 rounded-lg border border-green-100 flex items-center gap-1"><FaCheck className="shrink-0" /> {success}</p>}
-                                    </div>
-
-                                    <div className="relative overflow-hidden bg-gradient-to-br from-pw-indigo to-pw-violet p-6 rounded-2xl shadow-pw-lg text-white">
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-10 translate-x-10 pointer-events-none" />
-
-                                        <div className="relative z-10">
-                                            <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
-                                                <FaShareAlt className="text-pw-lavender" />
-                                                Invite Friends
-                                            </h4>
-                                            <p className="text-sm text-white/80 mb-4 leading-relaxed">
-                                                Share your email with friends so they can add you directly.
-                                            </p>
-
-                                            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 flex items-center justify-between gap-3">
-                                                <div className="min-w-0">
-                                                    <p className="text-[10px] text-pw-lavender uppercase font-bold tracking-wider mb-0.5">Your Email</p>
-                                                    <p className="text-sm font-bold truncate pr-2">{user?.email}</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(user?.email || '')
-                                                        setSuccess('Email copied to clipboard!')
-                                                        play('click') // Click sound
-                                                        setTimeout(() => setSuccess(''), 2000)
-                                                    }}
-                                                    className="px-3 py-1.5 bg-white text-pw-indigo rounded-lg text-xs font-bold hover:bg-pw-lavender transition-colors"
-                                                >
-                                                    Copy
-                                                </button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             )}
