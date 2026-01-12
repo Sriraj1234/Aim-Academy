@@ -330,7 +330,7 @@ export default function QuizPage() {
                     </span>
                     <div className="flex items-center gap-2 md:gap-3">
                         <div className="px-2 md:px-3 py-0.5 md:py-1 rounded-md md:rounded-lg bg-green-50 text-green-700 text-[10px] md:text-xs font-bold border border-green-200 shadow-sm">
-                            +{question.marks}.0
+                            +{question.marks || 1}.0
                         </div>
                         <div className="px-2 md:px-3 py-0.5 md:py-1 rounded-md md:rounded-lg bg-red-50 text-red-700 text-[10px] md:text-xs font-bold border border-red-200 shadow-sm">
                             -0.25
