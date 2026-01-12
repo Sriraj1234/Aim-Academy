@@ -124,31 +124,11 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             snapshot.forEach(doc => {
                 const data = doc.data();
 
-                // IN-MEMORY CLASS FILTER
-                console.log(`[QuizContext] Filtering Doc ${doc.id} | UserClass: ${userProfile?.class} | DocClass: ${data.class}`);
-
-                if (userProfile?.class) {
-                    const cls = userProfile.class.toString();
-                    const qClass = (data.class || '').toString();
-
-                    // Normalize both sides
-                    const normUserClass = cls.toLowerCase().replace('th', '').trim().split(' ')[0];
-                    const normQClass = qClass.toLowerCase().replace('th', '').trim().split(' ')[0];
-
-                    // If mismatch, skip
-                    if (normUserClass !== normQClass) {
-                        console.log(`[QuizContext] Skipped mismatch: ${normUserClass} !== ${normQClass}`);
-                        return;
-                    }
-                }
-
                 // Ensure we haven't already added it from wrap-around (unlikely order but safe)
                 if (!q.some(existing => existing.id === doc.id)) {
                     q.push({ id: doc.id, ...data } as Question)
                 }
             })
-
-            console.log(`[QuizContext] Post-Filter Count: ${q.length}`);
 
             if (snapshot.empty && !q.length) {
                 console.warn(`No questions found in DB for filter, checking mock`)
