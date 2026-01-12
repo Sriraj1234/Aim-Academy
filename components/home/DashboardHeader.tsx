@@ -99,16 +99,16 @@ export const DashboardHeader = () => {
     }
 
     return (
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between gap-3 md:gap-4"
             >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
                     {!user ? (
                         <div className="flex items-center gap-2">
-                            <a href="/login" className="px-5 py-2.5 bg-pw-violet text-white font-bold rounded-xl shadow-pw-sm hover:shadow-pw-md transition-all active:scale-95 text-sm">
+                            <a href="/login" className="px-4 py-2 md:px-5 md:py-2.5 bg-pw-violet text-white font-bold rounded-xl shadow-pw-sm hover:shadow-pw-md transition-all active:scale-95 text-xs md:text-sm whitespace-nowrap">
                                 Login
                             </a>
                             <a href="/signup" className="hidden md:block px-5 py-2.5 bg-white border border-pw-border text-pw-indigo font-bold rounded-xl hover:bg-gray-50 transition-all text-sm">
@@ -119,27 +119,27 @@ export const DashboardHeader = () => {
                         <>
                             <motion.div
                                 whileHover={{ scale: 1.05 }}
-                                className="relative"
+                                className="relative shrink-0"
                             >
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
+                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full p-[2px] md:p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
                                     <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface">
                                         {user?.photoURL ? (
                                             <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet font-bold text-xl">
+                                            <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet font-bold text-lg md:text-xl">
                                                 {(user?.displayName || 'U')[0]}
                                             </div>
                                         )}
                                     </div>
-                                    <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto" userProfile={userProfile} showDefault={true} />
+                                    <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto scale-75 md:scale-100 origin-top-left" userProfile={userProfile} showDefault={true} />
                                 </div>
                             </motion.div>
 
-                            <div>
-                                <p className="text-pw-indigo text-sm font-medium flex items-center gap-1" suppressHydrationWarning>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-pw-indigo text-xs md:text-sm font-medium flex items-center gap-1" suppressHydrationWarning>
                                     {greeting.text} {greeting.emoji}
                                 </p>
-                                <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight">
+                                <h2 className="text-lg md:text-2xl font-bold text-pw-violet leading-tight truncate">
                                     {user?.displayName || 'Scholar'}
                                 </h2>
                             </div>
@@ -147,15 +147,15 @@ export const DashboardHeader = () => {
                     )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3 shrink-0">
                     {/* Notification Button */}
                     <button
                         onClick={() => setIsNotificationsOpen(true)}
-                        className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
+                        className="relative p-2 md:p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
                     >
-                        <FaBell className="text-xl group-hover:scale-110 transition-transform" />
+                        <FaBell className="text-lg md:text-xl group-hover:scale-110 transition-transform" />
                         {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
+                            <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-red-500 text-white text-[9px] md:text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
                                 {unreadCount > 9 ? '9+' : unreadCount}
                             </span>
                         )}
@@ -169,20 +169,20 @@ export const DashboardHeader = () => {
                                 element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             }
                         }}
-                        className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
+                        className="relative p-2 md:p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm group"
                         title="Go to Study Modes"
                     >
-                        <FaBookReader className="text-xl group-hover:scale-110 transition-transform" />
+                        <FaBookReader className="text-lg md:text-xl group-hover:scale-110 transition-transform" />
                     </button>
 
                     {/* Friends Button */}
                     <button
                         onClick={() => setIsFriendsOpen(true)}
-                        className="relative p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm"
+                        className="relative p-2 md:p-2.5 bg-pw-surface text-pw-indigo rounded-full hover:bg-pw-lavender/20 transition-colors border border-pw-border shadow-pw-sm"
                     >
-                        <FaUserFriends className="text-xl" />
+                        <FaUserFriends className="text-lg md:text-xl" />
                         {incomingRequests.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
+                            <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-red-500 text-white text-[9px] md:text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse shadow-sm">
                                 {incomingRequests.length}
                             </span>
                         )}
