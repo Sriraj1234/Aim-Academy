@@ -78,28 +78,21 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
             // Essential Filters: Board & Class (Isolation)
             if (userProfile?.board) {
-                // Ensure case consistency (Uploads are lowercase usually)
-                constraints.push(where('board', '==', userProfile.board.toLowerCase()));
+                // Handle Case Mismatch: Upload might be 'BSEB', app uses 'bseb'
+                // We use 'in' operator to catch both. This is safe as it's the only 'in' (or 'array-contains') clause currently.
+                const rawBoard = userProfile.board;
+                // Generate lower and UPPER case variants to catch 'bseb' AND 'BSEB'
+                const variants = Array.from(new Set([
+                    rawBoard,
+                    rawBoard.toLowerCase(),
+                    rawBoard.toUpperCase()
+                ]));
+
+                constraints.push(where('board', 'in', variants));
             }
-            if (userProfile?.class) {
-                // Robust check: match both "10" (string) and 10 (number)
-                const cls = userProfile.class;
-                // Normalize: "12 Science" -> "12"
-                const normalizedClass = cls.toString().toLowerCase().replace('th', '').trim().split(' ')[0];
-
-                // Query for exact match AND normalized match (covering "12" and "12 Science" cases if data is messy)
-                const classVariants = [
-                    cls.toString(),
-                    Number(cls),
-                    normalizedClass,
-                    Number(normalizedClass)
-                ].filter(v => v !== null && !Number.isNaN(v)); // Filter out NaNs
-
-                // Unique values only
-                const uniqueVariants = Array.from(new Set(classVariants));
-
-                constraints.push(where('class', 'in', uniqueVariants));
-            }
+            // CLASS FILTER REMOVED from Firestore query to avoid Composite Index errors.
+            // We now fetch by Board + Subject + Chapter (sufficiently small dataset) 
+            // and filter by Class in-memory below.
 
             // Subject & Chapter Filters
             if (subject) {
@@ -113,60 +106,40 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             // If this fails, we might need to filter client-side or create those indexes.
             // For safety and strict isolation, server-side filtering is best.
 
-            // NEW: Randomize by picking a random start point
-            // Generate a random ID (20 chars alphanumeric, roughly mimics Firestore ID)
-            const randomId = doc(collection(db, 'questions')).id;
-
-            // Add Random Cursor to constraints
-            // We use 'orderBy' on documentId to ensure we can startAt or filter by it
-            const randomConstraints = [...constraints, where(documentId(), '>=', randomId), orderBy(documentId())];
-
+            // Simple query without randomization (avoids complex composite index requirements)
             console.log("Fetching questions with constraints:", {
                 board: userProfile?.board,
                 class: userProfile?.class,
                 subject,
-                chapter,
-                randomStart: randomId
+                chapter
             });
 
-            let qQuery = query(questionsRef, ...randomConstraints);
+            // Fetch more than needed, then shuffle and slice client-side
+            const fetchLimit = Math.min(count * 2, 100); // Fetch extra for shuffling
+            const qQuery = query(questionsRef, ...constraints, limit(fetchLimit));
 
             let snapshot = await getDocs(qQuery)
             let q: Question[] = []
 
-            // If we got fewer than requested (hit end of collection), wrap around
-            if (snapshot.size < count) {
-                const remaining = count - snapshot.size;
-                console.log(`Hit end of collection (got ${snapshot.size}), wrapping around for ${remaining} more...`);
-
-                // Wrap around: Query from start (documentId >= ' ')
-                // Reuse base constraints but reset random cursor
-                const wrapConstraints = [...constraints, where(documentId(), '>=', ' '), orderBy(documentId()), limit(remaining)];
-                const wrapQuery = query(questionsRef, ...wrapConstraints);
-                const wrapSnap = await getDocs(wrapQuery);
-
-                wrapSnap.forEach(doc => {
-                    // Dedup: Ensure we don't add duplicates if collection is smaller than count
-                    if (!snapshot.docs.some(existing => existing.id === doc.id)) {
-                        q.push({ id: doc.id, ...doc.data() } as Question)
-                    }
-                });
-            }
-
             snapshot.forEach(doc => {
                 const data = doc.data();
 
-                // IN-MEMORY CLASS FILTER (Replaces complex Firestore query)
+                // IN-MEMORY CLASS FILTER
+                console.log(`[QuizContext] Filtering Doc ${doc.id} | UserClass: ${userProfile?.class} | DocClass: ${data.class}`);
+
                 if (userProfile?.class) {
                     const cls = userProfile.class.toString();
                     const qClass = (data.class || '').toString();
 
                     // Normalize both sides
-                    const normUserClass = cls.toLowerCase().replace('th', '').trim().split(' ')[0]; // "12" from "12 Science"
-                    const normQClass = qClass.toLowerCase().replace('th', '').trim().split(' ')[0]; // "12" from "12"
+                    const normUserClass = cls.toLowerCase().replace('th', '').trim().split(' ')[0];
+                    const normQClass = qClass.toLowerCase().replace('th', '').trim().split(' ')[0];
 
                     // If mismatch, skip
-                    if (normUserClass !== normQClass) return;
+                    if (normUserClass !== normQClass) {
+                        console.log(`[QuizContext] Skipped mismatch: ${normUserClass} !== ${normQClass}`);
+                        return;
+                    }
                 }
 
                 // Ensure we haven't already added it from wrap-around (unlikely order but safe)
@@ -174,6 +147,8 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                     q.push({ id: doc.id, ...data } as Question)
                 }
             })
+
+            console.log(`[QuizContext] Post-Filter Count: ${q.length}`);
 
             if (snapshot.empty && !q.length) {
                 console.warn(`No questions found in DB for filter, checking mock`)
@@ -194,6 +169,19 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 setAnswers(new Array(Math.min(mq.length, count)).fill(null))
                 return
             }
+
+            // Shuffle helper
+            const shuffle = (arr: Question[]) => {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            };
+
+            // Shuffle and take only requested count
+            q = shuffle(q).slice(0, count);
+            console.log(`Final question count after shuffle/slice: ${q.length}`);
 
             setQuestions(q)
             setAnswers(new Array(q.length).fill(null))
