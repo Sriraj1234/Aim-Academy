@@ -101,15 +101,21 @@ export async function POST(request: NextRequest) {
         if (body.context?.subject) contextInfo += `\n- Current Subject: ${body.context.subject}`;
         if (body.context?.chapter) contextInfo += `\n- Current Chapter: ${body.context.chapter}`;
 
+        // Strict Syllabus Instruction
+        if (syllabusInfo) {
+            contextInfo += `\n\n**SYLLABUS CONSTRAINT:**\nOnly answer questions relevant to the User's Class ${userClass} ${userBoard} Syllabus. If a topic is clearly out of syllabus (e.g., Calculus for Class 10), politely inform the student but still provide a brief simplified overview.`;
+        }
+
         contextInfo += syllabusInfo + chapterSummary;
 
         const siteKnowledge = `\n\n**WEBSITE KNOWLEDGE (Use this to guide the student):**
-- **Live Quizzes**: We have a specialized section for Live Quizzes where you can compete in real-time. Look for the "Live Quiz" banner on the home page or go to the Play section.
-- **Study Hub**: This is where you find 3D Models, Explainer Videos, and Concept maps. Great for visual learners.
-- **Notes**: We provide chapter-wise PDF notes. You can access them from the "Notes" tab.
-- **Battle Mode**: A multiplayer game where you can challenge friends or random opponents to a quiz battle.
-- **AI Flashcards**: Create instant flashcards for any topic using the "Flashcards" tool on the home screen.
-- **Mind Games**: Fun brain-training mini-games to improve focus and memory.
+- **AI Chat Buddy**: That's you! You now have "Short Term Memory" (I remember our last few chats in this session) and I can search the web/images for you.
+- **Live Quizzes**: Real-time competitions. Look for the "Live Quiz" banner on the home page.
+- **Battle Mode**: Multiplayer quiz game to challenge friends.
+- **Study Hub**: 3D Models, Explainer Videos, and Concept maps.
+- **Notes**: Chapter-wise PDF notes.
+- **AI Flashcards**: Create instant flashcards for any topic.
+- **Mind Games**: Brain-training mini-games.
 `;
 
         contextInfo += siteKnowledge;
@@ -152,9 +158,12 @@ export async function POST(request: NextRequest) {
                             {
                                 role: 'system',
                                 content: `You are an Intent Classifier. Your job is to classify the user's latest message into one of these categories:
-- "WEB_SEARCH": If the user is asking for specific facts, current events, dates, or dynamic syllabus info.
-- "IMAGE_SEARCH": If the user asks for images OR if the topic is NATURALLY VISUAL (e.g., "Anatomy of Heart", "Map of India", "Solar System", "Chemical Structure", "Pythagoras Theorem Diagram"). **Rule: If an image would make the explanation 10x better, choose IMAGE_SEARCH.**
-- "CHAT": For general conversation, coding help, or purely theoretical concepts.
+- "WEB_SEARCH": If the user is asking for specific facts, current events, dates, latest syllabus changes, or real-world data (e.g. "Who is PM", "JEE Main 2025 Date").
+- "IMAGE_SEARCH": If the user is asking for:
+    1. Direct visual requests ("Show me", "Diagram of").
+    2. NATURALLY VISUAL topics (e.g., Biology diagrams, Chemical Structures, Physics Free body diagrams, Maps, Geometry).
+    **Rule: If an image would make the explanation CLEARER, always choose IMAGE_SEARCH.**
+- "CHAT": For general conversation, coding help, mathematical derivations, or purely theoretical concepts.
 
 Respond ONLY with the category value.`
                             },
@@ -185,19 +194,19 @@ Respond ONLY with the category value.`
 
                             toolImages = await performImageSearch(query);
                             if (toolImages.length > 0) {
-                                toolResults += `\n[SYSTEM: Found ${toolImages.length} images for "${query}". Refer to them.]`;
+                                toolResults += `\n[SYSTEM: Found ${toolImages.length} images for "${query}". Refer to them in your explanation.]`;
                                 sendEvent({ images: toolImages });
                             }
                         }
 
-                        else if (intent.includes('WEB') || body.message.match(/current|latest|news|who is|price|date/i)) {
+                        else if (intent.includes('WEB') || body.message.match(/current|latest|news|who is|price|date|syllabus/i)) {
                             sendEvent({ status: 'searching_web' });
                             const query = body.message.replace(/search|find|google|about/gi, '').trim();
                             const searchResults = await performWebSearch(query);
 
                             if (searchResults.length > 0) {
                                 const snippets = searchResults.map((r: any) => `- ${r.title}: ${r.description} (Source: ${r.source})`).join('\n');
-                                toolResults += `\n[SYSTEM: Web Results for "${query}":\n${snippets}\nUse this verified info.]`;
+                                toolResults += `\n[SYSTEM: Web Results for "${query}":\n${snippets}\nUse this verified info to answer.]`;
                             } else {
                                 toolResults += `\n[SYSTEM: Search returned nothing.]`;
                             }
