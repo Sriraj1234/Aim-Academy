@@ -109,7 +109,7 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                         </div>
                         <FaBolt className="text-emerald-400/50" />
                     </div>
-                    <div>
+                    <div className="text-left mt-4">
                         <h4 className="text-lg font-bold text-white group-hover:text-emerald-300 transition-colors">AI Quiz Generator</h4>
                         <p className="text-xs text-white/50 mt-1">Practice unlimited questions</p>
                     </div>
@@ -123,29 +123,29 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-black/90 backdrop-blur-md"
                         onClick={() => setIsOpen(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
+                            initial={{ scale: 0.95, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-[#0f0a1f] w-full max-w-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative"
+                            exit={{ scale: 0.95, y: 20 }}
+                            className="bg-[#0f0a1f] w-full h-full md:h-auto md:max-w-2xl md:rounded-3xl border-0 md:border border-white/10 shadow-2xl overflow-hidden relative flex flex-col"
                             onClick={e => e.stopPropagation()}
                         >
                             {/* Header */}
-                            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <div className="p-4 md:p-6 border-b border-white/10 flex justify-between items-center bg-white/5 shrink-0">
+                                <h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
                                     <FaRobot className="text-emerald-400" />
                                     <span>AI Quiz Setup</span>
                                 </h3>
-                                <button onClick={() => setIsOpen(false)} className="text-white/40 hover:text-white">
+                                <button onClick={() => setIsOpen(false)} className="text-white/40 hover:text-white p-2">
                                     <FaTimes />
                                 </button>
                             </div>
 
                             {/* Content */}
-                            <div className="p-8 space-y-6">
+                            <div className="p-4 md:p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                                 {/* Subject Selection */}
                                 <div className="space-y-3">
                                     <label className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Select Subject</label>
@@ -154,7 +154,7 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                                             <button
                                                 key={s}
                                                 onClick={() => setSubject(s)}
-                                                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${subject === s
+                                                className={`px-3 py-2 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${subject === s
                                                     ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 scale-105'
                                                     : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
                                             >
@@ -172,12 +172,12 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                                         value={topic}
                                         onChange={(e) => setTopic(e.target.value)}
                                         placeholder="e.g. Periodic Table, Algebra..."
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50 transition-colors text-sm md:text-base placeholder-white/30"
                                     />
                                 </div>
 
                                 {/* Difficulty & Language */}
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-3">
                                         <label className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Difficulty</label>
                                         <div className="flex bg-white/5 p-1 rounded-xl">
@@ -185,7 +185,7 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                                                 <button
                                                     key={d.id}
                                                     onClick={() => setDifficulty(d.id as any)}
-                                                    className={`flex-1 py-1.5 capitalize text-xs font-bold rounded-lg transition-all ${difficulty === d.id ? 'bg-emerald-500 text-white shadow' : 'text-white/40 hover:text-white'}`}
+                                                    className={`flex-1 py-2 capitalize text-xs font-bold rounded-lg transition-all ${difficulty === d.id ? 'bg-emerald-500 text-white shadow' : 'text-white/40 hover:text-white'}`}
                                                 >
                                                     {d.label}
                                                 </button>
@@ -202,9 +202,9 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                                                 step="5"
                                                 value={count}
                                                 onChange={(e) => setCount(parseInt(e.target.value))}
-                                                className="w-full accent-emerald-500"
+                                                className="w-full accent-emerald-500 cursor-pointer h-2 rounded-lg appearance-none bg-white/10"
                                             />
-                                            <span className="font-bold text-white w-8">{count}</span>
+                                            <span className="font-bold text-white w-8 text-center">{count}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -214,11 +214,14 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                                         {error}
                                     </div>
                                 )}
+                            </div>
 
+                            {/* Footer Action */}
+                            <div className="p-4 md:p-6 border-t border-white/10 bg-white/5 shrink-0">
                                 <button
                                     onClick={generateQuestions}
                                     disabled={loading || !subject}
-                                    className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:shadow-lg hover:shadow-emerald-500/25 active:scale-95 text-lg"
+                                    className="w-full py-3 md:py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:shadow-lg hover:shadow-emerald-500/25 active:scale-95 text-base md:text-lg"
                                 >
                                     {loading ? (
                                         <>
