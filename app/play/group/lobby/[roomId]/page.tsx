@@ -11,6 +11,7 @@ import { FriendsDrawer } from '@/components/home/FriendsDrawer';
 import { useFriends } from '@/hooks/useFriends';
 import { LobbyChat } from '@/components/play/LobbyChat';
 import dynamic from 'next/dynamic';
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
 
 const VoiceChatWidget = dynamic(
     () => import('@/components/group/VoiceChatWidget').then((mod) => mod.VoiceChatWidget),
@@ -215,12 +216,7 @@ export default function LobbyPage() {
         </div>
     );
 
-    if (!room) return (
-        <div className="min-h-screen bg-pw-surface flex flex-col items-center justify-center">
-            <FaSpinner className="text-4xl text-pw-indigo animate-spin mb-4" />
-            <p className="text-pw-violet font-bold uppercase tracking-widest text-sm animate-pulse">Connecting to Lobby...</p>
-        </div>
-    );
+    if (!room) return <InteractiveLoading message="Connecting to Lobby..." />;
 
     const isHost = localStorage.getItem(`room_host_${roomId}`) === 'true';
     const playersList = Object.values(room.players || {});
