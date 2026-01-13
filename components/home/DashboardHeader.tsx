@@ -99,7 +99,7 @@ export const DashboardHeader = () => {
     }
 
     return (
-        <div className="mb-6 md:mb-8">
+        <div className="mb-2 md:mb-4">
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
