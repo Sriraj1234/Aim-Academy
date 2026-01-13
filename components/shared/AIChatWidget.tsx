@@ -99,6 +99,50 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, streamingText, loading]);
 
+    // --- PERSISTENCE LOGIC START ---
+    const getStorageKey = useCallback(() => {
+        if (!userProfile?.uid) return null;
+        return `aim_buddy_chat_history_${userProfile.uid}`;
+    }, [userProfile?.uid]);
+
+    // Load from LocalStorage on mount (or user change)
+    useEffect(() => {
+        const key = getStorageKey();
+        if (key) {
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    // Convert date strings back to Date objects
+                    const hydrated = parsed.map((m: any) => ({
+                        ...m,
+                        timestamp: new Date(m.timestamp)
+                    }));
+                    setMessages(hydrated);
+                } catch (e) {
+                    console.error("Failed to load chat history", e);
+                }
+            }
+        }
+    }, [getStorageKey]);
+
+    // Save to LocalStorage on message update
+    useEffect(() => {
+        const key = getStorageKey();
+        if (key && messages.length > 0) {
+            localStorage.setItem(key, JSON.stringify(messages));
+        }
+    }, [messages, getStorageKey]);
+
+    const handleClearChat = () => {
+        const key = getStorageKey();
+        if (key) localStorage.removeItem(key);
+        setMessages([]);
+        setInput('');
+        try { play('click'); } catch { }
+    };
+    // --- PERSISTENCE LOGIC END ---
+
     // Focus input when opened
     useEffect(() => {
         if (isOpen) {
@@ -410,12 +454,21 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     </span>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-500"
-                            >
-                                <FaTimes className="text-sm" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleClearChat}
+                                    className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 text-xs font-bold transition-colors flex items-center gap-1"
+                                    title="Start New Chat"
+                                >
+                                    <FaTimes className="text-[10px]" /> Clear
+                                </button>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-500"
+                                >
+                                    <FaTimes className="text-sm" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Messages */}
@@ -600,7 +653,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 </motion.div>
                             )}
 
-                            {loading && !streamingText && (
+                            {/* Loading Indicator (When fetching but not yet streaming) */}
+                            {loading && !streamingText && !currentStatus && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
