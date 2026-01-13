@@ -77,6 +77,35 @@ const withPWA = require("@ducanh2912/next-pwa").default({
     // Runtime caching for API routes and external resources
     runtimeCaching: [
       {
+        // 1. DATA & API: Network First (Freshness Priority)
+        // We want real-time features (Social Hub, Quiz Results) to always look for new data.
+        urlPattern: /^https:\/\/padhaku\.co\.in\/api\/.*/i,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'api-cache',
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60 * 24, // 1 day fallback
+          },
+          networkTimeoutSeconds: 10, // Wait 10s for network, then use cache
+        },
+      },
+      {
+        // 2. PAGES (Next.js Data): Network First
+        // Ensures verify/result pages are fresh.
+        urlPattern: /\/_next\/data\/.*/i,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'next-data',
+          expiration: {
+            maxEntries: 32,
+            maxAgeSeconds: 60 * 60 * 24, // 24 hours
+          },
+        },
+      },
+      {
+        // 3. FONTS: Cache First (Stability)
+        // These never change, so we lock them in cache forever.
         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
         handler: 'CacheFirst',
         options: {
@@ -93,8 +122,10 @@ const withPWA = require("@ducanh2912/next-pwa").default({
         },
       },
       {
+        // 4. IMAGES: Stale While Revalidate (Speed)
+        // Show cached image instantly, check for update in background.
         urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif|ico)$/i,
-        handler: 'CacheFirst',
+        handler: 'StaleWhileRevalidate',
         options: {
           cacheName: 'images',
           expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
@@ -104,6 +135,4 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   },
 });
 
-// Export without PWA wrapper for now to fix dev server error
-export default nextConfig;
-// export default withPWA(nextConfig);
+export default withPWA(nextConfig);
