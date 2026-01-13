@@ -36,8 +36,10 @@ export const MediaUploader = ({ onUploadSuccess, folder = 'padhaku_notes' }: Med
             if (response.ok && data.url) {
                 console.log("✅ PDF Upload Success:", data);
                 setUploadedUrl(data.url);
-                setResult({ info: { resource_type: 'raw', format: 'pdf', secure_url: data.url } });
-                onUploadSuccess(data.url, 'raw');
+                // Use the type returned from API (should be 'image' now for PDFs)
+                const resType = data.type || 'raw';
+                setResult({ info: { resource_type: resType, format: 'pdf', secure_url: data.url } });
+                onUploadSuccess(data.url, resType);
             } else {
                 console.error("❌ PDF Upload Failed:", data.error);
                 alert("PDF upload failed: " + (data.error || 'Unknown error'));
@@ -58,8 +60,8 @@ export const MediaUploader = ({ onUploadSuccess, folder = 'padhaku_notes' }: Med
                     type="button"
                     onClick={() => setUploadType('image')}
                     className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${uploadType === 'image'
-                            ? 'bg-pw-indigo text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-pw-indigo text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     🖼️ Image
@@ -68,8 +70,8 @@ export const MediaUploader = ({ onUploadSuccess, folder = 'padhaku_notes' }: Med
                     type="button"
                     onClick={() => setUploadType('pdf')}
                     className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${uploadType === 'pdf'
-                            ? 'bg-red-500 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     📄 PDF
@@ -81,8 +83,8 @@ export const MediaUploader = ({ onUploadSuccess, folder = 'padhaku_notes' }: Med
                 <div
                     onClick={() => !uploading && pdfInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all group ${uploading
-                            ? 'border-gray-300 bg-gray-50'
-                            : 'border-red-300 hover:bg-red-50'
+                        ? 'border-gray-300 bg-gray-50'
+                        : 'border-red-300 hover:bg-red-50'
                         }`}
                 >
                     <input
