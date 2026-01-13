@@ -162,15 +162,7 @@ export const NotesSection = () => {
                                 <p className="text-xs text-gray-500">{selectedNote.subject}</p>
                             </div>
                             <div className="flex gap-2">
-                                <a
-                                    href={selectedNote.pdfUrl}
-                                    download
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-4 py-2 bg-pw-indigo text-white text-sm font-bold rounded-lg hover:bg-pw-violet transition-colors flex items-center gap-2"
-                                >
-                                    <FaDownload /> Download
-                                </a>
+                                {/* Download button removed per user request */}
                                 <button
                                     onClick={() => setSelectedNote(null)}
                                     className="p-2 hover:bg-gray-200 rounded-lg text-gray-500"
