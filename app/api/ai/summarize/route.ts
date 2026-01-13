@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { performImageSearch } from '@/lib/search';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -51,90 +52,97 @@ export async function POST(request: NextRequest) {
                 languageInstruction = 'Use Hinglish (Hindi-English mix) for better understanding.';
         }
 
-        // === Web Research Phase ===
+        // === Web & Image Research Phase ===
         let webContext = '';
         let sources: string[] = [];
+        let images: any[] = [];
 
         if (body.useWebResearch) {
             try {
-                const searchQuery = `${body.chapter} ${body.subject} Class ${body.classLevel || '10'} notes explanation`;
-                const searchRes = await fetch(`${request.nextUrl.origin}/api/search`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: searchQuery, type: 'text' }),
-                    signal: AbortSignal.timeout(8000) // 8 second timeout
-                });
+                const searchQuery = `${body.chapter} ${body.subject} Class ${body.classLevel || '10'} notes`;
 
-                if (searchRes.ok) {
-                    const searchData = await searchRes.json();
-                    if (searchData.results && searchData.results.length > 0) {
-                        const snippets: WebSnippet[] = searchData.results.slice(0, 5);
+                // Run Text and Image Search in Parallel
+                const [searchRes, imageRes] = await Promise.all([
+                    fetch(`${request.nextUrl.origin}/api/search`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: searchQuery + " explanation", type: 'text' }),
+                        signal: AbortSignal.timeout(8000)
+                    }).then(res => res.ok ? res.json() : null).catch(() => null),
 
-                        webContext = `
---- WEB RESEARCH CONTEXT ---
-The following information was gathered from the web. Use this to enhance your summary with accurate, up-to-date details:
-${snippets.map((s, i) => `[${i + 1}] ${s.title}: ${s.description || ''}`).join('\n')}
---- END WEB CONTEXT ---
-`;
-                        sources = snippets.map(s => s.url).filter(Boolean);
-                    }
+                    performImageSearch(searchQuery + " diagram chart").catch(() => [])
+                ]);
+
+                // Process Text Results
+                if (searchRes && searchRes.results?.length > 0) {
+                    const snippets: WebSnippet[] = searchRes.results.slice(0, 4);
+                    webContext = `
+--- WEB CONTEXT (Real-time Data) ---
+${snippets.map((s: WebSnippet, i: number) => `[${i + 1}] ${s.title}: ${s.description}`).join('\n')}
+--- END WEB CONTEXT ---`;
+                    sources = snippets.map((s: WebSnippet) => s.url);
                 }
+
+                // Process Image Results
+                if (imageRes && imageRes.length > 0) {
+                    images = imageRes.slice(0, 6); // Take top 6 images
+                }
+
             } catch (e) {
-                console.log('Web research failed, continuing without:', e);
+                console.log('Research failed:', e);
             }
         }
 
-        const systemPrompt = `You are an expert teacher creating DETAILED, COMPREHENSIVE revision notes for ${body.name ? body.name + ', a ' : ''}${body.board || 'Indian board'} ${body.classLevel || 'Class 10'} student.
+        const systemPrompt = `You are a World-Class Educator creating PREMIUM REVISION NOTES for ${body.name || 'Student'} (${body.classLevel || 'Class 10'}, ${body.board || 'CBSE'}).
 
-Create thorough, in-depth summaries that explain concepts clearly and help with exam preparation.
+GOAL: create notes so good that the student doesn't need to open their textbook.
 
-Rules:
-1. Address the student by name (${body.name || 'Student'}) occasionally to keep them engaged.
-2. Provide DETAILED explanations for each key point. Be thorough, not brief.
-3. Include practical examples and real-world applications where relevant.
-4. Use bullet points but ensure each point has a proper explanation.
-5. Keep definitions clear, include examples, and explain WHY things work the way they do.
-6. Adapt language complexity to Class ${body.classLevel || '10'}.
+STRUCTURE (JSON):
+{
+    "title": "Creative Chapter Title",
+    "keyPoints": ["**Bold Concept**: Detailed explanation...", ...],
+    "definitions": [{"term": "Term", "meaning": "Simple definition + Real life example"}, ...],
+    "formulas": ["Formula = ... (Variables explained)"],
+    "importantDates": [{"event": "Event", "date": "Date"}],
+    "mnemonics": ["Funny/Easy memory trick"],
+    "examTips": ["Common mistake to avoid", "Hot topic for exams"]
+}
+
+RULES:
+1. **Depth**: Don't just list points. EXPLAIN them. Use 2-3 sentences per point.
+2. **Formatting**: Use Markdown (**bold**, *italics*) inside the strings to highlight keywords.
+3. **Tone**: Encouraging, academic but accessible.
+4. **Context**: Use the provided Web Context if available for latest info.
 ${languageInstruction}
 ${webContext}
 
-Format your response as JSON with this structure:
-{
-    "title": "Chapter title",
-    "keyPoints": ["Point 1 with detailed explanation", "Point 2 with detailed explanation", ...],
-    "definitions": [{"term": "Term", "meaning": "Detailed definition with example"}, ...],
-    "formulas": ["Formula 1 with explanation", "Formula 2 with explanation", ...],
-    "importantDates": [{"event": "Event", "date": "Date"}, ...],
-    "mnemonics": ["Memory trick 1 with explanation", ...],
-    "examTips": ["Tip 1 specific to this chapter", "Tip 2", ...]
-}
+Format as JSON. Response must be ONLY valid JSON.
+`;
 
-Include only relevant sections. For science chapters include formulas, for history include dates, etc.
-Make each key point INFORMATIVE and EXAM-FOCUSED.`;
 
         const userPrompt = `Create comprehensive revision notes for:
-Subject: ${body.subject}
-Chapter: ${body.chapter}
-Class: ${body.classLevel || '10'}
-Board: ${body.board || 'CBSE/BSEB'}
+            Subject: ${body.subject}
+        Chapter: ${body.chapter}
+        Class: ${body.classLevel || '10'}
+        Board: ${body.board || 'CBSE/BSEB'}
 
 Focus on:
-- ALL key concepts students must remember for exams
-- Important definitions with examples
-- Formulas and their applications (if applicable)
-- Important dates/events (if applicable)
-- Memory tricks that actually help
-- Specific exam tips for this chapter
+        - ALL key concepts students must remember for exams
+            - Important definitions with examples
+            - Formulas and their applications(if applicable)
+            - Important dates / events(if applicable)
+            - Memory tricks that actually help
+                - Specific exam tips for this chapter
 
 IMPORTANT:
-1. Be DETAILED and COMPREHENSIVE - this should be enough for complete revision
+            1. Be DETAILED and COMPREHENSIVE - this should be enough for complete revision
 2. Include examples wherever possible
-3. Return ONLY the JSON, no markdown formatting.`;
+        3. Return ONLY the JSON, no markdown formatting.`;
 
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Authorization': `Bearer ${GROQ_API_KEY} `,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -179,6 +187,7 @@ IMPORTANT:
             success: true,
             summary,
             sources: body.useWebResearch ? sources : undefined,
+            images: body.useWebResearch ? images : undefined, // Return images
             metadata: {
                 subject: body.subject,
                 chapter: body.chapter,
