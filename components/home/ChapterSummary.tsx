@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaBook, FaTimes, FaSpinner, FaLightbulb, FaCalculator, FaCalendarAlt, FaBrain, FaGraduationCap, FaGlobe, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaBook, FaTimes, FaSpinner, FaLightbulb, FaCalculator, FaCalendarAlt, FaBrain, FaGraduationCap, FaGlobe, FaExternalLinkAlt, FaImage, FaMagic } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
+import ReactMarkdown from 'react-markdown';
 
 interface Summary {
     title: string;
@@ -36,6 +37,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
     const [language, setLanguage] = useState<'english' | 'hindi' | 'hinglish'>('hinglish');
     const [useWebResearch, setUseWebResearch] = useState(false);
     const [sources, setSources] = useState<string[]>([]);
+    const [images, setImages] = useState<any[]>([]);
 
     const generateSummary = async () => {
         if (!subject || !chapter.trim()) {
@@ -46,6 +48,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
         setLoading(true);
         setError('');
         setSummary(null);
+        setImages([]);
 
         try {
             const response = await fetch('/api/ai/summarize', {
@@ -54,7 +57,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                 body: JSON.stringify({
                     subject,
                     chapter,
-                    language, // Send selected language
+                    language,
                     classLevel: userProfile?.class || '10',
                     board: userProfile?.board || 'CBSE',
                     name: userProfile?.displayName,
@@ -66,9 +69,8 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
 
             if (data.success && data.summary) {
                 setSummary(data.summary);
-                if (data.sources) {
-                    setSources(data.sources);
-                }
+                if (data.sources) setSources(data.sources);
+                if (data.images) setImages(data.images); // Set images
             } else {
                 setError(data.error || 'Failed to generate summary');
             }
@@ -85,6 +87,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
         setSummary(null);
         setError('');
         setSources([]);
+        setImages([]);
         setLanguage('hinglish');
     };
 
@@ -95,14 +98,20 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setIsOpen(true)}
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
+                className="w-full relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-[1px] rounded-2xl shadow-xl shadow-purple-500/20"
             >
-                <FaBook className="text-xl" />
-                <div className="text-left">
-                    <p className="font-bold">Quick Revision Notes</p>
-                    <p className="text-xs opacity-80">AI-generated chapter summary</p>
+                <div className="bg-[#0f0a1f]/90 backdrop-blur-xl p-4 rounded-2xl flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <FaMagic className="text-white text-xl" />
+                    </div>
+                    <div className="text-left flex-1">
+                        <p className="font-bold text-white text-lg group-hover:text-purple-300 transition-colors">AI Notes Generator</p>
+                        <p className="text-xs text-white/60">Instant Visual Summary & Cheat-sheets</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                        <FaBook className="text-white/80" />
+                    </div>
                 </div>
-                <FaBrain className="ml-auto text-yellow-300" />
             </motion.button>
 
             {/* Modal */}
@@ -112,52 +121,51 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
                         onClick={() => { setIsOpen(false); resetState(); }}
                     >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="w-full max-w-lg bg-gradient-to-br from-[#1a1330] to-[#0f0a1f] rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+                            className="w-full max-w-2xl bg-[#0f0a1f] rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col relative"
                             onClick={(e) => e.stopPropagation()}
                         >
+                            {/* Decorative Gradients */}
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-[100px] pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
+
                             {/* Header */}
-                            <div className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 p-4 border-b border-white/10 flex items-center justify-between shrink-0">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                                        <FaBook className="text-white text-lg" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-white text-sm">Chapter Summary</h3>
-                                        <p className="text-[10px] text-white/50">AI-powered revision notes</p>
-                                    </div>
+                            <div className="p-5 border-b border-white/10 flex items-center justify-between shrink-0 bg-white/5 backdrop-blur-xl z-10">
+                                <div>
+                                    <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-xl">
+                                        AI Quick Revision
+                                    </h3>
+                                    <p className="text-[11px] text-white/50 font-medium tracking-wide uppercase">Generative Learning Engine</p>
                                 </div>
                                 <button
                                     onClick={() => { setIsOpen(false); resetState(); }}
-                                    className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"
+                                    className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
                                 >
-                                    <FaTimes className="text-white/60 text-sm" />
+                                    <FaTimes className="text-white/60" />
                                 </button>
                             </div>
 
                             {/* Content */}
-                            <div className="p-5 space-y-5 overflow-y-auto flex-1">
+                            <div className="p-6 overflow-y-auto flex-1 z-10 custom-scrollbar">
                                 {!summary ? (
-                                    <>
-                                        {/* Subject Selection */}
-                                        <div>
-                                            <label className="text-xs text-white/60 uppercase tracking-wider font-bold block mb-2">
-                                                Select Subject *
-                                            </label>
-                                            <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-6">
+                                        {/* Setup Form */}
+                                        <div className="space-y-4">
+                                            <label className="text-xs text-purple-300 font-bold uppercase tracking-wider block">Subject</label>
+                                            <div className="flex flex-wrap gap-2">
                                                 {SUBJECTS.map((s) => (
                                                     <button
                                                         key={s}
                                                         onClick={() => setSubject(s)}
-                                                        className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${subject === s
-                                                            ? 'bg-emerald-600 text-white'
-                                                            : 'bg-white/5 text-white/60 hover:bg-white/10'
+                                                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${subject === s
+                                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105'
+                                                            : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/5'
                                                             }`}
                                                     >
                                                         {s}
@@ -166,236 +174,232 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                             </div>
                                         </div>
 
-                                        {/* Chapter Input */}
-                                        <div>
-                                            <label className="text-xs text-white/60 uppercase tracking-wider font-bold block mb-2">
-                                                Chapter Name *
-                                            </label>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-purple-300 font-bold uppercase tracking-wider block">Chapter Name</label>
                                             <input
                                                 type="text"
                                                 value={chapter}
                                                 onChange={(e) => setChapter(e.target.value)}
-                                                placeholder="e.g., Photosynthesis, The French Revolution..."
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-emerald-500/50"
+                                                placeholder="e.g., Rise of Nationalism in Europe"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base placeholder-white/30 focus:outline-none focus:border-purple-500/50 transition-colors"
                                             />
                                         </div>
 
-                                        {/* Language Selection */}
-                                        <div>
-                                            <label className="text-xs text-white/60 uppercase tracking-wider font-bold block mb-2">
-                                                Language Mode
-                                            </label>
-                                            <div className="grid grid-cols-3 gap-2">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs text-purple-300 font-bold uppercase tracking-wider block">Language</label>
+                                                <div className="flex bg-white/5 p-1 rounded-xl">
+                                                    {['english', 'hinglish', 'hindi'].map((lang) => (
+                                                        <button
+                                                            key={lang}
+                                                            onClick={() => setLanguage(lang as any)}
+                                                            className={`flex-1 py-1.5 capitalize text-xs font-bold rounded-lg transition-all ${language === lang ? 'bg-purple-500 text-white shadow' : 'text-white/40 hover:text-white'}`}
+                                                        >
+                                                            {lang}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs text-cyan-300 font-bold uppercase tracking-wider block">Enhancements</label>
                                                 <button
-                                                    onClick={() => setLanguage('english')}
-                                                    className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${language === 'english'
-                                                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                                                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
-                                                        }`}
+                                                    onClick={() => setUseWebResearch(!useWebResearch)}
+                                                    className={`w-full py-2 px-3 rounded-xl border flex items-center gap-2 transition-all ${useWebResearch ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300' : 'bg-white/5 border-transparent text-white/40'}`}
                                                 >
-                                                    🇬🇧 English
-                                                </button>
-                                                <button
-                                                    onClick={() => setLanguage('hindi')}
-                                                    className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${language === 'hindi'
-                                                        ? 'bg-orange-500/20 border-orange-500 text-orange-400'
-                                                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
-                                                        }`}
-                                                >
-                                                    🇮🇳 Hindi
-                                                </button>
-                                                <button
-                                                    onClick={() => setLanguage('hinglish')}
-                                                    className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${language === 'hinglish'
-                                                        ? 'bg-purple-500/20 border-purple-500 text-purple-400'
-                                                        : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
-                                                        }`}
-                                                >
-                                                    🗣️ Hinglish
+                                                    <FaGlobe className={useWebResearch ? 'animate-pulse' : ''} />
+                                                    <span className="text-xs font-bold">Web & Images</span>
                                                 </button>
                                             </div>
                                         </div>
 
                                         {error && (
-                                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center text-red-400 text-sm">
+                                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs text-center font-medium">
                                                 {error}
                                             </div>
                                         )}
 
-                                        {/* Web Research Toggle */}
-                                        <div className="flex items-center gap-3 p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-                                            <button
-                                                type="button"
-                                                onClick={() => setUseWebResearch(!useWebResearch)}
-                                                className={`w-12 h-6 rounded-full transition-all relative ${useWebResearch ? 'bg-cyan-500' : 'bg-white/10'}`}
-                                            >
-                                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${useWebResearch ? 'left-7' : 'left-1'}`} />
-                                            </button>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 text-sm font-bold text-cyan-400">
-                                                    <FaGlobe /> Web Research
-                                                </div>
-                                                <p className="text-[10px] text-white/50">Fetch extra context from the web (takes longer)</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Generate Button */}
                                         <button
                                             onClick={generateSummary}
                                             disabled={loading || !subject || !chapter.trim()}
-                                            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
+                                            className="w-full py-4 mt-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
                                         >
                                             {loading ? (
                                                 <>
                                                     <FaSpinner className="animate-spin" />
-                                                    <span>Generating Notes...</span>
+                                                    <span>{useWebResearch ? 'Searching Web & Images...' : 'Generating Notes...'}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <FaBrain />
-                                                    <span>Generate Summary</span>
+                                                    <FaMagic />
+                                                    <span>Generate Visual Notes</span>
                                                 </>
                                             )}
                                         </button>
-                                    </>
+                                    </div>
                                 ) : (
                                     /* Summary Display */
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="text-lg font-bold text-white">{summary.title || chapter}</h4>
-                                            <button
-                                                onClick={resetState}
-                                                className="text-xs text-white/40 hover:text-white/60"
-                                            >
-                                                New Summary
-                                            </button>
+                                    <div className="space-y-6">
+                                        <div className="text-center pb-4 border-b border-white/10">
+                                            <h2 className="text-2xl font-bold text-white mb-1">{summary.title || chapter}</h2>
+                                            <span className="inline-block px-3 py-1 rounded-full bg-white/5 text-xs text-purple-300 font-medium">
+                                                Based on Class {userProfile?.class || 10} Syllabus
+                                            </span>
                                         </div>
 
-                                        {/* Key Points */}
+                                        {/* Image Gallery */}
+                                        {images && images.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h5 className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                                                    <FaImage /> Visuals & Diagrams
+                                                </h5>
+                                                <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar snap-x">
+                                                    {images.map((img, i) => (
+                                                        <div key={i} className="snap-center shrink-0 w-64 aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 relative group">
+                                                            <img
+                                                                src={img.original || img.url}
+                                                                alt={img.title}
+                                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                            />
+                                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
+                                                                <p className="text-xs text-white line-clamp-1">{img.title}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Key Points (Markdown) */}
                                         {summary.keyPoints?.length > 0 && (
-                                            <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
-                                                <h5 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <FaLightbulb /> Key Points
+                                            <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/20 rounded-2xl p-5">
+                                                <h5 className="text-sm font-bold text-purple-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                    <FaLightbulb className="text-yellow-400" /> Key Concepts
                                                 </h5>
-                                                <ul className="space-y-1.5">
+                                                <ul className="space-y-4">
                                                     {summary.keyPoints.map((point, i) => (
-                                                        <li key={i} className="text-sm text-white/80 flex items-start gap-2">
-                                                            <span className="text-purple-400">•</span>
-                                                            {point}
+                                                        <li key={i} className="text-[15px] leading-relaxed text-white/90 flex gap-3">
+                                                            <span className="text-purple-500 text-lg leading-none">•</span>
+                                                            <div className="prose prose-invert prose-sm max-w-none prose-p:my-0 prose-strong:text-purple-200 prose-strong:font-bold">
+                                                                <ReactMarkdown>{point}</ReactMarkdown>
+                                                            </div>
                                                         </li>
                                                     ))}
                                                 </ul>
                                             </div>
                                         )}
 
-                                        {/* Definitions */}
-                                        {summary.definitions?.length > 0 && (
-                                            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                                                <h5 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <FaGraduationCap /> Definitions
-                                                </h5>
-                                                <div className="space-y-2">
-                                                    {summary.definitions.map((def, i) => (
-                                                        <div key={i} className="text-sm">
-                                                            <span className="font-bold text-blue-300">{def.term}:</span>
-                                                            <span className="text-white/70 ml-1">{def.meaning}</span>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Definitions */}
+                                            {summary.definitions?.length > 0 && (
+                                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">
+                                                    <h5 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <FaGraduationCap /> Vocabulary
+                                                    </h5>
+                                                    <div className="space-y-3">
+                                                        {summary.definitions.map((def, i) => (
+                                                            <div key={i} className="text-sm">
+                                                                <span className="font-bold text-blue-200 block mb-1">{def.term}</span>
+                                                                <span className="text-white/70 text-xs leading-relaxed">{def.meaning}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Formulas / Dates */}
+                                            <div className="space-y-4">
+                                                {summary.formulas?.length > 0 && (
+                                                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-5">
+                                                        <h5 className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <FaCalculator /> Formulas
+                                                        </h5>
+                                                        <div className="space-y-2">
+                                                            {summary.formulas.map((formula, i) => (
+                                                                <div key={i} className="text-sm text-white/90 font-mono bg-black/30 px-3 py-2 rounded-lg border border-white/5">
+                                                                    {formula}
+                                                                </div>
+                                                            ))}
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
+                                                    </div>
+                                                )}
 
-                                        {/* Formulas */}
-                                        {summary.formulas?.length > 0 && (
-                                            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-                                                <h5 className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <FaCalculator /> Formulas
-                                                </h5>
-                                                <div className="space-y-1.5">
-                                                    {summary.formulas.map((formula, i) => (
-                                                        <p key={i} className="text-sm text-white/80 font-mono bg-black/20 px-2 py-1 rounded">
-                                                            {formula}
-                                                        </p>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Important Dates */}
-                                        {summary.importantDates?.length > 0 && (
-                                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                                                <h5 className="text-xs font-bold text-red-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <FaCalendarAlt /> Important Dates
-                                                </h5>
-                                                <div className="space-y-1.5">
-                                                    {summary.importantDates.map((item, i) => (
-                                                        <div key={i} className="text-sm flex justify-between">
-                                                            <span className="text-white/70">{item.event}</span>
-                                                            <span className="font-bold text-red-300">{item.date}</span>
+                                                {summary.importantDates?.length > 0 && (
+                                                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5">
+                                                        <h5 className="text-xs font-bold text-red-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <FaCalendarAlt /> Timeline
+                                                        </h5>
+                                                        <div className="space-y-2">
+                                                            {summary.importantDates.map((item, i) => (
+                                                                <div key={i} className="text-sm flex justify-between items-center border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                                                                    <span className="text-white/70">{item.event}</span>
+                                                                    <span className="font-bold text-red-300 bg-red-500/10 px-2 py-0.5 rounded text-xs">{item.date}</span>
+                                                                </div>
+                                                            ))}
                                                         </div>
-                                                    ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Mnemonics & Tips */}
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {summary.mnemonics?.length > 0 && (
+                                                <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-5 relative overflow-hidden">
+                                                    <div className="absolute -right-4 -top-4 text-6xl text-green-500/5 rotate-12">
+                                                        <FaBrain />
+                                                    </div>
+                                                    <h5 className="text-xs font-bold text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2 relative z-10">
+                                                        <FaBrain /> Brain Hacks (Mnemonics)
+                                                    </h5>
+                                                    <ul className="space-y-2 relative z-10">
+                                                        {summary.mnemonics.map((mnemonic, i) => (
+                                                            <li key={i} className="text-sm text-green-100/90 italic flex gap-2">
+                                                                <span>💡</span>
+                                                                {mnemonic}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
 
-                                        {/* Mnemonics */}
-                                        {summary.mnemonics?.length > 0 && (
-                                            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                                                <h5 className="text-xs font-bold text-green-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <FaBrain /> Memory Tricks
-                                                </h5>
-                                                <ul className="space-y-1.5">
-                                                    {summary.mnemonics.map((mnemonic, i) => (
-                                                        <li key={i} className="text-sm text-white/80 flex items-start gap-2">
-                                                            <span className="text-green-400">💡</span>
-                                                            {mnemonic}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
+                                            {summary.examTips?.length > 0 && (
+                                                <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-5">
+                                                    <h5 className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-3 w-full border-b border-orange-500/20 pb-2">
+                                                        Exam Strategy
+                                                    </h5>
+                                                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        {summary.examTips.map((tip, i) => (
+                                                            <li key={i} className="text-xs text-white/80 flex items-start gap-2 bg-black/20 p-2 rounded-lg">
+                                                                <span className="text-orange-400 font-bold">!</span>
+                                                                {tip}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
 
-                                        {/* Exam Tips */}
-                                        {summary.examTips?.length > 0 && (
-                                            <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4">
-                                                <h5 className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">
-                                                    📝 Exam Tips
-                                                </h5>
-                                                <ul className="space-y-1.5">
-                                                    {summary.examTips.map((tip, i) => (
-                                                        <li key={i} className="text-sm text-white/80 flex items-start gap-2">
-                                                            <span className="text-orange-400">✓</span>
-                                                            {tip}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-
-                                        {/* Web Sources */}
+                                        {/* Sources */}
                                         {sources.length > 0 && (
-                                            <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4">
-                                                <h5 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <FaGlobe /> Web Sources
-                                                </h5>
-                                                <div className="space-y-1.5">
-                                                    {sources.slice(0, 3).map((url, i) => {
-                                                        let hostname = "";
-                                                        try { hostname = new URL(url).hostname; } catch { }
-                                                        return (
-                                                            <a
-                                                                key={i}
-                                                                href={url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-xs text-cyan-300/80 hover:text-cyan-200 flex items-center gap-1 truncate"
-                                                            >
-                                                                <FaExternalLinkAlt className="text-[10px] shrink-0" />
-                                                                {hostname || url}
-                                                            </a>
-                                                        );
-                                                    })}
-                                                </div>
+                                            <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
+                                                <span className="text-[10px] text-white/40 uppercase font-bold self-center mr-2">Sources:</span>
+                                                {sources.slice(0, 3).map((url, i) => {
+                                                    let hostname = "Link";
+                                                    try { hostname = new URL(url).hostname.replace('www.', ''); } catch { }
+                                                    return (
+                                                        <a
+                                                            key={i}
+                                                            href={url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] text-white/60 transition-colors"
+                                                        >
+                                                            <FaExternalLinkAlt className="text-[8px]" />
+                                                            {hostname}
+                                                        </a>
+                                                    );
+                                                })}
                                             </div>
                                         )}
                                     </div>
