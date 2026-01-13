@@ -34,7 +34,7 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-pw-surface pb-20 font-sans selection:bg-pw-indigo selection:text-white">
             <Header />
 
-            <main className="pt-24 pb-16 md:pt-28 md:pb-20 space-y-4 md:space-y-6">
+            <main className="pt-20 pb-16 md:pt-24 md:pb-20 space-y-3 md:space-y-5">
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
