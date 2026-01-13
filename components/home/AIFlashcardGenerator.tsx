@@ -3,14 +3,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
-import { FaLightbulb, FaSpinner, FaArrowLeft, FaArrowRight, FaRedo, FaTrash, FaTimes } from 'react-icons/fa';
+import { FaLightbulb, FaSpinner, FaArrowLeft, FaArrowRight, FaRedo, FaTrash, FaTimes, FaBolt, FaLayerGroup } from 'react-icons/fa';
 import { UpgradeModal } from '../subscription/UpgradeModal';
 
 interface Flashcard {
     term: string;
     definition: string;
     example?: string;
-    imageUrl?: string;
 }
 
 interface FlashcardSet {
@@ -23,13 +22,10 @@ const STORAGE_KEY = 'aim_flashcards';
 
 export const AIFlashcardGenerator = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { userProfile, checkAccess, incrementUsage } = useAuth();
-
-    // Subscription Modal
+    const { userProfile, checkAccess } = useAuth();
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     const [topic, setTopic] = useState('');
-    const [language, setLanguage] = useState<'english' | 'hindi' | 'hinglish'>('english');
     const [loading, setLoading] = useState(false);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -37,38 +33,15 @@ export const AIFlashcardGenerator = () => {
     const [savedSets, setSavedSets] = useState<FlashcardSet[]>([]);
     const [showGenerator, setShowGenerator] = useState(true);
 
-
-
-    // Load saved flashcards from localStorage
+    // Load saved sets
     useEffect(() => {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            setSavedSets(JSON.parse(saved));
-        }
+        if (saved) setSavedSets(JSON.parse(saved));
     }, []);
-
-    // Lock body scroll when modal is open
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
-        } else {
-            document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
-        };
-    }, [isOpen]);
 
     const generateFlashcards = async () => {
         if (!topic.trim()) return;
 
-        // CHECK SUBSCRIPTION LIMIT
         const hasAccess = checkAccess('flashcards');
         if (!hasAccess) {
             setShowUpgradeModal(true);
@@ -84,13 +57,11 @@ export const AIFlashcardGenerator = () => {
                     topic,
                     count: 10,
                     classLevel: userProfile?.class || '10',
-                    board: userProfile?.board || 'CBSE',
-                    language
+                    board: userProfile?.board || 'CBSE'
                 })
             });
 
             const data = await res.json();
-
             if (data.success && data.flashcards) {
                 setFlashcards(data.flashcards);
                 setCurrentIndex(0);
@@ -98,19 +69,16 @@ export const AIFlashcardGenerator = () => {
                 setShowGenerator(false);
 
                 const newSet: FlashcardSet = {
-                    topic: topic,
+                    topic,
                     cards: data.flashcards,
                     createdAt: Date.now()
                 };
-                const updated = [newSet, ...savedSets.slice(0, 4)];
-                setSavedSets(updated);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-
-                // Track Usage
-                incrementUsage('flashcards');
+                const updatedSets = [newSet, ...savedSets].slice(0, 10);
+                setSavedSets(updatedSets);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSets));
             }
-        } catch (error) {
-            console.error('Failed to generate flashcards:', error);
+        } catch (e) {
+            console.error(e);
         } finally {
             setLoading(false);
         }
@@ -124,201 +92,41 @@ export const AIFlashcardGenerator = () => {
         setShowGenerator(false);
     };
 
-    const deleteSet = (index: number) => {
-        const updated = savedSets.filter((_, i) => i !== index);
-        setSavedSets(updated);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    const handleNext = () => {
+        if (currentIndex < flashcards.length - 1) {
+            setIsFlipped(false);
+            setTimeout(() => setCurrentIndex(prev => prev + 1), 200);
+        }
     };
 
-    const nextCard = () => {
-        setIsFlipped(false);
-        setTimeout(() => setCurrentIndex((prev) => (prev + 1) % flashcards.length), 150);
+    const handlePrev = () => {
+        if (currentIndex > 0) {
+            setIsFlipped(false);
+            setTimeout(() => setCurrentIndex(prev => prev - 1), 200);
+        }
     };
-
-    const prevCard = () => {
-        setIsFlipped(false);
-        setTimeout(() => setCurrentIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length), 150);
-    };
-
-    const resetToGenerator = () => {
-        setShowGenerator(true);
-        setFlashcards([]);
-        setTopic('');
-    };
-
-    // --- RENDER HELPERS ---
-
-    // 1. Flashcard Display (Inside Modal)
-    const renderFlashcardView = () => (
-        <div className="flex flex-col h-full">
-            {/* Header - responsive */}
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 truncate max-w-[60%]">
-                    <span className="p-1 sm:p-1.5 bg-yellow-500/20 text-yellow-400 rounded-lg shrink-0"><FaLightbulb className="text-sm sm:text-base" /></span>
-                    <span className="truncate">{topic}</span>
-                </h3>
-                <button onClick={resetToGenerator} className="text-[10px] sm:text-xs font-bold text-white/60 hover:text-white flex items-center gap-1.5 sm:gap-2 bg-white/5 hover:bg-white/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-all shrink-0">
-                    <FaRedo className="text-[8px] sm:text-[10px]" /> New
-                </button>
-            </div>
-
-            {/* Flashcard container - responsive height */}
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[250px] sm:min-h-[300px] md:min-h-[350px]">
-                {/* Card wrapper - responsive sizing */}
-                {/* Card wrapper - responsive sizing */}
-                <div
-                    className="relative w-full max-w-[280px] sm:max-w-sm md:max-w-md h-[200px] sm:h-[240px] md:h-[280px] perspective-1000 group"
-                >
-                    <motion.div
-                        className="absolute inset-0 rounded-xl sm:rounded-2xl md:rounded-[2rem] shadow-2xl transition-all duration-500 transform-gpu"
-                        animate={{ rotateY: isFlipped ? 180 : 0 }}
-                        initial={false}
-                        transition={{ duration: 0.6, type: "spring", stiffness: 200, damping: 25 }}
-                        style={{ transformStyle: 'preserve-3d' }}
-                    >
-                        {/* Front - Click to Flip */}
-                        <div
-                            onClick={() => setIsFlipped(true)}
-                            className={`absolute inset-0 bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#d946ef] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-4 sm:p-5 md:p-6 flex flex-col items-center justify-center text-white backface-hidden shadow-inner ring-1 ring-white/20 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform ${isFlipped ? 'pointer-events-none' : ''}`}
-                        >
-                            {/* Background Image */}
-                            {flashcards[currentIndex].imageUrl && (
-                                <div
-                                    className="absolute inset-0 bg-cover bg-center opacity-30"
-                                    style={{ backgroundImage: `url(${flashcards[currentIndex].imageUrl})` }}
-                                />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
-
-                            <div className="absolute top-2 sm:top-3 md:top-4 left-3 sm:left-4 text-white/60 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase z-10">Term</div>
-                            <h4 className="text-lg sm:text-xl md:text-2xl font-black text-center drop-shadow-lg leading-tight z-10 px-2">{flashcards[currentIndex].term}</h4>
-                            <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 opacity-80 text-[8px] sm:text-[9px] md:text-[10px] bg-black/30 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full z-10 backdrop-blur-sm">Tap to Flip</div>
-                        </div>
-
-                        {/* Back - Content Scrollable */}
-                        <div
-                            className={`absolute inset-0 bg-[#0f0a1f] rounded-xl sm:rounded-2xl md:rounded-[2rem] p-3 sm:p-4 md:p-5 flex flex-col text-white backface-hidden border border-white/10 shadow-xl ${!isFlipped ? 'pointer-events-none' : ''}`}
-                            style={{ transform: 'rotateY(180deg)' }}
-                        >
-                            <div className="flex justify-between items-start mb-2 shrink-0">
-                                <div className="text-emerald-400 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase">Definition</div>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setIsFlipped(false); }}
-                                    className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold text-white/70 transition-colors"
-                                >
-                                    ↩ Flip Back
-                                </button>
-                            </div>
-
-                            <div
-                                className="flex-1 overflow-y-auto overflow-x-hidden pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent select-text touch-pan-y"
-                                style={{
-                                    WebkitOverflowScrolling: 'touch',
-                                    overscrollBehavior: 'contain',
-                                }}
-                            >
-                                <p className="text-xs sm:text-sm font-medium leading-relaxed text-white/90">{flashcards[currentIndex].definition}</p>
-
-                                {flashcards[currentIndex].example && (
-                                    <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-white/10">
-                                        <div className="text-yellow-400 font-bold text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] uppercase mb-1">💡 Example</div>
-                                        <p className="text-[10px] sm:text-xs text-white/70 leading-relaxed">{flashcards[currentIndex].example}</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* Controls - responsive */}
-                <div className="flex items-center gap-4 sm:gap-5 md:gap-6 mt-5 sm:mt-6 md:mt-8">
-                    <button onClick={prevCard} className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-white/20 text-white flex items-center justify-center transition-colors active:scale-95">
-                        <FaArrowLeft className="text-sm sm:text-base" />
-                    </button>
-                    <span className="text-white/40 text-[10px] sm:text-xs font-mono">{currentIndex + 1} / {flashcards.length}</span>
-                    <button onClick={nextCard} className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform">
-                        <FaArrowRight className="text-sm sm:text-base" />
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-
-    // 2. Generator Form (Inside Modal)
-    const renderGeneratorForm = () => (
-        <div className="space-y-5">
-            <div>
-                <label className="text-xs text-white/60 uppercase tracking-wider font-bold block mb-2">Topic</label>
-                <input
-                    type="text"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    placeholder="e.g., Quantum Physics"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-purple-500/50"
-                    onKeyDown={(e) => e.key === 'Enter' && generateFlashcards()}
-                />
-            </div>
-
-            <div>
-                <label className="text-xs text-white/60 uppercase tracking-wider font-bold block mb-2">Language</label>
-                <div className="flex gap-2">
-                    {(['english', 'hindi', 'hinglish'] as const).map((lang) => (
-                        <button
-                            key={lang}
-                            onClick={() => setLanguage(lang)}
-                            className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase transition-all ${language === lang ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-                        >
-                            {lang === 'english' ? '🇬🇧 Eng' : lang === 'hindi' ? '🇮🇳 Hin' : '🌐 Hing'}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            <button
-                onClick={generateFlashcards}
-                disabled={loading || !topic.trim()}
-                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50"
-            >
-                {loading ? <FaSpinner className="animate-spin" /> : <>Generate <FaLightbulb /></>}
-            </button>
-
-            {savedSets.length > 0 && (
-                <div className="pt-4 border-t border-white/10">
-                    <p className="text-[10px] font-bold text-white/40 uppercase mb-2">Recent</p>
-                    <div className="flex flex-wrap gap-2">
-                        {savedSets.map((set, idx) => (
-                            <div key={idx} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all cursor-pointer">
-                                <button onClick={() => loadSet(set)} className="text-xs text-white/80 font-medium hover:text-white">{set.topic}</button>
-                                <button onClick={(e) => { e.stopPropagation(); deleteSet(idx); }} className="text-white/20 hover:text-red-400"><FaTrash className="text-[10px]" /></button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
 
     return (
         <>
-            <UpgradeModal
-                isOpen={showUpgradeModal}
-                onClose={() => setShowUpgradeModal(false)}
-                featureName="Flashcard Generator"
-            />
-
-            {/* Trigger Button */}
+            {/* Trigger Card */}
             <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setIsOpen(true)}
-                className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all"
+                className="w-full h-full relative overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-600 to-indigo-600 p-[1px] rounded-2xl shadow-xl shadow-cyan-500/20"
             >
-                <FaLightbulb className="text-xl" />
-                <div className="text-left">
-                    <p className="font-bold">Flashcard Generator</p>
-                    <p className="text-xs opacity-80">Memorize topics faster</p>
+                <div className="bg-[#0f0a1f]/90 backdrop-blur-xl h-full p-6 rounded-2xl flex flex-col justify-between group">
+                    <div className="flex justify-between items-start">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <FaLayerGroup className="text-white text-xl" />
+                        </div>
+                        <FaBolt className="text-cyan-400/50" />
+                    </div>
+                    <div>
+                        <h4 className="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">AI Flashcards</h4>
+                        <p className="text-xs text-white/50 mt-1">Memorize concepts instantly</p>
+                    </div>
                 </div>
-                <FaArrowRight className="ml-auto text-white/50" />
             </motion.button>
 
             {/* Modal */}
@@ -328,37 +136,170 @@ export const AIFlashcardGenerator = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
                         onClick={() => setIsOpen(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="w-full max-w-md bg-gradient-to-br from-[#1a1330] to-[#0f0a1f] rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
-                            onClick={(e) => e.stopPropagation()}
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-[#0f0a1f] w-full max-w-4xl h-[600px] rounded-3xl border border-white/10 shadow-2xl flex overflow-hidden relative"
+                            onClick={e => e.stopPropagation()}
                         >
-                            <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 p-4 border-b border-white/10 flex items-center justify-between shrink-0">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                                        <FaLightbulb className="text-white text-lg" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-white text-sm">Flashcards</h3>
-                                        <p className="text-[10px] text-white/50">AI Powered Memory Aid</p>
-                                    </div>
+                            {/* Decorative Blobs */}
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+                            {/* Sidebar - History */}
+                            <div className="w-64 border-r border-white/10 bg-white/5 p-4 hidden md:flex flex-col z-10">
+                                <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-4">Saved Decks</h3>
+                                <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
+                                    <button
+                                        onClick={() => setShowGenerator(true)}
+                                        className={`w-full text-left p-3 rounded-xl text-sm font-medium transition-colors ${showGenerator ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-white/60 hover:bg-white/5'}`}
+                                    >
+                                        + New Deck
+                                    </button>
+                                    {savedSets.map((set, i) => (
+                                        <div key={i} className="group relative">
+                                            <button
+                                                onClick={() => loadSet(set)}
+                                                className="w-full text-left p-3 rounded-xl text-sm text-white/80 hover:bg-white/5 transition-colors truncate"
+                                            >
+                                                {set.topic}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const newSets = savedSets.filter((_, idx) => idx !== i);
+                                                    setSavedSets(newSets);
+                                                    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSets));
+                                                }}
+                                                className="absolute right-2 top-3 text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <FaTrash size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
-                                <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"><FaTimes className="text-white/60" /></button>
                             </div>
 
-                            <div className={`p-5 flex-1 custom-scrollbar ${(!showGenerator && flashcards.length > 0) ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-                                {(!showGenerator && flashcards.length > 0) ? renderFlashcardView() : renderGeneratorForm()}
+                            {/* Main Content */}
+                            <div className="flex-1 p-8 flex flex-col items-center justify-center relative z-10">
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="absolute top-6 right-6 text-white/40 hover:text-white"
+                                >
+                                    <FaTimes size={24} />
+                                </button>
+
+                                {showGenerator ? (
+                                    <div className="w-full max-w-md text-center space-y-6">
+                                        <div className="w-20 h-20 mx-auto bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                                            <FaLayerGroup className="text-4xl text-white" />
+                                        </div>
+                                        <h2 className="text-3xl font-bold text-white">Create Flashcards</h2>
+                                        <p className="text-white/50">Enter any topic and AI will generate a study deck for you instantly.</p>
+
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={topic}
+                                                onChange={(e) => setTopic(e.target.value)}
+                                                placeholder="e.g. Periodic Table, French Revolution..."
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:border-cyan-500/50 transition-colors placeholder-white/20"
+                                                onKeyDown={(e) => e.key === 'Enter' && generateFlashcards()}
+                                            />
+                                            <button
+                                                onClick={generateFlashcards}
+                                                disabled={loading || !topic.trim()}
+                                                className="absolute right-2 top-2 bottom-2 px-6 bg-cyan-600 hover:bg-cyan-500 rounded-lg font-bold text-white transition-colors disabled:opacity-50 disabled:grayscale"
+                                            >
+                                                {loading ? <FaSpinner className="animate-spin" /> : 'Generate'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="w-full max-w-lg perspective-1000">
+                                        {/* Progress Bar */}
+                                        <div className="w-full h-1 bg-white/10 rounded-full mb-8 overflow-hidden">
+                                            <motion.div
+                                                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }}
+                                            />
+                                        </div>
+
+                                        {/* 3D Card */}
+                                        <div
+                                            className="relative w-full aspect-[4/3] cursor-pointer group"
+                                            onClick={() => setIsFlipped(!isFlipped)}
+                                        >
+                                            <motion.div
+                                                className="w-full h-full relative preserve-3d transition-all duration-500"
+                                                animate={{ rotateY: isFlipped ? 180 : 0 }}
+                                            >
+                                                {/* Front */}
+                                                <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-2xl backdrop-blur-sm">
+                                                    <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-4">Topic</span>
+                                                    <h3 className="text-3xl font-bold text-white">{flashcards[currentIndex]?.term}</h3>
+                                                    <p className="mt-8 text-white/40 text-sm flex items-center gap-2">
+                                                        <FaRedo className="text-xs" /> Tap to flip
+                                                    </p>
+                                                </div>
+
+                                                {/* Back */}
+                                                <div className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-2xl backdrop-blur-sm">
+                                                    <span className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Definition</span>
+                                                    <p className="text-xl text-white/90 leading-relaxed font-medium">
+                                                        {flashcards[currentIndex]?.definition}
+                                                    </p>
+                                                    {flashcards[currentIndex]?.example && (
+                                                        <div className="mt-6 bg-black/20 px-4 py-2 rounded-lg border border-white/5">
+                                                            <p className="text-sm text-cyan-200 italic">
+                                                                "{flashcards[currentIndex].example}"
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        </div>
+
+                                        {/* Controls */}
+                                        <div className="flex justify-between items-center mt-8">
+                                            <button
+                                                onClick={handlePrev}
+                                                disabled={currentIndex === 0}
+                                                className="p-4 rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 transition-colors"
+                                            >
+                                                <FaArrowLeft className="text-white" />
+                                            </button>
+                                            <span className="text-white/40 font-mono text-sm">
+                                                {currentIndex + 1} / {flashcards.length}
+                                            </span>
+                                            <button
+                                                onClick={handleNext}
+                                                disabled={currentIndex === flashcards.length - 1}
+                                                className="p-4 rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 transition-colors"
+                                            >
+                                                <FaArrowRight className="text-white" />
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setShowGenerator(true)}
+                                            className="w-full mt-6 py-3 text-sm font-bold text-white/30 hover:text-white transition-colors"
+                                        >
+                                            Start Over
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
         </>
     );
 };
-
