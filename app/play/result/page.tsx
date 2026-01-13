@@ -15,6 +15,7 @@ import { db } from '@/lib/firebase'
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore'
 import { Question, LiveQuizResult } from '@/data/types'
 import { Leaderboard } from '@/components/result/Leaderboard'
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading'
 
 const ResultContent = () => {
     const { questions: ctxQuestions, answers: ctxAnswers, calculateScore: ctxCalculateScore, startTime, endTime } = useQuiz()
@@ -208,12 +209,7 @@ const ResultContent = () => {
 
     // Loading State
     if (loading) {
-        return (
-            <div className="min-h-screen bg-pw-surface flex flex-col items-center justify-center space-y-4">
-                <FaSpinner className="animate-spin text-4xl text-pw-indigo" />
-                <p className="text-pw-violet/70 text-sm animate-pulse font-medium">Retrieving your result...</p>
-            </div>
-        )
+        return <InteractiveLoading message="Analyizng your performance..." />
     }
 
     // Live Mode - Show leaderboard even if user hasn't participated
