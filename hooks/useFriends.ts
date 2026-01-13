@@ -104,7 +104,8 @@ export const useFriends = () => {
                                 const states = connections.map(c => c.state);
                                 if (states.includes('playing')) userStatus = 'playing';
                                 else if (states.includes('in-lobby')) userStatus = 'in-lobby';
-                                else userStatus = 'online';
+                                else if (states.includes('online')) userStatus = 'online';
+                                // If status is 'away' (background), logic falls through and userStatus remains null (Offline)
                             }
                         }
                         // Fallback to Old Pattern
