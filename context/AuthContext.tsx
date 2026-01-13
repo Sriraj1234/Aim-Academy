@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth'
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
 import { UserProfile, GamificationStats } from '@/data/types'
 
 interface AuthContextType {
