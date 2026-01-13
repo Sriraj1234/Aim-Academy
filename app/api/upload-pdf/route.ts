@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: folder,
-                    resource_type: 'auto', // Allow Cloudinary to detect PDF as image/document
+                    resource_type: 'raw', // CRITICAL: Force RAW for PDFs
                     public_id: `${cleanName}_${Date.now()}`,
                 },
                 (error, result) => {
