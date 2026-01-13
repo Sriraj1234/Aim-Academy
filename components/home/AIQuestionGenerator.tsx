@@ -80,8 +80,17 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                 if (onStartQuiz) {
                     onStartQuiz(data.questions);
                 } else {
-                    localStorage.setItem('generated_quiz', JSON.stringify(data.questions));
-                    router.push('/play/quiz?mode=ai-generated');
+                    // Use user-specific key matching QuizPage expectation
+                    if (contextUser?.uid) {
+                        localStorage.setItem(`ai_quiz_questions_${contextUser.uid}`, JSON.stringify(data.questions));
+                        router.push('/play/quiz?mode=ai');
+                    } else {
+                        // Fallback for non-logged in (though auth check exists above)
+                        localStorage.setItem('generated_quiz', JSON.stringify(data.questions));
+                        // We might need to handle this in QuizPage if we want guest access, 
+                        // but for now let's stick to the auth path since auth is required above.
+                        setError('User ID missing for quiz storage');
+                    }
                 }
             } else {
                 setError(data.error || 'Failed to generate questions');
