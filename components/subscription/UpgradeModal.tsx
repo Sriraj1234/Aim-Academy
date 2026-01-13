@@ -10,8 +10,21 @@ interface UpgradeModalProps {
     featureName: string; // e.g., "AI Chat" or "Flashcards"
 }
 
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
+
 export const UpgradeModal = ({ isOpen, onClose, featureName }: UpgradeModalProps) => {
-    return (
+    // Handling SSR: we need to wait for client mount to access document
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -21,16 +34,16 @@ export const UpgradeModal = ({ isOpen, onClose, featureName }: UpgradeModalProps
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm"
+                        className="fixed inset-0 bg-black/60 z-[9998] backdrop-blur-sm pointer-events-auto"
                     />
 
                     {/* Modal */}
-                    <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative"
+                            className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative pointer-events-auto"
                         >
                             {/* Close Button */}
                             <button
@@ -98,6 +111,7 @@ export const UpgradeModal = ({ isOpen, onClose, featureName }: UpgradeModalProps
                     </div>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };
