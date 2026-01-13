@@ -3,37 +3,63 @@
 import { AIQuestionGenerator } from './AIQuestionGenerator';
 import { AIFlashcardGenerator } from './AIFlashcardGenerator';
 import { ChapterSummary } from './ChapterSummary';
+import { motion } from 'framer-motion';
+import { FaRobot, FaBolt } from 'react-icons/fa';
 
 export const AIStudyToolsGrid = () => {
     return (
-        <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-xl shadow-indigo-100/50">
-            <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                <span className="text-2xl bg-gradient-to-br from-indigo-500 to-purple-500 bg-clip-text text-transparent">🤖</span>
-                AI Study Power Tools
-                <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-100 uppercase tracking-wider font-bold">Beta</span>
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* 1. Practice Questions */}
-                <div className="h-full">
-                    <AIQuestionGenerator />
+        <div className="relative">
+            {/* Header Section */}
+            <div className="mb-8 flex items-center justify-between">
+                <div>
+                    <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <span className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/20">
+                            <FaRobot className="text-white" />
+                        </span>
+                        AI Study Power Tools
+                    </h3>
+                    <p className="text-white/40 text-sm mt-1 ml-11">
+                        Supercharge your learning with Generative AI
+                    </p>
                 </div>
-
-                {/* 2. Flashcards */}
-                <div className="h-full">
-                    <AIFlashcardGenerator />
+                <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-purple-300">
+                    <FaBolt className="text-yellow-400" />
+                    <span>Powered by Llama-3 70B</span>
                 </div>
-
-                {/* 3. Summarizer */}
-                <div className="h-full">
-                    <ChapterSummary />
-                </div>
-
             </div>
 
-            <p className="text-xs text-gray-400 text-center mt-6 font-medium">
-                Powered by Advanced AI • Helping you learn faster ⚡
-            </p>
+            {/* Premium Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* 1. Practice Questions */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="h-full"
+                >
+                    <AIQuestionGenerator />
+                </motion.div>
+
+                {/* 2. Flashcards */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="h-full"
+                >
+                    <AIFlashcardGenerator />
+                </motion.div>
+
+                {/* 3. Summarizer (Notes) */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="h-full"
+                >
+                    <ChapterSummary />
+                </motion.div>
+            </div>
         </div>
     );
 };
