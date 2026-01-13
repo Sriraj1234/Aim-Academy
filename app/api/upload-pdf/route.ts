@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
                 {
                     folder: folder,
                     resource_type: 'raw', // CRITICAL: Force RAW for PDFs
-                    public_id: `${cleanName}_${Date.now()}.pdf`, // Added .pdf extension
+                    public_id: `${cleanName}_${Date.now()}`, // Removed .pdf extension per user request
                 },
                 (error, result) => {
                     if (error) {
