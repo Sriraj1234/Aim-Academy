@@ -105,7 +105,7 @@ export const DashboardHeader = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-between gap-3 md:gap-4"
             >
-                <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                <div className="flex items-center gap-4 md:gap-6 min-w-0 flex-1">
                     {!user ? (
                         <div className="flex items-center gap-2">
                             <a href="/login" className="px-4 py-2 md:px-5 md:py-2.5 bg-pw-violet text-white font-bold rounded-xl shadow-pw-sm hover:shadow-pw-md transition-all active:scale-95 text-xs md:text-sm whitespace-nowrap">
@@ -121,7 +121,7 @@ export const DashboardHeader = () => {
                                 whileHover={{ scale: 1.05 }}
                                 className="relative shrink-0"
                             >
-                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full p-[2px] md:p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
+                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[2px] md:p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
                                     <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface">
                                         {user?.photoURL ? (
                                             <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -135,11 +135,11 @@ export const DashboardHeader = () => {
                                 </div>
                             </motion.div>
 
-                            <div className="min-w-0 flex-1">
-                                <p className="text-pw-indigo text-xs md:text-sm font-medium flex items-center gap-1" suppressHydrationWarning>
-                                    {greeting.text} {greeting.emoji}
+                            <div className="min-w-0 flex-1 flex flex-col justify-center">
+                                <p className="text-pw-indigo/80 text-xs md:text-sm font-medium flex items-center gap-1.5 mb-0.5" suppressHydrationWarning>
+                                    {greeting.text} <span className="text-sm md:text-base">{greeting.emoji}</span>
                                 </p>
-                                <h2 className="text-lg md:text-2xl font-bold text-pw-violet leading-tight truncate">
+                                <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight truncate tracking-tight">
                                     {user?.displayName || 'Scholar'}
                                 </h2>
                             </div>
