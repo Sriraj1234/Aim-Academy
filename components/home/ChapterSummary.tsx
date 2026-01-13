@@ -108,9 +108,6 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                         <p className="font-bold text-white text-lg group-hover:text-purple-300 transition-colors">AI Notes Generator</p>
                         <p className="text-xs text-white/60">Instant Visual Summary & Cheat-sheets</p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                        <FaBook className="text-white/80" />
-                    </div>
                 </div>
             </motion.button>
 
@@ -121,14 +118,14 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-md"
                         onClick={() => { setIsOpen(false); resetState(); }}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="w-full max-w-2xl bg-[#0f0a1f] rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col relative"
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="w-full max-w-2xl h-full md:h-auto md:max-h-[90vh] bg-[#0f0a1f] md:rounded-3xl border-0 md:border border-white/10 shadow-2xl overflow-hidden flex flex-col relative"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Decorative Gradients */}
@@ -136,12 +133,12 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                             <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
 
                             {/* Header */}
-                            <div className="p-5 border-b border-white/10 flex items-center justify-between shrink-0 bg-white/5 backdrop-blur-xl z-10">
+                            <div className="p-4 md:p-5 border-b border-white/10 flex items-center justify-between shrink-0 bg-white/5 backdrop-blur-xl z-10">
                                 <div>
-                                    <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-xl">
+                                    <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-lg md:text-xl">
                                         AI Quick Revision
                                     </h3>
-                                    <p className="text-[11px] text-white/50 font-medium tracking-wide uppercase">Generative Learning Engine</p>
+                                    <p className="text-[10px] md:text-[11px] text-white/50 font-medium tracking-wide uppercase">Generative Learning Engine</p>
                                 </div>
                                 <button
                                     onClick={() => { setIsOpen(false); resetState(); }}
@@ -152,7 +149,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                             </div>
 
                             {/* Content */}
-                            <div className="p-6 overflow-y-auto flex-1 z-10 custom-scrollbar">
+                            <div className="p-4 md:p-6 overflow-y-auto flex-1 z-10 custom-scrollbar">
                                 {!summary ? (
                                     <div className="space-y-6">
                                         {/* Setup Form */}
@@ -163,7 +160,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                                     <button
                                                         key={s}
                                                         onClick={() => setSubject(s)}
-                                                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${subject === s
+                                                        className={`px-3 py-2 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-medium transition-all ${subject === s
                                                             ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105'
                                                             : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/5'
                                                             }`}
@@ -185,7 +182,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                             />
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-xs text-purple-300 font-bold uppercase tracking-wider block">Language</label>
                                                 <div className="flex bg-white/5 p-1 rounded-xl">
@@ -222,7 +219,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                         <button
                                             onClick={generateSummary}
                                             disabled={loading || !subject || !chapter.trim()}
-                                            className="w-full py-4 mt-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
+                                            className="w-full py-3 md:py-4 mt-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
                                         >
                                             {loading ? (
                                                 <>
@@ -241,7 +238,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                     /* Summary Display */
                                     <div className="space-y-6">
                                         <div className="text-center pb-4 border-b border-white/10">
-                                            <h2 className="text-2xl font-bold text-white mb-1">{summary.title || chapter}</h2>
+                                            <h2 className="text-xl md:text-2xl font-bold text-white mb-1">{summary.title || chapter}</h2>
                                             <span className="inline-block px-3 py-1 rounded-full bg-white/5 text-xs text-purple-300 font-medium">
                                                 Based on Class {userProfile?.class || 10} Syllabus
                                             </span>
@@ -272,13 +269,13 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
 
                                         {/* Key Points (Markdown) */}
                                         {summary.keyPoints?.length > 0 && (
-                                            <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/20 rounded-2xl p-5">
+                                            <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/20 rounded-2xl p-4 md:p-5">
                                                 <h5 className="text-sm font-bold text-purple-300 uppercase tracking-wider mb-4 flex items-center gap-2">
                                                     <FaLightbulb className="text-yellow-400" /> Key Concepts
                                                 </h5>
                                                 <ul className="space-y-4">
                                                     {summary.keyPoints.map((point, i) => (
-                                                        <li key={i} className="text-[15px] leading-relaxed text-white/90 flex gap-3">
+                                                        <li key={i} className="text-[14px] md:text-[15px] leading-relaxed text-white/90 flex gap-3">
                                                             <span className="text-purple-500 text-lg leading-none">•</span>
                                                             <div className="prose prose-invert prose-sm max-w-none prose-p:my-0 prose-strong:text-purple-200 prose-strong:font-bold">
                                                                 <ReactMarkdown>{point}</ReactMarkdown>
@@ -292,7 +289,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {/* Definitions */}
                                             {summary.definitions?.length > 0 && (
-                                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">
+                                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 md:p-5">
                                                     <h5 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <FaGraduationCap /> Vocabulary
                                                     </h5>
@@ -310,7 +307,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                             {/* Formulas / Dates */}
                                             <div className="space-y-4">
                                                 {summary.formulas?.length > 0 && (
-                                                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-5">
+                                                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 md:p-5">
                                                         <h5 className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <FaCalculator /> Formulas
                                                         </h5>
@@ -325,7 +322,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                                 )}
 
                                                 {summary.importantDates?.length > 0 && (
-                                                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5">
+                                                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 md:p-5">
                                                         <h5 className="text-xs font-bold text-red-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <FaCalendarAlt /> Timeline
                                                         </h5>
@@ -345,7 +342,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                         {/* Mnemonics & Tips */}
                                         <div className="grid grid-cols-1 gap-4">
                                             {summary.mnemonics?.length > 0 && (
-                                                <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-5 relative overflow-hidden">
+                                                <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 md:p-5 relative overflow-hidden">
                                                     <div className="absolute -right-4 -top-4 text-6xl text-green-500/5 rotate-12">
                                                         <FaBrain />
                                                     </div>
@@ -364,7 +361,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                             )}
 
                                             {summary.examTips?.length > 0 && (
-                                                <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-5">
+                                                <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 md:p-5">
                                                     <h5 className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-3 w-full border-b border-orange-500/20 pb-2">
                                                         Exam Strategy
                                                     </h5>
