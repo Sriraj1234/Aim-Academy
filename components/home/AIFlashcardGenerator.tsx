@@ -10,6 +10,7 @@ interface Flashcard {
     term: string;
     definition: string;
     example?: string;
+    imageUrl?: string;
 }
 
 export const AIFlashcardGenerator = () => {
@@ -183,10 +184,24 @@ export const AIFlashcardGenerator = () => {
                                                 style={{ transformStyle: 'preserve-3d' }}
                                             >
                                                 {/* Front */}
-                                                <div className="absolute inset-0 backface-hidden bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 rounded-2xl shadow-xl flex flex-col items-center justify-center p-8 text-center" style={{ backfaceVisibility: 'hidden' }}>
-                                                    <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-4">Term</span>
-                                                    <h3 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">{flashcards[currentIndex]?.term}</h3>
-                                                    <p className="mt-6 text-gray-400 text-sm flex items-center gap-2">
+                                                <div className="absolute inset-0 backface-hidden bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 rounded-2xl shadow-xl flex flex-col items-center justify-center p-6 text-center overflow-hidden" style={{ backfaceVisibility: 'hidden' }}>
+                                                    <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-2 z-10">Term</span>
+
+                                                    {flashcards[currentIndex]?.imageUrl ? (
+                                                        <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                                                            <img
+                                                                src={flashcards[currentIndex].imageUrl}
+                                                                alt={flashcards[currentIndex].term}
+                                                                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ) : null}
+
+                                                    <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white z-10">{flashcards[currentIndex]?.term}</h3>
+                                                    <p className="mt-4 text-gray-400 text-xs flex items-center gap-2 z-10">
                                                         <FaRedo /> Tap to flip
                                                     </p>
                                                 </div>
