@@ -55,11 +55,13 @@ export async function POST(req: NextRequest) {
         console.log(`📤 Uploading to Cloudinary as RAW: ${cleanName}`);
 
         const result = await new Promise<any>((resolve, reject) => {
-            const safePublicId = `doc_${Date.now()}.pdf`;
+            // CRITICAL FIX: Do NOT add .pdf extension here. Cloudinary adds it automatically for 'auto/image' types.
+            // This prevents the .pdf.pdf double extension issue.
+            const safePublicId = `doc_${Date.now()}`;
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: folder,
-                    resource_type: 'auto', // Smartest option: lets Cloudinary decide (usually 'image' for PDFs)
+                    resource_type: 'auto', // Cloudinary will detect PDF and usually treat as image class
                     public_id: safePublicId,
                 },
                 (error, result) => {
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest) {
                         console.error("❌ Cloudinary Error:", error.message);
                         reject(error);
                     } else {
-                        console.log("✅ PDF Uploaded (Auto):", result?.secure_url);
+                        console.log("✅ PDF Uploaded (Fixed):", result?.secure_url);
                         resolve(result);
                     }
                 }
@@ -77,10 +79,10 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             url: result.secure_url,
-            type: result.resource_type, // Trust Cloudinary's decision
+            type: result.resource_type,
             format: result.format,
             publicId: result.public_id,
-            timestamp: Date.now() // Proof of new code
+            timestamp: Date.now()
         });
     } catch (error: any) {
         console.error("❌ PDF Upload Error:", error?.message || error);
