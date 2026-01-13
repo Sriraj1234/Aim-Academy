@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import useSWR from 'swr'
 import { Question, CategoryData } from '@/data/types'
 import { mockQuestions } from '@/data/mock'
 import { db } from '@/lib/firebase'
@@ -45,21 +46,24 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [categories, setCategories] = useState<CategoryData>({ subjects: [], chapters: {} })
 
-    // Fetch metadata on mount
+    // SWR Implementation for Metadata (Stale-While-Revalidate) ⚡
+    // This allows instant loading from cache while checking for updates
+    const fetcher = async () => {
+        const docRef = doc(db, 'metadata', 'taxonomy')
+        const docSnap = await getDoc(docRef)
+        return docSnap.exists() ? (docSnap.data() as CategoryData) : { subjects: [], chapters: {} }
+    }
+
+    const { data: swrCategories } = useSWR('taxonomy', fetcher, {
+        revalidateOnFocus: false, // Don't re-fetch just by clicking window (save data)
+        dedupingInterval: 60000 * 60, // Cache for 1 hour in memory
+    })
+
     useEffect(() => {
-        const fetchMetadata = async () => {
-            try {
-                const docRef = doc(db, 'metadata', 'taxonomy')
-                const docSnap = await getDoc(docRef)
-                if (docSnap.exists()) {
-                    setCategories(docSnap.data() as any)
-                }
-            } catch (e) {
-                console.error("Failed to fetch metadata", e)
-            }
+        if (swrCategories) {
+            setCategories(swrCategories)
         }
-        fetchMetadata()
-    }, [])
+    }, [swrCategories])
 
     const startQuiz = async (subject?: string, count: number = 20, chapter?: string) => {
         setIsLoading(true)
