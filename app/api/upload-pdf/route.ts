@@ -55,12 +55,11 @@ export async function POST(req: NextRequest) {
         console.log(`📤 Uploading to Cloudinary as RAW: ${cleanName}`);
 
         const result = await new Promise<any>((resolve, reject) => {
-            const safePublicId = `doc_${Date.now()}`;
+            const safePublicId = `doc_${Date.now()}.pdf`; // Must have extension for RAW
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: folder,
-                    resource_type: 'image', // Treat PDF as image (standard for viewable PDFs)
-                    format: 'pdf',
+                    resource_type: 'raw', // Revert to RAW for maximum compatibility
                     public_id: safePublicId,
                 },
                 (error, result) => {
@@ -78,7 +77,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             url: result.secure_url,
-            type: 'image', // Correct type for viewable PDFs
+            type: 'raw',
             format: 'pdf',
             publicId: result.public_id
         });
