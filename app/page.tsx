@@ -4,15 +4,16 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
+import { motion, Variants } from 'framer-motion'
 import { FaGraduationCap, FaMedal, FaRocket, FaUserGraduate, FaLightbulb, FaBrain, FaUsers } from 'react-icons/fa'
 import { HiArrowRight } from 'react-icons/hi'
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import { Footer } from '@/components/shared/Footer'
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading'
 
 // Animation Variants
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -23,7 +24,7 @@ const containerVariants = {
   }
 }
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
@@ -49,13 +50,11 @@ export default function LandingPage() {
   // 1. SHOW LOADING SCREEN (For Logged In Users)
   // While checking auth OR if redirecting, show a blank/loading screen.
   // This creates the illusion of "Direct Home" for existing users.
+  // 1. SHOW LOADING SCREEN (For Logged In Users)
+  // While checking auth OR if redirecting, show a blank/loading screen.
+  // This creates the illusion of "Direct Home" for existing users.
   if (loading || (user && isRedirecting)) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-pw-surface">
-        <div className="w-16 h-16 border-4 border-pw-indigo border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-pw-indigo font-bold animate-pulse">Opening Padhaku...</p>
-      </div>
-    )
+    return <InteractiveLoading message="Opening Padhaku..." fullScreen />
   }
 
   // 2. SHOW LANDING PAGE (For Google Bot & New Users)
