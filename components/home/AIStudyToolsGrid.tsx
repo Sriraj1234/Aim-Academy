@@ -10,10 +10,10 @@ export const AIStudyToolsGrid = () => {
     return (
         <div className="relative">
             {/* Header Section */}
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <span className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/20">
+                    <h3 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
+                        <span className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/20 shrink-0">
                             <FaRobot className="text-white" />
                         </span>
                         AI Study Power Tools
@@ -22,7 +22,7 @@ export const AIStudyToolsGrid = () => {
                         Supercharge your learning with Generative AI
                     </p>
                 </div>
-                <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-purple-300">
+                <div className="self-start md:self-center flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-purple-300">
                     <FaBolt className="text-yellow-400" />
                     <span>Powered by Llama-3 70B</span>
                 </div>
