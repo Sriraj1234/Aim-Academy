@@ -8,6 +8,7 @@ import { Button } from '@/components/shared/Button'
 import { ModernOptionButton } from '@/components/quiz/ModernOptionButton'
 import { LiveLeaderboard } from '@/components/quiz/LiveLeaderboard'
 import { ModernTimer } from '@/components/quiz/ModernTimer'
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading'
 import { useQuiz } from '@/hooks/useQuiz'
 import { useTimer } from '@/hooks/useTimer'
 import { useAuth } from '@/hooks/useAuth'
@@ -117,10 +118,9 @@ export default function QuizPage() {
 
     if (isLoading || isAILoading || isSavingResult) {
         return (
-            <div className="min-h-screen bg-pw-surface flex items-center justify-center flex-col gap-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pw-indigo"></div>
-                {isSavingResult && <p className="text-pw-violet font-bold animate-pulse">Saving your progress...</p>}
-            </div>
+            <InteractiveLoading
+                message={isSavingResult ? "Saving your progress..." : "Preparing your challenge..."}
+            />
         )
     }
 
@@ -269,44 +269,46 @@ export default function QuizPage() {
 
             {/* Header - PW Style */}
             <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-pw-border shadow-pw-sm font-sans transition-all">
-                <div className="max-w-5xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between relative gap-2">
-                    <div className="flex items-center gap-2 md:gap-4 relative z-10 bg-white/50 backdrop-blur-sm rounded-r-xl pr-2 shrink-1 min-w-0">
+                <div className="max-w-5xl mx-auto px-3 h-16 flex items-center justify-between relative gap-2">
+                    {/* LEFT: Back & Subject */}
+                    <div className="flex items-center gap-2 relative z-10 shrink-1 min-w-0">
                         <button
                             onClick={() => router.back()}
-                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl hover:bg-pw-surface text-gray-500 transition-colors shrink-0"
+                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors shrink-0 active:scale-95"
                         >
-                            <FaChevronLeft className="text-sm md:text-base" />
+                            <FaChevronLeft className="text-sm" />
                         </button>
-                        <div className="flex flex-col text-left min-w-0">
-                            <h1 className="font-bold text-sm md:text-lg text-pw-violet leading-tight capitalize truncate">
+                        <div className="flex flex-col text-left min-w-0 max-w-[100px] sm:max-w-xs">
+                            <h1 className="font-bold text-sm text-pw-violet leading-tight capitalize truncate">
                                 {question.subject}
                             </h1>
-                            <p className="text-[10px] md:text-xs text-pw-indigo font-medium uppercase tracking-wider truncate">
+                            <p className="text-[10px] text-pw-indigo font-medium uppercase tracking-wider truncate">
                                 {question.mainSubject || question.subSubject || 'General'}
                             </p>
                         </div>
                     </div>
 
-                    {/* Timer - Flex grow to take available space but centered properly if possible, or just placed nicely */}
-                    <div className="flex-1 flex justify-center items-center min-w-0">
-                        <div className="w-20 sm:w-28 md:w-48">
-                            <ModernTimer duration={totalTime} current={timeLeft} className="w-full scale-100 origin-center" />
+                    {/* CENTER: Timer (Fixed Width to prevent layout shifts) */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                        <div className="scale-75 sm:scale-100 origin-center pointer-events-auto">
+                            <ModernTimer duration={totalTime} current={timeLeft} />
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 md:gap-3 relative z-10 bg-white/50 backdrop-blur-sm rounded-l-xl pl-2 shrink-0">
+                    {/* RIGHT: Controls */}
+                    <div className="flex items-center gap-1.5 relative z-10 shrink-0">
                         <button
                             onClick={() => toggleBookmark(question.id)}
-                            className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl transition-colors ${bookmarks.includes(question.id) ? 'bg-pw-red/10 text-pw-red' : 'bg-pw-surface text-gray-400 hover:text-pw-indigo'}`}
+                            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors active:scale-95 ${bookmarks.includes(question.id) ? 'bg-pw-red/10 text-pw-red' : 'bg-gray-50 text-gray-400 hover:text-pw-indigo'}`}
                         >
-                            {bookmarks.includes(question.id) ? <FaBookmark size={12} className="md:text-sm" /> : <FaRegBookmark size={12} className="md:text-sm" />}
+                            {bookmarks.includes(question.id) ? <FaBookmark size={14} /> : <FaRegBookmark size={14} />}
                         </button>
 
                         <button
-                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-pw-surface text-gray-600 hover:bg-pw-border transition-colors border border-pw-border"
+                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200 active:scale-95"
                             onClick={isRunning ? pauseTimer : resumeTimer}
                         >
-                            {isRunning ? <FaPause className="text-[10px] md:text-xs" /> : <FaPlay className="text-[10px] md:text-xs" />}
+                            {isRunning ? <FaPause className="text-[10px]" /> : <FaPlay className="text-[10px]" />}
                         </button>
                     </div>
                 </div>
@@ -322,23 +324,23 @@ export default function QuizPage() {
                 </div>
             </header>
 
-            <main className="pt-20 md:pt-28 px-4 md:px-4 max-w-3xl mx-auto relative z-10 pb-40 md:pb-32">
+            <main className="pt-20 px-3 md:px-4 max-w-3xl mx-auto relative z-10 pb-44 md:pb-32">
                 {/* Stats Row */}
-                <div className="flex items-center justify-between mb-4 md:mb-8 px-1">
-                    <span className="text-[10px] md:text-sm font-bold text-pw-indigo uppercase tracking-widest bg-pw-indigo/5 px-2 md:px-3 py-1 rounded-lg">
-                        Ques {currentQuestionIndex + 1} <span className="text-gray-400">/ {questions.length}</span>
+                <div className="flex items-center justify-between mb-4 md:mb-6 px-1">
+                    <span className="text-[10px] font-bold text-pw-indigo uppercase tracking-widest bg-white border border-pw-indigo/10 px-3 py-1.5 rounded-full shadow-sm">
+                        Question {currentQuestionIndex + 1} <span className="text-gray-400">/ {questions.length}</span>
                     </span>
-                    <div className="flex items-center gap-2 md:gap-3">
-                        <div className="px-2 md:px-3 py-0.5 md:py-1 rounded-md md:rounded-lg bg-green-50 text-green-700 text-[10px] md:text-xs font-bold border border-green-200 shadow-sm">
-                            +{question.marks || 1}.0
+                    <div className="flex items-center gap-2">
+                        <div className="px-2 py-1 rounded-md bg-green-50 text-green-700 text-[10px] font-bold border border-green-200 shadow-sm">
+                            +1.0
                         </div>
-                        <div className="px-2 md:px-3 py-0.5 md:py-1 rounded-md md:rounded-lg bg-red-50 text-red-700 text-[10px] md:text-xs font-bold border border-red-200 shadow-sm">
+                        <div className="px-2 py-1 rounded-md bg-red-50 text-red-700 text-[10px] font-bold border border-red-200 shadow-sm">
                             -0.25
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-pw-lg border border-pw-border mb-8 relative overflow-hidden">
+                <div className="bg-white rounded-[1.5rem] p-5 md:p-8 shadow-sm border border-pw-border mb-8 relative overflow-hidden">
                     {/* Decorative Top Accent */}
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pw-indigo via-pw-violet to-pw-indigo opacity-50" />
 
@@ -347,25 +349,22 @@ export default function QuizPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         key={currentQuestionIndex + '-text'}
-                        className="mb-6 md:mb-8 text-left"
+                        className="mb-8 text-left"
                     >
-                        <h2 className="text-xl md:text-2xl font-display font-bold text-pw-violet leading-relaxed mb-3 md:mb-6 text-left">
+                        <h2 className="text-lg md:text-2xl font-display font-medium text-gray-800 leading-relaxed mb-4 text-left">
                             {question.question}
                         </h2>
 
-                        {/* Question Meta Tags */}
-                        <div className="flex flex-wrap gap-2 mb-2">
-                            <span className="px-2 md:px-3 py-1 bg-pw-surface border border-pw-border text-pw-indigo text-[10px] md:text-xs font-bold rounded-lg uppercase tracking-wider shadow-sm">
-                                {question.difficulty}
-                            </span>
-                            <span className="px-2 md:px-3 py-1 bg-pw-surface border border-pw-border text-pw-indigo text-[10px] md:text-xs font-bold rounded-lg uppercase tracking-wider shadow-sm">
+                        {/* Question Meta Tags - simplified */}
+                        {/* <div className="flex flex-wrap gap-2 mb-2">
+                            <span className="px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 text-[10px] font-semibold rounded uppercase tracking-wider">
                                 {question.chapter}
                             </span>
-                        </div>
+                        </div> */}
                     </motion.div>
 
                     {/* Options Grid */}
-                    <div className="grid gap-2 md:gap-3">
+                    <div className="grid gap-3">
                         <AnimatePresence mode="wait">
                             {safeOptions.map((option, index) => {
                                 let correctState: boolean | null = null;
@@ -401,23 +400,24 @@ export default function QuizPage() {
 
 
 
-                {/* Floating Bottom Bar */}
-                <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-white via-white to-transparent pointer-events-none">
+                {/* Floating Bottom Bar - Optimized for Mobile */}
+                <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none pb-6">
                     <div className="max-w-3xl mx-auto pointer-events-auto">
-                        <div className="bg-white/90 backdrop-blur-md p-2 md:p-4 rounded-[1.5rem] shadow-pw-xl border border-pw-border flex items-center justify-between gap-2 md:gap-4">
+                        <div className="bg-white p-3 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-pw-border flex items-center justify-between gap-3">
 
-                            {/* Previous Button */}
+                            {/* Previous Button - Smaller on mobile */}
                             <Button
                                 variant="ghost"
                                 onClick={prevQuestion}
                                 disabled={currentQuestionIndex === 0}
-                                className="w-10 h-10 md:w-auto md:px-6 rounded-full shrink-0 flex items-center justify-center hover:bg-pw-surface"
+                                className="w-12 h-12 md:w-auto md:px-6 rounded-2xl shrink-0 flex items-center justify-center hover:bg-gray-100 text-gray-500"
+                                title="Previous"
                             >
                                 <FaStepBackward />
                                 <span className="hidden md:inline ml-2">Prev</span>
                             </Button>
 
-                            {/* Lock Answer (Center) */}
+                            {/* Lock Answer (Center) - Calls for action */}
                             <div className="flex-grow">
                                 <Button
                                     fullWidth
@@ -425,18 +425,18 @@ export default function QuizPage() {
                                     disabled={selectedOption === null && !isLocked}
                                     onClick={handleLockAnswer}
                                     className={`
-                                        rounded-xl text-sm md:text-lg shadow-lg transition-all h-10 md:h-12 font-bold
+                                        rounded-2xl text-base shadow-md transition-all h-12 font-bold uppercase tracking-wide
                                         ${isLocked
-                                            ? 'bg-pw-surface text-gray-400 cursor-not-allowed shadow-none border border-pw-border'
-                                            : 'bg-pw-indigo hover:bg-pw-violet text-white shadow-pw-indigo/30'
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200'
+                                            : 'bg-[#110c1d] hover:bg-black text-white shadow-purple-200'
                                         }
                                     `}
                                 >
-                                    {isLocked ? 'Next Question...' : 'Lock Answer'}
+                                    {isLocked ? 'Next' : 'Lock Answer'}
                                 </Button>
                             </div>
 
-                            {/* Skip Button */}
+                            {/* Skip Button - Smaller on mobile */}
                             <Button
                                 variant="secondary"
                                 onClick={() => {
@@ -444,7 +444,8 @@ export default function QuizPage() {
                                     setSelectedOption(null)
                                     skipQuestion()
                                 }}
-                                className="w-10 h-10 md:w-auto md:px-6 rounded-full md:rounded-2xl shrink-0 flex items-center justify-center text-gray-500 hover:text-gray-700"
+                                className="w-12 h-12 md:w-auto md:px-6 rounded-2xl shrink-0 flex items-center justify-center text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-100"
+                                title="Skip"
                             >
                                 <span className="hidden md:inline mr-2">Skip</span>
                                 <FaStepForward />
@@ -472,4 +473,3 @@ export default function QuizPage() {
         </div >
     )
 }
-
