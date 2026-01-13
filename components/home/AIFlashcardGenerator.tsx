@@ -13,12 +13,20 @@ interface Flashcard {
     imageUrl?: string;
 }
 
+const SUBJECTS = [
+    'Physics', 'Chemistry', 'Biology',
+    'History', 'Geography', 'Economics', 'Political Science'
+];
+
 export const AIFlashcardGenerator = () => {
     const [isOpen, setIsOpen] = useState(false);
     const { userProfile, checkAccess } = useAuth();
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
+    const [subject, setSubject] = useState('');
     const [topic, setTopic] = useState('');
+    const [language, setLanguage] = useState<'english' | 'hindi' | 'hinglish'>('hinglish');
+
     const [loading, setLoading] = useState(false);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,7 +34,7 @@ export const AIFlashcardGenerator = () => {
     const [showResult, setShowResult] = useState(false);
 
     const generateFlashcards = async () => {
-        if (!topic.trim()) return;
+        if (!topic.trim() || !subject) return;
 
         const hasAccess = checkAccess('flashcards');
         if (!hasAccess) {
@@ -36,14 +44,18 @@ export const AIFlashcardGenerator = () => {
 
         setLoading(true);
         try {
+            // Combine subject and topic for better context
+            const fullTopic = `${subject}: ${topic}`;
+
             const res = await fetch('/api/ai/flashcards', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    topic,
+                    topic: fullTopic,
                     count: 10,
                     classLevel: userProfile?.class || '10',
-                    board: userProfile?.board || 'CBSE'
+                    board: userProfile?.board || 'CBSE',
+                    language
                 })
             });
 
@@ -130,32 +142,77 @@ export const AIFlashcardGenerator = () => {
                             {/* Content */}
                             <div className="p-6 md:p-8 overflow-y-auto">
                                 {!showResult ? (
-                                    <div className="space-y-6 text-center py-8">
-                                        <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <FaLayerGroup className="text-3xl text-indigo-500" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Create Study Set</h2>
-                                            <p className="text-gray-500 dark:text-gray-400">Enter a topic and let AI create flashcards for you.</p>
+                                    <div className="space-y-6">
+                                        <div className="text-center pb-4">
+                                            <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                <FaLayerGroup className="text-2xl text-indigo-500" />
+                                            </div>
+                                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create Study Set</h2>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Select subject and topic to generate flashcards.</p>
                                         </div>
 
-                                        <div className="relative max-w-md mx-auto">
+                                        {/* Subject Selection */}
+                                        <div className="space-y-3">
+                                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subject</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {SUBJECTS.map((s) => (
+                                                    <button
+                                                        key={s}
+                                                        onClick={() => setSubject(s)}
+                                                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${subject === s
+                                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105'
+                                                            : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                                                            }`}
+                                                    >
+                                                        {s}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Topic Input */}
+                                        <div className="space-y-3">
+                                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Chapter / Topic Name</label>
                                             <input
                                                 type="text"
                                                 value={topic}
                                                 onChange={(e) => setTopic(e.target.value)}
-                                                placeholder="e.g. Newton's Laws, Cell Biology..."
-                                                className="w-full px-5 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-700 bg-transparent focus:border-indigo-500 outline-none transition-colors dark:text-white"
+                                                placeholder="e.g. Light Reflection and Refraction"
+                                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/50 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all dark:text-white font-medium"
                                                 onKeyDown={(e) => e.key === 'Enter' && generateFlashcards()}
                                             />
-                                            <button
-                                                onClick={generateFlashcards}
-                                                disabled={loading || !topic.trim()}
-                                                className="absolute right-2 top-2 bottom-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-colors disabled:opacity-50"
-                                            >
-                                                {loading ? <FaSpinner className="animate-spin" /> : 'Generate'}
-                                            </button>
                                         </div>
+
+                                        {/* Language Selection */}
+                                        <div className="space-y-3">
+                                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Language</label>
+                                            <div className="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
+                                                {['english', 'hinglish', 'hindi'].map((lang) => (
+                                                    <button
+                                                        key={lang}
+                                                        onClick={() => setLanguage(lang as any)}
+                                                        className={`flex-1 py-2 capitalize text-xs font-bold rounded-lg transition-all ${language === lang ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                                    >
+                                                        {lang}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={generateFlashcards}
+                                            disabled={loading || !topic.trim() || !subject}
+                                            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:grayscale shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
+                                        >
+                                            {loading ? (
+                                                <>
+                                                    <FaSpinner className="animate-spin" />
+                                                    <span>Generating...</span>
+                                                </>
+                                            ) : (
+                                                'Generate Flashcards'
+                                            )}
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="max-w-xl mx-auto">
@@ -184,7 +241,7 @@ export const AIFlashcardGenerator = () => {
                                                 style={{ transformStyle: 'preserve-3d' }}
                                             >
                                                 {/* Front */}
-                                                <div className="absolute inset-0 backface-hidden bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 rounded-2xl shadow-xl flex flex-col items-center justify-center p-6 text-center overflow-hidden" style={{ backfaceVisibility: 'hidden' }}>
+                                                <div className="absolute inset-0 backface-hidden bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 rounded-2xl shadow-xl flex flex-col items-center justify-center p-6 text-center overflow-y-auto custom-scrollbar" style={{ backfaceVisibility: 'hidden' }}>
                                                     <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-2 z-10">Term</span>
 
                                                     {flashcards[currentIndex]?.imageUrl ? (
@@ -208,7 +265,7 @@ export const AIFlashcardGenerator = () => {
 
                                                 {/* Back */}
                                                 <div
-                                                    className="absolute inset-0 backface-hidden bg-indigo-50 dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-2xl shadow-xl flex flex-col items-center justify-center p-8 text-center"
+                                                    className="absolute inset-0 backface-hidden bg-indigo-50 dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-2xl shadow-xl flex flex-col items-center justify-center p-8 text-center overflow-y-auto custom-scrollbar"
                                                     style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                                                 >
                                                     <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-4">Definition</span>
