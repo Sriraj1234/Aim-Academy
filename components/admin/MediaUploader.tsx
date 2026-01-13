@@ -36,10 +36,8 @@ export const MediaUploader = ({ onUploadSuccess, folder = 'padhaku_notes' }: Med
             if (response.ok && data.url) {
                 console.log("✅ PDF Upload Success:", data);
                 setUploadedUrl(data.url);
-                // Use the type returned from API (should be 'image' now for PDFs)
-                const resType = data.type || 'raw';
-                setResult({ info: { resource_type: resType, format: 'pdf', secure_url: data.url } });
-                onUploadSuccess(data.url, resType);
+                setResult({ info: { resource_type: 'raw', format: 'pdf', secure_url: data.url } });
+                onUploadSuccess(data.url, 'raw');
             } else {
                 console.error("❌ PDF Upload Failed:", data.error);
                 alert("PDF upload failed: " + (data.error || 'Unknown error'));
