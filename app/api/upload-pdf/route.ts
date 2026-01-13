@@ -55,11 +55,11 @@ export async function POST(req: NextRequest) {
         console.log(`📤 Uploading to Cloudinary as RAW: ${cleanName}`);
 
         const result = await new Promise<any>((resolve, reject) => {
-            const safePublicId = `doc_${Date.now()}.pdf`; // Must have extension for RAW
+            const safePublicId = `doc_${Date.now()}.pdf`;
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: folder,
-                    resource_type: 'raw', // Revert to RAW for maximum compatibility
+                    resource_type: 'auto', // Smartest option: lets Cloudinary decide (usually 'image' for PDFs)
                     public_id: safePublicId,
                 },
                 (error, result) => {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
                         console.error("❌ Cloudinary Error:", error.message);
                         reject(error);
                     } else {
-                        console.log("✅ PDF Uploaded:", result?.secure_url);
+                        console.log("✅ PDF Uploaded (Auto):", result?.secure_url);
                         resolve(result);
                     }
                 }
@@ -77,9 +77,10 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             url: result.secure_url,
-            type: 'raw',
-            format: 'pdf',
-            publicId: result.public_id
+            type: result.resource_type, // Trust Cloudinary's decision
+            format: result.format,
+            publicId: result.public_id,
+            timestamp: Date.now() // Proof of new code
         });
     } catch (error: any) {
         console.error("❌ PDF Upload Error:", error?.message || error);
