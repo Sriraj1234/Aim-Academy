@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
 
 export default function DiscussionsPage() {
     const { userProfile } = useAuth();
@@ -94,10 +95,7 @@ export default function DiscussionsPage() {
             {/* Discussions List */}
             <div className="max-w-4xl mx-auto px-4 py-6">
                 {loading ? (
-                    <div className="text-center py-12">
-                        <div className="w-8 h-8 border-3 border-pw-indigo border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                        <p className="text-gray-500">Loading discussions...</p>
-                    </div>
+                    <InteractiveLoading message="Loading discussions..." fullScreen={false} />
                 ) : filteredDiscussions.length === 0 ? (
                     <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-pw-border dark:border-slate-800">
                         <FaComments className="text-5xl text-gray-300 dark:text-slate-600 mx-auto mb-4" />
