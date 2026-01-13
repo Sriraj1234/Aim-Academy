@@ -185,6 +185,22 @@ export const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({ onStar
                                     />
                                 </div>
 
+                                {/* Language Selection */}
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Language</label>
+                                    <div className="flex bg-white/5 p-1 rounded-xl">
+                                        {['english', 'hinglish', 'hindi'].map((lang) => (
+                                            <button
+                                                key={lang}
+                                                onClick={() => setLanguage(lang as any)}
+                                                className={`flex-1 py-2 capitalize text-xs font-bold rounded-lg transition-all ${language === lang ? 'bg-emerald-500 text-white shadow' : 'text-white/40 hover:text-white'}`}
+                                            >
+                                                {lang}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* Difficulty & Language */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-3">
