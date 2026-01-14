@@ -18,6 +18,7 @@ import {
 import { adminDb } from '@/lib/firebase-admin';
 import { getGroqChatCompletion } from '@/lib/groq';
 import { performWebSearch, performImageSearch } from '@/lib/search';
+import { syllabusData } from '@/data/syllabusData';
 
 interface ChatMessage {
     role: 'user' | 'assistant' | 'model';
@@ -55,37 +56,39 @@ export async function POST(request: NextRequest) {
 
         // --- Fetch Syllabus Context ---
         let syllabusInfo = '';
-        let subjects: string[] = [];
-        let chapterSummary = '';
+        import { syllabusData } from '@/data/syllabusData'; // Dynamic Import Hack if needed, or better, top-level. 
+        // Note: Next.js API routes support top-level imports. We will add it to the top.
 
-        try {
-            const board = (body.context?.board || 'cbse').toLowerCase();
-            const classNum = body.context?.class || '10';
-            const taxonomyKey = `${board}_${classNum}`;
+        // Use Local Syllabus Data as Primary Source of Truth for reliability
+        if (syllabusData && syllabusData.length > 0) {
+            const subjectsList = syllabusData.map(s => s.name).join(', ');
+            syllabusInfo = `\n\n**OFFICIAL CLASS 10 BIHAR BOARD SYLLABUS:**\nSubjects: ${subjectsList}`;
 
-            const taxDoc = await adminDb.collection('metadata').doc('taxonomy').get();
-            if (taxDoc.exists) {
-                const taxonomy = taxDoc.data();
-                const syllabusData = taxonomy?.[taxonomyKey];
+            const detailedChapters = syllabusData.map(sub => {
+                const chapters = sub.chapters.map(c => c.title).join(', ');
+                return `- **${sub.name}**: ${chapters}`;
+            }).join('\n');
 
-                if (syllabusData?.subjects) {
-                    subjects = syllabusData.subjects;
-                    syllabusInfo = `\n\n**Available Subjects in Your ${body.context?.board?.toUpperCase() || 'CBSE'} Class ${classNum} Syllabus:**\n${subjects.join(', ')}`;
+            syllabusInfo += `\n\n**DETAILED CHAPTER LIST:**\n${detailedChapters}`;
+        } else {
+            // Fallback to Firestore if local is empty (Legacy logic)
+            try {
+                const board = (body.context?.board || 'cbse').toLowerCase();
+                const classNum = body.context?.class || '10';
+                const taxonomyKey = `${board}_${classNum}`;
 
-                    // Build detailed chapter list for "Full Syllabus Knowledge"
-                    if (syllabusData.chapters) {
-                        const allChapters = subjects.map(sub => {
-                            const chapters = syllabusData.chapters[sub] || [];
-                            // Format: "Physics: Light, Human Eye, Electricity..."
-                            return `**${sub}**: ${chapters.join(', ')}`;
-                        }).join('\n');
+                const taxDoc = await adminDb.collection('metadata').doc('taxonomy').get();
+                if (taxDoc.exists) {
+                    const taxonomy = taxDoc.data();
+                    const firestoreData = taxonomy?.[taxonomyKey];
 
-                        chapterSummary = `\n\n**FULL SYLLABUS (Reference This):**\n${allChapters}`;
+                    if (firestoreData?.subjects) {
+                        syllabusInfo = `\n\n**Available Subjects:**\n${firestoreData.subjects.join(', ')}`;
                     }
                 }
+            } catch (err) {
+                console.error('Failed to fetch taxonomy:', err);
             }
-        } catch (err) {
-            console.error('Failed to fetch taxonomy:', err);
         }
 
         // --- Build System Context ---
