@@ -40,7 +40,7 @@ async function countQuestions() {
 
     console.log('\n--- Counts by Board/Class/Subject (Class 12 Only) ---');
     for (const [key, count] of Object.entries(counts)) {
-        if (key.includes('_12')) {
+        if (key.includes('_12') && key.toLowerCase().includes('hindi')) {
             console.log(`${key}: ${count}`);
         }
     }
