@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaFire, FaCheckCircle, FaTrophy, FaChartLine, FaMapMarkerAlt } from 'react-icons/fa'
+import { FaFire, FaCheckCircle, FaTrophy, FaChartLine, FaMapMarkerAlt, FaLock } from 'react-icons/fa'
 import { useAuth } from '@/context/AuthContext'
 import { useEffect, useState } from 'react'
 import { collection, query, where, getCountFromServer } from 'firebase/firestore'
@@ -32,8 +32,36 @@ const useAnimatedCounter = (endValue: number, duration: number = 1500) => {
 }
 
 export const StatsOverview = () => {
-    const { userProfile } = useAuth()
+    const { user, userProfile } = useAuth()
     const [regionalRank, setRegionalRank] = useState(0)
+
+    // Check if user is logged in
+    if (!user) {
+        return (
+            <div className="relative overflow-hidden rounded-xl">
+                {/* Blurred Placeholder Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 filter blur-sm select-none opacity-50 pointer-events-none">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="bg-white/50 p-2.5 rounded-xl border border-white/50 h-16">
+                            <div className="w-8 h-8 bg-gray-200 rounded-lg mb-2" />
+                            <div className="h-4 w-12 bg-gray-200 rounded" />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Lock Overlay */}
+                <div className="absolute inset-x-0 inset-y-0 flex flex-col items-center justify-center z-10 bg-white/10 backdrop-blur-[1px]">
+                    <div className="bg-white p-2 rounded-full shadow-lg mb-2">
+                        <FaLock className="text-pw-indigo text-lg" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-600 mb-2">Track your progress</p>
+                    <a href="/login" className="px-4 py-1.5 bg-pw-indigo text-white text-xs font-bold rounded-full hover:bg-pw-violet transition-colors shadow-lg shadow-indigo-200">
+                        Login to View
+                    </a>
+                </div>
+            </div>
+        )
+    }
 
     // Real data from Firebase
     const quizzesTaken = userProfile?.stats?.quizzesTaken || 0
