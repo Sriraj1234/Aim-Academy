@@ -19,7 +19,15 @@ if (!admin.apps.length) {
 
 const db = getFirestore();
 
-// FILE DEFINITIONS
+// Map "Option A" -> index 0, etc.
+const OPTION_INDEX = {
+    'Option A': 0, 'option a': 0, 'A': 0, 'a': 0,
+    'Option B': 1, 'option b': 1, 'B': 1, 'b': 1,
+    'Option C': 2, 'option c': 2, 'C': 2, 'c': 2,
+    'Option D': 3, 'option d': 3, 'D': 3, 'd': 3,
+};
+
+// FILE DEFINITIONS with section info
 const FILES = [
     { path: 'data/Class 12th BSEB english Prose (1).xlsx', subject: 'English', section: 'Prose' },
     { path: 'data/Class 12th BSEB english Poetry.xlsx', subject: 'English', section: 'Poetry' },
@@ -28,7 +36,7 @@ const FILES = [
 ];
 
 async function uploadQuestions() {
-    console.log('Starting Class 12 BSEB Bulk Upload...');
+    console.log('Starting Class 12 BSEB Bulk Upload (Index Format)...');
     let totalUploaded = 0;
     const chapterCounts = {};
 
@@ -48,14 +56,26 @@ async function uploadQuestions() {
 
             for (const row of rows) {
                 const question = row['Question'];
-                const chapter = row['Chapter'] || sheetName; // Use sheet name as fallback chapter
+                const chapter = row['Chapter'] || sheetName;
                 const optionA = row['Option A'];
                 const optionB = row['Option B'];
                 const optionC = row['Option C'];
                 const optionD = row['Option D'];
-                const correctAnswer = row['Correct Answer'];
+                const correctAnswerRaw = row['Correct Answer'];
 
-                if (!question || !optionA) continue; // Skip invalid rows
+                if (!question || !optionA) continue;
+
+                const options = [optionA, optionB, optionC, optionD].map(o => (o || '').toString().trim());
+
+                // Convert "Option B" -> index number (0, 1, 2, 3)
+                const trimmedAnswer = (correctAnswerRaw || '').toString().trim();
+                let correctAnswer = OPTION_INDEX[trimmedAnswer];
+
+                // If not found, default to 0
+                if (correctAnswer === undefined) {
+                    correctAnswer = 0;
+                    console.warn(`    Warning: Unknown answer format "${trimmedAnswer}", defaulting to 0`);
+                }
 
                 const docRef = db.collection('questions').doc();
                 batch.set(docRef, {
@@ -64,17 +84,21 @@ async function uploadQuestions() {
                     subject: fileDef.subject,
                     section: fileDef.section,
                     chapter: chapter.trim(),
-                    question: question.trim(),
-                    options: [optionA, optionB, optionC, optionD].map(o => (o || '').toString().trim()),
-                    correctAnswer: correctAnswer ? correctAnswer.toString().trim() : '',
+                    question: question.toString().trim(),
+                    options: options,
+                    correctAnswer: correctAnswer,  // INDEX NUMBER
+                    explanation: '',
                     createdAt: FieldValue.serverTimestamp()
                 });
                 batchCount++;
 
                 // Track chapters for taxonomy
-                const key = `${fileDef.subject}_${fileDef.section}`;
-                if (!chapterCounts[key]) chapterCounts[key] = new Set();
-                chapterCounts[key].add(chapter.trim());
+                const key = `${fileDef.subject}`;
+                if (!chapterCounts[key]) chapterCounts[key] = {};
+                if (!chapterCounts[key][chapter.trim()]) {
+                    chapterCounts[key][chapter.trim()] = { name: chapter.trim(), section: fileDef.section, count: 0 };
+                }
+                chapterCounts[key][chapter.trim()].count++;
             }
 
             if (batchCount > 0) {
@@ -91,24 +115,21 @@ async function uploadQuestions() {
     console.log('\nRebuilding Taxonomy for bseb_12...');
     const taxonomyRef = db.collection('metadata').doc('taxonomy');
 
-    const taxonomyData = {
-        subjects: ['English', 'Hindi'],
-        chapters: {
-            'English': {
-                'Prose': Array.from(chapterCounts['English_Prose'] || []),
-                'Poetry': Array.from(chapterCounts['English_Poetry'] || [])
-            },
-            'Hindi': {
-                'Prose': Array.from(chapterCounts['Hindi_Prose'] || []),
-                'Poetry': Array.from(chapterCounts['Hindi_Poetry'] || [])
-            }
-        }
-    };
+    const taxonomyChapters = {};
+    for (const subject of Object.keys(chapterCounts)) {
+        taxonomyChapters[subject] = Object.values(chapterCounts[subject]);
+    }
 
-    await taxonomyRef.set({ 'bseb_12': taxonomyData }, { merge: true });
+    await taxonomyRef.set({
+        'bseb_12': {
+            subjects: Object.keys(chapterCounts),
+            chapters: taxonomyChapters
+        }
+    }, { merge: true });
+
     console.log('Taxonomy Rebuilt!');
-    console.log('Chapters found:');
-    console.log(JSON.stringify(taxonomyData.chapters, null, 2));
+    console.log('English Chapters:', taxonomyChapters['English']?.length || 0);
+    console.log('Hindi Chapters:', taxonomyChapters['Hindi']?.length || 0);
 }
 
 uploadQuestions().catch(console.error);
