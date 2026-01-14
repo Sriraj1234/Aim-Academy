@@ -123,123 +123,77 @@ export const ExamCountdown = () => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full relative overflow-hidden rounded-3xl mb-6 shadow-xl"
+            className="w-full relative overflow-hidden rounded-2xl mb-4 shadow-md group"
         >
-            {/* Background with Gradient Mesh */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#4F46E5] via-[#7C3AED] to-[#DB2777]"></div>
+            {/* Compact Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
 
-            {/* Glass Overlay Pattern */}
-            <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
-            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/20 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500/30 rounded-full blur-3xl"></div>
+            {/* Slim Progress Bar at Bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+                <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="h-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]"
+                />
+            </div>
 
-            <div className="relative z-10 p-4 md:p-6 text-white">
-                {/* Header Section */}
-                <div className="flex items-start justify-between mb-4 md:mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
-                            <FaCalendarAlt className="text-xl" />
+            <div className="relative z-10 px-4 py-3 text-white flex items-center justify-between gap-4">
+                {/* Left: Icon & Title */}
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
+                        <span className="text-xl font-bold">{timeLeft.days}</span>
+                    </div>
+                    <div>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="font-bold text-sm leading-none">Days Left</h3>
+                            <span className="text-[10px] opacity-70 font-medium uppercase tracking-wider">Board Exam</span>
                         </div>
-                        <div>
-                            <h3 className="font-bold text-lg md:text-xl leading-tight">Board Exam</h3>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] opacity-80 flex items-center gap-1">
+                                {timeLeft.hours}h {timeLeft.minutes}m
+                            </span>
                             <button
                                 onClick={() => setIsEditing(!isEditing)}
-                                className="text-xs md:text-sm text-white/80 hover:text-white flex items-center gap-1.5 mt-0.5 transition-colors group"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] hover:text-white/100 text-white/60"
                             >
-                                <span>
-                                    {examDate?.toLocaleDateString('en-IN', {
-                                        day: 'numeric',
-                                        month: 'short',
-                                        year: 'numeric'
-                                    })}
-                                </span>
-                                <FaEdit className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px]" />
+                                <FaEdit />
                             </button>
                         </div>
                     </div>
-
-                    {/* Motivation Badge */}
-                    <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/10">
-                        <FaFire className="text-orange-300 animate-pulse text-xs" />
-                        <span className="text-xs font-medium">{motivation.message}</span>
-                    </div>
                 </div>
 
-                {/* Date Editor */}
-                {isEditing && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mb-6 bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20"
-                    >
-                        <p className="text-xs text-white/70 mb-2 font-medium uppercase tracking-wide">Set Exam Date</p>
-                        <div className="flex gap-2">
+                {/* Right: Motivation or Edit Form */}
+                <div className="flex-1 flex justify-end">
+                    {isEditing ? (
+                        <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1 pr-2 border border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-right-5">
                             <input
                                 type="date"
                                 value={customDate}
                                 onChange={(e) => setCustomDate(e.target.value)}
-                                className="flex-1 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:bg-black/30 transition-colors"
+                                className="bg-transparent border-none text-xs text-white focus:ring-0 px-2 py-1 w-28"
                             />
                             <button
                                 onClick={handleSaveDate}
                                 disabled={saving}
-                                className="px-4 py-2 bg-white text-indigo-600 font-bold text-sm rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg"
+                                className="w-6 h-6 rounded-md bg-white text-indigo-600 flex items-center justify-center hover:bg-indigo-50 transition-colors"
                             >
-                                {saving ? (
-                                    <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <FaCheck />
-                                )}
-                                <span>Save</span>
+                                {saving ? <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /> : <FaCheck className="text-xs" />}
                             </button>
                         </div>
-                    </motion.div>
-                )}
-
-                {/* Counter Grid */}
-                <div className="grid grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
-                    {[
-                        { value: timeLeft.days, label: 'Days' },
-                        { value: timeLeft.hours, label: 'Hours' },
-                        { value: timeLeft.minutes, label: 'Mins' },
-                        { value: timeLeft.seconds, label: 'Secs' }
-                    ].map((item, idx) => (
-                        <div key={item.label} className="group relative">
-                            <div className="absolute inset-0 bg-white/5 rounded-2xl transform transition-transform group-hover:scale-105"></div>
-                            <div className="relative bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 md:p-4 text-center shadow-lg group-hover:bg-white/15 transition-colors">
-                                <div className="text-xl md:text-4xl font-black mb-1 font-mono tracking-tight">
-                                    {String(item.value).padStart(2, '0')}
-                                </div>
-                                <div className="text-[10px] md:text-xs font-medium text-white/60 uppercase tracking-widest">
-                                    {item.label}
-                                </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <p className="text-xs font-medium text-right hidden sm:block opacity-90 max-w-[200px] truncate">
+                                {motivation.message}
+                            </p>
+                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
+                                <FaFire className={`${motivation.color.replace('text-', 'text-')} text-orange-300 text-sm animate-pulse`} />
                             </div>
                         </div>
-                    ))}
-                </div>
-
-                {/* Progress Bar & Footer */}
-                <div className="space-y-2">
-                    <div className="flex justify-between items-end px-1">
-                        <span className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Preparation Timeline</span>
-                        <span className="text-sm font-bold">{Math.round(progressPercent)}%</span>
-                    </div>
-                    <div className="h-2.5 bg-black/20 rounded-full overflow-hidden p-[2px]">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progressPercent}%` }}
-                            transition={{ duration: 1.5, ease: "easeOut" }}
-                            className="h-full bg-gradient-to-r from-green-300 to-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]"
-                        />
-                    </div>
-
-                    {/* Mobile Only Message */}
-                    <div className="md:hidden mt-3 flex items-center justify-center gap-2 text-white/80">
-                        <FaFire className="text-orange-300 text-xs" />
-                        <span className="text-xs">{motivation.message}</span>
-                    </div>
+                    )}
                 </div>
             </div>
         </motion.div>
