@@ -175,7 +175,7 @@ Respond ONLY with the category value.`
                             { role: 'user', content: body.message }
                         ];
 
-                        const intentCheck = await getGroqChatCompletion(intentMessages, 0.1, 10);
+                        const intentCheck = await getGroqChatCompletion(intentMessages, 0.1, 10, 'llama-3.1-8b-instant');
                         const intent = intentCheck.reply.trim().toUpperCase();
 
                         // 2. Execute Tools
@@ -235,7 +235,7 @@ Respond ONLY with the category value.`
                             { role: 'user', content: body.message }
                         ];
 
-                        const groqResult = await getGroqChatCompletion(groqMessages);
+                        const groqResult = await getGroqChatCompletion(groqMessages, 0.7, 1024, 'llama-3.1-8b-instant');
 
                         if (groqResult.success && groqResult.reply) {
                             sendEvent({ text: groqResult.reply });
