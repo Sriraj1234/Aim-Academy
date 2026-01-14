@@ -99,12 +99,16 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             // and filter by Class in-memory below.
 
             if (subject) {
+                // Map UI Subject (e.g. "English Prose") to DB Subject ("English")
+                let dbSubject = subject;
+                if (subject.includes('English')) dbSubject = 'English';
+                else if (subject.includes('Hindi')) dbSubject = 'Hindi'; // Handles "Hindi Prose", "Hindi Gadya" etc.
+
                 // Robust filtering: Check both Title Case and lowercase
-                // English is 'English', Hindi is 'hindi' in DB.
                 const variants = Array.from(new Set([
-                    subject,
-                    subject.toLowerCase(),
-                    subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase()
+                    dbSubject,
+                    dbSubject.toLowerCase(),
+                    dbSubject.charAt(0).toUpperCase() + dbSubject.slice(1).toLowerCase()
                 ]));
                 constraints.push(where('subject', 'in', variants));
             }
@@ -133,6 +137,12 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
             snapshot.forEach(doc => {
                 const data = doc.data();
+
+                // IN-MEMORY FILTER: Ensure Class matches
+                // Firestore query dropped class filter to avoid index issues, so we MUST check here.
+                if (userProfile?.class && data.class && String(data.class) !== String(userProfile.class)) {
+                    return;
+                }
 
                 // Ensure we haven't already added it from wrap-around (unlikely order but safe)
                 if (!q.some(existing => existing.id === doc.id)) {
