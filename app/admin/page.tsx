@@ -58,6 +58,21 @@ export default function AdminDashboard() {
                         </div>
                     </Link>
 
+                    {/* Manage Users Card */}
+                    <Link href="/admin/users" className="group">
+                        <div className="bg-white p-8 rounded-[2rem] shadow-pw-lg border border-pw-border hover:border-pw-indigo/30 transition-all hover:-translate-y-1 group-hover:shadow-pw-xl relative overflow-hidden">
+                            <div className="absolute right-0 bottom-0 w-32 h-32 bg-teal-50 rounded-full blur-2xl -mr-8 -mb-8"></div>
+
+                            <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:bg-teal-100 transition-colors">
+                                <span className="text-3xl">👥</span>
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-800 mb-2 group-hover:text-teal-600 transition-colors">Manage Users</h3>
+                            <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                                Search for users and manually grant Pro access.
+                            </p>
+                        </div>
+                    </Link>
+
                     {/* Manage Questions Card */}
                     <Link href="/admin/questions" className="group">
                         <div className="bg-white p-8 rounded-[2rem] shadow-pw-lg border border-pw-border hover:border-pw-indigo/30 transition-all hover:-translate-y-1 group-hover:shadow-pw-xl relative overflow-hidden">
