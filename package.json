@@ -33,6 +33,8 @@
     "google-sr": "^6.0.0",
     "googlethis": "^1.8.0",
     "groq-sdk": "^0.37.0",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
     "katex": "^0.16.27",
     "next": "16.0.10",
     "next-cloudinary": "^6.17.5",
