@@ -381,9 +381,12 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
 
                             {/* Main 3D Button */}
                             <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 p-1 shadow-2xl shadow-purple-500/40">
-                                <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-                                    {/* 3D Robot Face */}
-                                    <span className="text-3xl" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>🤖</span>
+                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white/50">
+                                    <img
+                                        src="/ai-avatar/teacher-idle.png"
+                                        alt="AI Teacher"
+                                        className="w-full h-full object-cover"
+                                    />
                                 </div>
                             </div>
 
@@ -410,35 +413,35 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 {/* 3D Avatar with Thinking State */}
                                 <motion.div
                                     animate={loading ? {
-                                        rotateY: [0, 15, -15, 0],
-                                        scale: [1, 1.05, 1]
-                                    } : {}}
-                                    transition={{ repeat: loading ? Infinity : 0, duration: 1.5 }}
+                                        scale: [1, 1.05, 1],
+                                        filter: ["brightness(1)", "brightness(1.1)", "brightness(1)"]
+                                    } : {
+                                        y: [0, -3, 0],
+                                    }}
+                                    transition={{
+                                        repeat: Infinity,
+                                        duration: loading ? 1.5 : 4,
+                                        ease: "easeInOut"
+                                    }}
                                     className="relative"
                                 >
                                     {/* Outer Glow Ring */}
-                                    <div className={`absolute -inset-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-75 blur-sm ${loading ? 'animate-pulse' : ''}`} />
+                                    <div className={`absolute -inset-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-60 blur-sm ${loading ? 'animate-pulse' : ''}`} />
 
-                                    {/* Main 3D Avatar */}
-                                    <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 p-0.5 shadow-lg shadow-purple-500/30">
-                                        <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center overflow-hidden">
-                                            {/* Face with 3D depth */}
-                                            <div className="relative">
-                                                {loading ? (
-                                                    // Thinking Face
-                                                    <motion.div
-                                                        animate={{ rotate: [0, 10, -10, 0] }}
-                                                        transition={{ repeat: Infinity, duration: 2 }}
-                                                        className="text-2xl"
-                                                    >
-                                                        🤔
-                                                    </motion.div>
-                                                ) : (
-                                                    // Normal Face - Robot emoji for 3D effect
-                                                    <span className="text-2xl">🤖</span>
-                                                )}
-                                            </div>
-                                        </div>
+                                    {/* Main Avatar Image */}
+                                    <div className="relative w-12 h-12 rounded-full border-2 border-white/50 shadow-lg shadow-purple-500/30 overflow-hidden bg-white">
+                                        <AnimatePresence mode="wait">
+                                            <motion.img
+                                                key={loading ? 'thinking' : 'idle'}
+                                                src={loading ? "/ai-avatar/teacher-thinking.png" : "/ai-avatar/teacher-idle.png"}
+                                                alt="AI Teacher"
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.8 }}
+                                                transition={{ duration: 0.3 }}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </AnimatePresence>
                                     </div>
 
                                     {/* Online Indicator */}
@@ -484,12 +487,12 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-xl animate-pulse" />
 
                                         {/* Main Avatar Container */}
-                                        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border-4 border-white/20 shadow-2xl flex items-center justify-center overflow-hidden">
-                                            {/* Inner Gradient Ring */}
-                                            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20" />
-
-                                            {/* 3D Robot Face */}
-                                            <span className="text-6xl drop-shadow-lg" style={{ textShadow: '0 4px 8px rgba(0,0,0,0.3)' }}>🤖</span>
+                                        <div className="relative w-full h-full rounded-full bg-white border-4 border-white/40 shadow-2xl flex items-center justify-center overflow-hidden">
+                                            <img
+                                                src="/ai-avatar/teacher-idle.png"
+                                                alt="AI Teacher"
+                                                className="w-full h-full object-cover transform scale-110"
+                                            />
                                         </div>
 
                                         {/* Sparkle Effects */}
@@ -527,8 +530,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start items-end gap-2'}`}
                                 >
                                     {msg.role === 'assistant' && (
-                                        <div className="w-6 h-6 rounded-full overflow-hidden bg-indigo-100 border border-gray-200 shrink-0 mb-1 flex items-center justify-center">
-                                            <FaRobot className="w-4 h-4 text-indigo-600" />
+                                        <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200 shrink-0 mb-1 shadow-sm">
+                                            <img src="/ai-avatar/teacher-idle.png" alt="AI" className="w-full h-full object-cover" />
                                         </div>
                                     )}
 
@@ -637,14 +640,11 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 >
                                     {/* 3D Mini Avatar for Streaming */}
                                     <motion.div
-                                        animate={{ rotateY: [0, 15, -15, 0], scale: [1, 1.05, 1] }}
-                                        transition={{ repeat: Infinity, duration: 1 }}
-                                        className="relative shrink-0 mb-1"
+                                        animate={{ scale: [1, 1.1, 1] }}
+                                        transition={{ repeat: Infinity, duration: 1.5 }}
+                                        className="relative shrink-0 mb-1 w-8 h-8 rounded-full overflow-hidden border border-yellow-400 shadow-sm"
                                     >
-                                        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 animate-pulse blur-sm" />
-                                        <div className="relative w-7 h-7 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-yellow-400/50">
-                                            <span className="text-sm">🤔</span>
-                                        </div>
+                                        <img src="/ai-avatar/teacher-thinking.png" alt="Thinking" className="w-full h-full object-cover" />
                                     </motion.div>
                                     <div className="bg-white px-5 py-3 rounded-2xl rounded-bl-none text-sm text-gray-800 shadow-sm border border-gray-100">
                                         {streamingText}
@@ -662,20 +662,11 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 >
                                     {/* 3D Mini Avatar for Loading */}
                                     <motion.div
-                                        animate={{ rotateY: [0, 20, -20, 0] }}
+                                        animate={{ scale: [1, 1.1, 1] }}
                                         transition={{ repeat: Infinity, duration: 1.5 }}
-                                        className="relative shrink-0 mb-1"
+                                        className="relative shrink-0 mb-1 w-8 h-8 rounded-full overflow-hidden border border-indigo-400 shadow-sm"
                                     >
-                                        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse blur-sm" />
-                                        <div className="relative w-7 h-7 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-indigo-400/50">
-                                            <motion.span
-                                                animate={{ rotate: [0, 15, -15, 0] }}
-                                                transition={{ repeat: Infinity, duration: 1 }}
-                                                className="text-sm"
-                                            >
-                                                🤔
-                                            </motion.span>
-                                        </div>
+                                        <img src="/ai-avatar/teacher-thinking.png" alt="Thinking" className="w-full h-full object-cover" />
                                     </motion.div>
                                     <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-2 shadow-sm border border-gray-100">
                                         <span className="flex gap-1">
