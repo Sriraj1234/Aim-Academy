@@ -1,37 +1,76 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { HiCloudUpload, HiChartPie, HiDocumentText, HiLightningBolt, HiDuplicate } from 'react-icons/hi'
+import { HiCloudUpload, HiChartPie, HiDocumentText, HiLightningBolt, HiDuplicate, HiUsers } from 'react-icons/hi'
+import { collection, getCountFromServer } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 export default function AdminDashboard() {
+    const [stats, setStats] = useState({
+        users: 0,
+        questions: 0,
+        loading: true
+    })
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                // Fetch Users Count
+                const usersColl = collection(db, 'users');
+                const usersSnapshot = await getCountFromServer(usersColl);
+
+                // Fetch Questions Count
+                // Based on previous contexts, questions might be in 'questions' collection.
+                const questionsColl = collection(db, 'questions');
+                const questionsSnapshot = await getCountFromServer(questionsColl);
+
+                setStats({
+                    users: usersSnapshot.data().count,
+                    questions: questionsSnapshot.data().count,
+                    loading: false
+                })
+            } catch (error) {
+                console.error("Error fetching admin stats:", error);
+                setStats(s => ({ ...s, loading: false }));
+            }
+        }
+        fetchStats();
+    }, [])
+
     return (
-        <div className="min-h-screen bg-pw-surface p-8 font-sans">
+        <div className="min-h-screen font-sans">
             <div className="max-w-7xl mx-auto">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-display font-bold text-pw-violet mb-1">Admin Dashboard</h1>
-                    <p className="text-gray-500 font-medium">Welcome back, Admin. Manage your question bank and content.</p>
+                    <h1 className="text-3xl font-display font-bold text-slate-800 mb-1">Admin Dashboard</h1>
+                    <p className="text-slate-500 font-medium">Welcome back, Admin. Manage your question bank and content.</p>
                 </div>
 
-                {/* Quick Stats (Placeholder) */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                    <div className="bg-white p-6 rounded-[2rem] shadow-pw-md border border-pw-border flex items-center gap-4 hover:shadow-pw-lg transition-all">
-                        <div className="w-14 h-14 rounded-2xl bg-pw-indigo/10 flex items-center justify-center text-pw-indigo shadow-sm">
+                {/* Quick Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 mb-10">
+                    {/* Questions Stat */}
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-all group">
+                        <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
                             <HiDocumentText className="text-2xl" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Questions</p>
-                            <p className="text-3xl font-bold text-pw-violet">--</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Questions</p>
+                            <p className="text-2xl font-black text-slate-800">
+                                {stats.loading ? <span className="animate-pulse opacity-50">...</span> : stats.questions}
+                            </p>
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-[2rem] shadow-pw-md border border-pw-border flex items-center gap-4 hover:shadow-pw-lg transition-all">
-                        <div className="w-14 h-14 rounded-2xl bg-pw-violet/10 flex items-center justify-center text-pw-violet shadow-sm">
-                            <HiLightningBolt className="text-2xl" />
+                    {/* Users Stat */}
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-all group">
+                        <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                            <HiUsers className="text-2xl" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Active Users</p>
-                            <p className="text-3xl font-bold text-pw-violet">--</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Users</p>
+                            <p className="text-2xl font-black text-slate-800">
+                                {stats.loading ? <span className="animate-pulse opacity-50">...</span> : stats.users}
+                            </p>
                         </div>
                     </div>
                 </div>
