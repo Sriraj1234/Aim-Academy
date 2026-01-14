@@ -6,6 +6,8 @@ import { FaBook, FaTimes, FaSpinner, FaLightbulb, FaCalculator, FaCalendarAlt, F
 import { useAuth } from '@/context/AuthContext';
 import { UpgradeModal } from '@/components/subscription/UpgradeModal'; // Fix import path
 import ReactMarkdown from 'react-markdown';
+import { exportSummaryToPDF } from '@/lib/pdfGenerator';
+import { FaFilePdf } from 'react-icons/fa';
 
 interface Summary {
     title: string;
@@ -148,12 +150,26 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                     </h3>
                                     <p className="text-[10px] md:text-[11px] text-white/50 font-medium tracking-wide uppercase">Generative Learning Engine</p>
                                 </div>
-                                <button
-                                    onClick={() => { setIsOpen(false); resetState(); }}
-                                    className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-                                >
-                                    <FaTimes className="text-white/60" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    {summary && (
+                                        <button
+                                            onClick={() => exportSummaryToPDF( // Pass images to PDF
+                                                { ...summary, images: images ? images.map(img => ({ url: img.url || img.original, caption: img.title })) : [] },
+                                                { subject, chapter, classLevel: userProfile?.class?.toString() || '10', board: userProfile?.board || 'CBSE' }
+                                            )}
+                                            className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-bold border border-indigo-500/20 flex items-center gap-2 transition-colors"
+                                            title="Download as PDF"
+                                        >
+                                            <FaFilePdf /> <span className="hidden sm:inline">Download PDF</span>
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => { setIsOpen(false); resetState(); }}
+                                        className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                                    >
+                                        <FaTimes className="text-white/60" />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Content */}
