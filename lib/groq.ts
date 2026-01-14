@@ -141,7 +141,8 @@ export interface ChatMessage {
 export async function getGroqChatCompletion(
     messages: ChatMessage[],
     temperature: number = 0.7,
-    maxTokens: number = 1024
+    maxTokens: number = 1024,
+    model: string = 'llama-3.3-70b-versatile'
 ): Promise<{ reply: string; success: boolean; error?: string }> {
     const GROQ_API_KEY = process.env.GROQ_API_KEY;
     if (!GROQ_API_KEY) {
@@ -157,7 +158,7 @@ export async function getGroqChatCompletion(
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
+                model: model,
                 messages,
                 temperature,
                 max_tokens: maxTokens,
