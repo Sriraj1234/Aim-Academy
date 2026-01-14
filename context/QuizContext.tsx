@@ -140,8 +140,12 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
                 // IN-MEMORY FILTER: Ensure Class matches
                 // Firestore query dropped class filter to avoid index issues, so we MUST check here.
-                if (userProfile?.class && data.class && String(data.class) !== String(userProfile.class)) {
-                    return;
+                if (userProfile?.class && data.class) {
+                    const userClass = String(userProfile.class).replace(/\D/g, '');
+                    const qClass = String(data.class).replace(/\D/g, '');
+                    if (userClass && qClass && userClass !== qClass) {
+                        return;
+                    }
                 }
 
                 // Ensure we haven't already added it from wrap-around (unlikely order but safe)
