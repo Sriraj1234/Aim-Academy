@@ -1,14 +1,12 @@
-'use client'
-
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HiHome, HiUpload, HiDatabase, HiUsers, HiChartBar } from 'react-icons/hi'
+import { HiHome, HiUpload, HiDatabase, HiUsers, HiChartBar, HiMenu, HiX } from 'react-icons/hi'
 import { FaYoutube, FaPuzzlePiece, FaBell, FaUserShield, FaChalkboardTeacher, FaClock } from 'react-icons/fa'
+import { AnimatePresence, motion } from 'framer-motion'
 
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import { FaLock } from 'react-icons/fa'
 
 const AUTHORIZED_EMAILS = [
@@ -21,6 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const { user, loading } = useAuth()
     const router = useRouter()
     const [isAuthorized, setIsAuthorized] = useState(false)
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
     useEffect(() => {
         if (!loading) {
@@ -91,8 +90,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     return (
         <div className="flex min-h-screen bg-slate-50">
-            {/* Sidebar */}
-            <aside className="w-64 bg-slate-900 text-white hidden md:block border-r border-slate-800">
+            {/* Desktop Sidebar */}
+            <aside className="w-64 bg-slate-900 text-white hidden md:block border-r border-slate-800 sticky top-0 h-screen overflow-y-auto">
                 <div className="p-6">
                     <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
                         AIM Admin
@@ -110,7 +109,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${isActive
-                                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                    ? 'bg-purple-600/20 text-purple-400 border border-purple-500/20 shadow-lg shadow-purple-900/10'
                                     : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                     }`}
                             >
@@ -121,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     })}
                 </nav>
 
-                <div className="absolute bottom-0 w-64 p-4 border-t border-slate-800">
+                <div className="p-4 mt-auto border-t border-slate-800">
                     <Link href="/" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors">
                         <HiHome className="text-xl" />
                         <span className="font-semibold text-sm">Back to App</span>
@@ -129,16 +128,84 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
             </aside>
 
-            {/* Mobile Nav Overlay (Simple for now) */}
+            {/* Mobile Nav Overlay */}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
+                        />
+                        <motion.aside
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                            className="fixed inset-y-0 left-0 w-64 bg-slate-900 text-white z-50 md:hidden flex flex-col shadow-2xl"
+                        >
+                            <div className="p-6 flex justify-between items-center bg-slate-900/50">
+                                <div>
+                                    <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+                                        AIM Admin
+                                    </h1>
+                                    <p className="text-xs text-slate-400">Mobile Panel</p>
+                                </div>
+                                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white">
+                                    <HiX className="text-xl" />
+                                </button>
+                            </div>
+
+                            <nav className="flex-1 px-3 py-4 overflow-y-auto">
+                                {navItems.map((item) => {
+                                    const Icon = item.icon
+                                    const isActive = pathname === item.href
+
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${isActive
+                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                                }`}
+                                        >
+                                            <Icon className="text-xl" />
+                                            <span className="font-semibold text-sm">{item.label}</span>
+                                        </Link>
+                                    )
+                                })}
+                            </nav>
+
+                            <div className="p-4 border-t border-slate-800 bg-slate-900">
+                                <Link href="/" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                                    <HiHome className="text-xl" />
+                                    <span className="font-semibold text-sm">Back to App</span>
+                                </Link>
+                            </div>
+                        </motion.aside>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto h-screen">
-                <header className="bg-white border-b border-slate-200 p-4 md:hidden flex justify-between items-center sticky top-0 z-10">
-                    <span className="font-bold text-slate-800">AIM Admin</span>
-                    <Link href="/" className="text-sm text-purple-600 font-semibold">Exit</Link>
+            <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50">
+                <header className="bg-white border-b border-slate-200 px-4 py-3 md:hidden flex justify-between items-center sticky top-0 z-10 shadow-sm">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100"
+                        >
+                            <HiMenu className="text-2xl" />
+                        </button>
+                        <span className="font-bold text-slate-800">Admin Dashboard</span>
+                    </div>
                 </header>
 
-                <div className="p-0 md:p-2">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8">
                     {children}
                 </div>
             </main>
