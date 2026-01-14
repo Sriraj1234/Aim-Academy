@@ -262,164 +262,171 @@ export const AIFlashcardGenerator = () => {
                                                 'Generate Flashcards'
                                             )}
                                         </button>
-                                    </button>
 
                                         {/* Recent History */}
-                                {history.length > 0 && (
-                                    <div className="pt-6 border-t border-gray-100 dark:border-slate-800">
-                                        <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Recent Generations</h4>
-                                        <div className="space-y-2">
-                                            {history.map((set) => (
-                                                <button
-                                                    key={set.id}
-                                                    onClick={() => loadFromHistory(set)}
-                                                    className="w-full p-3 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-gray-200 dark:hover:border-slate-600 transition-all text-left group"
-                                                >
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-bold text-gray-700 dark:text-gray-200 text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                                                            {set.topic.split(': ')[1] || set.topic}
-                                                        </span>
-                                                        <span className="text-xs text-gray-400">{new Date(set.date).toLocaleDateString()}</span>
+                                        {history.length > 0 && (
+                                            <div className="pt-6 border-t border-gray-100 dark:border-slate-800">
+                                                <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Recent Generations</h4>
+                                                <div className="space-y-2">
+                                                    {history.map((set) => (
+                                                        <button
+                                                            key={set.id}
+                                                            onClick={() => loadFromHistory(set)}
+                                                            className="w-full p-3 rounded-lg bg-gray-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-gray-200 dark:hover:border-slate-600 transition-all text-left group"
+                                                        >
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="font-bold text-gray-700 dark:text-gray-200 text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                                                                    {set.topic.split(': ')[1] || set.topic}
+                                                                </span>
+                                                                <span className="text-xs text-gray-400">{new Date(set.date).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <div className="text-xs text-gray-400 mt-1">{set.cards.length} cards • {set.subject}</div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="max-w-xl mx-auto">
+                                        {/* Progress */}
+                                        <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                            <span>Card {currentIndex + 1} of {flashcards.length}</span>
+                                            <span>{Math.round(((currentIndex + 1) / flashcards.length) * 100)}% Completed</span>
+                                        </div>
+                                        <div className="h-2 bg-gray-100 dark:bg-slate-800 rounded-full mb-6 overflow-hidden">
+                                            <div
+                                                className="h-full bg-indigo-500 transition-all duration-300"
+                                                style={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }}
+                                            />
+                                        </div>
+
+                                        {/* Classic Flashcard - Click to Flip */}
+                                        <div
+                                            onClick={() => setIsFlipped(!isFlipped)}
+                                            className="cursor-pointer perspective-1000 group h-80 w-full"
+                                        >
+                                            <motion.div
+                                                initial={false}
+                                                animate={{ rotateY: isFlipped ? 180 : 0 }}
+                                                transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
+                                                className="relative w-full h-full preserve-3d"
+                                                style={{ transformStyle: 'preserve-3d' }}
+                                            >
+                                                {/* Front */}
+                                                <div className="absolute inset-0 backface-hidden bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden" style={{ backfaceVisibility: 'hidden' }}>
+                                                    <div className="h-full w-full overflow-y-auto custom-scrollbar">
+                                                        <div className="min-h-full flex flex-col items-center justify-center p-6 text-center">
+                                                            <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-2 shrink-0">Term</span>
+
+                                                            {flashcards[currentIndex]?.imageUrl ? (
+                                                                <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                                                                    <img
+                                                                        src={flashcards[currentIndex].imageUrl}
+                                                                        alt={flashcards[currentIndex].term}
+                                                                        className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in hover:scale-105 transition-transform"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setZoomedImage(flashcards[currentIndex].imageUrl || null);
+                                                                        }}
+                                                                        onError={(e) => {
+                                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            ) : null}
+
+                                                            <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">{flashcards[currentIndex]?.term}</h3>
+                                                            <p className="mt-4 text-gray-400 text-xs flex items-center gap-2 shrink-0">
+                                                                <FaRedo /> Tap to flip
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-xs text-gray-400 mt-1">{set.cards.length} cards • {set.subject}</div>
-                                                </button>
-                                            ))}
+                                                </div>
+
+                                                {/* Back */}
+                                                <div
+                                                    className="absolute inset-0 backface-hidden bg-indigo-50 dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-2xl shadow-xl overflow-hidden"
+                                                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                                                >
+                                                    <div className="h-full w-full overflow-y-auto custom-scrollbar">
+                                                        <div className="min-h-full flex flex-col items-center justify-center p-8 text-center">
+                                                            <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-4 shrink-0">Definition</span>
+                                                            <p className="text-lg text-gray-700 dark:text-gray-200 leading-relaxed font-medium">
+                                                                {flashcards[currentIndex]?.definition}
+                                                            </p>
+                                                            {flashcards[currentIndex]?.example && (
+                                                                <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 italic">
+                                                                    "{flashcards[currentIndex].example}"
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        </div>
+
+                                        {/* Controls */}
+                                        <div className="flex justify-between items-center mt-8">
+                                            <button
+                                                onClick={handlePrev}
+                                                disabled={currentIndex === 0}
+                                                className="p-4 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 disabled:opacity-50 transition-colors"
+                                            >
+                                                <FaArrowLeft />
+                                            </button>
+
+                                            <button
+                                                onClick={reset}
+                                                className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                            >
+                                                New Set
+                                            </button>
+
+                                            <button
+                                                onClick={handleNext}
+                                                disabled={currentIndex === flashcards.length - 1}
+                                                className="p-4 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                                            >
+                                                <FaArrowRight />
+                                            </button>
                                         </div>
                                     </div>
                                 )}
                             </div>
-                            ) : (
-                            <div className="max-w-xl mx-auto">
-                                {/* Progress */}
-                                <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
-                                    <span>Card {currentIndex + 1} of {flashcards.length}</span>
-                                    <span>{Math.round(((currentIndex + 1) / flashcards.length) * 100)}% Completed</span>
-                                </div>
-                                <div className="h-2 bg-gray-100 dark:bg-slate-800 rounded-full mb-6 overflow-hidden">
-                                    <div
-                                        className="h-full bg-indigo-500 transition-all duration-300"
-                                        style={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }}
-                                    />
-                                </div>
-
-                                {/* Classic Flashcard - Click to Flip */}
-                                <div
-                                    onClick={() => setIsFlipped(!isFlipped)}
-                                    className="cursor-pointer perspective-1000 group h-80 w-full"
-                                >
-                                    <motion.div
-                                        initial={false}
-                                        animate={{ rotateY: isFlipped ? 180 : 0 }}
-                                        transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
-                                        className="relative w-full h-full preserve-3d"
-                                        style={{ transformStyle: 'preserve-3d' }}
-                                    >
-                                        {/* Front */}
-                                        <div className="absolute inset-0 backface-hidden bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 rounded-2xl shadow-xl flex flex-col items-center justify-center p-6 text-center overflow-y-auto custom-scrollbar" style={{ backfaceVisibility: 'hidden' }}>
-                                            <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-2 z-10">Term</span>
-
-                                            {flashcards[currentIndex]?.imageUrl ? (
-                                                <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
-                                                    <img
-                                                        src={flashcards[currentIndex].imageUrl}
-                                                        alt={flashcards[currentIndex].term}
-                                                        className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in hover:scale-105 transition-transform"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setZoomedImage(flashcards[currentIndex].imageUrl || null);
-                                                        }}
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                        }}
-                                                    />
-                                                </div>
-                                            ) : null}
-
-                                            <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white z-10">{flashcards[currentIndex]?.term}</h3>
-                                            <p className="mt-4 text-gray-400 text-xs flex items-center gap-2 z-10">
-                                                <FaRedo /> Tap to flip
-                                            </p>
-                                        </div>
-
-                                        {/* Back */}
-                                        <div
-                                            className="absolute inset-0 backface-hidden bg-indigo-50 dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-2xl shadow-xl flex flex-col items-center justify-center p-8 text-center overflow-y-auto custom-scrollbar"
-                                            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                                        >
-                                            <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-4">Definition</span>
-                                            <p className="text-lg text-gray-700 dark:text-gray-200 leading-relaxed font-medium">
-                                                {flashcards[currentIndex]?.definition}
-                                            </p>
-                                            {flashcards[currentIndex]?.example && (
-                                                <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 italic">
-                                                    "{flashcards[currentIndex].example}"
-                                                </p>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                </div>
-
-                                {/* Controls */}
-                                <div className="flex justify-between items-center mt-8">
-                                    <button
-                                        onClick={handlePrev}
-                                        disabled={currentIndex === 0}
-                                        className="p-4 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 disabled:opacity-50 transition-colors"
-                                    >
-                                        <FaArrowLeft />
-                                    </button>
-
-                                    <button
-                                        onClick={reset}
-                                        className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
-                                    >
-                                        New Set
-                                    </button>
-
-                                    <button
-                                        onClick={handleNext}
-                                        disabled={currentIndex === flashcards.length - 1}
-                                        className="p-4 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
-                                    >
-                                        <FaArrowRight />
-                                    </button>
-                                </div>
-                            </div>
-                                )}
-                    </div>
                         </motion.div>
-        </div >
+                    </div >
                 )}
             </AnimatePresence >
 
-    {/* Image Zoom Modal */ }
-    <AnimatePresence>
-{
-    zoomedImage && (
-        <div
-            className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
-            onClick={() => setZoomedImage(null)}
-        >
-            <motion.img
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                src={zoomedImage}
-                alt="Zoomed"
-                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-            />
-            <button
-                onClick={() => setZoomedImage(null)}
-                className="absolute top-4 right-4 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
-            >
-                <FaTimes />
-            </button>
-        </div>
-    )
-}
+            {/* Image Zoom Modal */}
+            <AnimatePresence>
+                {
+                    zoomedImage && (
+                        <div
+                            className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
+                            onClick={() => setZoomedImage(null)}
+                        >
+                            <motion.img
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                src={zoomedImage}
+                                alt="Zoomed"
+                                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                            />
+                            <button
+                                onClick={() => setZoomedImage(null)}
+                                className="absolute top-4 right-4 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+                    )
+                }
             </AnimatePresence >
 
-    <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} featureName="AI Flashcards" />
+            <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} featureName="AI Flashcards" />
         </>
     );
 };
