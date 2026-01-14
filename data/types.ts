@@ -130,6 +130,7 @@ export interface UserProfile {
         aiChatCount: number;
         flashcardGenCount: number;
         groupPlayCount: number;
+        noteGenCount?: number;
     };
 
     viewedVideoIds?: string[]; // Study Hub Tracking
