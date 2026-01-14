@@ -117,35 +117,42 @@ export const StatsOverview = () => {
     ]
 
     return (
-        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-1.5 md:gap-3`}>
+        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3`}>
             {stats.map((stat, index) => (
                 <motion.div
                     key={index}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: index * 0.05, type: "spring", stiffness: 200 }}
-                    whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                    className={`relative overflow-hidden bg-white p-2 md:p-3 rounded-xl shadow-pw-sm border border-pw-border border-l-4 ${stat.borderColor} group cursor-default hover:shadow-pw-md transition-shadow`}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
+                    whileHover={{ scale: 1.02 }}
+                    className={`relative overflow-hidden bg-white/50 backdrop-blur-sm p-2.5 rounded-xl border border-white/50 shadow-sm hover:shadow-md transition-all group`}
                 >
-                    <div className="relative z-10 flex flex-col min-w-0">
-                        <div className={`w-5 h-5 md:w-8 md:h-8 mb-1.5 md:mb-2 rounded-lg ${stat.iconBg} flex items-center justify-center ${stat.iconColor} shrink-0`}>
-                            <stat.icon className="text-[10px] md:text-sm" />
+                    {/* Background Gradient Blend */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`} />
+
+                    <div className="relative z-10 flex items-center gap-3">
+                        {/* Icon Box */}
+                        <div className={`w-8 h-8 rounded-lg ${stat.iconBg} flex items-center justify-center shrink-0 shadow-inner`}>
+                            <stat.icon className={`text-base ${stat.iconColor}`} />
                         </div>
 
-                        <div className="flex items-baseline gap-1 min-w-0">
-                            <span className="text-sm md:text-2xl font-black text-pw-violet tabular-nums truncate">
-                                {stat.value}
-                            </span>
-                            {stat.suffix && (
-                                <span className="text-[9px] md:text-base font-bold text-gray-400 shrink-0">
-                                    {stat.suffix}
+                        <div className="flex flex-col min-w-0">
+                            {/* Value */}
+                            <div className="flex items-baseline gap-0.5">
+                                <span className="text-lg md:text-xl font-black text-slate-800 tabular-nums leading-none">
+                                    {stat.value}
                                 </span>
-                            )}
+                                {stat.suffix && (
+                                    <span className="text-[10px] font-bold text-slate-400">
+                                        {stat.suffix}
+                                    </span>
+                                )}
+                            </div>
+                            {/* Label */}
+                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest truncate leading-tight mt-0.5">
+                                {stat.label}
+                            </p>
                         </div>
-
-                        <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5 truncate">
-                            {stat.label}
-                        </p>
                     </div>
                 </motion.div>
             ))}
