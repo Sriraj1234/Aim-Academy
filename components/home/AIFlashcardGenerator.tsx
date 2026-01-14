@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { FaLayerGroup, FaBolt, FaTimes, FaSpinner, FaArrowLeft, FaArrowRight, FaRedo } from 'react-icons/fa';
@@ -36,16 +36,18 @@ export const AIFlashcardGenerator = () => {
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
     // Load history on mount
-    useState(() => {
-        const saved = localStorage.getItem('ai_flashcards_history');
-        if (saved) {
-            try {
-                setHistory(JSON.parse(saved));
-            } catch (e) {
-                console.error("Failed to load history", e);
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('ai_flashcards_history');
+            if (saved) {
+                try {
+                    setHistory(JSON.parse(saved));
+                } catch (e) {
+                    console.error("Failed to load history", e);
+                }
             }
         }
-    });
+    }, []);
 
     const saveToHistory = (newSet: FlashcardSet) => {
         const updated = [newSet, ...history].slice(0, 5); // Keep last 5
