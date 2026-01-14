@@ -47,9 +47,9 @@ export default function UserManagementPage() {
         try {
             const userRef = doc(db, 'users', searchedUser.uid)
 
-            // 1 Year Pro Access
+            // 1 Month Pro Access
             const startDate = Date.now()
-            const expiryDate = startDate + (365 * 24 * 60 * 60 * 1000)
+            const expiryDate = startDate + (30 * 24 * 60 * 60 * 1000)
 
             await updateDoc(userRef, {
                 subscription: {
