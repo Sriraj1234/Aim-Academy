@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaBook, FaTimes, FaSpinner, FaLightbulb, FaCalculator, FaCalendarAlt, FaBrain, FaGraduationCap, FaGlobe, FaExternalLinkAlt, FaImage, FaMagic } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal'; // Fix import path
 import ReactMarkdown from 'react-markdown';
 
 interface Summary {
@@ -27,7 +28,7 @@ const SUBJECTS = [
 ];
 
 export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initialSubject, chapter: initialChapter }) => {
-    const { userProfile } = useAuth();
+    const { userProfile, checkAccess, incrementUsage } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [subject, setSubject] = useState(initialSubject || '');
     const [chapter, setChapter] = useState(initialChapter || '');
@@ -38,10 +39,16 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
     const [useWebResearch, setUseWebResearch] = useState(false);
     const [sources, setSources] = useState<string[]>([]);
     const [images, setImages] = useState<any[]>([]);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     const generateSummary = async () => {
         if (!subject || !chapter.trim()) {
             setError('Please select subject and enter chapter name');
+            return;
+        }
+
+        if (!checkAccess('note_gen')) {
+            setShowUpgradeModal(true);
             return;
         }
 
@@ -71,6 +78,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                 setSummary(data.summary);
                 if (data.sources) setSources(data.sources);
                 if (data.images) setImages(data.images); // Set images
+                incrementUsage('note_gen');
             } else {
                 setError(data.error || 'Failed to generate summary');
             }
@@ -406,6 +414,12 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                featureName="Smart Notes Generator"
+            />
         </>
     );
 };
