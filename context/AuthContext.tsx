@@ -28,8 +28,8 @@ interface AuthContextType {
     updateProfile: (data: Partial<UserProfile>) => Promise<void>
     addXP: (amount: number) => Promise<void>
     // Subscription Helpers
-    checkAccess: (feature: 'ai_chat' | 'flashcards' | 'group_play') => boolean
-    incrementUsage: (feature: 'ai_chat' | 'flashcards' | 'group_play') => Promise<void>
+    checkAccess: (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen') => boolean
+    incrementUsage: (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen') => Promise<void>
     isInTrial: boolean
 }
 
@@ -424,36 +424,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const isInTrial = userProfile ? (Date.now() - (userProfile.createdAt || 0) < 7 * 24 * 60 * 60 * 1000) && userProfile.subscription?.plan !== 'pro' : false;
 
-    const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play'): boolean => {
+    const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen'): boolean => {
         if (!userProfile) return false;
 
         const isPro = userProfile.subscription?.plan === 'pro';
+        const limits = userProfile.dailyLimits || { aiChatCount: 0, flashcardGenCount: 0, groupPlayCount: 0, noteGenCount: 0 };
 
-        // Grant access if Pro OR in Trial
+        // --- PRO USER LOGIC ---
         if (isPro || isInTrial) {
-            // Exceptions: Limits might still apply if we want to limit trial users? 
-            // Usually trial = full access. Let's give full access.
-            // BUT for flashcards explicitly check limit if we want strictness? No, full Pro experience.
-            if (feature === 'flashcards' && isInTrial) return (userProfile.dailyLimits?.flashcardGenCount || 0) < 10; // Trial users get Pro limit (10) not unlimited? existing pro is 10?
-            // Wait, existing check was:
-            // if (feature === 'flashcards') return limits.flashcardGenCount < (isPro ? 10 : 3);
-            // I should respect that structure.
-
-            if (feature === 'flashcards') return (userProfile.dailyLimits?.flashcardGenCount || 0) < 10;
-            return true;
+            // Pro/Trial Users are mostly unlimited, with specific caps for heavy tools
+            if (feature === 'flashcards') return limits.flashcardGenCount < 10;
+            if (feature === 'note_gen') return (limits.noteGenCount || 0) < 6; // Pro Limit: 6
+            return true; // ai_chat, group_play are unlimited
         }
 
-        // Free User Logic
-        const limits = userProfile.dailyLimits || { aiChatCount: 0, flashcardGenCount: 0, groupPlayCount: 0 };
-
-        if (feature === 'ai_chat') return limits.aiChatCount < 10;
+        // --- FREE USER LOGIC ---
+        if (feature === 'ai_chat') return limits.aiChatCount < 15; // Increased from 10 to 15
         if (feature === 'flashcards') return limits.flashcardGenCount < 3;
         if (feature === 'group_play') return (limits.groupPlayCount || 0) < 3;
+        if (feature === 'note_gen') return (limits.noteGenCount || 0) < 2; // Free Limit: 2
 
         return false;
     }
 
-    const incrementUsage = async (feature: 'ai_chat' | 'flashcards' | 'group_play') => {
+    const incrementUsage = async (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen') => {
         if (!user) return;
 
         const docRef = doc(db, 'users', user.uid);
@@ -462,7 +456,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const fieldMap = {
             'ai_chat': 'aiChatCount',
             'flashcards': 'flashcardGenCount',
-            'group_play': 'groupPlayCount'
+            'group_play': 'groupPlayCount',
+            'note_gen': 'noteGenCount'
         };
         const fieldName = fieldMap[feature];
 
