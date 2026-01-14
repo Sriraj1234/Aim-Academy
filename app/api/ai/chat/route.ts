@@ -56,11 +56,13 @@ export async function POST(request: NextRequest) {
 
         // --- Fetch Syllabus Context ---
         let syllabusInfo = '';
-        import { syllabusData } from '@/data/syllabusData'; // Dynamic Import Hack if needed, or better, top-level. 
-        // Note: Next.js API routes support top-level imports. We will add it to the top.
+        let chapterSummary = '';
 
-        // Use Local Syllabus Data as Primary Source of Truth for reliability
-        if (syllabusData && syllabusData.length > 0) {
+        const board = (body.context?.board || 'cbse').toLowerCase();
+        const classNum = (body.context?.class || '10').toString();
+
+        // Use Local Syllabus Data ONLY for Class 10 (as it's hardcoded for it)
+        if (classNum === '10' && syllabusData && syllabusData.length > 0) {
             const subjectsList = syllabusData.map(s => s.name).join(', ');
             syllabusInfo = `\n\n**OFFICIAL CLASS 10 BIHAR BOARD SYLLABUS:**\nSubjects: ${subjectsList}`;
 
@@ -89,6 +91,9 @@ export async function POST(request: NextRequest) {
             } catch (err) {
                 console.error('Failed to fetch taxonomy:', err);
             }
+
+            // Append Web Search instruction for non-local classes
+            syllabusInfo += `\n\n**NOTE:** Detailed syllabus for Class ${classNum} is not locally cached. If the user asks about specific chapters or topics, **use your WEB_SEARCH tool** to find the latest ${board.toUpperCase()} Class ${classNum} syllabus details.`;
         }
 
         // --- Build System Context ---
