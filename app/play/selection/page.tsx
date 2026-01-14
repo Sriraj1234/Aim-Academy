@@ -125,8 +125,13 @@ function SelectionContent() {
                     // Extract first token (assumes "12" or "12 science")
                     const classKey = rawClass.replace('th', '').trim().split(' ')[0];
 
-                    const key = `${boardKey}_${classKey}`
-                    console.log(`[Selection] Fetching taxonomy for key: ${key} (raw: ${rawClass})`);
+                    let key = `${boardKey}_${classKey}`;
+                    // Append stream if class 11 or 12 and stream exists
+                    if ((classKey === '11' || classKey === '12') && userProfile.stream) {
+                        key += `_${userProfile.stream.toLowerCase()}`;
+                    }
+
+                    console.log(`[Selection] Fetching taxonomy for key: ${key} (raw: ${rawClass}, stream: ${userProfile.stream})`);
 
                     if (fullTaxonomy[key]) {
                         setActiveCategories(fullTaxonomy[key])
