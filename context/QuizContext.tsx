@@ -99,7 +99,14 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             // and filter by Class in-memory below.
 
             if (subject) {
-                constraints.push(where('subject', '==', subject));
+                // Robust filtering: Check both Title Case and lowercase
+                // English is 'English', Hindi is 'hindi' in DB.
+                const variants = Array.from(new Set([
+                    subject,
+                    subject.toLowerCase(),
+                    subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase()
+                ]));
+                constraints.push(where('subject', 'in', variants));
             }
             if (chapter) {
                 constraints.push(where('chapter', '==', chapter));
