@@ -161,9 +161,10 @@ export async function POST(request: NextRequest) {
 - "WEB_SEARCH": If the user is asking for specific facts, current events, dates, latest syllabus changes, or real-world data (e.g. "Who is PM", "JEE Main 2025 Date").
 - "IMAGE_SEARCH": If the user is asking for:
     1. Direct visual requests ("Show me", "Diagram of").
-    2. NATURALLY VISUAL topics (e.g., Biology diagrams, Chemical Structures, Physics Free body diagrams, Maps, Geometry).
+    2. NATURALLY VISUAL topics (Biology organs, Chemical Structures, Physics setups, Maps, Geometry).
+    **Rule: If the user asks "What is X?" or "Explain X", and X is a PHYSICAL OBJECT (e.g. Heart, Prism, Volcano, Circuit, Cell), ALWAYS choose IMAGE_SEARCH.**
     **Rule: If an image would make the explanation CLEARER, always choose IMAGE_SEARCH.**
-- "CHAT": For general conversation, coding help, mathematical derivations, or purely theoretical concepts.
+- "CHAT": For general conversation, coding help, mathematical derivations, or purely theoretical concepts (e.g. "Define Force", "What is Love").
 
 Respond ONLY with the category value.`
                             },
@@ -179,7 +180,7 @@ Respond ONLY with the category value.`
 
                         // 2. Execute Tools
                         // Enhanced regex for biology/visual topics
-                        const visualKeywords = /image|photo|diagram|sketch|map|structure|anatomy|cycle|mechanism|graph|figure|draw|show|look like/i;
+                        const visualKeywords = /image|photo|diagram|sketch|map|structure|anatomy|cycle|mechanism|graph|figure|draw|show|look like|cell|heart|brain|eye|ear|plant|flower|leaf|root|skeleton|skull|liver|kidney|lung|prism|lens|mirror|magnet|circuit|solar system|planet|atom|molecule|volcano|mountain|river|glacier/i;
 
                         if (intent.includes('IMAGE') || body.message.match(visualKeywords)) {
                             sendEvent({ status: 'searching_image' });
@@ -187,9 +188,13 @@ Respond ONLY with the category value.`
                             // If implicit (no "show me"), use the full message as query but clean it slightly
                             let query = body.message.replace(/show|me|images?|photos?|diagrams?|sketches?/gi, '').trim();
 
-                            // For specific biology topics, make query specific to find better diagrams
-                            if (query.match(/cockroach|digestive|heart|brain|flower|plant|anatomy|cell/i)) {
+                            // For specific biology/science topics, make query specific to find better diagrams
+                            if (query.match(/cockroach|digestive|heart|brain|flower|plant|anatomy|cell|kidney|liver|lung|eye|ear|skeleton/i)) {
                                 query += " scientific diagram";
+                            }
+                            // Physics/Geography diagrams
+                            if (query.match(/prism|lens|mirror|circuit|solar system|atom|molecule|volcano/i)) {
+                                query += " diagram";
                             }
 
                             toolImages = await performImageSearch(query);
