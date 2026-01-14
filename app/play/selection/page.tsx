@@ -187,7 +187,7 @@ function SelectionContent() {
 
     const scienceSubjects = ['physics', 'chemistry', 'biology']
     const sstSubjects = ['history', 'geography', 'civics', 'economics', 'political science', 'disaster management']
-    const langSubjects = ['english', 'hindi', 'sanskrit']
+    const langSubjects = ['english', 'hindi', 'sanskrit', 'english prose', 'english poetry', 'hindi gadya', 'hindi padya']
 
     const displayedSubjects = activeCategories.subjects?.filter(
         sub => !scienceSubjects.includes(sub.toLowerCase()) &&
