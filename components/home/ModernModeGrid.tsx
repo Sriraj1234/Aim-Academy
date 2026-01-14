@@ -10,18 +10,6 @@ export const ModernModeGrid = () => {
 
     const modes = [
         {
-            id: 'batches',
-            title: 'My Batches',
-            desc: 'View your enrolled courses',
-            icon: FaYoutube,
-            gradient: 'from-rose-500 to-red-500',
-            shadow: 'shadow-rose-500/20',
-            bgGlow: 'bg-rose-500',
-            badge: 'NEW',
-            badgeColor: 'bg-red-600 animate-pulse',
-            delay: 0.1
-        },
-        {
             id: 'group',
             title: 'Play with Friends',
             desc: 'Compete in real-time with your classmates!',
@@ -31,31 +19,7 @@ export const ModernModeGrid = () => {
             bgGlow: 'bg-pw-indigo',
             badge: 'HOT',
             badgeColor: 'bg-pw-red',
-            delay: 0.15
-        },
-        {
-            id: 'mistakes',
-            title: 'Mistake Notebook',
-            desc: 'Master your weak areas',
-            icon: FaExclamationTriangle,
-            gradient: 'from-orange-500 to-red-500',
-            shadow: 'shadow-orange-500/20',
-            bgGlow: 'bg-orange-500',
-            badge: 'NEW',
-            badgeColor: 'bg-red-500',
-            delay: 0.2
-        },
-        {
-            id: 'subject',
-            title: t('playMode.subject.title'),
-            desc: 'Practice any subject deeply',
-            icon: FaBookOpen,
-            gradient: 'from-blue-500 to-cyan-500',
-            shadow: 'shadow-blue-500/20',
-            bgGlow: 'bg-blue-500',
-            badge: null,
-            badgeColor: '',
-            delay: 0.25
+            delay: 0.1
         },
         {
             id: 'chapter',
@@ -67,6 +31,42 @@ export const ModernModeGrid = () => {
             bgGlow: 'bg-green-500',
             badge: 'POPULAR',
             badgeColor: 'bg-gradient-to-r from-pw-violet to-pw-indigo',
+            delay: 0.15
+        },
+        {
+            id: 'subject',
+            title: t('playMode.subject.title'),
+            desc: 'Practice any subject deeply',
+            icon: FaBookOpen,
+            gradient: 'from-blue-500 to-cyan-500',
+            shadow: 'shadow-blue-500/20',
+            bgGlow: 'bg-blue-500',
+            badge: null,
+            badgeColor: '',
+            delay: 0.2
+        },
+        {
+            id: 'mistakes',
+            title: 'Mistake Notebook',
+            desc: 'Master your weak areas',
+            icon: FaExclamationTriangle,
+            gradient: 'from-orange-500 to-red-500',
+            shadow: 'shadow-orange-500/20',
+            bgGlow: 'bg-orange-500',
+            badge: 'NEW',
+            badgeColor: 'bg-red-500',
+            delay: 0.25
+        },
+        {
+            id: 'batches',
+            title: 'My Batches',
+            desc: 'View your enrolled courses',
+            icon: FaYoutube,
+            gradient: 'from-rose-500 to-red-500',
+            shadow: 'shadow-rose-500/20',
+            bgGlow: 'bg-rose-500',
+            badge: 'NEW',
+            badgeColor: 'bg-red-600 animate-pulse',
             delay: 0.3
         },
         {
