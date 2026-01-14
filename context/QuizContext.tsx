@@ -98,9 +98,8 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             // We now fetch by Board + Subject + Chapter (sufficiently small dataset) 
             // and filter by Class in-memory below.
 
-            // Subject & Chapter Filters
             if (subject) {
-                constraints.push(where('subject', '==', subject.toLowerCase()));
+                constraints.push(where('subject', '==', subject));
             }
             if (chapter) {
                 constraints.push(where('chapter', '==', chapter));
