@@ -106,45 +106,43 @@ export const DashboardHeader = () => {
                 className="flex items-center justify-between gap-3 md:gap-4"
             >
                 <div className="flex items-center gap-4 md:gap-6 min-w-0 flex-1">
-                    {!user ? (
-                        <div className="flex items-center gap-2">
-                            <a href="/login" className="px-4 py-2 md:px-5 md:py-2.5 bg-pw-violet text-white font-bold rounded-xl shadow-pw-sm hover:shadow-pw-md transition-all active:scale-95 text-xs md:text-sm whitespace-nowrap">
-                                Login
-                            </a>
-                            <a href="/signup" className="hidden md:block px-5 py-2.5 bg-white border border-pw-border text-pw-indigo font-bold rounded-xl hover:bg-gray-50 transition-all text-sm">
-                                Sign Up
-                            </a>
-                        </div>
-                    ) : (
-                        <>
-                            <motion.div
-                                whileHover={{ scale: 1.05 }}
-                                className="relative shrink-0"
-                            >
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[2px] md:p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
-                                    <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface">
-                                        {user?.photoURL ? (
-                                            <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet font-bold text-lg md:text-xl">
-                                                {(user?.displayName || 'U')[0]}
-                                            </div>
-                                        )}
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className="relative shrink-0"
+                    >
+                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[2px] md:p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
+                            <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface cursor-pointer" onClick={() => !user && router.push('/login')}>
+                                {user?.photoURL ? (
+                                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet font-bold text-lg md:text-xl">
+                                        {(user?.displayName || 'G')[0]}
                                     </div>
-                                    <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto scale-75 md:scale-100 origin-top-left" userProfile={userProfile} showDefault={true} />
-                                </div>
-                            </motion.div>
-
-                            <div className="min-w-0 flex-1 flex flex-col justify-center">
-                                <p className="text-pw-indigo/80 text-xs md:text-sm font-medium flex items-center gap-1.5 mb-0.5" suppressHydrationWarning>
-                                    {greeting.text} <span className="text-sm md:text-base">{greeting.emoji}</span>
-                                </p>
-                                <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight truncate tracking-tight">
-                                    {user?.displayName || 'Scholar'}
-                                </h2>
+                                )}
                             </div>
-                        </>
-                    )}
+                            {user && <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto scale-75 md:scale-100 origin-top-left" userProfile={userProfile} showDefault={true} />}
+                        </div>
+                    </motion.div>
+
+                    <div className="min-w-0 flex-1 flex flex-col justify-center">
+                        <p className="text-pw-indigo/80 text-xs md:text-sm font-medium flex items-center gap-1.5 mb-0.5" suppressHydrationWarning>
+                            {greeting.text} <span className="text-sm md:text-base">{greeting.emoji}</span>
+                        </p>
+                        <div className="flex flex-col items-start">
+                            <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight truncate tracking-tight">
+                                {user?.displayName || 'Future Topper'}
+                            </h2>
+                            {!user && (
+                                <div className="mt-1 flex items-center gap-2">
+                                    <a href="/login" className="text-xs font-bold text-pw-indigo hover:text-pw-violet underline decoration-2 underline-offset-2">
+                                        Login Now
+                                    </a>
+                                    <span className="text-xs text-slate-400">•</span>
+                                    <span className="text-xs text-slate-500">Save your progress</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-3 shrink-0">
