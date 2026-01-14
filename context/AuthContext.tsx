@@ -28,8 +28,6 @@ interface AuthContextType {
     updateProfile: (data: Partial<UserProfile>) => Promise<void>
     addXP: (amount: number) => Promise<void>
     // Subscription Helpers
-    // Subscription Helpers
-    // Subscription Helpers
     checkAccess: (feature: 'ai_chat' | 'flashcards' | 'group_play') => boolean
     incrementUsage: (feature: 'ai_chat' | 'flashcards' | 'group_play') => Promise<void>
     isInTrial: boolean
