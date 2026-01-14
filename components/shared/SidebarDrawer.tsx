@@ -1,16 +1,11 @@
-
-
-'use client';
-
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaMoon, FaWifi, FaGraduationCap, FaFileAlt, FaShoppingCart, FaBolt, FaHandsHelping, FaBook, FaLaptopCode, FaDesktop, FaBookOpen, FaDownload, FaShareAlt, FaUserCircle, FaGem, FaCamera, FaLightbulb, FaPaperPlane, FaInfoCircle, FaHeadset, FaShieldAlt, FaChalkboardTeacher, FaComments } from 'react-icons/fa';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { FaTimes, FaMoon, FaGraduationCap, FaBook, FaLaptopCode, FaDesktop, FaBookOpen, FaShareAlt, FaUserCircle, FaGem, FaCamera, FaLightbulb, FaPaperPlane, FaInfoCircle, FaHeadset, FaShieldAlt, FaChalkboardTeacher, FaComments, FaBolt, FaHandsHelping } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from './Button';
-
 
 interface SidebarDrawerProps {
     isOpen: boolean;
@@ -43,20 +38,33 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         { icon: FaShieldAlt, label: 'Policies', href: '/privacy' },
     ];
 
-    const sidebarVariants: any = {
+    // Smooth Animation Curve (No Jitter)
+    const sidebarVariants: Variants = {
         hidden: {
             x: '-100%',
-            transition: { type: 'spring', damping: 25, stiffness: 300 }
+            opacity: 0.5,
+            transition: {
+                type: "tween",
+                ease: "circIn",
+                duration: 0.3
+            }
         },
         show: {
             x: 0,
-            transition: { type: 'spring', damping: 30, stiffness: 300, staggerChildren: 0.05, delayChildren: 0.1 }
+            opacity: 1,
+            transition: {
+                type: "tween",
+                ease: "circOut",
+                duration: 0.4,
+                staggerChildren: 0.04,
+                delayChildren: 0.1
+            }
         }
     };
 
-    const itemVariants = {
-        hidden: { x: -20, opacity: 0 },
-        show: { x: 0, opacity: 1 }
+    const itemVariants: Variants = {
+        hidden: { x: -10, opacity: 0 },
+        show: { x: 0, opacity: 1, transition: { type: "tween", ease: "easeOut", duration: 0.3 } }
     };
 
     return (
@@ -67,9 +75,9 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        exit={{ opacity: 0, transition: { duration: 0.2 } }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-[6px] z-[60]"
                     />
 
                     {/* Premium Sidebar */}
@@ -78,39 +86,39 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                         initial="hidden"
                         animate="show"
                         exit="hidden"
-                        className={`fixed top-0 left-0 bottom-0 w-[85vw] sm:w-[300px] backdrop-blur-2xl z-[70] shadow-2xl border-r flex flex-col ${resolvedTheme === 'dark' ? 'bg-gray-900/95 border-gray-800' : 'bg-white/90 border-white/40'}`}
+                        className={`fixed top-0 left-0 bottom-0 w-[85vw] sm:w-[320px] backdrop-blur-3xl z-[70] shadow-[10px_0_40px_-5px_rgba(0,0,0,0.3)] border-r flex flex-col ${resolvedTheme === 'dark' ? 'bg-[#0a0a0f]/95 border-white/5' : 'bg-white/95 border-gray-100'}`}
                     >
                         {/* Vibrant Header with Gradient */}
-                        <div className="relative p-5 sm:p-6 pt-12 pb-8 overflow-hidden">
+                        <div className="relative p-6 pt-12 pb-8 overflow-hidden rounded-br-[32px] shadow-lg z-10">
                             {/* Decorative Background Mesh */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 z-0" />
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
-                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full blur-xl -ml-5 -mb-5" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#4F46E5] via-[#7C3AED] to-[#DB2777] z-0" />
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10" />
+                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl -ml-5 -mb-5" />
 
                             <div className="relative z-10 flex items-center gap-4">
                                 <Link href="/profile" onClick={onClose} className="group relative">
-                                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-[3px] border-white/30 shadow-lg group-hover:scale-105 transition-transform duration-300">
+                                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-[3px] border-white/40 shadow-xl group-hover:scale-105 transition-transform duration-300 bg-white/10 backdrop-blur-md">
                                         {user?.photoURL ? (
                                             <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="w-full h-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-3xl">
+                                            <div className="w-full h-full flex items-center justify-center text-white text-3xl">
                                                 <FaUserCircle />
                                             </div>
                                         )}
                                     </div>
-                                    <div className="absolute -bottom-1 -right-1 bg-green-400 w-4 h-4 rounded-full border-2 border-indigo-600 shadow-sm" />
+                                    <div className="absolute bottom-0 right-0 bg-[#22c55e] w-4 h-4 rounded-full border-[2.5px] border-[#5b50e6] shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                                 </Link>
 
                                 <div className="flex-1 min-w-0 text-white">
-                                    <h3 className="font-bold text-xl leading-tight truncate tracking-tight">
+                                    <h3 className="font-bold text-xl leading-snug truncate tracking-tight drop-shadow-sm">
                                         {user?.displayName || 'Future Scholar'}
                                     </h3>
-                                    <div className="flex items-center gap-2 mt-1 opacity-90">
-                                        <span className="text-xs bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full font-medium border border-white/10">
+                                    <div className="flex items-center gap-2 mt-1.5 opacity-90">
+                                        <span className="text-[10px] uppercase tracking-wider bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full font-bold border border-white/20 shadow-sm">
                                             {userProfile?.class ? `Class ${userProfile.class}` : 'Student'}
                                         </span>
                                         {/* Mock Level/XP */}
-                                        <span className="text-xs flex items-center gap-1">
+                                        <span className="text-xs flex items-center gap-1 font-medium text-yellow-100">
                                             <FaGem className="text-yellow-300 text-[10px]" />
                                             Lvl {userProfile?.gamification?.level || 1}
                                         </span>
@@ -121,20 +129,21 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                             {/* Close Button */}
                             <button
                                 onClick={onClose}
-                                className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all"
+                                className="absolute top-5 right-5 text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all duration-300"
                             >
-                                <FaTimes />
+                                <FaTimes className="text-lg" />
                             </button>
                         </div>
 
                         {/* Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto py-2 custom-scrollbar">
-                            <div className="px-4 space-y-1">
+                        <div className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar">
+                            <div className="space-y-1">
                                 {menuItems.map((item: any, idx) => (
                                     <React.Fragment key={idx}>
                                         {item.isDivider ? (
-                                            <motion.div variants={itemVariants} className="mt-6 mb-2 px-3">
-                                                <span className={`text-[10px] font-black uppercase tracking-widest ${resolvedTheme === 'dark' ? 'text-gray-500' : 'text-indigo-400/80'}`}>
+                                            <motion.div variants={itemVariants} className="mt-8 mb-3 px-3">
+                                                <span className={`text-[11px] font-extrabold uppercase tracking-widest flex items-center gap-2 ${resolvedTheme === 'dark' ? 'text-gray-500' : 'text-indigo-400/90'}`}>
+                                                    <span className="w-1 h-1 rounded-full bg-current opacity-50"></span>
                                                     {item.label}
                                                 </span>
                                             </motion.div>
@@ -143,27 +152,27 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                                                 <Link href={item.href} onClick={onClose}>
                                                     <motion.div
                                                         variants={itemVariants}
-                                                        className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer group transition-all duration-300 ${pathname === item.href
-                                                            ? 'bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-500 font-semibold shadow-inner'
-                                                            : resolvedTheme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'
+                                                        className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer group transition-all duration-300 border border-transparent ${pathname === item.href
+                                                            ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent text-indigo-500 font-bold border-indigo-500/10'
+                                                            : resolvedTheme === 'dark' ? 'text-gray-400 hover:bg-white/5 hover:text-gray-200' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                                             }`}
                                                     >
                                                         <div className="flex items-center gap-4">
-                                                            <span className={`text-xl transition-transform duration-300 group-hover:scale-110 ${pathname === item.href ? 'text-indigo-500 drop-shadow-sm' : resolvedTheme === 'dark' ? 'text-gray-500 group-hover:text-indigo-400' : 'text-gray-400 group-hover:text-indigo-500'
+                                                            <span className={`text-[1.15rem] transition-colors duration-300 filter ${pathname === item.href ? 'text-indigo-500 drop-shadow-[0_0_8px_rgba(99,102,241,0.4)]' : 'opacity-70 group-hover:opacity-100 group-hover:text-indigo-500'
                                                                 }`}>
                                                                 <item.icon />
                                                             </span>
 
-                                                            <span className="text-sm tracking-wide">{item.label}</span>
+                                                            <span className="text-[14px] tracking-wide">{item.label}</span>
                                                         </div>
 
                                                         {item.isNew && (
-                                                            <span className="text-[9px] font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+                                                            <span className="text-[9px] font-bold bg-gradient-to-r from-pink-500 to-rose-600 text-white px-2 py-0.5 rounded-full shadow-[0_2px_8px_rgba(244,63,94,0.4)]">
                                                                 NEW
                                                             </span>
                                                         )}
                                                         {pathname === item.href && (
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
                                                         )}
                                                     </motion.div>
                                                 </Link>
@@ -171,18 +180,17 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                                                 <motion.div
                                                     onClick={item.action}
                                                     variants={itemVariants}
-                                                    className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer group transition-all duration-200 ${resolvedTheme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'
+                                                    className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer group transition-all duration-200 ${resolvedTheme === 'dark' ? 'text-gray-400 hover:bg-white/5 hover:text-gray-200' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <span className={`text-xl transition-colors ${resolvedTheme === 'dark' ? 'text-gray-500 group-hover:text-indigo-400' : 'text-gray-400 group-hover:text-indigo-500'
-                                                            }`}><item.icon /></span>
-                                                        <span className="text-sm font-medium">{item.label}</span>
+                                                        <span className={`text-[1.15rem] transition-colors duration-300 ${'opacity-70 group-hover:opacity-100 group-hover:text-indigo-500'}`}><item.icon /></span>
+                                                        <span className="text-[14px] font-medium tracking-wide">{item.label}</span>
                                                     </div>
                                                     {item.isToggle && (
-                                                        <div className={`w-10 h-6 rounded-full relative transition-colors cursor-pointer ${resolvedTheme === 'dark' ? 'bg-indigo-600' : 'bg-gray-200 group-hover:bg-gray-300'
+                                                        <div className={`w-11 h-6 rounded-full relative transition-colors cursor-pointer border ${resolvedTheme === 'dark' ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-gray-200 border-gray-300'
                                                             }`}>
-                                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all ${resolvedTheme === 'dark' ? 'left-5' : 'left-1'
+                                                            <div className={`absolute top-[3px] w-4 h-4 rounded-full shadow-md transition-all duration-300 ${resolvedTheme === 'dark' ? 'left-[22px] bg-indigo-400' : 'left-1 bg-white'
                                                                 }`} />
                                                         </div>
                                                     )}
@@ -194,29 +202,32 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                             </div>
 
                             {/* CTA / Upgrade Box */}
-                            <motion.div variants={itemVariants} className="mx-4 mt-6 p-4 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-xl relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl -mr-6 -mt-6 transition-transform group-hover:scale-150 duration-700" />
-                                <div className="relative z-10">
-                                    <h4 className="font-bold text-sm mb-1">Unlock Premium 🚀</h4>
-                                    <p className="text-xs text-gray-300 mb-3 leading-relaxed">Get unlimited AI doubts, ad-free learning, and exclusive notes.</p>
-                                    <button className="w-full py-2 bg-white text-gray-900 rounded-lg text-xs font-bold hover:bg-indigo-50 transition-colors">
-                                        View Plans
+                            <motion.div variants={itemVariants} className="mx-2 mt-8 p-0 rounded-2xl bg-gradient-to-br from-[#0f0a1f] to-[#1e1b2e] border border-white/5 relative overflow-hidden group shadow-2xl">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <div className="relative p-5 z-10">
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white mb-3 shadow-lg">
+                                        <FaGem />
+                                    </div>
+                                    <h4 className="font-bold text-white text-[15px] mb-1">Padhaku Pro 🚀</h4>
+                                    <p className="text-xs text-gray-400 mb-4 leading-relaxed font-medium">Unlock unlimited AI doubts, ad-free experience & exclusive notes.</p>
+                                    <button className="w-full py-2.5 bg-white hover:bg-gray-50 text-black rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95">
+                                        View Premium Plans
                                     </button>
                                 </div>
                             </motion.div>
 
                             {/* Sign Out */}
-                            <motion.div variants={itemVariants} className="p-4 mt-2">
+                            <motion.div variants={itemVariants} className="mt-4 px-2">
                                 <Button
                                     variant="ghost"
-                                    className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50/80 rounded-xl h-12"
+                                    className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-xl h-11 border border-transparent hover:border-red-500/10"
                                     onClick={() => { onClose(); logout(); }}
                                 >
                                     <FaShareAlt className="rotate-180" />
-                                    <span className="font-medium">Sign Out</span>
+                                    <span className="font-medium text-sm">Sign Out</span>
                                 </Button>
-                                <div className="mt-4 text-center">
-                                    <p className="text-[10px] text-gray-400 font-medium">Padhaku v1.2.0 • Made with ❤️</p>
+                                <div className="mt-6 text-center">
+                                    <p className="text-[10px] text-gray-400/60 font-semibold tracking-wider font-mono uppercase">Padhaku v1.2.0 • Made with ❤️</p>
                                 </div>
                             </motion.div>
                         </div>
@@ -234,36 +245,37 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                                     className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                                 />
                                 <motion.div
-                                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                    initial={{ scale: 0.95, opacity: 0, y: 10 }}
                                     animate={{ scale: 1, opacity: 1, y: 0 }}
-                                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                                    className={`relative w-full max-w-sm rounded-2xl p-6 shadow-2xl ${resolvedTheme === 'dark' ? 'bg-gray-900 border border-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                    exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                                    transition={{ type: "tween", duration: 0.2 }}
+                                    className={`relative w-full max-w-sm rounded-3xl p-6 shadow-2xl border ${resolvedTheme === 'dark' ? 'bg-[#0f0a1f] border-white/10 text-white' : 'bg-white border-white text-gray-900'}`}
                                 >
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">
+                                    <div className="flex items-center gap-4 mb-5">
+                                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-xl">
                                             <FaLightbulb />
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-lg">Request Feature</h3>
-                                            <p className={`text-xs ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Help us improve Padhaku</p>
+                                            <p className={`text-xs font-medium ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Help us improve Padhaku</p>
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1.5 block">What's on your mind?</label>
+                                            <label className="text-[11px] font-bold uppercase tracking-wider opacity-60 mb-2 block">What's on your mind?</label>
                                             <textarea
-                                                className={`w-full h-24 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none ${resolvedTheme === 'dark' ? 'bg-gray-800 text-white placeholder-gray-500' : 'bg-gray-50 text-gray-900 placeholder-gray-400 border-gray-100'}`}
+                                                className={`w-full h-28 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none transition-all ${resolvedTheme === 'dark' ? 'bg-white/5 text-white placeholder-white/20 border border-white/5' : 'bg-gray-50 text-gray-900 placeholder-gray-400 border-gray-100'}`}
                                                 placeholder="I wish Padhaku had..."
                                             />
                                         </div>
-                                        <Button className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30" onClick={() => setIsRequestOpen(false)}>
+                                        <Button className="w-full gap-2 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-lg shadow-indigo-500/20 rounded-xl font-bold" onClick={() => setIsRequestOpen(false)}>
                                             <FaPaperPlane />
                                             Submit Request
                                         </Button>
                                     </div>
 
-                                    <button onClick={() => setIsRequestOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
+                                    <button onClick={() => setIsRequestOpen(false)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-500 transition-colors">
                                         <FaTimes />
                                     </button>
                                 </motion.div>
@@ -275,4 +287,3 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         </AnimatePresence>
     );
 };
-
