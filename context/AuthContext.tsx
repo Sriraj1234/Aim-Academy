@@ -196,17 +196,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                         setUserProfile({ ...profileData, gamification });
                     } else {
-                        // --- SAFETY CHECK (PREVENT OVERWRITE) ---
-                        const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : Date.now();
-                        const isOldAccount = (Date.now() - creationTime) > 5 * 60 * 1000;
-
-                        if (isOldAccount && !user.isAnonymous) {
-                            // Only block old real accounts. Anonymous users are fresh or transient.
-                            console.error("CRITICAL: Existing user profile not found. Preventing overwrite.");
-                            // alert("Error loading profile. Please check your internet connection.");
-                            setLoading(false);
-                            return;
-                        }
+                        // Removed "Old Account" check to ensure profile is always created if missing.
+                        // Previous logic blocked creation for accounts > 5 mins old, which trapped users with no profile.
 
                         // Create New Profile
                         const now = new Date()
