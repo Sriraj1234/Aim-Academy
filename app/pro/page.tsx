@@ -180,11 +180,12 @@ export default function PricingPage() {
                             <ul className="space-y-4 mb-8">
                                 <FeatureItem active text="Standard Live Quizzes" />
                                 <FeatureItem active text="Access to Study Notes" />
-                                <FeatureItem active text="10 AI Chats / Day" />
+                                <FeatureItem active text="15 AI Chats / Day" />
                                 <FeatureItem active text="3 Flashcard Sets / Day" />
+                                <FeatureItem active text="2 AI Solutions (Snap & Solve) / Day" />
+                                <FeatureItem active text="2 Note Generations / Day" />
                                 <FeatureItem active={false} text="Ad-Free Experience" />
                                 <FeatureItem active={false} text="Detailed Analytics" />
-                                <FeatureItem active={false} text="Voice Chat in Group" />
                             </ul>
 
                             <Button disabled className="w-full py-4 bg-gray-100 text-gray-400 font-bold rounded-xl cursor-not-allowed">
@@ -218,8 +219,9 @@ export default function PricingPage() {
                                 <FeatureItem active dark text="Unlimited AI Chat & Context" />
                                 <FeatureItem active dark text="Unlimited Group Play Rooms" />
                                 <FeatureItem active dark text="10 Flashcard Sets / Day" />
+                                <FeatureItem active dark text="6 AI Solutions (Snap & Solve) / Day" />
+                                <FeatureItem active dark text="6 Note Generations / Day" />
                                 <FeatureItem active dark text="100% Ad-Free Interface" />
-                                <FeatureItem active dark text="Microphone Access in Groups" />
                                 <FeatureItem active dark text="Deep Analytics & Heatmaps" />
                             </ul>
 
@@ -238,7 +240,7 @@ export default function PricingPage() {
                             )}
 
                             <p className="text-xs text-gray-500 text-center mt-4">
-                                {billingCycle === 'monthly' ? 'Renews automatically. Cancel anytime.' : 'One-time payment. Best value.'}
+                                {billingCycle === 'monthly' ? 'Valid for 30 days. Manual renewal required.' : 'One-time payment. Best value.'}
                             </p>
                         </motion.div>
 
