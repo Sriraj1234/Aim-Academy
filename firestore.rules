@@ -13,15 +13,25 @@ service cloud.firestore {
 
     // Role-Based Access Control
     // Fetches the user's profile to check if they have the 'admin' role.
+    // Role-Based Access Control
+    // Fetches the user's profile to check if they have the 'admin' role.
     function isAdmin() {
-      return isAuthenticated() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      let role = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return isAuthenticated() && (role == 'admin' || role == 'teacher' || role == 'super_admin');
     }
 
     // --- 1. User Data (Strict Ownership) ---
+    // --- 1. User Data (Strict Ownership) ---
     match /users/{userId} {
-      // Users can modify their own data (except forcing role upgrade if we wanted to be strict, but keeping simple for now)
-      allow read, write: if isOwner(userId);
+      // Users can modify their own data. Admins can read all for dashboard/management.
+      allow write: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId) || isAdmin();
+    }
+
+    // Mind Games (Missing Rule Fix)
+    match /mind_games/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // --- 2. Admin Only Content (Protected) ---
@@ -53,7 +63,12 @@ service cloud.firestore {
     
     match /live_quizzes/{document=**} {
       allow read: if true;
-      // Teachers might need access too, for now keeping Admin/Teacher logic same or separate
+      allow write: if isAdmin();
+    }
+    
+    // Study Hub (Video Resources)
+    match /video_resources/{document=**} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
