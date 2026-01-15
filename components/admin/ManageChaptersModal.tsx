@@ -310,7 +310,7 @@ export default function ManageChaptersModal({ isOpen, onClose, onUpdate }: Manag
                                 </div>
 
                                 {/* List with Drag and Drop */}
-                                <Reorder.Group axis="y" values={chapters} onReorder={setChapters} className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                                <Reorder.Group axis="y" values={chapters} onReorder={(newOrder) => setChapters(newOrder)} className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
                                     {chapters.map((chap, idx) => (
                                         <Reorder.Item key={chap.id} value={chap}>
                                             <div className="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between group cursor-move hover:border-purple-300 hover:shadow-md transition-all">
