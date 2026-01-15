@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
 import { app, db } from '@/lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { useAuth } from './useAuth';
 import toast from 'react-hot-toast';
 
@@ -57,11 +57,13 @@ export const useNotifications = () => {
                 if (token) {
                     setFcmToken(token);
                     if (user?.uid) {
-                        await updateDoc(doc(db, 'users', user.uid), {
-                            fcmToken: token,
-                            notificationsEnabled: true,
-                            lastTokenUpdate: new Date().toISOString()
-                        });
+                        if (user?.uid) {
+                            await setDoc(doc(db, 'users', user.uid), {
+                                fcmToken: token,
+                                notificationsEnabled: true,
+                                lastTokenUpdate: new Date().toISOString()
+                            }, { merge: true });
+                        }
                     }
                     return token;
                 }
