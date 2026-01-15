@@ -71,6 +71,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
         const lensWindow = window.open('', '_blank');
         if (lensWindow) {
             lensWindow.document.write(`
+                <!DOCTYPE html>
                 <html>
                     <head><title>Opening Google Lens...</title></head>
                     <body style="font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: #fff;">
