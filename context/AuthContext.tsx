@@ -336,7 +336,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!user) return
         const docRef = doc(db, 'users', user.uid)
         try {
-            await updateDoc(docRef, data)
+            await setDoc(docRef, data, { merge: true })
             // Update local state
             setUserProfile(prev => prev ? { ...prev, ...data } : null)
         } catch (error) {
