@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { FaLayerGroup, FaBolt, FaTimes, FaSpinner, FaArrowLeft, FaArrowRight, FaRedo } from 'react-icons/fa';
 import { UpgradeModal } from '../subscription/UpgradeModal';
+import { SafeImage } from '../shared/SafeImage';
 
 interface Flashcard {
     term: string;
@@ -322,18 +323,18 @@ export const AIFlashcardGenerator = () => {
                                                             <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-2 shrink-0">Term</span>
 
                                                             {flashcards[currentIndex]?.imageUrl ? (
-                                                                <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
-                                                                    <img
+                                                                <div
+                                                                    className="relative w-full h-32 mb-4 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center shrink-0 cursor-zoom-in"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setZoomedImage(flashcards[currentIndex].imageUrl || null);
+                                                                    }}
+                                                                >
+                                                                    <SafeImage
                                                                         src={flashcards[currentIndex].imageUrl}
                                                                         alt={flashcards[currentIndex].term}
-                                                                        className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in hover:scale-105 transition-transform"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setZoomedImage(flashcards[currentIndex].imageUrl || null);
-                                                                        }}
-                                                                        onError={(e) => {
-                                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                                        }}
+                                                                        className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal hover:scale-105 transition-transform"
+                                                                        width={400}
                                                                     />
                                                                 </div>
                                                             ) : null}
