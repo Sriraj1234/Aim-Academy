@@ -122,20 +122,23 @@ export const StatsOverview = () => {
                 {/* Blurred Placeholder Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 filter blur-sm select-none opacity-50 pointer-events-none">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="bg-white/50 p-2.5 rounded-xl border border-white/50 h-16">
-                            <div className="w-8 h-8 bg-gray-200 rounded-lg mb-2" />
-                            <div className="h-4 w-12 bg-gray-200 rounded" />
+                        <div key={i} className="bg-white/50 p-2 rounded-xl border border-white/50 h-14 md:h-16 flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gray-200 rounded-lg shrink-0" />
+                            <div className="flex flex-col gap-1 w-full">
+                                <div className="h-3 w-8 bg-gray-200 rounded" />
+                                <div className="h-2 w-12 bg-gray-200 rounded" />
+                            </div>
                         </div>
                     ))}
                 </div>
 
                 {/* Lock Overlay */}
-                <div className="absolute inset-x-0 inset-y-0 flex flex-col items-center justify-center z-10 bg-white/10 backdrop-blur-[1px]">
-                    <div className="bg-white p-2 rounded-full shadow-lg mb-2">
-                        <FaLock className="text-pw-indigo text-lg" />
+                <div className="absolute inset-x-0 inset-y-0 flex flex-col items-center justify-center z-10 bg-white/40 backdrop-blur-[2px]">
+                    <div className="bg-white p-1.5 md:p-2 rounded-full shadow-lg mb-1.5 md:mb-2">
+                        <FaLock className="text-pw-indigo text-sm md:text-lg" />
                     </div>
-                    <p className="text-xs font-bold text-slate-600 mb-2">Track your progress</p>
-                    <a href="/login" className="px-4 py-1.5 bg-pw-indigo text-white text-xs font-bold rounded-full hover:bg-pw-violet transition-colors shadow-lg shadow-indigo-200">
+                    <p className="text-[10px] md:text-xs font-bold text-slate-700 mb-2 drop-shadow-sm">Track your progress</p>
+                    <a href="/login" className="px-3 md:px-4 py-1 md:py-1.5 bg-pw-indigo text-white text-[10px] md:text-xs font-bold rounded-full hover:bg-pw-violet transition-colors shadow-lg shadow-indigo-200">
                         Login to View
                     </a>
                 </div>
