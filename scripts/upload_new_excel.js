@@ -1,39 +1,47 @@
 
 const XLSX = require('xlsx');
-const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, writeBatch, doc, getDocs } = require('firebase/firestore');
+const admin = require("firebase-admin");
 const path = require('path');
 const dotenv = require('dotenv');
 const fs = require('fs');
 
 // Load environment variables
-dotenv.config({ path: '.env.local' });
-
-// Check for required env vars
-const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-};
-
-if (!firebaseConfig.apiKey) {
-    console.error("Missing Firebase API Key in .env.local");
-    process.exit(1);
+// Handles both root execution and script dir execution
+const envPath = path.resolve(__dirname, '../.env.local');
+if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+} else {
+    dotenv.config({ path: '.env.local' });
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// --- ADMIN MODE: Initialize Firebase Admin SDK ---
+if (!admin.apps.length) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+        ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        : undefined;
+
+    if (!privateKey || !process.env.FIREBASE_CLIENT_EMAIL) {
+        console.error("❌ Missing FIREBASE_PRIVATE_KEY or FIREBASE_CLIENT_EMAIL in .env.local");
+        process.exit(1);
+    }
+
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: privateKey
+        }),
+    });
+}
+
+const db = admin.firestore();
 
 // File Path
 const FILE_PATH = path.join(__dirname, '../data/Social Science class10 bseb fixed.xlsx');
 
 async function uploadData() {
     console.log(`Starting upload from: ${FILE_PATH}`);
+    console.log("🔒 ADMIN MODE ACTIVE: Bypassing Firestore Rules...");
 
     if (!fs.existsSync(FILE_PATH)) {
         console.error("File not found!");
@@ -44,7 +52,7 @@ async function uploadData() {
     console.log("Fetching existing questions to check for duplicates...");
     const existingQuestions = new Set();
     try {
-        const querySnapshot = await getDocs(collection(db, 'questions'));
+        const querySnapshot = await db.collection('questions').get();
         querySnapshot.forEach(doc => {
             const data = doc.data();
             if (data.question) {
@@ -64,7 +72,7 @@ async function uploadData() {
     console.log(`Found ${sheetNames.length} sheets. Processing all...`);
 
     const batchSize = 400;
-    let batch = writeBatch(db);
+    let batch = db.batch();
     let count = 0;
     let totalUploaded = 0;
     let skippedCount = 0;
@@ -163,7 +171,7 @@ async function uploadData() {
             };
 
             // Create a new document reference
-            const docRef = doc(collection(db, 'questions'));
+            const docRef = db.collection('questions').doc();
             batch.set(docRef, questionData);
 
             count++;
@@ -171,7 +179,7 @@ async function uploadData() {
                 await batch.commit();
                 totalUploaded += count;
                 console.log(`Uploaded batch of ${count}. Total so far: ${totalUploaded}`);
-                batch = writeBatch(db);
+                batch = db.batch();
                 count = 0;
             }
         }
