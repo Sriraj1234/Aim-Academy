@@ -6,12 +6,24 @@ import { FaCrown, FaClock, FaTimes, FaRocket } from 'react-icons/fa';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
-export const TrialReminderModal = () => {
+interface TrialReminderModalProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+    message?: string;
+    subMessage?: string;
+}
+
+export const TrialReminderModal = ({ isOpen, onClose, message, subMessage }: TrialReminderModalProps = {}) => {
     const { userProfile, isInTrial } = useAuth();
     const [isVisible, setIsVisible] = useState(false);
     const [daysLeft, setDaysLeft] = useState(0);
 
+    const isControlled = isOpen !== undefined;
+    const show = isControlled ? isOpen : isVisible;
+
     useEffect(() => {
+        if (isControlled) return; // Skip auto-show logic if controlled
+
         // 1. Check if user is logged in
         if (!userProfile) return;
 
@@ -25,11 +37,7 @@ export const TrialReminderModal = () => {
 
         if (diffDays > 7) return; // Trial expired
 
-        // 4. Determine Days Left (0-7)
-        // 0.5 days means "0 days left" effectively, or "1 day left"? 
-        // Let's ceil: 6.9 days used -> 0.1 left -> "Last Day!"
-        // Actually floors are better for "Completed Days". 
-        // Let's do: 7 - floor(diff)
+        // 4. Determine Days Left
         const remaining = Math.ceil(7 - diffDays);
         setDaysLeft(remaining);
 
@@ -42,7 +50,6 @@ export const TrialReminderModal = () => {
         }
 
         // SHOW IT
-        // Small delay for better UX (don't pop immediately on load)
         const timer = setTimeout(() => {
             setIsVisible(true);
             localStorage.setItem('last_trial_reminder_date', todayStr);
@@ -50,15 +57,18 @@ export const TrialReminderModal = () => {
 
         return () => clearTimeout(timer);
 
-    }, [userProfile]);
+    }, [userProfile, isControlled]);
 
-    const close = () => setIsVisible(false);
+    const close = () => {
+        if (onClose) onClose();
+        setIsVisible(false);
+    };
 
-    if (!isVisible) return null;
+    if (!show) return null;
 
     return (
         <AnimatePresence>
-            {isVisible && (
+            {show && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -76,10 +86,10 @@ export const TrialReminderModal = () => {
                             </div>
 
                             <h2 className="text-2xl font-black text-white mb-1 tracking-tight">
-                                Free Trial Ending Soon!
+                                {message || "Free Trial Ending Soon!"}
                             </h2>
                             <p className="text-purple-100 font-medium text-sm">
-                                Don't lose your premium access
+                                {subMessage || "Don't lose your premium access"}
                             </p>
 
                             <button
@@ -92,15 +102,16 @@ export const TrialReminderModal = () => {
 
                         {/* Content */}
                         <div className="p-6 text-center">
-                            <div className="mb-6">
-                                <span className="inline-block text-6xl font-black bg-clip-text text-transparent bg-gradient-to-br from-pw-indigo to-purple-600">
-                                    {daysLeft}
-                                </span>
-                                <div className="text-gray-500 font-bold uppercase tracking-widest text-sm mt-1">
-                                    Days Remaining
+                            {!message && (
+                                <div className="mb-6">
+                                    <span className="inline-block text-6xl font-black bg-clip-text text-transparent bg-gradient-to-br from-pw-indigo to-purple-600">
+                                        {daysLeft}
+                                    </span>
+                                    <div className="text-gray-500 font-bold uppercase tracking-widest text-sm mt-1">
+                                        Days Remaining
+                                    </div>
                                 </div>
-                            </div>
-
+                            )}
                             <div className="space-y-3 mb-8">
                                 <div className="flex items-center gap-3 bg-purple-50 p-3 rounded-xl border border-purple-100">
                                     <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
