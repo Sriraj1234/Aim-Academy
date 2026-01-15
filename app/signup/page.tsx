@@ -125,8 +125,10 @@ export default function SignupPage() {
                     <form onSubmit={handleSignup} className="space-y-4">
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.fullNameLabel')}</label>
+                                <label htmlFor="signup-name" className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.fullNameLabel')}</label>
                                 <Input
+                                    id="signup-name"
+                                    name="name"
                                     placeholder={language === 'en' ? "Enter your full name" : "अपना पूरा नाम दर्ज करें"}
                                     icon={<FaUser className="text-gray-400" />}
                                     className="!bg-pw-surface !border-pw-border !text-gray-900 placeholder:!text-gray-400 rounded-xl focus:!border-pw-indigo focus:!ring-pw-indigo/20"
@@ -137,8 +139,10 @@ export default function SignupPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.mobileEmailLabel')}</label>
+                                <label htmlFor="signup-email" className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.mobileEmailLabel')}</label>
                                 <Input
+                                    id="signup-email"
+                                    name="email"
                                     placeholder={language === 'en' ? "Enter your phone or email" : "अपना फोन या ईमेल दर्ज करें"}
                                     icon={<FaEnvelope className="text-gray-400" />}
                                     className="!bg-pw-surface !border-pw-border !text-gray-900 placeholder:!text-gray-400 rounded-xl focus:!border-pw-indigo focus:!ring-pw-indigo/20"
@@ -149,8 +153,10 @@ export default function SignupPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.passwordLabel')}</label>
+                                <label htmlFor="signup-password" className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.passwordLabel')}</label>
                                 <Input
+                                    id="signup-password"
+                                    name="password"
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder={language === 'en' ? "Create a password" : "पासवर्ड बनाएं"}
                                     icon={<MdLock className="text-gray-400 text-lg" />}
@@ -164,8 +170,10 @@ export default function SignupPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.confirmPasswordLabel')}</label>
+                                <label htmlFor="signup-confirm-password" className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.confirmPasswordLabel')}</label>
                                 <Input
+                                    id="signup-confirm-password"
+                                    name="confirmPassword"
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder={language === 'en' ? "Confirm your password" : "पासवर्ड की पुष्टि करें"}
                                     icon={<MdLock className="text-gray-400 text-lg" />}
