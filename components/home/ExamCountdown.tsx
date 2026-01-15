@@ -132,20 +132,20 @@ export const ExamCountdown = () => {
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-600/5 rounded-full blur-[100px] pointer-events-none" />
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 relative z-10 gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-8 relative z-10 gap-2">
                 <div className="w-full sm:w-auto">
-                    <h2 className="text-lg md:text-xl font-black text-white flex items-center gap-3 uppercase tracking-wider">
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-[ping_1.5s_infinite]" />
+                    <h2 className="text-base md:text-xl font-black text-white flex items-center gap-2 md:gap-3 uppercase tracking-wider">
+                        <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 animate-[ping_1.5s_infinite]" />
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 whitespace-nowrap">
                             Exam Countdown
                         </span>
                     </h2>
-                    <p className="text-[10px] text-gray-500 font-mono mt-1 tracking-widest pl-5 uppercase">
+                    <p className="text-[10px] text-gray-500 font-mono mt-0.5 md:mt-1 tracking-widest pl-4 md:pl-5 uppercase">
                         Target: {examDate?.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-auto">
+                <div className="flex items-center gap-2 self-end sm:self-auto absolute top-0 right-0 sm:static">
                     {isEditing ? (
                         <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/10 backdrop-blur-md">
                             <input
@@ -165,32 +165,32 @@ export const ExamCountdown = () => {
                     ) : (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="text-gray-600 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+                            className="text-gray-600 hover:text-white transition-colors p-1.5 hover:bg-white/5 rounded-lg"
                         >
-                            <FaEdit />
+                            <FaEdit className="text-sm" />
                         </button>
                     )}
                 </div>
             </div>
 
             {/* Countdown Grid (Digital/Premium Look) */}
-            <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6 md:mb-8 relative z-10">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-4 md:mb-8 relative z-10">
                 {[
                     { label: 'Days', value: timeLeft.days, color: 'text-red-500' },
                     { label: 'Hours', value: timeLeft.hours, color: 'text-white' },
-                    { label: 'Minutes', value: timeLeft.minutes, color: 'text-white' },
-                    { label: 'Seconds', value: timeLeft.seconds, color: 'text-orange-500' },
+                    { label: 'Mins', value: timeLeft.minutes, color: 'text-white' },
+                    { label: 'Secs', value: timeLeft.seconds, color: 'text-orange-500' },
                 ].map((item, index) => (
                     <div key={index} className="flex flex-col items-center group">
-                        <div className="w-full aspect-square rounded-xl md:rounded-2xl bg-[#111] border border-white/5 shadow-inner flex flex-col items-center justify-center relative overflow-hidden group-hover:border-red-500/30 transition-colors duration-500">
+                        <div className="w-full h-12 sm:h-auto sm:aspect-square rounded-lg md:rounded-2xl bg-[#111] border border-white/5 shadow-inner flex flex-col items-center justify-center relative overflow-hidden group-hover:border-red-500/30 transition-colors duration-500">
                             {/* Digital Glitch Decoration */}
                             <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                            <span className={`text-2xl sm:text-3xl md:text-4xl font-black font-mono tracking-tighter ${item.color} drop-shadow-[0_0_10px_rgba(255,0,0,0.3)]`}>
+                            <span className={`text-xl sm:text-3xl md:text-4xl font-black font-mono tracking-tighter ${item.color} drop-shadow-[0_0_10px_rgba(255,0,0,0.3)]`}>
                                 {String(item.value).padStart(2, '0')}
                             </span>
                         </div>
-                        <span className="text-[8px] sm:text-[10px] font-bold text-gray-600 uppercase tracking-widest sm:tracking-[0.2em] mt-2 sm:mt-3 group-hover:text-red-500/70 transition-colors">
+                        <span className="text-[8px] sm:text-[10px] font-bold text-gray-600 uppercase tracking-widest sm:tracking-[0.2em] mt-1.5 sm:mt-3 group-hover:text-red-500/70 transition-colors">
                             {item.label}
                         </span>
                     </div>
@@ -198,12 +198,12 @@ export const ExamCountdown = () => {
             </div>
 
             {/* Status / Motivation Bar */}
-            <div className="relative z-10 bg-gradient-to-r from-red-950/30 to-transparent border-l-2 border-red-600 pl-4 py-2 my-4">
-                <div className="flex items-center gap-2 mb-1">
-                    <FaFire className="text-orange-500 text-xs animate-pulse" />
-                    <span className="text-[10px] text-orange-400 font-bold uppercase tracking-wider">Status: {timeLeft.days < 30 ? 'CRITICAL' : 'ACTIVE'}</span>
+            <div className="relative z-10 bg-gradient-to-r from-red-950/30 to-transparent border-l-2 border-red-600 pl-3 md:pl-4 py-1.5 md:py-2 my-2 md:my-4">
+                <div className="flex items-center gap-2 mb-0.5 md:mb-1">
+                    <FaFire className="text-orange-500 text-[10px] md:text-xs animate-pulse" />
+                    <span className="text-[9px] md:text-[10px] text-orange-400 font-bold uppercase tracking-wider">Status: {timeLeft.days < 30 ? 'CRITICAL' : 'ACTIVE'}</span>
                 </div>
-                <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
+                <p className="text-[11px] md:text-sm text-gray-300 font-medium leading-relaxed line-clamp-1 md:line-clamp-2">
                     "{motivation.message}"
                 </p>
             </div>
