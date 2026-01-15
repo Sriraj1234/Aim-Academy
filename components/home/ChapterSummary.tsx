@@ -198,6 +198,8 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                             <label className="text-xs text-purple-300 font-bold uppercase tracking-wider block">Chapter Name</label>
                                             <input
                                                 type="text"
+                                                name="chapterName"
+                                                id="chapterName"
                                                 value={chapter}
                                                 onChange={(e) => setChapter(e.target.value)}
                                                 placeholder="e.g., Rise of Nationalism in Europe"
