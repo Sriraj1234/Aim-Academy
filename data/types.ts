@@ -131,6 +131,7 @@ export interface UserProfile {
         flashcardGenCount: number;
         groupPlayCount: number;
         noteGenCount?: number;
+        snapSolveCount?: number;
     };
 
     viewedVideoIds?: string[]; // Study Hub Tracking
