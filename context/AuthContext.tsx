@@ -220,6 +220,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         const newProfile: UserProfile = {
                             uid: user.uid,
                             email: user.email || (user.isAnonymous ? 'guest@padhaku.co.in' : ''),
+                            role: 'student', // Default role
                             displayName: user.displayName || (user.isAnonymous ? 'Guest Student' : ''),
                             photoURL: user.photoURL || '',
                             onboardingCompleted: false,
