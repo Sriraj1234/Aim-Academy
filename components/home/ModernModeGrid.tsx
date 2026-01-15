@@ -281,7 +281,7 @@ export const ModernModeGrid = () => {
                             </h3>
 
                             <p className="text-gray-500 text-sm leading-relaxed mb-4 group-hover:text-gray-600 transition-colors">
-                                Track Class 10th progress & deadlines.
+                                Track your progress & deadlines.
                             </p>
 
                             <div className="flex items-center text-sm font-bold text-pw-indigo/40 group-hover:text-pw-indigo transition-colors">
