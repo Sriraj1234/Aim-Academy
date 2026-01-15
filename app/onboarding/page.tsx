@@ -163,7 +163,9 @@ export default function OnboardingPage() {
                 profileData.stream = selectedStream;
             }
 
-            await updateProfile(profileData);
+            // Sanitize data (remove undefined)
+            const cleanData = JSON.parse(JSON.stringify(profileData));
+            await updateProfile(cleanData);
             router.push('/');
         } catch (error) {
             console.error(error);
