@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // TypeScript - ignore build errors for faster builds
+  reactStrictMode: false,
   typescript: {
     ignoreBuildErrors: true,
   },
