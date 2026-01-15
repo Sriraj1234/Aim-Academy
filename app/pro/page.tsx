@@ -36,8 +36,8 @@ export default function PricingPage() {
         setProcessing(true);
 
         try {
-            // 1. Create Order
-            const res = await fetch('/api/payment/create-order', {
+            // 1. Create Subscription
+            const res = await fetch('/api/payment/create-subscription', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ planId: billingCycle }),
@@ -46,27 +46,27 @@ export default function PricingPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || 'Failed to create order');
+                throw new Error(data.error || 'Failed to create subscription');
             }
 
-            // 2. Initialize Razorpay
+            // 2. Initialize Razorpay (Subscription Mode)
             const options = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY, // Public Key (We need to ensure user adds this to env)
-                amount: data.amount,
-                currency: data.currency,
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
+                subscription_id: data.id, // Mandatory for Subscriptions
                 name: "Padhaku Academy",
                 description: `Upgrade to Padhaku Pro (${billingCycle})`,
-                image: "/padhaku-192.png", // Ensure this exists or use logo
-                order_id: data.id,
+                image: "/padhaku-192.png",
                 handler: async function (response: any) {
                     try {
+                        console.log("Razorpay Response:", response);
+
                         // 3. Verify Payment
                         const verifyRes = await fetch('/api/payment/verify', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_subscription_id: response.razorpay_subscription_id,
                                 razorpay_signature: response.razorpay_signature,
                                 userId: user.uid,
                                 planId: billingCycle
@@ -80,7 +80,6 @@ export default function PricingPage() {
                         }
 
                         // Success Actions
-                        // Update local context
                         const now = Date.now();
                         const expiry = billingCycle === 'monthly'
                             ? now + (30 * 24 * 60 * 60 * 1000)
@@ -92,11 +91,11 @@ export default function PricingPage() {
                                 status: 'active',
                                 startDate: now,
                                 expiryDate: expiry,
-                                autoRenew: false
+                                autoRenew: true // Subscriptions are auto-renewing
                             }
                         });
 
-                        toast.success("Upgrade Successful! Welcome to Padhaku Pro 👑");
+                        toast.success("Upgrade Successful! Auto-Pay Enabled ⚡");
                         router.push('/home');
 
                     } catch (err: any) {
@@ -109,20 +108,26 @@ export default function PricingPage() {
                     email: user.email || "",
                 },
                 theme: {
-                    color: "#F59E0B", // Amber-500
+                    color: "#F59E0B",
                 },
+                modal: {
+                    ondismiss: function () {
+                        setProcessing(false);
+                    }
+                }
             };
 
             const rzp1 = new window.Razorpay(options);
             rzp1.on('payment.failed', function (response: any) {
+                console.error('Payment Failed:', response.error);
                 toast.error(response.error.description || "Payment Failed");
+                setProcessing(false);
             });
             rzp1.open();
 
         } catch (error: any) {
             console.error("Payment Initiation Error:", error);
             toast.error(error.message || "Something went wrong");
-        } finally {
             setProcessing(false);
         }
     };
@@ -138,7 +143,7 @@ export default function PricingPage() {
                     {/* Header Section */}
                     <div className="mb-12">
                         <span className="inline-block py-1 px-3 rounded-full bg-amber-100 text-amber-700 text-xs font-bold uppercase tracking-wider mb-4">
-                            Premium Membership
+                            Premium Membership (Auto-Pay)
                         </span>
                         <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 font-display">
                             Unlock Your Full Potential <br /> with <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-500">Padhaku Pro</span>
