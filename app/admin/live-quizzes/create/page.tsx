@@ -60,16 +60,19 @@ export default function CreateLiveQuizPage() {
     useEffect(() => {
         // Fetch Questions for Selection
         const fetchQuestions = async () => {
+            setLoading(true);
+            setAvailableQuestions([]); // Clear previous results to avoid confusion
+
             let constraints: any[] = [limit(500), orderBy('createdAt', 'desc')];
 
-            // Filter by Board (Bank Filter)
+            // Filter by Board (Bank Filter) - Keep Lowercase
             if (bankFilterBoard !== 'all') {
-                constraints.push(where('board', '==', bankFilterBoard.toLowerCase())); // Ensure lowercase match
+                constraints.push(where('board', '==', bankFilterBoard.toLowerCase()));
             }
 
-            // Filter by Subject (Bank Filter)
+            // Filter by Subject (Bank Filter) - Title Case (Do NOT lower case)
             if (bankFilterSubject !== 'all') {
-                constraints.push(where('subject', '==', bankFilterSubject.toLowerCase())); // Ensure normalized match
+                constraints.push(where('subject', '==', bankFilterSubject));
             }
 
             // Filter by Class (Bank Filter)
@@ -80,10 +83,20 @@ export default function CreateLiveQuizPage() {
             const q = query(collection(db, 'questions'), ...constraints);
             try {
                 const snap = await getDocs(q);
-                // Client-side search filtering is done in render
-                setAvailableQuestions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Question)));
-            } catch (error) {
+                const fetchedQuestions = snap.docs.map(d => ({ id: d.id, ...d.data() } as Question));
+                setAvailableQuestions(fetchedQuestions);
+
+                if (fetchedQuestions.length === 0) {
+                    console.log("No questions found for these filters.");
+                }
+            } catch (error: any) {
                 console.error("Error fetching questions:", error);
+                // Handle Missing Index Error gracefully
+                if (error.message.includes('index')) {
+                    alert("System Notice: This specific combination of filters requires a new database index. Please ask the developer to create it, or try fewer filters.");
+                }
+            } finally {
+                setLoading(false);
             }
         };
 
