@@ -18,11 +18,12 @@ export async function POST(req: Request) {
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature,
+            razorpay_subscription_id, // NEW: For subscriptions
             userId,
             planId
         } = body;
 
-        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId) {
+        if (!razorpay_payment_id || !razorpay_signature || !userId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
@@ -32,10 +33,26 @@ export async function POST(req: Request) {
         }
 
         // 1. Verify Signature
-        const generated_signature = crypto
-            .createHmac('sha256', key_secret)
-            .update(razorpay_order_id + "|" + razorpay_payment_id)
-            .digest('hex');
+        let generated_signature = '';
+
+        if (razorpay_subscription_id) {
+            // Subscription Verification Flow
+            // Signature = razorpay_payment_id + "|" + razorpay_subscription_id
+            const data = razorpay_payment_id + "|" + razorpay_subscription_id;
+
+            generated_signature = crypto
+                .createHmac('sha256', key_secret)
+                .update(data)
+                .digest('hex');
+        } else {
+            // Standard Order Verification Flow
+            if (!razorpay_order_id) return NextResponse.json({ error: 'Missing Order ID' }, { status: 400 });
+
+            generated_signature = crypto
+                .createHmac('sha256', key_secret)
+                .update(razorpay_order_id + "|" + razorpay_payment_id)
+                .digest('hex');
+        }
 
         if (generated_signature !== razorpay_signature) {
             return NextResponse.json({ error: 'Invalid Payment Signature' }, { status: 400 });
@@ -57,12 +74,14 @@ export async function POST(req: Request) {
                 status: 'active',
                 startDate: now,
                 expiryDate: expiry,
-                autoRenew: false, // Razorpay standard is one-time unless Subscription API used
-                paymentId: razorpay_payment_id
+                autoRenew: !!razorpay_subscription_id, // True if subscription
+                subscriptionId: razorpay_subscription_id || null,
+                paymentId: razorpay_payment_id,
+                lastPaymentDate: now
             }
         }, { merge: true });
 
-        console.log(`User ${userId} upgraded to PRO via payment ${razorpay_payment_id}`);
+        console.log(`User ${userId} upgraded to PRO via payment ${razorpay_payment_id} (Sub: ${razorpay_subscription_id || 'One-time'})`);
 
         return NextResponse.json({ success: true, message: 'Subscription Activated' });
 
