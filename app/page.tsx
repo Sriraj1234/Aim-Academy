@@ -144,7 +144,9 @@ export default function LandingPage() {
                     router.push('/home');
                   } catch (error) {
                     console.error("Guest login failed", error);
-                    router.push('/login'); // Fallback
+                    // Fallback: If anonymous auth fails (e.g. not enabled in Firebase),
+                    // allow access as unauthenticated visitor
+                    router.push('/home');
                   }
                 }}
                 className="w-full sm:w-auto px-8 py-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 transition-all flex items-center justify-center gap-2"
