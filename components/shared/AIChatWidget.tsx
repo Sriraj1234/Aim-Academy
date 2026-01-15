@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FaRobot, FaTimes, FaPaperPlane, FaSpinner,
     FaMicrophone, FaMicrophoneSlash,
-    FaVolumeUp, FaVolumeMute, FaGoogle
+    FaVolumeUp, FaVolumeMute, FaGoogle, FaImage
 } from 'react-icons/fa';
 import { HiSparkles, HiLightningBolt } from 'react-icons/hi';
 import { useSpeech, isHindiText } from '@/hooks/useSpeech';
@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { UpgradeModal } from '../subscription/UpgradeModal';
+import Webcam from 'react-webcam';
 
 interface Message {
     id: string;
@@ -56,6 +57,96 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
     const { speak, stop, isSpeaking, isSupported: ttsSupported } = useSpeech();
     const { play } = useSound();
     const { userProfile, updateProfile, checkAccess, incrementUsage } = useAuth();
+
+    // --- Camera & Upload Logic ---
+    const [showCamera, setShowCamera] = useState(false);
+    const webcamRef = useRef<Webcam>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const processImage = async (blob: Blob | File) => {
+        setShowCamera(false); // Close camera modal if open
+
+        // Open window immediately
+        const lensWindow = window.open('', '_blank');
+        if (lensWindow) {
+            lensWindow.document.write(`
+                <html>
+                    <head><title>Opening Google Lens...</title></head>
+                    <body style="font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: #fff;">
+                        <div style="width: 40px; height: 40px; border: 3px solid #333; border-top-color: #4285f4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <p style="margin-top: 20px;">Uploading to Google Lens...</p>
+                        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+                    </body>
+                </html>
+            `);
+        }
+
+        setLoading(true);
+        setCurrentStatus('searching_image');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', blob);
+
+            // Optimistic feedback
+            const tempId = Date.now().toString();
+            setMessages(prev => [...prev, {
+                id: tempId,
+                role: 'user',
+                content: '📸 Using Google Lens...',
+                timestamp: new Date()
+            }]);
+
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+            const lensUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(data.url)}`;
+
+            if (lensWindow) {
+                lensWindow.location.href = lensUrl;
+            } else {
+                window.open(lensUrl, '_blank');
+            }
+
+            setMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: 'I\'ve opened Google Lens for you in a new tab! 🔍',
+                timestamp: new Date()
+            }]);
+
+        } catch (error) {
+            console.error('Lens error:', error);
+            if (lensWindow) lensWindow.close();
+            setMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: 'Failed to upload image. Please try again.',
+                timestamp: new Date()
+            }]);
+        } finally {
+            setLoading(false);
+            setCurrentStatus(null);
+        }
+    };
+
+    const handleCameraCapture = useCallback(() => {
+        const imageSrc = webcamRef.current?.getScreenshot();
+        if (imageSrc) {
+            fetch(imageSrc)
+                .then(res => res.blob())
+                .then(blob => processImage(blob));
+        }
+    }, [webcamRef]);
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            processImage(file);
+        }
+    };
 
     // Determine effective context (including AI memory)
     const effectiveContext = {
@@ -702,7 +793,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 <div className="flex items-center gap-1 pb-1">
                                     {/* Google Lens Integration */}
                                     <button
-                                        onClick={() => document.getElementById('lens-upload')?.click()}
+                                        onClick={() => setShowCamera(true)}
                                         className="w-9 h-9 rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-blue-500 hover:bg-blue-50"
                                         title="Search with Google Lens"
                                     >
@@ -710,83 +801,10 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     </button>
                                     <input
                                         type="file"
-                                        id="lens-upload"
+                                        ref={fileInputRef}
                                         className="hidden"
                                         accept="image/*"
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-
-                                            // Open window immediately to avoid popup blocker
-                                            const lensWindow = window.open('', '_blank');
-                                            if (lensWindow) {
-                                                lensWindow.document.write(`
-                                                    <html>
-                                                        <head><title>Opening Google Lens...</title></head>
-                                                        <body style="font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: #fff;">
-                                                            <div style="width: 40px; height: 40px; border: 3px solid #333; border-top-color: #4285f4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                                                            <p style="margin-top: 20px;">Uploading to Google Lens...</p>
-                                                            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
-                                                        </body>
-                                                    </html>
-                                                `);
-                                            }
-
-                                            setLoading(true);
-                                            setCurrentStatus('searching_image');
-                                            try {
-                                                const formData = new FormData();
-                                                formData.append('file', file);
-
-                                                // Optimistic feedback
-                                                const tempId = Date.now().toString();
-                                                setMessages(prev => [...prev, {
-                                                    id: tempId,
-                                                    role: 'user',
-                                                    content: '📸 Using Google Lens...',
-                                                    timestamp: new Date()
-                                                }]);
-
-                                                const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                                                const data = await res.json();
-
-                                                if (!res.ok) throw new Error(data.error || 'Upload failed');
-
-                                                const lensUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(data.url)}`;
-
-                                                // Redirect the already opened window
-                                                if (lensWindow) {
-                                                    lensWindow.location.href = lensUrl;
-                                                } else {
-                                                    // Fallback if window failed to open (rare if triggered by user)
-                                                    window.open(lensUrl, '_blank');
-                                                }
-
-                                                // Add system message
-                                                setMessages(prev => [...prev, {
-                                                    id: (Date.now() + 1).toString(),
-                                                    role: 'assistant',
-                                                    content: 'I\'ve opened Google Lens for you in a new tab! 🔍',
-                                                    timestamp: new Date()
-                                                }]);
-
-                                            } catch (error) {
-                                                console.error('Lens error:', error);
-                                                if (lensWindow) lensWindow.close();
-                                                // Show error in chat
-                                                setMessages(prev => [...prev, {
-                                                    id: (Date.now() + 1).toString(),
-                                                    role: 'assistant',
-                                                    content: 'Failed to upload image. Please try again.',
-                                                    timestamp: new Date()
-                                                }]);
-                                            } finally {
-                                                setLoading(false);
-                                                setCurrentStatus(null);
-                                                // Reset input
-                                                e.target.value = '';
-                                            }
-                                        }}
+                                        onChange={handleFileUpload}
                                     />
 
                                     <button
