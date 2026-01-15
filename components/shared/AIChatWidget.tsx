@@ -717,6 +717,21 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                             const file = e.target.files?.[0];
                                             if (!file) return;
 
+                                            // Open window immediately to avoid popup blocker
+                                            const lensWindow = window.open('', '_blank');
+                                            if (lensWindow) {
+                                                lensWindow.document.write(`
+                                                    <html>
+                                                        <head><title>Opening Google Lens...</title></head>
+                                                        <body style="font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: #fff;">
+                                                            <div style="width: 40px; height: 40px; border: 3px solid #333; border-top-color: #4285f4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                                            <p style="margin-top: 20px;">Uploading to Google Lens...</p>
+                                                            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+                                                        </body>
+                                                    </html>
+                                                `);
+                                            }
+
                                             setLoading(true);
                                             setCurrentStatus('searching_image');
                                             try {
@@ -737,8 +752,15 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
 
                                                 if (!res.ok) throw new Error(data.error || 'Upload failed');
 
-                                                // Open Lens in new tab
-                                                window.open(`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(data.url)}`, '_blank');
+                                                const lensUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(data.url)}`;
+
+                                                // Redirect the already opened window
+                                                if (lensWindow) {
+                                                    lensWindow.location.href = lensUrl;
+                                                } else {
+                                                    // Fallback if window failed to open (rare if triggered by user)
+                                                    window.open(lensUrl, '_blank');
+                                                }
 
                                                 // Add system message
                                                 setMessages(prev => [...prev, {
@@ -750,7 +772,14 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
 
                                             } catch (error) {
                                                 console.error('Lens error:', error);
-                                                // Show error
+                                                if (lensWindow) lensWindow.close();
+                                                // Show error in chat
+                                                setMessages(prev => [...prev, {
+                                                    id: (Date.now() + 1).toString(),
+                                                    role: 'assistant',
+                                                    content: 'Failed to upload image. Please try again.',
+                                                    timestamp: new Date()
+                                                }]);
                                             } finally {
                                                 setLoading(false);
                                                 setCurrentStatus(null);
