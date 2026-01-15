@@ -83,6 +83,7 @@ export default function LoginPage() {
                         src="/assets/login-hero.png"
                         alt="Students studying"
                         fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-cover"
                         priority
                     />
@@ -118,8 +119,10 @@ export default function LoginPage() {
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-bold text-pw-violet mb-2 ml-1">{t('auth.mobileEmailLabel')}</label>
+                                <label htmlFor="login-email" className="block text-sm font-bold text-pw-violet mb-2 ml-1">{t('auth.mobileEmailLabel')}</label>
                                 <Input
+                                    id="login-email"
+                                    name="email"
                                     placeholder={language === 'en' ? "Enter your phone or email" : "अपना फोन या ईमेल दर्ज करें"}
                                     icon={<FaEnvelope className="text-pw-indigo/60" />}
                                     className="!bg-pw-surface !border-pw-border !text-pw-violet placeholder:!text-gray-400 rounded-xl focus:!border-pw-indigo focus:!ring-pw-indigo/20 transition-all font-medium"
@@ -135,8 +138,10 @@ export default function LoginPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-pw-violet mb-2 ml-1">{t('auth.passwordLabel')}</label>
+                                <label htmlFor="login-password" className="block text-sm font-bold text-pw-violet mb-2 ml-1">{t('auth.passwordLabel')}</label>
                                 <Input
+                                    id="login-password"
+                                    name="password"
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder={language === 'en' ? "Enter your password" : "अपना पासवर्ड दर्ज करें"}
                                     icon={<MdLock className="text-pw-indigo/60 text-lg" />}
