@@ -91,6 +91,28 @@
                     "order": "DESCENDING"
                 }
             ]
+        },
+        {
+            "collectionGroup": "questions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "board",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "subject",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "class",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
         }
     ],
     "fieldOverrides": []
