@@ -35,7 +35,7 @@ const itemVariants: Variants = {
 
 export default function LandingPage() {
   const { t, language, setLanguage } = useLanguage()
-  const { user, loading } = useAuth()
+  const { user, loading, loginAnonymously } = useAuth()
   const router = useRouter()
   const [isRedirecting, setIsRedirecting] = useState(false)
 
@@ -128,15 +128,29 @@ export default function LandingPage() {
             </motion.p>
 
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/home">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto px-8 py-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 transition-all flex items-center justify-center gap-2"
-                >
-                  Start Learning Free <HiArrowRight />
-                </motion.button>
-              </Link>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={async () => {
+                  try {
+                    // If already logged in, just go home
+                    if (user) {
+                      router.push('/home');
+                      return;
+                    }
+
+                    // Otherwise login anonymously
+                    await loginAnonymously();
+                    router.push('/home');
+                  } catch (error) {
+                    console.error("Guest login failed", error);
+                    router.push('/login'); // Fallback
+                  }
+                }}
+                className="w-full sm:w-auto px-8 py-4 bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 transition-all flex items-center justify-center gap-2"
+              >
+                Start Learning Free <HiArrowRight />
+              </motion.button>
               <Link href="/about">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
