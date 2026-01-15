@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, query, getDocs, where, limit, orderBy } from 'firebase/firestore';
 import { LiveQuiz, Question, Batch } from '@/data/types';
-import { FaSave, FaSearch, FaCheck, FaPlus, FaCalendarAlt, FaClock, FaMinusCircle } from 'react-icons/fa';
+import { FaSave, FaSearch, FaCheck, FaPlus, FaCalendarAlt, FaClock, FaMinusCircle, FaFilter } from 'react-icons/fa';
 import { HiArrowLeft } from 'react-icons/hi';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -13,7 +13,6 @@ import "react-datepicker/dist/react-datepicker.css";
 export default function CreateLiveQuizPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState(1);
 
     // Form State
     const [title, setTitle] = useState('');
@@ -39,9 +38,11 @@ export default function CreateLiveQuizPage() {
     const [mqMarks, setMqMarks] = useState(4);
     const [mqSubject, setMqSubject] = useState('Physics');
 
+    // BANK FILTERS (Independent of Quiz Settings)
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterBoard, setFilterBoard] = useState('all');
-    const [filterSubject, setFilterSubject] = useState('all');
+    const [bankFilterBoard, setBankFilterBoard] = useState('all');
+    const [bankFilterClass, setBankFilterClass] = useState('all');
+    const [bankFilterSubject, setBankFilterSubject] = useState('all');
 
     // Data Headers
     const [batches, setBatches] = useState<Batch[]>([]);
@@ -61,34 +62,38 @@ export default function CreateLiveQuizPage() {
         const fetchQuestions = async () => {
             let constraints: any[] = [limit(500), orderBy('createdAt', 'desc')];
 
-            // Filter by Target Board
-            if (targetBoard !== 'all') constraints.push(where('board', '==', targetBoard));
+            // Filter by Board (Bank Filter)
+            if (bankFilterBoard !== 'all') {
+                constraints.push(where('board', '==', bankFilterBoard.toLowerCase())); // Ensure lowercase match
+            }
 
-            // Filter by Subject (if selected) - using local input or quiz subject? 
-            // Better to keep the Search filter for subject flexibility, 
-            // BUT user said "wahi question show honge... jis board or class ko maine select kiya".
-            // So Board and Class must be strict. Subject usually follows quiz subject but Mixed quizzes exist.
-            // Let's keep subject flexible via filterSubject, but enforce Board and Class.
-            if (filterSubject !== 'all') constraints.push(where('subject', '==', filterSubject));
+            // Filter by Subject (Bank Filter)
+            if (bankFilterSubject !== 'all') {
+                constraints.push(where('subject', '==', bankFilterSubject.toLowerCase())); // Ensure normalized match
+            }
 
-            // Filter by Class (if selected)
-            if (selectedClasses.length > 0) {
-                // Firestore 'in' query supports up to 10 items
-                const classes = selectedClasses.slice(0, 10);
-                constraints.push(where('class', 'in', classes));
+            // Filter by Class (Bank Filter)
+            if (bankFilterClass !== 'all') {
+                constraints.push(where('class', '==', bankFilterClass));
             }
 
             const q = query(collection(db, 'questions'), ...constraints);
             try {
                 const snap = await getDocs(q);
+                // Client-side search filtering is done in render
                 setAvailableQuestions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Question)));
             } catch (error) {
                 console.error("Error fetching questions:", error);
-                // Fallback for compound index errors or "in" query limits
             }
         };
-        fetchQuestions();
-    }, [targetBoard, filterSubject, selectedClasses]);
+
+        // Debounce fetch slightly to avoid rapid fires
+        const timeoutId = setTimeout(() => {
+            fetchQuestions();
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [bankFilterBoard, bankFilterSubject, bankFilterClass]);
 
 
     const handleToggleQuestion = (question: Question) => {
@@ -147,13 +152,13 @@ export default function CreateLiveQuizPage() {
                 allowedClasses: selectedClasses,
                 allowedStreams: selectedStreams,
                 subject,
-                targetBoard, // Save the board
+                targetBoard, // This one is saved to Quiz Meta
                 startTime: startTime.getTime(),
-                endTime: startTime.getTime() + (duration * 60 * 1000) + (10 * 60 * 1000), // End time is technically window close, giving 10 mins buffer or handled via Logic
+                endTime: startTime.getTime() + (duration * 60 * 1000) + (10 * 60 * 1000),
                 duration,
                 questions: selectedQuestions,
                 totalMarks: selectedQuestions.reduce((sum, q) => sum + (q.marks || 1), 0),
-                createdBy: 'admin', // Replace with actual user ID if available in context
+                createdBy: 'admin',
                 createdAt: Date.now(),
                 status: 'scheduled',
                 participantsCount: 0
@@ -171,7 +176,7 @@ export default function CreateLiveQuizPage() {
 
     return (
         <div className="min-h-screen bg-pw-surface p-8 font-sans">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <button onClick={() => router.back()} className="text-gray-400 font-bold hover:text-pw-indigo flex items-center gap-1 mb-2">
@@ -182,7 +187,11 @@ export default function CreateLiveQuizPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Settings */}
-                    <div className="bg-white p-6 rounded-3xl border border-pw-border shadow-sm space-y-6 lg:col-span-1">
+                    <div className="bg-white p-6 rounded-3xl border border-pw-border shadow-sm space-y-6 lg:col-span-1 h-fit">
+                        <h2 className="text-xl font-bold text-pw-violet flex items-center gap-2">
+                            Quiz Settings
+                        </h2>
+
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">Quiz Title</label>
                             <input
@@ -204,7 +213,7 @@ export default function CreateLiveQuizPage() {
                             />
                         </div>
 
-                        {/* Target Board Selection */}
+                        {/* Settings: Target Board */}
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">Target Board</label>
                             <select
@@ -215,7 +224,7 @@ export default function CreateLiveQuizPage() {
                                 <option value="cbse">CBSE</option>
                                 <option value="icse">ICSE</option>
                                 <option value="bseb">BSEB (Bihar Board)</option>
-                                <option value="all">All Boards (Generic)</option>
+                                <option value="all">All Boards</option>
                             </select>
                         </div>
 
@@ -237,7 +246,7 @@ export default function CreateLiveQuizPage() {
                             </div>
                         </div>
 
-                        {/* Class Selection */}
+                        {/* Settings: Class Selection */}
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">Allowed Classes</label>
                             <div className="flex flex-wrap gap-2">
@@ -256,7 +265,6 @@ export default function CreateLiveQuizPage() {
                             </div>
                         </div>
 
-                        {/* Stream Selection (Visible only if Class 11 or 12 is selected) */}
                         {(selectedClasses.includes('11') || selectedClasses.includes('12')) && (
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Allowed Streams</label>
@@ -393,7 +401,7 @@ export default function CreateLiveQuizPage() {
 
                         {creationMode === 'manual' ? (
                             <div className="bg-white p-6 rounded-3xl border border-pw-border shadow-sm space-y-4">
-                                <h3 className="text-lg font-bold text-pw-violet">Add New Question</h3>
+                                <h3 className="text-lg font-bold text-pw-violet">Add New Question (Manual)</h3>
 
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 mb-1">Question Text</label>
@@ -477,40 +485,71 @@ export default function CreateLiveQuizPage() {
                             </div>
                         ) : (
                             <>
-                                <div className="bg-white p-4 rounded-2xl border border-pw-border shadow-sm flex flex-wrap gap-4">
-                                    <div className="flex-1 min-w-[200px] relative">
+                                <div className="bg-white p-4 rounded-2xl border border-pw-border shadow-sm">
+                                    <h3 className="text-sm font-bold text-gray-500 mb-3 flex items-center gap-2">
+                                        <FaFilter /> Filter Question Bank
+                                    </h3>
+
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                        {/* Board Filter */}
+                                        <select
+                                            value={bankFilterBoard}
+                                            onChange={(e) => setBankFilterBoard(e.target.value)}
+                                            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none capitalize"
+                                        >
+                                            <option value="all">All Boards</option>
+                                            <option value="cbse">CBSE</option>
+                                            <option value="icse">ICSE</option>
+                                            <option value="bseb">BSEB (Bihar)</option>
+                                            <option value="up">UP Board</option>
+                                        </select>
+
+                                        {/* Class Filter */}
+                                        <select
+                                            value={bankFilterClass}
+                                            onChange={(e) => setBankFilterClass(e.target.value)}
+                                            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none"
+                                        >
+                                            <option value="all">All Classes</option>
+                                            <option value="9">Class 9</option>
+                                            <option value="10">Class 10</option>
+                                            <option value="11">Class 11</option>
+                                            <option value="12">Class 12</option>
+                                        </select>
+
+                                        {/* Subject Filter */}
+                                        <select
+                                            value={bankFilterSubject}
+                                            onChange={(e) => setBankFilterSubject(e.target.value)}
+                                            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none capitalize col-span-2"
+                                        >
+                                            <option value="all">All Subjects</option>
+                                            <option value="Physics">Physics</option>
+                                            <option value="Chemistry">Chemistry</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="Biology">Biology</option>
+                                            <option value="English">English</option>
+                                            <option value="Hindi">Hindi</option>
+                                            <option value="History">History</option>
+                                            <option value="Geography">Geography</option>
+                                            <option value="Political Science">Political Science</option>
+                                            <option value="Economics">Economics</option>
+                                            <option value="Accountancy">Accountancy</option>
+                                            <option value="Business Studies">Business Studies</option>
+                                            <option value="Sanskrit">Sanskrit</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="relative">
                                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                         <input
                                             type="text"
-                                            placeholder="Search questions..."
+                                            placeholder="Search question text..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-pw-indigo/20"
                                         />
                                     </div>
-
-                                    {/* Board Filter Removed from here as it relies on Quiz Settings now */}
-                                    {/* Subject Filter kept for narrowing down */}
-                                    <select
-                                        value={filterSubject}
-                                        onChange={(e) => setFilterSubject(e.target.value)}
-                                        className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none capitalize"
-                                    >
-                                        <option value="all">All Subjects</option>
-                                        <option value="Physics">Physics</option>
-                                        <option value="Chemistry">Chemistry</option>
-                                        <option value="Mathematics">Mathematics</option>
-                                        <option value="Biology">Biology</option>
-                                        <option value="English">English</option>
-                                        <option value="Hindi">Hindi</option>
-                                        <option value="History">History</option>
-                                        <option value="Geography">Geography</option>
-                                        <option value="Political Science">Political Science</option>
-                                        <option value="Economics">Economics</option>
-                                        <option value="Accountancy">Accountancy</option>
-                                        <option value="Business Studies">Business Studies</option>
-                                        <option value="Sanskrit">Sanskrit</option>
-                                    </select>
                                 </div>
 
                                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
@@ -528,11 +567,11 @@ export default function CreateLiveQuizPage() {
                                                         <div className="flex-1">
                                                             <div className="flex gap-2 mb-1">
                                                                 <span className="text-[10px] font-bold uppercase text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{q.board}</span>
+                                                                <span className="text-[10px] font-bold uppercase text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{q.class}th</span>
                                                                 <span className="text-[10px] font-bold uppercase text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{q.subject}</span>
                                                             </div>
                                                             <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">{q.question}</p>
-                                                            {/* Show Options */}
-                                                            {/* Show Options - Enhanced Display */}
+
                                                             {q.options && q.options.length > 0 ? (
                                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                                                                     {q.options.map((opt, idx) => (
@@ -560,13 +599,6 @@ export default function CreateLiveQuizPage() {
                             </>
                         )}
 
-                        {/* List of MANUALLY Added Questions (Always Visible if any) to allow remove? 
-                            Actually the "Selected Questions" count on the left acts as the cart.
-                            Maybe we should show a list of selected questions somewhere?
-                            For now, relying on the "Selection List" in the 'Bank' mode is enough, but for manual ones,
-                            user needs to see what they added.
-                            I'll add a "Selected Questions Review" section below.
-                        */}
                         {selectedQuestions.length > 0 && (
                             <div className="mt-8 pt-6 border-t border-gray-200">
                                 <h3 className="font-bold text-gray-700 mb-4">Selected Questions ({selectedQuestions.length})</h3>
