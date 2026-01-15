@@ -13,7 +13,7 @@ import { SidebarDrawer } from './SidebarDrawer'
 
 // Header Component
 export const Header = () => {
-    const { user, userProfile, isInTrial } = useAuth()
+    const { user, userProfile, isInTrial, loading } = useAuth()
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -56,7 +56,9 @@ export const Header = () => {
                     <div className="flex items-center gap-2 md:gap-3">
                         {/* Theme & Sound Toggles Removed as per request */}
 
-                        {mounted && user ? (
+                        {(!mounted || loading) ? (
+                            <div className="w-24 h-9 bg-gray-100/50 rounded-full animate-pulse" />
+                        ) : user ? (
                             <>
                                 {userProfile?.subscription?.plan !== 'pro' && (
                                     isInTrial ? (
@@ -101,8 +103,17 @@ export const Header = () => {
                             </>
                         ) : (
                             <>
-                                <Link href="/login" className="hidden sm:block">
-                                    <Button variant="ghost" size="sm" className="text-pw-violet hover:bg-pw-lavender/20">Login</Button>
+                                <Link href="/login">
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className="relative flex items-center gap-2 px-1.5 py-1 md:px-3 md:py-1.5 rounded-full bg-pw-surface hover:bg-pw-lavender/20 border border-pw-border transition-all cursor-pointer"
+                                    >
+                                        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gray-100 text-pw-violet flex items-center justify-center text-xs md:text-sm font-bold shadow-pw-sm">
+                                            <FaUserCircle />
+                                        </div>
+                                        <span className="text-xs font-bold text-pw-indigo hidden sm:block">Future Scholar</span>
+                                    </motion.div>
                                 </Link>
                                 <Link href="/login">
                                     <Button size="sm" className="bg-pw-indigo hover:bg-pw-violet text-white border-0 shadow-pw-md text-xs md:text-sm px-3 md:px-4">Get Started</Button>
@@ -110,8 +121,8 @@ export const Header = () => {
                             </>
                         )}
                     </div>
-                </div>
-            </header>
+                </div >
+            </header >
         </>
     )
 }
