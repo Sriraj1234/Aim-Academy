@@ -18,53 +18,84 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
     const pathname = usePathname();
     const [isRequestOpen, setIsRequestOpen] = useState(false);
 
-    const menuItems = [
-        { icon: FaDesktop, label: 'Dashboard', href: '/home' },
-        { icon: FaBookOpen, label: 'Study Hub', href: '/study-hub' },
-        { icon: FaLaptopCode, label: 'Practice Zone', href: '/play/selection' },
-        { icon: FaUserCircle, label: 'My Profile', href: '/profile' },
-        { icon: FaBolt, label: 'AI Tools', isDivider: true },
-        { icon: FaCamera, label: 'Snap & Solve', href: '/play/snap-solve' },
-        { icon: FaBook, label: 'Wisdom Book', href: '/wisdom', isNew: true },
-        { icon: FaHandsHelping, label: 'AI Guru', href: '/live-guru' },
-        { icon: FaGraduationCap, label: 'Leaderboard', href: '/leaderboard' },
-        { icon: FaComments, label: 'Discussions', href: '/discussions', isNew: true },
-        { icon: FaChalkboardTeacher, label: 'Teacher Panel', href: '/teachers/admin' },
-        { icon: FaMoon, label: 'Settings', isDivider: true },
-        { icon: FaLightbulb, label: 'Request Feature', action: () => setIsRequestOpen(true) },
-        { icon: FaMoon, label: 'Dark Mode', isToggle: true, action: toggleTheme },
-        { icon: FaInfoCircle, label: 'About Us', href: '/about' },
-        { icon: FaHeadset, label: 'Contact Support', href: '/contact' },
-        { icon: FaShieldAlt, label: 'Policies', href: '/privacy' },
+    // Grouped Menu Structure
+    const menuGroups = [
+        {
+            id: 'main',
+            label: null, // No header for main section
+            items: [
+                { icon: FaDesktop, label: 'Dashboard', href: '/home' },
+                { icon: FaUserCircle, label: 'My Profile', href: '/profile' },
+                { icon: FaGraduationCap, label: 'Leaderboard', href: '/leaderboard' },
+            ]
+        },
+        {
+            id: 'ai-tools',
+            label: 'AI Tools',
+            items: [
+                { icon: FaCamera, label: 'Snap & Solve', href: '/play/snap-solve' },
+                { icon: FaBook, label: 'Wisdom Book', href: '/wisdom', isNew: true },
+                { icon: FaHandsHelping, label: 'AI Guru', href: '/live-guru' },
+            ]
+        },
+        {
+            id: 'features',
+            label: 'App Features',
+            items: [
+                { icon: FaBookOpen, label: 'Study Hub', href: '/study-hub' },
+                { icon: FaLaptopCode, label: 'Practice Zone', href: '/play/selection' },
+                { icon: FaComments, label: 'Discussions', href: '/discussions', isNew: true },
+                { icon: FaChalkboardTeacher, label: 'Teacher Panel', href: '/teachers/admin' },
+            ]
+        },
+        {
+            id: 'settings',
+            label: 'Settings & Support',
+            items: [
+                { icon: FaLightbulb, label: 'Request Feature', action: () => setIsRequestOpen(true) },
+                { icon: FaMoon, label: 'Dark Mode', isToggle: true, action: toggleTheme },
+                { icon: FaInfoCircle, label: 'About Us', href: '/about' },
+                { icon: FaHeadset, label: 'Contact Support', href: '/contact' },
+                { icon: FaShieldAlt, label: 'Policies', href: '/privacy' },
+            ]
+        }
     ];
 
-    // Smooth Animation Curve (No Jitter)
+    // Smooth Animation Curve (Spring Physics)
     const sidebarVariants: Variants = {
         hidden: {
             x: '-100%',
             opacity: 0.5,
             transition: {
-                type: "tween",
-                ease: "circIn",
-                duration: 0.3
+                type: "spring",
+                stiffness: 300,
+                damping: 30
             }
         },
         show: {
             x: 0,
             opacity: 1,
             transition: {
-                type: "tween",
-                ease: "circOut",
-                duration: 0.4,
-                staggerChildren: 0.04,
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                staggerChildren: 0.05,
                 delayChildren: 0.1
             }
         }
     };
 
     const itemVariants: Variants = {
-        hidden: { x: -10, opacity: 0 },
-        show: { x: 0, opacity: 1, transition: { type: "tween", ease: "easeOut", duration: 0.3 } }
+        hidden: { x: -20, opacity: 0 },
+        show: {
+            x: 0,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                stiffness: 400,
+                damping: 25
+            }
+        }
     };
 
     return (
@@ -89,7 +120,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                         className={`fixed top-0 left-0 bottom-0 w-[85vw] sm:w-[320px] backdrop-blur-3xl z-[70] shadow-[10px_0_40px_-5px_rgba(0,0,0,0.3)] border-r flex flex-col ${resolvedTheme === 'dark' ? 'bg-[#0a0a0f]/95 border-white/5' : 'bg-white/95 border-gray-100'}`}
                     >
                         {/* Vibrant Header with Gradient */}
-                        <div className="relative p-6 pt-12 pb-8 overflow-hidden rounded-br-[32px] shadow-lg z-10">
+                        <div className="relative p-6 pt-12 pb-8 overflow-hidden rounded-br-[32px] shadow-lg z-10 shrink-0">
                             {/* Decorative Background Mesh */}
                             <div className="absolute inset-0 bg-gradient-to-br from-[#4F46E5] via-[#7C3AED] to-[#DB2777] z-0" />
                             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10" />
@@ -137,67 +168,73 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
 
                         {/* Scrollable Content */}
                         <div className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar">
-                            <div className="space-y-1">
-                                {menuItems.map((item: any, idx) => (
-                                    <React.Fragment key={idx}>
-                                        {item.isDivider ? (
-                                            <motion.div variants={itemVariants} className="mt-8 mb-3 px-3">
-                                                <span className={`text-[11px] font-extrabold uppercase tracking-widest flex items-center gap-2 ${resolvedTheme === 'dark' ? 'text-gray-500' : 'text-indigo-400/90'}`}>
-                                                    <span className="w-1 h-1 rounded-full bg-current opacity-50"></span>
-                                                    {item.label}
+                            <div className="space-y-6">
+                                {menuGroups.map((group) => (
+                                    <div key={group.id}>
+                                        {group.label && (
+                                            <motion.div variants={itemVariants} className="px-3 mb-2 flex items-center gap-2">
+                                                <span className={`text-[10px] font-extrabold uppercase tracking-widest ${resolvedTheme === 'dark' ? 'text-gray-500' : 'text-indigo-400/80'}`}>
+                                                    {group.label}
                                                 </span>
+                                                <div className={`h-[1px] flex-1 ${resolvedTheme === 'dark' ? 'bg-white/5' : 'bg-gray-100'}`} />
                                             </motion.div>
-                                        ) : (
-                                            item.href ? (
-                                                <Link href={item.href} onClick={onClose}>
-                                                    <motion.div
-                                                        variants={itemVariants}
-                                                        className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer group transition-all duration-300 border border-transparent ${pathname === item.href
-                                                            ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent text-indigo-500 font-bold border-indigo-500/10'
-                                                            : resolvedTheme === 'dark' ? 'text-gray-400 hover:bg-white/5 hover:text-gray-200' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center gap-4">
-                                                            <span className={`text-[1.15rem] transition-colors duration-300 filter ${pathname === item.href ? 'text-indigo-500 drop-shadow-[0_0_8px_rgba(99,102,241,0.4)]' : 'opacity-70 group-hover:opacity-100 group-hover:text-indigo-500'
-                                                                }`}>
-                                                                <item.icon />
-                                                            </span>
-
-                                                            <span className="text-[14px] tracking-wide">{item.label}</span>
-                                                        </div>
-
-                                                        {item.isNew && (
-                                                            <span className="text-[9px] font-bold bg-gradient-to-r from-pink-500 to-rose-600 text-white px-2 py-0.5 rounded-full shadow-[0_2px_8px_rgba(244,63,94,0.4)]">
-                                                                NEW
-                                                            </span>
-                                                        )}
-                                                        {pathname === item.href && (
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
-                                                        )}
-                                                    </motion.div>
-                                                </Link>
-                                            ) : (
-                                                <motion.div
-                                                    onClick={item.action}
-                                                    variants={itemVariants}
-                                                    className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer group transition-all duration-200 ${resolvedTheme === 'dark' ? 'text-gray-400 hover:bg-white/5 hover:text-gray-200' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center gap-4">
-                                                        <span className={`text-[1.15rem] transition-colors duration-300 ${'opacity-70 group-hover:opacity-100 group-hover:text-indigo-500'}`}><item.icon /></span>
-                                                        <span className="text-[14px] font-medium tracking-wide">{item.label}</span>
-                                                    </div>
-                                                    {item.isToggle && (
-                                                        <div className={`w-11 h-6 rounded-full relative transition-colors cursor-pointer border ${resolvedTheme === 'dark' ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-gray-200 border-gray-300'
-                                                            }`}>
-                                                            <div className={`absolute top-[3px] w-4 h-4 rounded-full shadow-md transition-all duration-300 ${resolvedTheme === 'dark' ? 'left-[22px] bg-indigo-400' : 'left-1 bg-white'
-                                                                }`} />
-                                                        </div>
-                                                    )}
-                                                </motion.div>
-                                            )
                                         )}
-                                    </React.Fragment>
+
+                                        <div className="space-y-1">
+                                            {group.items.map((item: any, idx) => (
+                                                <React.Fragment key={`${group.id}-${idx}`}>
+                                                    {item.href ? (
+                                                        <Link href={item.href} onClick={onClose}>
+                                                            <motion.div
+                                                                variants={itemVariants}
+                                                                className={`flex items-center justify-between p-3 rounded-xl cursor-pointer group transition-all duration-300 border border-transparent ${pathname === item.href
+                                                                    ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent text-indigo-500 font-bold border-indigo-500/10 shadow-sm'
+                                                                    : resolvedTheme === 'dark' ? 'text-gray-400 hover:bg-white/5 hover:text-gray-200' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                                                    }`}
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className={`text-[1.1rem] w-6 flex justify-center transition-colors duration-300 filter ${pathname === item.href ? 'text-indigo-500' : 'opacity-70 group-hover:opacity-100 group-hover:text-indigo-500'
+                                                                        }`}>
+                                                                        <item.icon />
+                                                                    </span>
+
+                                                                    <span className="text-[13px] tracking-wide font-medium">{item.label}</span>
+                                                                </div>
+
+                                                                {item.isNew && (
+                                                                    <span className="text-[9px] font-bold bg-gradient-to-r from-pink-500 to-rose-600 text-white px-2 py-0.5 rounded-full shadow-[0_2px_8px_rgba(244,63,94,0.4)]">
+                                                                        NEW
+                                                                    </span>
+                                                                )}
+                                                                {pathname === item.href && (
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                                                                )}
+                                                            </motion.div>
+                                                        </Link>
+                                                    ) : (
+                                                        <motion.div
+                                                            onClick={item.action}
+                                                            variants={itemVariants}
+                                                            className={`flex items-center justify-between p-3 rounded-xl cursor-pointer group transition-all duration-200 ${resolvedTheme === 'dark' ? 'text-gray-400 hover:bg-white/5 hover:text-gray-200' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                                                }`}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <span className={`text-[1.1rem] w-6 flex justify-center transition-colors duration-300 ${'opacity-70 group-hover:opacity-100 group-hover:text-indigo-500'}`}><item.icon /></span>
+                                                                <span className="text-[13px] font-medium tracking-wide">{item.label}</span>
+                                                            </div>
+                                                            {item.isToggle && (
+                                                                <div className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer border ${resolvedTheme === 'dark' ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-gray-200 border-gray-300'
+                                                                    }`}>
+                                                                    <div className={`absolute top-[2px] w-3.5 h-3.5 rounded-full shadow-md transition-all duration-300 ${resolvedTheme === 'dark' ? 'left-[20px] bg-indigo-400' : 'left-1 bg-white'
+                                                                        }`} />
+                                                                </div>
+                                                            )}
+                                                        </motion.div>
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
 
