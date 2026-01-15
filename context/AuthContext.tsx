@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             activeDevices.push({ deviceId, deviceName, lastActive: nowTs });
                         }
 
-                        await updateDoc(docRef, { activeDevices });
+                        await setDoc(docRef, { activeDevices }, { merge: true });
                         isRegistered = true; // Mark as successfully registered in DB
                     } else {
                         // New Profile Creation handles the initial device array, so we consider it registered.
@@ -163,11 +163,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                         if (gamification.currentMonth !== currentMonthStr) {
                             // Handle Reset
-                            updateDoc(docRef, {
+                            setDoc(docRef, {
                                 'gamification.xp': 0,
                                 'gamification.level': 1,
                                 'gamification.currentMonth': currentMonthStr
-                            });
+                            }, { merge: true });
                             gamification.xp = 0;
                             gamification.level = 1;
                             gamification.currentMonth = currentMonthStr;
@@ -190,7 +190,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                                 groupPlayCount: 0
                             };
                             // We don't await this to keep UI snappy, fire and forget-ish or optimistic
-                            updateDoc(docRef, { dailyLimits: newLimits });
+                            setDoc(docRef, { dailyLimits: newLimits }, { merge: true });
                             profileData.dailyLimits = newLimits;
                         }
 
@@ -473,7 +473,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 [`dailyLimits.${fieldName}`]: currentVal + 1
             };
 
-            await updateDoc(docRef, updatePayload);
+            await setDoc(docRef, updatePayload, { merge: true });
         } catch (e) {
             console.error("Failed to update usage", e);
         }
