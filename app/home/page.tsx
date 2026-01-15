@@ -29,7 +29,23 @@ const DiscussionSection = dynamic(() => import('@/components/home/DiscussionSect
 
 
 
+import { useAuth } from '@/context/AuthContext'
+import { useRouter } from 'next/navigation' // Add router
+import { useEffect } from 'react' // Add useEffect
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading' // Add loader
+
 export default function DashboardPage() {
+    const { user, loading } = useAuth()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/login')
+        }
+    }, [user, loading, router])
+
+    if (loading || !user) return <InteractiveLoading message="Loading Dashboard..." fullScreen />
+
     return (
         <div className="min-h-screen bg-pw-surface pb-20 font-sans selection:bg-pw-indigo selection:text-white">
             <Header />
