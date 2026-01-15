@@ -28,8 +28,8 @@ interface AuthContextType {
     updateProfile: (data: Partial<UserProfile>) => Promise<void>
     addXP: (amount: number) => Promise<void>
     // Subscription Helpers
-    checkAccess: (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen') => boolean
-    incrementUsage: (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen') => Promise<void>
+    checkAccess: (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve') => boolean
+    incrementUsage: (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve') => Promise<void>
     isInTrial: boolean
 }
 
@@ -245,7 +245,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                                 date: new Date().toISOString().split('T')[0],
                                 aiChatCount: 0,
                                 flashcardGenCount: 0,
-                                groupPlayCount: 0
+                                groupPlayCount: 0,
+                                noteGenCount: 0,
+                                snapSolveCount: 0
                             },
                             referralCode: user.uid, // Use UID as referral code
                             referredBy: referredBy,
@@ -424,17 +426,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const isInTrial = userProfile ? (Date.now() - (userProfile.createdAt || 0) < 7 * 24 * 60 * 60 * 1000) && userProfile.subscription?.plan !== 'pro' : false;
 
-    const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen'): boolean => {
+    const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve'): boolean => {
         if (!userProfile) return false;
 
         const isPro = userProfile.subscription?.plan === 'pro';
-        const limits = userProfile.dailyLimits || { aiChatCount: 0, flashcardGenCount: 0, groupPlayCount: 0, noteGenCount: 0 };
+        const limits = userProfile.dailyLimits || { aiChatCount: 0, flashcardGenCount: 0, groupPlayCount: 0, noteGenCount: 0, snapSolveCount: 0 };
 
         // --- PRO USER LOGIC ---
         if (isPro || isInTrial) {
             // Pro/Trial Users are mostly unlimited, with specific caps for heavy tools
             if (feature === 'flashcards') return limits.flashcardGenCount < 10;
             if (feature === 'note_gen') return (limits.noteGenCount || 0) < 6; // Pro Limit: 6
+            if (feature === 'snap_solve') return (limits.snapSolveCount || 0) < 6; // Pro Limit: 6
             return true; // ai_chat, group_play are unlimited
         }
 
@@ -443,11 +446,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (feature === 'flashcards') return limits.flashcardGenCount < 3;
         if (feature === 'group_play') return (limits.groupPlayCount || 0) < 3;
         if (feature === 'note_gen') return (limits.noteGenCount || 0) < 2; // Free Limit: 2
+        if (feature === 'snap_solve') return (limits.snapSolveCount || 0) < 2; // Free Limit: 2
 
         return false;
     }
 
-    const incrementUsage = async (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen') => {
+    const incrementUsage = async (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve') => {
         if (!user) return;
 
         const docRef = doc(db, 'users', user.uid);
@@ -457,7 +461,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             'ai_chat': 'aiChatCount',
             'flashcards': 'flashcardGenCount',
             'group_play': 'groupPlayCount',
-            'note_gen': 'noteGenCount'
+            'note_gen': 'noteGenCount',
+            'snap_solve': 'snapSolveCount'
         };
         const fieldName = fieldMap[feature];
 
