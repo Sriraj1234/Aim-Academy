@@ -16,19 +16,44 @@ export const useLocation = () => {
 
     const getAddressFromCoordinates = async (latitude: number, longitude: number, accuracy: number): Promise<LocationData> => {
         try {
-            // Use BigDataCloud's free reverse geocoding API
+            // Priority 1: Use BigDataCloud's free reverse geocoding API (Fast, no rate limit)
             const response = await fetch(
                 `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
             );
             const data = await response.json();
 
+            let pincode = data.postcode || '';
+            let locality = data.locality || '';
+            let city = data.city || '';
+            let state = data.principalSubdivision || '';
+
+            // Priority 2: Fallback to OpenStreetMap (Nominatim) if pincode is missing
+            if (!pincode) {
+                try {
+                    console.log("BigDataCloud missing pincode, falling back to Nominatim...");
+                    const nominatimRes = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+                    );
+                    const nominatimData = await nominatimRes.json();
+
+                    if (nominatimData.address) {
+                        if (nominatimData.address.postcode) pincode = nominatimData.address.postcode;
+                        if (!locality) locality = nominatimData.address.suburb || nominatimData.address.neighbourhood || '';
+                        if (!city) city = nominatimData.address.city || nominatimData.address.town || nominatimData.address.village || '';
+                        if (!state) state = nominatimData.address.state || '';
+                    }
+                } catch (nomErr) {
+                    console.warn("Nominatim fallback failed:", nomErr);
+                }
+            }
+
             return {
                 latitude,
                 longitude,
-                locality: data.locality || '',
-                city: data.city || '',
-                state: data.principalSubdivision || '',
-                pincode: data.postcode || '',
+                locality,
+                city,
+                state,
+                pincode,
                 accuracy
             };
         } catch (err) {
