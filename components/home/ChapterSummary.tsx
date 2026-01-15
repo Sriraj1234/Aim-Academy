@@ -7,7 +7,9 @@ import { useAuth } from '@/context/AuthContext';
 import { UpgradeModal } from '@/components/subscription/UpgradeModal'; // Fix import path
 import ReactMarkdown from 'react-markdown';
 import { exportSummaryToPDF } from '@/lib/pdfGenerator';
+
 import { FaFilePdf } from 'react-icons/fa';
+import { SafeImage } from '../shared/SafeImage';
 
 interface Summary {
     title: string;
@@ -274,12 +276,13 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
                                                 <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar snap-x">
                                                     {images.map((img, i) => (
                                                         <div key={i} className="snap-center shrink-0 w-64 aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 relative group">
-                                                            <img
+                                                            <SafeImage
                                                                 src={img.original || img.url}
                                                                 alt={img.title}
                                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                                width={320}
                                                             />
-                                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
+                                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8 pointer-events-none">
                                                                 <p className="text-xs text-white line-clamp-1">{img.title}</p>
                                                             </div>
                                                         </div>
