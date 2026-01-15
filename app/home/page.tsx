@@ -38,13 +38,14 @@ export default function DashboardPage() {
     const { user, loading } = useAuth()
     const router = useRouter()
 
-    useEffect(() => {
-        if (!loading && !user) {
-            router.push('/login')
-        }
-    }, [user, loading, router])
+    // Removed forced redirect to login for guest access
+    // useEffect(() => {
+    //     if (!loading && !user) {
+    //         router.push('/login')
+    //     }
+    // }, [user, loading, router])
 
-    if (loading || !user) return <InteractiveLoading message="Loading Dashboard..." fullScreen />
+    if (loading) return <InteractiveLoading message="Loading Dashboard..." fullScreen />
 
     return (
         <div className="min-h-screen bg-pw-surface pb-20 font-sans selection:bg-pw-indigo selection:text-white">
