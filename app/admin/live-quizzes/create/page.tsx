@@ -37,7 +37,7 @@ export default function CreateLiveQuizPage() {
     const [mqOptions, setMqOptions] = useState(['', '', '', '']);
     const [mqCorrect, setMqCorrect] = useState(0);
     const [mqMarks, setMqMarks] = useState(4);
-    const [mqSubject, setMqSubject] = useState('physics');
+    const [mqSubject, setMqSubject] = useState('Physics');
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterBoard, setFilterBoard] = useState('all');
@@ -285,13 +285,19 @@ export default function CreateLiveQuizPage() {
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pw-indigo/20 outline-none font-medium capitalize"
                             >
                                 <option value="Mixed">Mixed Subjects</option>
-                                <option value="physics">Physics</option>
-                                <option value="math">Math</option>
-                                <option value="chemistry">Chemistry</option>
-                                <option value="biology">Biology</option>
-                                <option value="english">English</option>
-                                <option value="hindi">Hindi</option>
-                                <option value="sanskrit">Sanskrit</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Biology">Biology</option>
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="Political Science">Political Science</option>
+                                <option value="Economics">Economics</option>
+                                <option value="Accountancy">Accountancy</option>
+                                <option value="Business Studies">Business Studies</option>
+                                <option value="Sanskrit">Sanskrit</option>
                             </select>
                         </div>
 
@@ -435,13 +441,19 @@ export default function CreateLiveQuizPage() {
                                             onChange={(e) => setMqSubject(e.target.value)}
                                             className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none capitalize"
                                         >
-                                            <option value="physics">Physics</option>
-                                            <option value="math">Mathematics</option>
-                                            <option value="chemistry">Chemistry</option>
-                                            <option value="biology">Biology</option>
-                                            <option value="english">English</option>
-                                            <option value="hindi">Hindi</option>
-                                            <option value="sanskrit">Sanskrit</option>
+                                            <option value="Physics">Physics</option>
+                                            <option value="Chemistry">Chemistry</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="Biology">Biology</option>
+                                            <option value="English">English</option>
+                                            <option value="Hindi">Hindi</option>
+                                            <option value="History">History</option>
+                                            <option value="Geography">Geography</option>
+                                            <option value="Political Science">Political Science</option>
+                                            <option value="Economics">Economics</option>
+                                            <option value="Accountancy">Accountancy</option>
+                                            <option value="Business Studies">Business Studies</option>
+                                            <option value="Sanskrit">Sanskrit</option>
                                         </select>
                                     </div>
                                     <div className="w-24">
@@ -485,13 +497,19 @@ export default function CreateLiveQuizPage() {
                                         className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none capitalize"
                                     >
                                         <option value="all">All Subjects</option>
-                                        <option value="physics">Physics</option>
-                                        <option value="math">Math</option>
-                                        <option value="chemistry">Chemistry</option>
-                                        <option value="biology">Biology</option>
-                                        <option value="english">English</option>
-                                        <option value="hindi">Hindi</option>
-                                        <option value="sanskrit">Sanskrit</option>
+                                        <option value="Physics">Physics</option>
+                                        <option value="Chemistry">Chemistry</option>
+                                        <option value="Mathematics">Mathematics</option>
+                                        <option value="Biology">Biology</option>
+                                        <option value="English">English</option>
+                                        <option value="Hindi">Hindi</option>
+                                        <option value="History">History</option>
+                                        <option value="Geography">Geography</option>
+                                        <option value="Political Science">Political Science</option>
+                                        <option value="Economics">Economics</option>
+                                        <option value="Accountancy">Accountancy</option>
+                                        <option value="Business Studies">Business Studies</option>
+                                        <option value="Sanskrit">Sanskrit</option>
                                     </select>
                                 </div>
 
