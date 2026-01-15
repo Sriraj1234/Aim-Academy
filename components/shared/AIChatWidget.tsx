@@ -906,6 +906,59 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                     )
                 }
             </AnimatePresence >
+            {/* Camera Modal */}
+            <AnimatePresence>
+                {showCamera && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-4"
+                    >
+                        <div className="relative w-full max-w-lg aspect-[3/4] rounded-3xl overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
+                            <Webcam
+                                audio={false}
+                                ref={webcamRef}
+                                screenshotFormat="image/jpeg"
+                                videoConstraints={{ facingMode: "environment" }}
+                                className="w-full h-full object-cover"
+                            />
+
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setShowCamera(false)}
+                                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 z-20"
+                            >
+                                <FaTimes />
+                            </button>
+
+                            {/* Controls */}
+                            <div className="absolute bottom-0 inset-x-0 p-8 pt-20 bg-gradient-to-t from-black/90 to-transparent flex items-center justify-around z-20">
+                                {/* Upload Button */}
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="flex flex-col items-center gap-2 text-white/80 hover:text-white transition-colors"
+                                >
+                                    <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                                        <FaImage className="text-lg" />
+                                    </div>
+                                    <span className="text-xs font-bold">Gallery</span>
+                                </button>
+
+                                {/* Capture Button */}
+                                <button
+                                    onClick={handleCameraCapture}
+                                    className="w-20 h-20 rounded-full border-4 border-white bg-white/20 backdrop-blur-md flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                                >
+                                    <div className="w-16 h-16 bg-white rounded-full"></div>
+                                </button>
+
+                                <div className="w-12"></div> {/* Spacer for symmetry */}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 };
