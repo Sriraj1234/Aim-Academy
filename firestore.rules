@@ -1,9 +1,79 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Role-Based Access Control
+    // Fetches the user's profile to check if they have the 'admin' role.
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // --- 1. User Data (Strict Ownership) ---
+    match /users/{userId} {
+      // Users can modify their own data (except forcing role upgrade if we wanted to be strict, but keeping simple for now)
+      allow read, write: if isOwner(userId);
+    }
+
+    // --- 2. Admin Only Content (Protected) ---
+    // Public Read, but Admin Write
+    match /questions/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /notes/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /chapters/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /batches/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /metadata/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /live_quizzes/{document=**} {
+      allow read: if true;
+      // Teachers might need access too, for now keeping Admin/Teacher logic same or separate
+      allow write: if isAdmin();
+    }
+
+    // --- 3. Interactive Features (Authenticated Users) ---
+    // These need to be writable by students for the app to function
+    
+    // Group Play (Rooms & Chat)
+    match /rooms/{document=**} { 
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated(); 
+    }
+    
+    // Results (Submissions)
+    match /results/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Default
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
