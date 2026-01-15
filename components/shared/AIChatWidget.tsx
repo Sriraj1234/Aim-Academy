@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FaRobot, FaTimes, FaPaperPlane, FaSpinner,
     FaMicrophone, FaMicrophoneSlash,
-    FaVolumeUp, FaVolumeMute, FaGoogle, FaImage
+    FaVolumeUp, FaVolumeMute, FaGoogle, FaImage, FaCamera
 } from 'react-icons/fa';
 import { HiSparkles, HiLightningBolt } from 'react-icons/hi';
 import { useSpeech, isHindiText } from '@/hooks/useSpeech';
