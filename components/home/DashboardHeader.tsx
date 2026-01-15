@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion } from 'framer-motion'
-import { FaStar, FaRocket, FaUserFriends, FaBell, FaShareAlt, FaBookReader, FaShieldAlt } from 'react-icons/fa'
+import { FaStar, FaRocket, FaUserFriends, FaBell, FaShareAlt, FaBookReader, FaShieldAlt, FaGraduationCap } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { FriendsDrawer } from './FriendsDrawer'
 import { NotificationsDrawer } from './NotificationsDrawer'
@@ -23,7 +23,7 @@ const motivationalQuotes = [
 ]
 
 export const DashboardHeader = () => {
-    const { user, userProfile } = useAuth()
+    const { user, userProfile, loading } = useAuth()
     const { t } = useLanguage()
     const [isFriendsOpen, setIsFriendsOpen] = useState(false)
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
@@ -106,43 +106,66 @@ export const DashboardHeader = () => {
                 className="flex items-center justify-between gap-3 md:gap-4"
             >
                 <div className="flex items-center gap-4 md:gap-6 min-w-0 flex-1">
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="relative shrink-0"
-                    >
-                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[2px] md:p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
-                            <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface cursor-pointer" onClick={() => !user && router.push('/login')}>
-                                {user?.photoURL ? (
-                                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet font-bold text-lg md:text-xl">
-                                        {(user?.displayName || 'G')[0]}
-                                    </div>
-                                )}
+                    {loading ? (
+                        <>
+                            {/* Skeleton Avatar */}
+                            <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gray-200 animate-pulse shrink-0" />
+                            {/* Skeleton Text */}
+                            <div className="flex flex-col gap-2">
+                                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                                <div className="h-6 w-40 bg-gray-200 rounded animate-pulse" />
                             </div>
-                            {user && <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto scale-75 md:scale-100 origin-top-left" userProfile={userProfile} showDefault={true} />}
-                        </div>
-                    </motion.div>
-
-                    <div className="min-w-0 flex-1 flex flex-col justify-center">
-                        <p className="text-pw-indigo/80 text-xs md:text-sm font-medium flex items-center gap-1.5 mb-0.5" suppressHydrationWarning>
-                            {greeting.text} <span className="text-sm md:text-base">{greeting.emoji}</span>
-                        </p>
-                        <div className="flex flex-col items-start">
-                            <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight truncate tracking-tight">
-                                {user?.displayName || 'Future Topper'}
-                            </h2>
-                            {!user && (
-                                <div className="mt-1 flex items-center gap-2">
-                                    <a href="/login" className="text-xs font-bold text-pw-indigo hover:text-pw-violet underline decoration-2 underline-offset-2">
-                                        Login Now
-                                    </a>
-                                    <span className="text-xs text-slate-400">•</span>
-                                    <span className="text-xs text-slate-500">Save your progress</span>
+                        </>
+                    ) : (
+                        <>
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                className="relative shrink-0"
+                            >
+                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[2px] md:p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
+                                    <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface cursor-pointer flex items-center justify-center" onClick={() => !user && router.push('/login')}>
+                                        {user?.photoURL ? (
+                                            <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet">
+                                                {user?.displayName ? (
+                                                    <span className="font-bold text-lg md:text-xl">{user.displayName[0]}</span>
+                                                ) : (
+                                                    <FaGraduationCap className="text-2xl md:text-3xl opacity-80" />
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {user && <UserBadge size="md" className="-bottom-1 -right-1 md:w-auto md:h-auto scale-75 md:scale-100 origin-top-left" userProfile={userProfile} showDefault={true} />}
+                                    {!user && (
+                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-gray-400 rounded-full border-2 border-white flex items-center justify-center text-white shadow-sm z-10">
+                                            <FaUserFriends className="text-[10px] md:text-xs" />
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    </div>
+                            </motion.div>
+
+                            <div className="min-w-0 flex-1 flex flex-col justify-center">
+                                <p className="text-pw-indigo/80 text-xs md:text-sm font-medium flex items-center gap-1.5 mb-0.5" suppressHydrationWarning>
+                                    {greeting.text} <span className="text-sm md:text-base">{greeting.emoji}</span>
+                                </p>
+                                <div className="flex flex-col items-start">
+                                    <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight truncate tracking-tight">
+                                        {user?.displayName || 'Future Scholar'}
+                                    </h2>
+                                    {!user && (
+                                        <button onClick={() => router.push('/login')} className="mt-1 flex items-center gap-2 group">
+                                            <span className="text-xs font-bold text-pw-indigo group-hover:text-pw-violet transition-colors">
+                                                Guest Student
+                                            </span>
+                                            <span className="text-xs text-slate-400">•</span>
+                                            <span className="text-xs text-slate-500 group-hover:text-pw-indigo transition-colors">Tap to Login</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-3 shrink-0">
