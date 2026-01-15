@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FaRobot, FaTimes, FaPaperPlane, FaSpinner,
     FaMicrophone, FaMicrophoneSlash,
-    FaVolumeUp, FaVolumeMute
+    FaVolumeUp, FaVolumeMute, FaGoogle
 } from 'react-icons/fa';
 import { HiSparkles, HiLightningBolt } from 'react-icons/hi';
 import { useSpeech, isHindiText } from '@/hooks/useSpeech';
@@ -700,6 +700,66 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                 />
 
                                 <div className="flex items-center gap-1 pb-1">
+                                    {/* Google Lens Integration */}
+                                    <button
+                                        onClick={() => document.getElementById('lens-upload')?.click()}
+                                        className="w-9 h-9 rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-blue-500 hover:bg-blue-50"
+                                        title="Search with Google Lens"
+                                    >
+                                        <FaGoogle className="text-xs" />
+                                    </button>
+                                    <input
+                                        type="file"
+                                        id="lens-upload"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+
+                                            setLoading(true);
+                                            setCurrentStatus('searching_image');
+                                            try {
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+
+                                                // Optimistic feedback
+                                                const tempId = Date.now().toString();
+                                                setMessages(prev => [...prev, {
+                                                    id: tempId,
+                                                    role: 'user',
+                                                    content: '📸 Using Google Lens...',
+                                                    timestamp: new Date()
+                                                }]);
+
+                                                const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                                                const data = await res.json();
+
+                                                if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+                                                // Open Lens in new tab
+                                                window.open(`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(data.url)}`, '_blank');
+
+                                                // Add system message
+                                                setMessages(prev => [...prev, {
+                                                    id: (Date.now() + 1).toString(),
+                                                    role: 'assistant',
+                                                    content: 'I\'ve opened Google Lens for you in a new tab! 🔍',
+                                                    timestamp: new Date()
+                                                }]);
+
+                                            } catch (error) {
+                                                console.error('Lens error:', error);
+                                                // Show error
+                                            } finally {
+                                                setLoading(false);
+                                                setCurrentStatus(null);
+                                                // Reset input
+                                                e.target.value = '';
+                                            }
+                                        }}
+                                    />
+
                                     <button
                                         onClick={toggleVoice}
                                         disabled={!hasSpeechRecognition}
