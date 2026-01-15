@@ -125,18 +125,18 @@ export const ExamCountdown = () => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full relative overflow-hidden bg-[#0a0a0a] border border-red-900/30 rounded-3xl p-6 shadow-2xl shadow-red-900/10"
+            className="w-full relative overflow-hidden bg-[#0a0a0a] border border-red-900/30 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-2xl shadow-red-900/10"
         >
             {/* Ambient Background Effects */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-600/5 rounded-full blur-[100px] pointer-events-none" />
 
             {/* Header */}
-            <div className="flex justify-between items-start mb-8 relative z-10">
-                <div>
-                    <h2 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-wider">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 relative z-10 gap-3">
+                <div className="w-full sm:w-auto">
+                    <h2 className="text-lg md:text-xl font-black text-white flex items-center gap-3 uppercase tracking-wider">
                         <span className="w-2 h-2 rounded-full bg-red-500 animate-[ping_1.5s_infinite]" />
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 whitespace-nowrap">
                             Exam Countdown
                         </span>
                     </h2>
@@ -145,14 +145,14 @@ export const ExamCountdown = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto">
                     {isEditing ? (
                         <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/10 backdrop-blur-md">
                             <input
                                 type="date"
                                 value={customDate}
                                 onChange={(e) => setCustomDate(e.target.value)}
-                                className="bg-transparent border-none text-xs text-white focus:ring-0 px-2 py-1 font-mono"
+                                className="bg-transparent border-none text-xs text-white focus:ring-0 px-2 py-1 font-mono w-28 md:w-auto"
                             />
                             <button
                                 onClick={handleSaveDate}
@@ -174,7 +174,7 @@ export const ExamCountdown = () => {
             </div>
 
             {/* Countdown Grid (Digital/Premium Look) */}
-            <div className="grid grid-cols-4 gap-3 md:gap-4 mb-8 relative z-10">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6 md:mb-8 relative z-10">
                 {[
                     { label: 'Days', value: timeLeft.days, color: 'text-red-500' },
                     { label: 'Hours', value: timeLeft.hours, color: 'text-white' },
@@ -182,15 +182,15 @@ export const ExamCountdown = () => {
                     { label: 'Seconds', value: timeLeft.seconds, color: 'text-orange-500' },
                 ].map((item, index) => (
                     <div key={index} className="flex flex-col items-center group">
-                        <div className="w-full aspect-square rounded-2xl bg-[#111] border border-white/5 shadow-inner flex flex-col items-center justify-center relative overflow-hidden group-hover:border-red-500/30 transition-colors duration-500">
+                        <div className="w-full aspect-square rounded-xl md:rounded-2xl bg-[#111] border border-white/5 shadow-inner flex flex-col items-center justify-center relative overflow-hidden group-hover:border-red-500/30 transition-colors duration-500">
                             {/* Digital Glitch Decoration */}
                             <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                            <span className={`text-3xl md:text-4xl font-black font-mono tracking-tighter ${item.color} drop-shadow-[0_0_10px_rgba(255,0,0,0.3)]`}>
+                            <span className={`text-2xl sm:text-3xl md:text-4xl font-black font-mono tracking-tighter ${item.color} drop-shadow-[0_0_10px_rgba(255,0,0,0.3)]`}>
                                 {String(item.value).padStart(2, '0')}
                             </span>
                         </div>
-                        <span className="text-[9px] md:text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em] mt-3 group-hover:text-red-500/70 transition-colors">
+                        <span className="text-[8px] sm:text-[10px] font-bold text-gray-600 uppercase tracking-widest sm:tracking-[0.2em] mt-2 sm:mt-3 group-hover:text-red-500/70 transition-colors">
                             {item.label}
                         </span>
                     </div>
@@ -198,7 +198,7 @@ export const ExamCountdown = () => {
             </div>
 
             {/* Status / Motivation Bar */}
-            <div className="relative z-10 bg-gradient-to-r from-red-950/30 to-transparent border-l-2 border-red-600 pl-4 py-2">
+            <div className="relative z-10 bg-gradient-to-r from-red-950/30 to-transparent border-l-2 border-red-600 pl-4 py-2 my-4">
                 <div className="flex items-center gap-2 mb-1">
                     <FaFire className="text-orange-500 text-xs animate-pulse" />
                     <span className="text-[10px] text-orange-400 font-bold uppercase tracking-wider">Status: {timeLeft.days < 30 ? 'CRITICAL' : 'ACTIVE'}</span>
@@ -209,7 +209,7 @@ export const ExamCountdown = () => {
             </div>
 
             {/* Progress Bar (Thin & Sleek) */}
-            <div className="mt-6 h-[2px] bg-gray-800 w-full relative z-10">
+            <div className="mt-4 sm:mt-6 h-[2px] bg-gray-800 w-full relative z-10">
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
