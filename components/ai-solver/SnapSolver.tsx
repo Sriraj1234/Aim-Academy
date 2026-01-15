@@ -8,6 +8,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { useAuth } from '@/context/AuthContext';
+import { TrialReminderModal } from '@/components/subscription/TrialReminderModal';
 
 // --- Utility: Create Cropped Image ---
 const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -56,9 +58,11 @@ async function getCroppedImg(imageSrc: string, pixelCrop: any): Promise<Blob> {
 // -------------------------------------
 
 export default function SnapSolver() {
+    const { checkAccess, incrementUsage } = useAuth();
     // Modes: INITIAL -> CAMERA -> CROP -> SOLVING -> RESULT
     const [mode, setMode] = useState<'INITIAL' | 'CAMERA' | 'CROP' | 'SOLVING' | 'RESULT'>('INITIAL');
     const [solverType, setSolverType] = useState<'LENS' | 'AI'>('LENS');
+    const [showPaywall, setShowPaywall] = useState(false);
 
     // Camera State
     const webcamRef = useRef<Webcam>(null);
@@ -139,6 +143,15 @@ export default function SnapSolver() {
     const processSolution = async () => {
         if (!imgSrc || !croppedAreaPixels) return;
 
+        // Check Limit for AI Solver
+        if (solverType === 'AI') {
+            const allowed = checkAccess('snap_solve');
+            if (!allowed) {
+                setShowPaywall(true);
+                return;
+            }
+        }
+
         setMode('SOLVING');
         setError('');
 
@@ -159,6 +172,7 @@ export default function SnapSolver() {
             }
             else {
                 // --- INTERNAL AI FLOW ---
+
                 const formData = new FormData();
                 formData.append('image', croppedBlob, 'question.jpg');
 
@@ -169,6 +183,11 @@ export default function SnapSolver() {
                 setSolution(data.solution);
                 setUsedModel(data.modelUsed);
                 setMode('RESULT');
+
+                // Increment Usage Only if Request Succeeds
+                if (solverType === 'AI') {
+                    await incrementUsage('snap_solve');
+                }
             }
 
         } catch (err: any) {
@@ -186,6 +205,12 @@ export default function SnapSolver() {
 
     return (
         <div className="relative h-full bg-black text-white flex flex-col overflow-hidden">
+            <TrialReminderModal
+                isOpen={showPaywall}
+                onClose={() => setShowPaywall(false)}
+                message="You've reached your daily limit for AI Solutions."
+                subMessage="Upgrade to Pro for more AI power!"
+            />
 
             {/* Top Bar */}
             <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-20 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
@@ -309,9 +334,9 @@ export default function SnapSolver() {
                                 crop={crop}
                                 zoom={zoom}
                                 aspect={undefined} // Free crop
-                                onCropChange={setCrop}
+                                onCropChange={(location) => setCrop(location)}
                                 onCropComplete={onCropComplete}
-                                onZoomChange={setZoom}
+                                onZoomChange={(zoom) => setZoom(zoom)}
                             />
                         </div>
                         <div className="bg-gray-900 p-6 flex flex-col gap-4">
