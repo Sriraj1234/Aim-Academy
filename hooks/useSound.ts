@@ -50,7 +50,7 @@ export function useSound(options: UseSoundOptions = {}) {
         Object.entries(SOUNDS).forEach(([key, path]) => {
             const audio = new Audio(path);
             audio.volume = volume;
-            audio.preload = 'auto';
+            audio.preload = 'none';
             audioCache.current.set(key as SoundType, audio);
         });
 
