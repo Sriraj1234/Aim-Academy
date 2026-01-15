@@ -112,7 +112,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             activeDevices.push({ deviceId, deviceName, lastActive: nowTs });
                         }
 
-                        await setDoc(docRef, { activeDevices }, { merge: true });
+                        await setDoc(docRef, {
+                            activeDevices,
+                            email: user.email || profileData.email, // Sync latest email
+                            displayName: user.displayName || profileData.displayName, // Sync latest name
+                            photoURL: user.photoURL || profileData.photoURL // Sync latest photo
+                        }, { merge: true });
                         isRegistered = true; // Mark as successfully registered in DB
                     } else {
                         // New Profile Creation handles the initial device array, so we consider it registered.
