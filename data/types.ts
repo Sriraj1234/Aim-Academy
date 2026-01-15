@@ -89,6 +89,7 @@ export interface AIMemory {
 export interface UserProfile {
     uid: string;
     email: string;
+    role?: 'student' | 'admin' | 'teacher'; // Role for RBAC
     displayName?: string;
     photoURL?: string;
     board?: string;
