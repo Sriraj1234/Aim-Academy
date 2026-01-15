@@ -49,10 +49,7 @@ export const ChapterSummary: React.FC<ChapterSummaryProps> = ({ subject: initial
             return;
         }
 
-        if (!checkAccess('note_gen')) {
-            setShowUpgradeModal(true);
-            return;
-        }
+
 
         setLoading(true);
         setError('');
