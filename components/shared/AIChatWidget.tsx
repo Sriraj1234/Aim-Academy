@@ -15,6 +15,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { UpgradeModal } from '../subscription/UpgradeModal';
 import Webcam from 'react-webcam';
+import { SafeImage } from './SafeImage';
 
 interface Message {
     id: string;
@@ -681,15 +682,18 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                             <div className="mt-2 flex gap-2 overflow-x-auto pb-2 px-1 snap-x scrollbar-hide">
                                                 {msg.images.map((img, idx) => (
                                                     <div key={idx} className="flex-shrink-0 w-32 sm:w-40 md:w-48 snap-center">
-                                                        <div className="rounded-xl overflow-hidden shadow-md aspect-video bg-gray-100 cursor-pointer hover:shadow-lg transition-shadow">
-                                                            <img
+                                                        <div
+                                                            className="rounded-xl overflow-hidden shadow-md aspect-video bg-gray-100 cursor-pointer hover:shadow-lg transition-shadow"
+                                                            onClick={() => {
+                                                                setGalleryImages(msg.images || []);
+                                                                setGalleryIndex(idx);
+                                                            }}
+                                                        >
+                                                            <SafeImage
                                                                 src={img.image}
                                                                 alt={img.title}
                                                                 className="w-full h-full object-cover"
-                                                                onClick={() => {
-                                                                    setGalleryImages(msg.images || []);
-                                                                    setGalleryIndex(idx);
-                                                                }}
+                                                                width={320}
                                                             />
                                                         </div>
                                                         <p className="text-[10px] text-gray-500 mt-1 line-clamp-1 text-center">{img.title}</p>
@@ -794,10 +798,10 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
                                     {/* Google Lens Integration */}
                                     <button
                                         onClick={() => setShowCamera(true)}
-                                        className="w-9 h-9 rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-blue-500 hover:bg-blue-50"
-                                        title="Search with Google Lens"
+                                        className="w-9 h-9 rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-indigo-500 hover:bg-indigo-50"
+                                        title="Snap a Question"
                                     >
-                                        <FaGoogle className="text-xs" />
+                                        <FaCamera className="text-sm" />
                                     </button>
                                     <input
                                         type="file"
