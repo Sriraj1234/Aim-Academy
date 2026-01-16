@@ -3,17 +3,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheckCircle, FaTimesCircle, FaEye, FaTrash, FaLightbulb, FaFlask, FaCalculator, FaGlobeAmericas, FaLanguage, FaBook } from 'react-icons/fa';
-import { doc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useAuth } from '@/context/AuthContext';
+
+// Removed Firestore imports
 import { AIExplainButton } from '@/components/quiz/AIExplainButton';
 
 interface MistakeProps {
     id: string;
     question: string;
     options: string[];
-    correctAnswer: number;
-    userAnswer: number;
+    correctAnswer: number | string; // Can be index or text
+    userAnswer: number | string | null;
     subject: string;
     chapter: string;
     timestamp: number;
@@ -31,20 +30,28 @@ const subjectIcons: Record<string, any> = {
 export const MistakeCard: React.FC<MistakeProps> = ({
     id, question, options, correctAnswer, userAnswer, subject, chapter, timestamp, onRemove
 }) => {
-    const { user } = useAuth();
+    // const { user } = useAuth(); // Not needed for local delete (parent handles it)
     const [revealed, setRevealed] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Normalize answers to indices for UI and AI Button
+    const getIndex = (ans: number | string | null, opts: string[]) => {
+        if (ans === null || ans === undefined) return -1;
+        if (typeof ans === 'number') return ans;
+        return opts.findIndex(o => o === ans);
+    };
+
+    const correctIndex = getIndex(correctAnswer, options);
+    const userIndex = getIndex(userAnswer, options);
+
     const handleMastered = async () => {
-        if (!user) return;
+        // No Firestore call here - parent handles local removal
         setIsDeleting(true);
-        try {
-            await deleteDoc(doc(db, 'users', user.uid, 'mistakes', id));
-            onRemove(id); // Optimistic UI update
-        } catch (error) {
-            console.error("Failed to remove mistake:", error);
+        // Simulate small delay for UX
+        setTimeout(() => {
+            onRemove(id);
             setIsDeleting(false);
-        }
+        }, 300);
     };
 
     const Icon = subjectIcons[subject?.toLowerCase()] || FaBook;
@@ -74,9 +81,9 @@ export const MistakeCard: React.FC<MistakeProps> = ({
 
                 {/* Options Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
-                    {options.map((opt, idx) => {
-                        const isUserWrong = idx === userAnswer;
-                        const isCorrect = idx === correctAnswer;
+                    {options && options.map((opt, idx) => { // Safety check for options
+                        const isUserWrong = idx === userIndex;
+                        const isCorrect = idx === correctIndex;
 
                         let cardClass = "border-gray-200 bg-gray-50 text-gray-500 opacity-60"; // Default dimmed
 
@@ -114,8 +121,8 @@ export const MistakeCard: React.FC<MistakeProps> = ({
                     <AIExplainButton
                         question={question}
                         options={options}
-                        correctAnswer={correctAnswer}
-                        userAnswer={userAnswer}
+                        correctAnswer={correctIndex} // Pass index
+                        userAnswer={userIndex} // Pass index
                         subject={subject}
                     />
                 </div>
