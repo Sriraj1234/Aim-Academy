@@ -93,9 +93,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    match /live_quizzes/{document=**} {
+    match /live_quizzes/{quizId} {
       allow read: if true;
       allow write: if isAdmin();
+      
+      // Allow users to set reminders
+      match /reminders/{userId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // Study Hub (Video Resources)
@@ -114,7 +119,12 @@ service cloud.firestore {
     }
     
     // Results (Submissions)
+    // Results (Submissions)
     match /results/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /live_quiz_results/{document=**} {
       allow read, write: if isAuthenticated();
     }
 
