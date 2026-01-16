@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket, FaYoutube } from 'react-icons/fa'
+import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket, FaYoutube, FaBookOpen, FaFlag } from 'react-icons/fa'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 
@@ -22,13 +22,24 @@ const adSlides: Slide[] = [
     {
         id: 5,
         type: 'ad',
-        title: "Happy New Year 2026! ✨",
-        subtitle: "Launch Your Dreams",
-        description: "Focus, Consistency, and Discipline. Make 2026 your year of academic excellence.",
-        ctaText: "Claim 2026 XP Bonus",
-        ctaLink: "/leaderboard",
-        bgClass: "bg-[conic-gradient(at_bottom_left,_var(--tw-gradient-stops))] from-slate-900 via-purple-900 to-slate-900",
-        icon: FaRocket
+        title: "Basant Panchami ✨",
+        subtitle: "Blessings of Wisdom",
+        description: "May Maa Saraswati bless you with knowledge, focus, and success in your exams.",
+        ctaText: "Start Learning",
+        ctaLink: "/study-hub",
+        bgClass: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500",
+        icon: FaBookOpen
+    },
+    {
+        id: 7,
+        type: 'ad',
+        title: "Happy Republic Day 🇮🇳",
+        subtitle: "Jai Hind",
+        description: "Celebrating the spirit of India. Empowering the future through education.",
+        ctaText: "Join the Mission",
+        ctaLink: "/batches",
+        bgClass: "bg-gradient-to-br from-orange-600 via-blue-900 to-green-700",
+        icon: FaFlag
     },
     {
         id: 2,
@@ -166,29 +177,23 @@ export const ModernCarousel = () => {
 
         // Standard Ad Slide Content
         return (
-            <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center pt-2 relative z-10">
-                <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/10 backdrop-blur-md rounded-full mb-2 md:mb-4 border border-white/10">
+            <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center pt-2 relative z-10 w-full px-4 md:px-0">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full mb-2 md:mb-4 border border-white/20">
                     <span className="text-amber-300 text-[9px] md:text-xs font-bold tracking-wider uppercase">{slide.subtitle}</span>
                 </div>
 
-                <h1 className="text-xl md:text-5xl font-black text-white leading-tight mb-1 md:mb-3 drop-shadow-md">
-                    {slide.id === 5 ? (
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 drop-shadow-sm">
-                            {slide.title}
-                        </span>
-                    ) : (
-                        slide.title
-                    )}
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-white leading-tight mb-2 md:mb-4 drop-shadow-lg max-w-2xl">
+                    {slide.title}
                 </h1>
 
-                <p className="text-white/90 text-xs md:text-lg font-medium mb-3 md:mb-6 max-w-xs md:max-w-lg leading-relaxed line-clamp-1 md:line-clamp-none">
+                <p className="text-white/95 text-xs sm:text-sm md:text-lg font-medium mb-4 md:mb-8 max-w-xs md:max-w-lg leading-relaxed line-clamp-2 md:line-clamp-none">
                     {slide.description}
                 </p>
 
                 <Link href={slide.ctaLink || '/'} className="w-full md:w-auto">
-                    <button className={`w-auto px-4 py-2 ${slide.id === 5 ? 'bg-gradient-to-r from-amber-500 to-yellow-600 border border-yellow-400/50 text-white' : 'bg-white text-gray-900'} rounded-lg font-bold text-xs md:text-base shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 active:scale-95 group/btn mx-auto`}>
+                    <button className={`w-auto px-6 py-3 ${slide.id === 5 ? 'bg-white text-amber-600' : slide.id === 7 ? 'bg-white text-blue-800' : 'bg-white text-gray-900'} rounded-xl font-bold text-sm md:text-base shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 active:scale-95 group/btn mx-auto md:mx-0`}>
                         <span>{slide.ctaText}</span>
-                        <FaArrowRight className="group-hover/btn:translate-x-1 transition-transform text-[10px]" />
+                        <FaArrowRight className="group-hover/btn:translate-x-1 transition-transform text-xs" />
                     </button>
                 </Link>
             </div>
@@ -232,21 +237,29 @@ export const ModernCarousel = () => {
                             if (swipe < -50) nextSlide();
                             else if (swipe > 50) prevSlide();
                         }}
-                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-4 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing`}
+                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-4 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing overflow-hidden`}
                     >
-                        {/* Special Background for New Year Slide */}
+                        {/* Saraswati Puja Decor (ID 5) */}
                         {slides[current].id === 5 && (
                             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                                <div className="hidden md:block absolute -right-10 top-10 text-[120px] md:text-[250px] font-black text-white/5 md:text-white/5 leading-none tracking-tighter select-none z-0">
-                                    2026
-                                </div>
-                                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.3)_100%)]" />
-                                {/* Floating particles */}
-                                <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-amber-400 rounded-full animate-ping opacity-75" />
-                                <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-purple-400 rounded-full animate-pulse opacity-75" />
+                                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.2)_0%,_transparent_60%)]" />
+                                {/* Floating Petals hints */}
+                                <div className="absolute top-10 right-10 w-4 h-4 bg-yellow-200 rounded-full blur-[2px] animate-pulse opacity-60" />
+                                <div className="absolute bottom-20 left-20 w-3 h-3 bg-amber-200 rounded-full blur-[2px] animate-bounce opacity-50" />
+                                <div className="absolute top-1/2 left-1/3 w-60 h-60 bg-white opacity-5 rounded-full blur-[60px]" />
                             </div>
                         )}
-                        {/* Background Decor - Made subtler - Hidden on Mobile */}
+
+                        {/* Republic Day Decor (ID 7) */}
+                        {slides[current].id === 7 && (
+                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                                {/* Ashoka Chakra Abstract */}
+                                <div className="hidden md:block absolute -right-20 -bottom-20 w-80 h-80 rounded-full border-[20px] border-blue-800/20 opacity-30 animate-[spin_10s_linear_infinite]" />
+                                <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(135deg,_rgba(255,153,51,0.2)_0%,_rgba(255,255,255,0.1)_50%,_rgba(19,136,8,0.2)_100%)]" />
+                            </div>
+                        )}
+
+                        {/* Background Decor - Standard - Hidden on Mobile */}
                         <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
                             <div className="absolute -top-20 -right-20 w-40 h-40 md:w-60 md:h-60 bg-white opacity-5 rounded-full blur-[50px]" />
                             <div className="absolute bottom-0 left-0 w-32 h-32 md:w-40 md:h-40 bg-black opacity-10 rounded-full blur-[40px]" />
@@ -259,8 +272,8 @@ export const ModernCarousel = () => {
 
                         {/* Graphic Area - Hidden on small mobile to save space, visible on larger phones/desktop */}
                         <div className="hidden sm:flex relative z-0 md:w-2/5 justify-center items-center">
-                            <div className="relative w-20 h-20 md:w-48 md:h-48 rounded-2xl flex items-center justify-center transform rotate-3 transition-transform duration-500">
-                                {React.createElement(slides[current].icon, { className: "text-white/20 md:text-white text-6xl md:text-8xl drop-shadow-lg" })}
+                            <div className="relative w-20 h-20 md:w-48 md:h-48 rounded-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-500">
+                                {React.createElement(slides[current].icon, { className: "text-white/20 md:text-white text-6xl md:text-8xl drop-shadow-2xl" })}
                             </div>
                         </div>
                     </motion.div>
