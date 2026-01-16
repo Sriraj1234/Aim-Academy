@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/shared/Header';
 import { useAuth } from '@/context/AuthContext';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore';
+// import { db } from '@/lib/firebase'; // DB no longer needed for mistakes
+import { mistakesLocalStore } from '@/utils/mistakesLocalStore';
 import { MistakeCard } from '@/components/mistakes/MistakeCard';
 import { FaFilter, FaBookOpen, FaMedal } from 'react-icons/fa';
 import Link from 'next/link';
@@ -13,8 +13,8 @@ interface Mistake {
     id: string;
     question: string;
     options: string[];
-    correctAnswer: number;
-    userAnswer: number;
+    correctAnswer: number | string;
+    userAnswer: number | string;
     subject: string;
     chapter: string;
     timestamp: number;
@@ -27,20 +27,15 @@ export default function MistakesPage() {
     const [filterSubject, setFilterSubject] = useState<string>('all');
 
     useEffect(() => {
-        const fetchMistakes = async () => {
+        const fetchMistakes = () => {
             if (!user) return;
             setLoading(true);
             try {
-                // Fetch only latest 50 mistakes to save reads
-                const q = query(
-                    collection(db, 'users', user.uid, 'mistakes'),
-                    orderBy('timestamp', 'desc'),
-                    limit(50)
-                );
-
-                const snapshot = await getDocs(q);
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Mistake));
-                setMistakes(data);
+                // Local Storage Fetch
+                const data = mistakesLocalStore.getMistakes(user.uid);
+                // The local store logic already returns raw objects, but let's ensure they match 'Mistake' interface
+                // The interfaces are almost identical.
+                setMistakes(data as Mistake[]); // Cast or map if needed
             } catch (err) {
                 console.error("Error fetching mistakes:", err);
             } finally {
@@ -49,10 +44,15 @@ export default function MistakesPage() {
         };
 
         fetchMistakes();
+
+        // Optional: Listen for storage events if we want multi-tab sync (not critical)
     }, [user]);
 
     const handleRemove = (id: string) => {
-        setMistakes(prev => prev.filter(m => m.id !== id));
+        if (user) {
+            mistakesLocalStore.removeMistake(user.uid, id);
+            setMistakes(prev => prev.filter(m => m.id !== id));
+        }
     };
 
     const distinctSubjects = Array.from(new Set(mistakes.map(m => m.subject?.toLowerCase()))).filter(Boolean);
