@@ -70,9 +70,9 @@ export default function CreateLiveQuizPage() {
                 constraints.push(where('board', '==', bankFilterBoard.toLowerCase()));
             }
 
-            // Filter by Subject (Bank Filter) - Title Case (Do NOT lower case)
+            // Filter by Subject (Bank Filter) - Use Lowercase to match DB
             if (bankFilterSubject !== 'all') {
-                constraints.push(where('subject', '==', bankFilterSubject));
+                constraints.push(where('subject', '==', bankFilterSubject.toLowerCase()));
             }
 
             // Filter by Class (Bank Filter)
