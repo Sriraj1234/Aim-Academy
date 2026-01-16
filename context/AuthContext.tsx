@@ -11,7 +11,7 @@ import {
     signOut,
     onAuthStateChanged
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, getDocFromServer } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, getDocFromServer, increment } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
 import { UserProfile, GamificationStats } from '@/data/types'
@@ -491,23 +491,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
         const fieldName = fieldMap[feature];
 
+        const fieldName = fieldMap[feature];
+
         try {
-
-            const currentLimits = userProfile?.dailyLimits || {
-                date: new Date().toISOString().split('T')[0],
-                aiChatCount: 0,
-                flashcardGenCount: 0,
-                groupPlayCount: 0
-            };
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const currentVal = (currentLimits as any)[fieldName] || 0;
-
-            const updatePayload = {
-                [`dailyLimits.${fieldName}`]: currentVal + 1
-            };
-
-            await setDoc(docRef, updatePayload, { merge: true });
+            // Use updateDoc with atomic increment to ensure reliability and correct nested path handling
+            await updateDoc(docRef, {
+                [`dailyLimits.${fieldName}`]: increment(1)
+            });
         } catch (e) {
             console.error("Failed to update usage", e);
         }
