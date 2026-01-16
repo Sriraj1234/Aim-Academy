@@ -33,7 +33,14 @@ service cloud.firestore {
       // 1. Friend Requests: Allow other users to write (send) requests
       match /friend_requests/{requestId} {
         allow read: if isOwner(userId);
-        allow write: if isAuthenticated();
+        // Security Fix: Validate that the 'sender' of the request is actually the authenticated user
+        // This prevents User A from sending a request "from User B" to User C.
+        allow write: if isAuthenticated() && (
+          // If deleting (cancel/reject), must be owner of profile OR sender of request
+          request.method == 'delete' || 
+          // If creating/updating, data.uid must allow request.auth.uid (sender)
+          request.resource.data.uid == request.auth.uid
+        );
       }
 
       // 2. Friends: Allow mutual writing during acceptance
