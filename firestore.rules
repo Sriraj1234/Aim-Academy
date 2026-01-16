@@ -25,7 +25,34 @@ service cloud.firestore {
     match /users/{userId} {
       // Users can modify their own data. Admins can read all for dashboard/management.
       allow write: if isOwner(userId) || isAdmin();
-      allow read: if isOwner(userId) || isAdmin();
+      // Public Read (Authenticated) required for Leaderboards/Search
+      allow read: if isAuthenticated();
+      
+      // --- Social Feature Subcollections ---
+      
+      // 1. Friend Requests: Allow other users to write (send) requests
+      match /friend_requests/{requestId} {
+        allow read: if isOwner(userId);
+        allow write: if isAuthenticated();
+      }
+
+      // 2. Friends: Allow mutual writing during acceptance
+      match /friends/{friendId} {
+        allow read: if isOwner(userId);
+        allow write: if isAuthenticated();
+      }
+
+      // 3. Game Invites: Allow others to drop an invite here
+      match /game_invites/{inviteId} {
+        allow read: if isOwner(userId);
+        allow write: if isAuthenticated();
+      }
+
+      // 4. Sent Game Invites: Allow the recipient to update status (accept/reject)
+      match /sent_game_invites/{inviteId} {
+        allow read: if isOwner(userId);
+        allow write: if isAuthenticated();
+      }
     }
 
     // Mind Games (Missing Rule Fix)
