@@ -6,6 +6,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { FaTrophy, FaHome, FaMedal, FaStar, FaCheckCircle, FaTimesCircle, FaChartPie, FaUser } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { mistakesLocalStore } from '@/utils/mistakesLocalStore';
 
 interface PlayerResult {
     id: string;
@@ -99,16 +100,19 @@ export default function ResultPage() {
                         });
 
                         if (mistakesToSave.length > 0) {
-                            console.log(`Saving ${mistakesToSave.length} mistakes to notebook...`);
-                            // We use map to execute parallel writes
-                            const savePromises = mistakesToSave.map(async (m) => {
-                                // Save to users/{uid}/mistakes/{questionId}
-                                const mistakeRef = doc(db, 'users', user.uid, 'mistakes', m.id);
-                                await setDoc(mistakeRef, m, { merge: true });
+                            console.log(`Saving ${mistakesToSave.length} mistakes to notebook (local)...`);
+                            mistakesToSave.forEach(m => {
+                                mistakesLocalStore.saveMistake(user.uid, {
+                                    id: m.id,
+                                    question: m.question,
+                                    options: m.options,
+                                    // Convert indices to text for consistency with single player mode
+                                    correctAnswer: m.options[m.correctAnswer],
+                                    userAnswer: m.options[m.userAnswer],
+                                    subject: m.subject,
+                                    chapter: m.chapter || 'Group Quiz'
+                                });
                             });
-
-                            // Non-blocking wait (catch errors silently to not break UI)
-                            Promise.all(savePromises).catch(e => console.error("Error saving mistakes:", e));
                         }
                     }
                 }
