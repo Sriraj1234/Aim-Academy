@@ -186,20 +186,25 @@ function SelectionContent() {
     const [selectedLang, setSelectedLang] = useState(false)
 
     const scienceSubjects = ['physics', 'chemistry', 'biology']
-    const sstSubjects = ['history', 'geography', 'civics', 'economics', 'political science', 'disaster management']
-    const langSubjects = ['english', 'hindi', 'sanskrit', 'english prose', 'english poetry', 'hindi gadya', 'hindi padya']
+    const sstSubjects = ['history', 'geography', 'civics', 'economics', 'political science', 'disaster management', 'social studies']
+
+    // Robust Language Check: Helper Function
+    const isLanguage = (sub: string) => {
+        const s = sub.toLowerCase();
+        return s.includes('english') || s.includes('hindi') || s.includes('sanskrit') || s.includes('urdu') || s.includes('maithili') || s.includes('bhojpuri');
+    };
 
     const displayedSubjects = activeCategories.subjects?.filter(
         sub => !scienceSubjects.includes(sub.toLowerCase()) &&
             !sstSubjects.includes(sub.toLowerCase()) &&
-            !langSubjects.includes(sub.toLowerCase()) &&
-            sub.toLowerCase() !== 'social studies' && // Explicitly hide Social Studies
-            sub.toLowerCase() !== 'mathematics' // Hide duplicate Mathematics ONLY (exact match, not Math/Maths)
+            !isLanguage(sub) &&
+            sub.toLowerCase() !== 'social studies' &&
+            sub.toLowerCase() !== 'mathematics'
     ) || []
 
     const hasScience = activeCategories.subjects?.some(sub => scienceSubjects.includes(sub.toLowerCase()))
     const hasSST = activeCategories.subjects?.some(sub => sstSubjects.includes(sub.toLowerCase()))
-    const hasLang = activeCategories.subjects?.some(sub => langSubjects.includes(sub.toLowerCase()))
+    const hasLang = activeCategories.subjects?.some(sub => isLanguage(sub))
 
     const subjects = displayedSubjects
     const chapters = selectedSubject ? (activeCategories.chapters?.[selectedSubject] || []) : []
@@ -234,7 +239,10 @@ function SelectionContent() {
             } else if (sstSubjects.includes(selectedSubject.toLowerCase())) {
                 setSelectedSubject(null)
                 setSelectedSST(true)
-            } else if (langSubjects.includes(selectedSubject.toLowerCase())) {
+            } else if (sstSubjects.includes(selectedSubject.toLowerCase())) {
+                setSelectedSubject(null)
+                setSelectedSST(true)
+            } else if (isLanguage(selectedSubject)) {
                 setSelectedSubject(null)
                 setSelectedLang(true)
             } else {
@@ -445,7 +453,7 @@ function SelectionContent() {
                                 selectedScience
                                     ? scienceSubjects.includes(s.toLowerCase())
                                     : selectedLang
-                                        ? langSubjects.includes(s.toLowerCase())
+                                        ? isLanguage(s)
                                         : sstSubjects.includes(s.toLowerCase())
                             ).map((sub, idx) => (
                                 <motion.div
