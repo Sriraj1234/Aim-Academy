@@ -18,8 +18,6 @@ interface Slide {
     bgClass: string
     icon: React.ElementType
     image?: string
-    imagePosition?: string
-    imageScale?: string
 }
 
 const adSlides: Slide[] = [
@@ -33,9 +31,7 @@ const adSlides: Slide[] = [
         ctaLink: "/study-hub",
         bgClass: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500", // Fallback
         icon: FaBookOpen,
-        image: "/images/saraswati_puja_banner.png",
-        imagePosition: "center 25%", // Focus higher up on the deity
-        imageScale: "scale-125 md:scale-110" // Zoom in to reduce background
+        image: "/images/saraswati_puja_banner.png"
     },
     {
         id: 7,
@@ -47,8 +43,7 @@ const adSlides: Slide[] = [
         ctaLink: "/batches",
         bgClass: "bg-gradient-to-br from-orange-600 via-blue-900 to-green-700", // Fallback
         icon: FaFlag,
-        image: "/images/republic_day_banner.png",
-        imagePosition: "center center"
+        image: "/images/republic_day_banner.png"
     },
     {
         id: 2,
@@ -256,8 +251,7 @@ export const ModernCarousel = () => {
                                         src={slides[current].image!}
                                         alt={slides[current].title || 'Banner'}
                                         fill
-                                        style={{ objectPosition: slides[current].imagePosition || 'center' }}
-                                        className={`object-cover opacity-90 transition-transform duration-[20s] group-hover:scale-110 ${slides[current].imageScale || 'scale-105'}`}
+                                        className="object-cover opacity-90 scale-105 group-hover:scale-110 transition-transform duration-[20s]"
                                         priority={true}
                                         quality={85}
                                     />
