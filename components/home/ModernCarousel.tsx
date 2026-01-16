@@ -16,6 +16,7 @@ interface Slide {
     ctaLink?: string
     bgClass: string
     icon: React.ElementType
+    image?: string
 }
 
 const adSlides: Slide[] = [
@@ -27,8 +28,9 @@ const adSlides: Slide[] = [
         description: "May Maa Saraswati bless you with knowledge, focus, and success in your exams.",
         ctaText: "Start Learning",
         ctaLink: "/study-hub",
-        bgClass: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500",
-        icon: FaBookOpen
+        bgClass: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500", // Fallback
+        icon: FaBookOpen,
+        image: "/images/saraswati_puja_banner.png"
     },
     {
         id: 7,
@@ -38,8 +40,9 @@ const adSlides: Slide[] = [
         description: "Celebrating the spirit of India. Empowering the future through education.",
         ctaText: "Join the Mission",
         ctaLink: "/batches",
-        bgClass: "bg-gradient-to-br from-orange-600 via-blue-900 to-green-700",
-        icon: FaFlag
+        bgClass: "bg-gradient-to-br from-orange-600 via-blue-900 to-green-700", // Fallback
+        icon: FaFlag,
+        image: "/images/republic_day_banner.png"
     },
     {
         id: 2,
@@ -78,6 +81,7 @@ const adSlides: Slide[] = [
 ]
 
 export const ModernCarousel = () => {
+    // ... [No changes to existing logic hooks]
     const { user, userProfile } = useAuth()
     const [current, setCurrent] = useState(0)
     const [isHovered, setIsHovered] = useState(false)
@@ -102,7 +106,7 @@ export const ModernCarousel = () => {
         }
     ]
 
-    // State for slide direction (1 for next, -1 for prev) to animate correctly
+    // ... [Keep existing state and handlers]
     const [direction, setDirection] = useState(0);
 
     // Auto-slide logic
@@ -147,10 +151,9 @@ export const ModernCarousel = () => {
 
     // Helper to render content based on slide type
     const renderContent = (slide: Slide) => {
-        // ... (Keep existing render logic, just ensuring classes are clean)
         if (slide.type === 'personal') {
             return (
-                <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center pt-2">
+                <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center pt-2 relative z-20">
                     <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/15 backdrop-blur-md rounded-full mb-2 md:mb-4">
                         <span className="text-amber-300 text-[10px]"><FaStar /></span>
                         <span className="text-white text-[9px] md:text-xs font-bold tracking-wider uppercase">{streak} Day Streak</span>
@@ -177,21 +180,21 @@ export const ModernCarousel = () => {
 
         // Standard Ad Slide Content
         return (
-            <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center pt-2 relative z-10 w-full px-4 md:px-0">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full mb-2 md:mb-4 border border-white/20">
+            <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center pt-2 relative z-20 w-full px-4 md:px-0">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full mb-2 md:mb-4 border border-white/20 shadow-lg">
                     <span className="text-amber-300 text-[9px] md:text-xs font-bold tracking-wider uppercase">{slide.subtitle}</span>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-white leading-tight mb-2 md:mb-4 drop-shadow-lg max-w-2xl">
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-white leading-tight mb-2 md:mb-4 drop-shadow-2xl max-w-2xl" style={{ textShadow: '0 4px 8px rgba(0,0,0,0.3)' }}>
                     {slide.title}
                 </h1>
 
-                <p className="text-white/95 text-xs sm:text-sm md:text-lg font-medium mb-4 md:mb-8 max-w-xs md:max-w-lg leading-relaxed line-clamp-2 md:line-clamp-none">
+                <p className="text-white font-medium mb-4 md:mb-8 max-w-xs md:max-w-lg leading-relaxed line-clamp-2 md:line-clamp-none drop-shadow-md text-xs sm:text-sm md:text-lg opacity-95">
                     {slide.description}
                 </p>
 
                 <Link href={slide.ctaLink || '/'} className="w-full md:w-auto">
-                    <button className={`w-auto px-6 py-3 ${slide.id === 5 ? 'bg-white text-amber-600' : slide.id === 7 ? 'bg-white text-blue-800' : 'bg-white text-gray-900'} rounded-xl font-bold text-sm md:text-base shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 active:scale-95 group/btn mx-auto md:mx-0`}>
+                    <button className={`w-auto px-6 py-3 ${slide.id === 5 ? 'bg-white text-amber-700' : slide.id === 7 ? 'bg-white text-blue-900' : 'bg-white text-gray-900'} rounded-xl font-bold text-sm md:text-base shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 active:scale-95 group/btn mx-auto md:mx-0 ring-2 ring-white/50 ring-offset-2 ring-offset-transparent`}>
                         <span>{slide.ctaText}</span>
                         <FaArrowRight className="group-hover/btn:translate-x-1 transition-transform text-xs" />
                     </button>
@@ -239,31 +242,28 @@ export const ModernCarousel = () => {
                         }}
                         className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-4 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing overflow-hidden`}
                     >
-                        {/* Saraswati Puja Decor (ID 5) */}
-                        {slides[current].id === 5 && (
-                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.2)_0%,_transparent_60%)]" />
-                                {/* Floating Petals hints */}
-                                <div className="absolute top-10 right-10 w-4 h-4 bg-yellow-200 rounded-full blur-[2px] animate-pulse opacity-60" />
-                                <div className="absolute bottom-20 left-20 w-3 h-3 bg-amber-200 rounded-full blur-[2px] animate-bounce opacity-50" />
-                                <div className="absolute top-1/2 left-1/3 w-60 h-60 bg-white opacity-5 rounded-full blur-[60px]" />
-                            </div>
+                        {/* Render Background Image if present */}
+                        {slides[current].image && (
+                            <>
+                                <div className="absolute inset-0 z-0">
+                                    <img
+                                        src={slides[current].image}
+                                        alt={slides[current].title}
+                                        className="w-full h-full object-cover opacity-90 scale-105 group-hover:scale-110 transition-transform duration-[20s]"
+                                    />
+                                    {/* Gradient Overlay for Text Readability */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent md:from-black/90 md:via-black/50 md:to-transparent" />
+                                </div>
+                            </>
                         )}
 
-                        {/* Republic Day Decor (ID 7) */}
-                        {slides[current].id === 7 && (
-                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                                {/* Ashoka Chakra Abstract */}
-                                <div className="hidden md:block absolute -right-20 -bottom-20 w-80 h-80 rounded-full border-[20px] border-blue-800/20 opacity-30 animate-[spin_10s_linear_infinite]" />
-                                <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(135deg,_rgba(255,153,51,0.2)_0%,_rgba(255,255,255,0.1)_50%,_rgba(19,136,8,0.2)_100%)]" />
+                        {/* Background Decor - Only show if NO image, or show simplified decor */}
+                        {!slides[current].image && (
+                            <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
+                                <div className="absolute -top-20 -right-20 w-40 h-40 md:w-60 md:h-60 bg-white opacity-5 rounded-full blur-[50px]" />
+                                <div className="absolute bottom-0 left-0 w-32 h-32 md:w-40 md:h-40 bg-black opacity-10 rounded-full blur-[40px]" />
                             </div>
                         )}
-
-                        {/* Background Decor - Standard - Hidden on Mobile */}
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
-                            <div className="absolute -top-20 -right-20 w-40 h-40 md:w-60 md:h-60 bg-white opacity-5 rounded-full blur-[50px]" />
-                            <div className="absolute bottom-0 left-0 w-32 h-32 md:w-40 md:h-40 bg-black opacity-10 rounded-full blur-[40px]" />
-                        </div>
 
                         {/* Content Area */}
                         <div className="relative z-10 w-full md:w-3/5 text-center md:text-left flex flex-col items-center md:items-start justify-center h-full pb-4 md:pb-0">
