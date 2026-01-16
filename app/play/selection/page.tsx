@@ -125,18 +125,61 @@ function SelectionContent() {
                     // Extract first token (assumes "12" or "12 science")
                     const classKey = rawClass.replace('th', '').trim().split(' ')[0];
 
-                    let key = `${boardKey}_${classKey}`;
-                    // Append stream if class 11 or 12 and stream exists
+                    const baseKey = `${boardKey}_${classKey}`;
+                    let streamKey = '';
                     if ((classKey === '11' || classKey === '12') && userProfile.stream) {
-                        key += `_${userProfile.stream.toLowerCase()}`;
+                        streamKey = `${boardKey}_${classKey}_${userProfile.stream.toLowerCase()}`;
                     }
 
-                    console.log(`[Selection] Fetching taxonomy for key: ${key} (raw: ${rawClass}, stream: ${userProfile.stream})`);
+                    console.log(`[Selection] Fetching taxonomy for keys: ${baseKey}, ${streamKey}`);
 
-                    if (fullTaxonomy[key]) {
-                        setActiveCategories(fullTaxonomy[key])
+                    // Merge Logic
+                    const combinedSubjects: string[] = [];
+                    const combinedChapters: Record<string, any[]> = {};
+
+                    const mergeData = (key: string) => {
+                        if (fullTaxonomy[key]) {
+                            const data = fullTaxonomy[key] as Taxonomy;
+
+                            // Merge Subjects (avoiding strict duplicates if exact string match)
+                            if (data.subjects) {
+                                data.subjects.forEach(sub => {
+                                    // Check if insensitive match exists, else add
+                                    const exists = combinedSubjects.some(s => s.toLowerCase() === sub.toLowerCase());
+                                    if (!exists) combinedSubjects.push(sub);
+                                });
+                            }
+
+                            // Merge Chapters
+                            if (data.chapters) {
+                                Object.keys(data.chapters).forEach(sub => {
+                                    // Normalize key
+                                    // Find if we already have this subject in our combined chapters map (case insensitive)
+                                    let targetSubKey = Object.keys(combinedChapters).find(k => k.toLowerCase() === sub.toLowerCase());
+
+                                    if (!targetSubKey) {
+                                        targetSubKey = sub;
+                                        combinedChapters[targetSubKey] = [];
+                                    }
+
+                                    const newChapters = data.chapters[sub] || [];
+                                    // Append
+                                    combinedChapters[targetSubKey] = [...combinedChapters[targetSubKey], ...newChapters];
+                                });
+                            }
+                        }
+                    };
+
+                    mergeData(baseKey);
+                    if (streamKey) mergeData(streamKey);
+
+                    if (combinedSubjects.length > 0) {
+                        setActiveCategories({
+                            subjects: combinedSubjects,
+                            chapters: combinedChapters
+                        });
                     } else if (fullTaxonomy[`${boardKey}_${rawClass}`]) {
-                        // Fallback: Try exact match if normalized failed (unlikely but safe)
+                        // Fallback
                         setActiveCategories(fullTaxonomy[`${boardKey}_${rawClass}`])
                     }
                 }
