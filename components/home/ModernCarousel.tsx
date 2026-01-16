@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket, FaYoutube, FaBookOpen, FaFlag } from 'react-icons/fa'
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 
 interface Slide {
@@ -246,10 +247,13 @@ export const ModernCarousel = () => {
                         {slides[current].image && (
                             <>
                                 <div className="absolute inset-0 z-0">
-                                    <img
-                                        src={slides[current].image}
-                                        alt={slides[current].title}
-                                        className="w-full h-full object-cover opacity-90 scale-105 group-hover:scale-110 transition-transform duration-[20s]"
+                                    <NextImage
+                                        src={slides[current].image!}
+                                        alt={slides[current].title || 'Banner'}
+                                        fill
+                                        className="object-cover opacity-90 scale-105 group-hover:scale-110 transition-transform duration-[20s]"
+                                        priority={true}
+                                        quality={85}
                                     />
                                     {/* Gradient Overlay for Text Readability */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent md:from-black/90 md:via-black/50 md:to-transparent" />
