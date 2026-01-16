@@ -229,8 +229,8 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
             displayName: request.displayName,
             photoURL: request.photoURL,
             createdAt: Date.now(),
-            subscription: request.subscription,
-            gamification: request.gamification
+            ...(request.subscription && { subscription: request.subscription }),
+            ...(request.gamification && { gamification: request.gamification })
         };
 
         const friendForThem: Friend = {
@@ -238,8 +238,8 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
             displayName: userProfile.displayName || '',
             photoURL: userProfile.photoURL || '',
             createdAt: Date.now(),
-            subscription: userProfile.subscription ? { plan: userProfile.subscription.plan, status: userProfile.subscription.status } : undefined,
-            gamification: userProfile.gamification ? { currentStreak: userProfile.gamification.currentStreak } : undefined
+            ...(userProfile.subscription && { subscription: { plan: userProfile.subscription.plan, status: userProfile.subscription.status } }),
+            ...(userProfile.gamification && { gamification: { currentStreak: userProfile.gamification.currentStreak } })
         };
 
         try {
