@@ -58,6 +58,18 @@ service cloud.firestore {
       match /syllabus_tracker/{docId} {
         allow read, write: if isOwner(userId);
       }
+
+      // 6. Quiz Results (User History)
+      match /quiz_results/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+
+
+      // 8. Completed Videos (Study Hub)
+      match /completed_videos/{docId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Mind Games (Missing Rule Fix)
@@ -95,7 +107,8 @@ service cloud.firestore {
     
     match /live_quizzes/{quizId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantsCount']));
       
       // Allow users to set reminders
       match /reminders/{userId} {
