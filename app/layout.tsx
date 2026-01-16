@@ -10,6 +10,7 @@ import { ClientLayoutWrapper } from '@/components/shared/ClientLayoutWrapper'
 
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { SoundProvider } from '@/context/SoundContext'
+import { FriendsProvider } from '@/context/FriendsContext'
 import { AdSense } from '@/components/shared/AdSense'
 import { JsonLd } from '@/components/shared/JsonLd'
 
@@ -138,12 +139,14 @@ export default function RootLayout({
             <QuizProvider>
               <LanguageProvider>
                 <SoundProvider>
-                  <Suspense fallback={null}>
-                    <ClientLayoutWrapper />
-                  </Suspense>
-                  <div className="relative w-full max-w-full overflow-x-hidden">
-                    {children}
-                  </div>
+                  <FriendsProvider>
+                    <Suspense fallback={null}>
+                      <ClientLayoutWrapper />
+                    </Suspense>
+                    <div className="relative w-full max-w-full overflow-x-hidden">
+                      {children}
+                    </div>
+                  </FriendsProvider>
                 </SoundProvider>
               </LanguageProvider>
             </QuizProvider>
