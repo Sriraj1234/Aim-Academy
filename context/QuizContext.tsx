@@ -143,7 +143,11 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 if (userProfile?.class && data.class) {
                     const userClass = String(userProfile.class).replace(/\D/g, '');
                     const qClass = String(data.class).replace(/\D/g, '');
-                    if (userClass && qClass && userClass !== qClass) {
+
+                    // Relaxed Check: If both result in a valid number, compare them.
+                    // If either is empty (e.g. "General"), let it pass or strict? 
+                    // Let's assume if user has class, we strictly want that class's content OR content marked 'all'.
+                    if (userClass && qClass && userClass !== qClass && String(data.class).toLowerCase() !== 'all') {
                         return;
                     }
                 }
