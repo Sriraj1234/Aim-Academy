@@ -72,9 +72,6 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
                     const updatedFriends = await Promise.all(initialFriendsList.map(async (friend) => {
                         if (!friend.uid) return friend;
                         try {
-                            // Check local cache or fetch? For now fetch fresh.
-                            // Optimization: Check if data changed? 
-                            // Simplest: Fetch.
                             const userDocRef = doc(db, 'users', friend.uid);
                             const userSnap = await getDoc(userDocRef);
                             if (userSnap.exists()) {
@@ -92,26 +89,24 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
                         }
                         return friend;
                     }));
-                    setFriends(updatedFriends); // Update state with fresh data
+                    setFriends(updatedFriends);
                 } catch (err) {
                     console.error("Error hydrating friends data:", err);
-                    setFriends(initialFriendsList); // Fallback
+                    setFriends(initialFriendsList);
                 }
             } else {
                 setFriends([]);
             }
 
-            // Clean up old RTDB listeners
+            // RTDB Logic...
             Object.values(rtdbUnsubscribes).forEach(unsub => unsub());
-
-            // Subscribe to Online Status (RTDB)
             initialFriendsList.forEach(friend => {
                 if (!friend.uid) return;
                 const statusRef = ref(rtdb, `status/${friend.uid}`);
                 const unsub = onValue(statusRef, (snap) => {
+                    // ... logic ...
                     const statusVal = snap.val();
                     let userStatus: string | null = null;
-
                     if (statusVal) {
                         if (statusVal.connections) {
                             const connections = Object.values(statusVal.connections) as any[];
@@ -125,7 +120,6 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
                             userStatus = 'online';
                         }
                     }
-
                     setOnlineUsers(prev => ({ ...prev, [friend.uid]: userStatus }));
                 });
                 rtdbUnsubscribes[friend.uid] = unsub;
@@ -148,7 +142,7 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
         const unsubGameInvites = onSnapshot(gameInvitesRef, (snapshot) => {
             const invitesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GameInvite));
             setActiveInvites(invitesList);
-            setLoading(false); // Initial load done
+            setLoading(false);
         }, (error) => {
             console.error("Error fetching game invites:", error);
             setLoading(false);
@@ -226,6 +220,7 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
 
     const acceptFriendRequest = async (requestUid: string) => {
         if (!user || !userProfile) return;
+
         const request = requests.find(r => r.uid === requestUid && r.direction === 'received');
         if (!request) throw new Error("Request not found");
 
@@ -247,11 +242,16 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
             gamification: userProfile.gamification ? { currentStreak: userProfile.gamification.currentStreak } : undefined
         };
 
-        await setDoc(doc(db, 'users', user.uid, 'friends', request.uid), friendForMe);
-        await setDoc(doc(db, 'users', request.uid, 'friends', user.uid), friendForThem);
+        try {
+            await setDoc(doc(db, 'users', user.uid, 'friends', request.uid), friendForMe);
+            await setDoc(doc(db, 'users', request.uid, 'friends', user.uid), friendForThem);
 
-        await deleteDoc(doc(db, 'users', user.uid, 'friend_requests', request.uid));
-        await deleteDoc(doc(db, 'users', request.uid, 'friend_requests', user.uid));
+            await deleteDoc(doc(db, 'users', user.uid, 'friend_requests', request.uid));
+            await deleteDoc(doc(db, 'users', request.uid, 'friend_requests', user.uid));
+        } catch (error) {
+            console.error("Error accepting friend request:", error);
+            throw error;
+        }
     };
 
     const rejectFriendRequest = async (requestUid: string) => {
