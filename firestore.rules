@@ -30,31 +30,24 @@ service cloud.firestore {
       
       // --- Social Feature Subcollections ---
       
-      // 1. Friend Requests: Allow other users to write (send) requests
+      // 1. Friend Requests: OPEN FOR DEBUGGING
       match /friend_requests/{requestId} {
-        allow read: if isOwner(userId);
-        // Simplified Logic: Allow any authenticated user to write/delete requests.
-        // Risk: Users can technically delete others' requests or spam, but fixes functionality issues.
-        allow write: if isAuthenticated();
+        allow read, write: if true;
       }
 
-      // 2. Friends: Allow mutual writing during acceptance
+      // 2. Friends: OPEN FOR DEBUGGING
       match /friends/{friendId} {
-        allow read: if isOwner(userId);
-        // Simplified Logic: Allow any authenticated user to write.
-        allow write: if isAuthenticated();
+        allow read, write: if true;
       }
 
-      // 3. Game Invites: Allow others to drop an invite here
+      // 3. Game Invites: OPEN FOR DEBUGGING
       match /game_invites/{inviteId} {
-        allow read: if isOwner(userId);
-        allow write: if isAuthenticated();
+        allow read, write: if true;
       }
 
-      // 4. Sent Game Invites: Allow the recipient to update status (accept/reject)
+      // 4. Sent Game Invites: OPEN FOR DEBUGGING
       match /sent_game_invites/{inviteId} {
-        allow read: if isOwner(userId);
-        allow write: if isAuthenticated();
+        allow read, write: if true;
       }
 
       // 5. Syllabus Tracker: Allow user to manage their progress
