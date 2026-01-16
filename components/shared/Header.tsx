@@ -70,7 +70,14 @@ export const Header = () => {
                                             >
                                                 <FaCrown className="text-sm" />
                                                 <span className="text-xs font-bold whitespace-nowrap">
-                                                    Trial: {Math.ceil((7 * 24 * 60 * 60 * 1000 - (Date.now() - (userProfile?.createdAt || 0))) / (24 * 60 * 60 * 1000))}d Left
+                                                    Trial: {(() => {
+                                                        // Robust Time Calculation
+                                                        const c = userProfile?.createdAt as any;
+                                                        const createdMs = typeof c === 'number' ? c : (c?.toMillis ? c.toMillis() : new Date(c || 0).getTime());
+                                                        const diffMs = Date.now() - createdMs;
+                                                        const daysLeft = 7 - (diffMs / (24 * 60 * 60 * 1000));
+                                                        return Math.ceil(daysLeft);
+                                                    })()}d Left
                                                 </span>
                                             </motion.button>
                                         </Link>
