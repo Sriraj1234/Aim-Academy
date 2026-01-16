@@ -53,6 +53,11 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow write: if isAuthenticated();
       }
+
+      // 5. Syllabus Tracker: Allow user to manage their progress
+      match /syllabus_tracker/{docId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Mind Games (Missing Rule Fix)
