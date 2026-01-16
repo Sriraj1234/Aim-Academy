@@ -363,9 +363,15 @@ const UploadPage = () => {
                     }
 
                     // Add Chapter if unique
-                    const existingChapters = metaData[key].chapters[subject].map((c: any) => typeof c === 'string' ? c : c.name);
-                    if (!existingChapters.includes(chapter)) {
-                        // FIX: Store as object to match existing schema AND app expectations
+                    const existingChapters = metaData[key].chapters[subject] || [];
+                    const existingChapterNames = existingChapters.map((c: any) => typeof c === 'string' ? c : c.name);
+
+                    if (!existingChapterNames.includes(chapter)) {
+                        // FIX: Initialize array if it doesn't exist
+                        if (!metaData[key].chapters[subject]) {
+                            metaData[key].chapters[subject] = [];
+                        }
+                        // Store as object to match existing schema AND app expectations
                         metaData[key].chapters[subject].push({ name: chapter, count: 1 });
                         metaModified = true;
                     }
