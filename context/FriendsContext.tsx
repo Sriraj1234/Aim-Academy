@@ -25,7 +25,7 @@ interface FriendsContextType {
     sentInvites: GameInvite[];
     loading: boolean;
     onlineUsers: Record<string, string | null>;
-    sendFriendRequest: (email: string) => Promise<void>;
+    sendFriendRequest: (email: string, targetUid?: string) => Promise<void>;
     acceptFriendRequest: (uid: string) => Promise<void>;
     rejectFriendRequest: (uid: string) => Promise<void>;
     sendGameInvite: (friendUid: string, roomId: string) => Promise<void>;
@@ -171,21 +171,29 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
     }, [user]);
 
     // Actions
-    const sendFriendRequest = async (email: string) => {
+    const sendFriendRequest = async (email: string, targetUid?: string) => {
         if (!user || !userProfile) throw new Error("Not authenticated");
         if (email === user.email) throw new Error("You cannot invite yourself");
 
-        const usersRef = collection(db, 'users');
-        const q = query(usersRef, where("email", "==", email));
-        const snapshot = await getDocs(q);
+        let targetUserDoc;
 
-        if (snapshot.empty) throw new Error("User not found");
+        if (targetUid) {
+            const docRef = doc(db, 'users', targetUid);
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) throw new Error("User not found");
+            targetUserDoc = docSnap;
+        } else {
+            const usersRef = collection(db, 'users');
+            const q = query(usersRef, where("email", "==", email));
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) throw new Error("User not found");
+            targetUserDoc = snapshot.docs[0];
+        }
 
-        const targetUserDoc = snapshot.docs[0];
         const targetUser = targetUserDoc.data() as UserProfile;
-        const targetUid = targetUserDoc.id;
+        const resolvedTargetUid = targetUserDoc.id;
 
-        const existingFriend = friends.find(f => f.uid === targetUid);
+        const existingFriend = friends.find(f => f.uid === resolvedTargetUid);
         if (existingFriend) throw new Error("Already friends");
 
         const requestForTarget: FriendRequest = {
@@ -201,7 +209,7 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
         };
 
         const requestForMe: FriendRequest = {
-            uid: targetUid,
+            uid: resolvedTargetUid,
             displayName: targetUser.displayName || 'Unknown',
             photoURL: targetUser.photoURL || '',
             email: targetUser.email || '',
@@ -212,8 +220,8 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
             gamification: targetUser.gamification ? { currentStreak: targetUser.gamification.currentStreak } : undefined
         };
 
-        await setDoc(doc(db, 'users', targetUid, 'friend_requests', user.uid), requestForTarget);
-        await setDoc(doc(db, 'users', user.uid, 'friend_requests', targetUid), requestForMe);
+        await setDoc(doc(db, 'users', resolvedTargetUid, 'friend_requests', user.uid), requestForTarget);
+        await setDoc(doc(db, 'users', user.uid, 'friend_requests', resolvedTargetUid), requestForMe);
     };
 
     const acceptFriendRequest = async (requestUid: string) => {
