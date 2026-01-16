@@ -24,7 +24,7 @@ const slides: Slide[] = [
         description: "Join the most elite batch for Bihar Board Class 10th. Live classes, notes, and 24/7 doubt support.",
         image: "/images/hero-study.jpg", // Placeholder - using gradient in reality
         ctaText: "Enroll Now",
-        ctaLink: "/courses",
+        ctaLink: "/batches",
         bgClass: "bg-gradient-to-r from-indigo-600 to-purple-700"
     },
     {
