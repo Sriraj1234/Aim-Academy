@@ -491,8 +491,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
         const fieldName = fieldMap[feature];
 
-        const fieldName = fieldMap[feature];
-
         try {
             // Use updateDoc with atomic increment to ensure reliability and correct nested path handling
             await updateDoc(docRef, {
