@@ -201,6 +201,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             profileData.dailyLimits = newLimits;
                         }
 
+                        // --- SELF-HEALING: Missing createdAt ---
+                        if (!profileData.createdAt) {
+                            console.warn("Repairing profile: Missing createdAt. Setting to NOW.");
+                            const nowTs = Date.now();
+                            setDoc(docRef, {
+                                createdAt: nowTs,
+                                'subscription.startDate': nowTs // Also fix sub start date
+                            }, { merge: true });
+                            profileData.createdAt = nowTs;
+                        }
+
                         setUserProfile({ ...profileData, gamification });
                     } else {
                         // Removed "Old Account" check to ensure profile is always created if missing.
