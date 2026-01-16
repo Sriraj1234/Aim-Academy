@@ -8,6 +8,7 @@ interface LocalStudentsSectionProps {
     currentUserId?: string;
     userPincode: string;
     existingFriendIds: string[];
+    pendingRequestIds?: string[];
     onSendRequest: (uid: string, email: string) => Promise<void>;
     onRequestSent: (uid: string) => void;
 }
@@ -16,6 +17,7 @@ export const LocalStudentsSection = ({
     currentUserId,
     userPincode,
     existingFriendIds,
+    pendingRequestIds,
     onSendRequest,
     onRequestSent
 }: LocalStudentsSectionProps) => {
@@ -39,8 +41,11 @@ export const LocalStudentsSection = ({
     if (loading) return <div className="p-4 text-center text-gray-400 text-sm">Finding students near your location...</div>;
     if (error) return <div className="p-4 text-center text-red-400 text-xs">Error: {error}</div>;
 
-    // Filter out existing friends
-    const displayStudents = localStudents.filter(s => !existingFriendIds.includes(s.uid));
+    // Filter out existing friends AND pending requests
+    const displayStudents = localStudents.filter(s =>
+        !existingFriendIds.includes(s.uid) &&
+        !pendingRequestIds?.includes(s.uid)
+    );
 
     if (displayStudents.length === 0) return (
         <div className="bg-white p-5 rounded-2xl border border-pw-border text-center">
