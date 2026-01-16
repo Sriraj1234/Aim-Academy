@@ -37,7 +37,7 @@ const adSlides: Slide[] = [
         subtitle: "Admissions Open",
         description: "Join the most elite batch for Class 10th. Live classes, notes, and 24/7 doubt support.",
         ctaText: "Enroll Now",
-        ctaLink: "/courses",
+        ctaLink: "/batches",
         bgClass: "bg-gradient-to-br from-indigo-600 to-violet-700",
         icon: FaCrown
     },
