@@ -401,7 +401,7 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                             }}
                                             onSendRequest={async (uid: string, email: string) => {
                                                 try {
-                                                    await sendFriendRequest(email);
+                                                    await sendFriendRequest(email, uid);
                                                     setSuccess(`Request sent to ${email}!`);
                                                     setTimeout(() => setSuccess(''), 3000);
                                                 } catch (e: any) {
