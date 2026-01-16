@@ -13,8 +13,6 @@ service cloud.firestore {
 
     // Role-Based Access Control
     // Fetches the user's profile to check if they have the 'admin' role.
-    // Role-Based Access Control
-    // Fetches the user's profile to check if they have the 'admin' role.
     function isAdmin() {
       let role = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
       return isAuthenticated() && (role == 'admin' || role == 'teacher' || role == 'super_admin');
@@ -30,10 +28,8 @@ service cloud.firestore {
       
       // --- Social Feature Subcollections ---
       
-      // 1. Friend Requests: Allow other users to write (send) requests
-      // 1. Friend Requests: Allow other users to write (send) requests
-      // 1. Friend Requests: Allow other users to write (send) requests
-      // 1. Friend Requests: Allow other users to write (send) requests
+      // --- Social Feature Subcollections ---
+      
       // 1. Friend Requests: Allow other users to write (send) requests
       match /friend_requests/{requestId} {
         allow read: if isOwner(userId);
