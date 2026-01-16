@@ -394,9 +394,9 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                                             currentUserId={user?.uid}
                                             userPincode={userProfile.pincode}
                                             existingFriendIds={friends.map(f => f.uid)}
+                                            pendingRequestIds={requests.map(r => r.uid)}
                                             onRequestSent={(uid: string) => {
-                                                // Optimistic update or just let the user know
-                                                // Ideally we'd add this ID to a 'success' set
+                                                // Optimistic update handled internally by section or context
                                             }}
                                             onSendRequest={async (uid: string, email: string) => {
                                                 try {
