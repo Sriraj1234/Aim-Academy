@@ -173,65 +173,28 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
     // Actions
     const sendFriendRequest = async (email: string, targetUid?: string) => {
         if (!user || !userProfile) throw new Error("Not authenticated");
-
-        const cleanEmail = email.trim().toLowerCase();
-        if (cleanEmail === user.email?.toLowerCase()) throw new Error("You cannot invite yourself");
+        if (email === user.email) throw new Error("You cannot invite yourself");
 
         let targetUserDoc;
-        let resolvedTargetUid: string;
-
-        // Priority 1: Search by Email (User request: "only gmail k through")
-        // We will prioritize email search even if targetUid is provided, 
-        // to ensure we mean the person with THIS email.
-        // However, if targetUid is passed (e.g. from LocalStudents), we can verify it matches the email if needed.
-        // For strictness per user request, let's rely on Email query if a string looks like an email.
 
         if (targetUid) {
-            // If we have a UID (e.g. from a list), just use it but double check self.
-            resolvedTargetUid = targetUid;
-            if (resolvedTargetUid === user.uid) throw new Error("You cannot invite yourself");
-
-            const docRef = doc(db, 'users', resolvedTargetUid);
+            const docRef = doc(db, 'users', targetUid);
             const docSnap = await getDoc(docRef);
             if (!docSnap.exists()) throw new Error("User not found");
             targetUserDoc = docSnap;
         } else {
-            // Search by Email
             const usersRef = collection(db, 'users');
-            const q = query(usersRef, where("email", "==", cleanEmail));
+            const q = query(usersRef, where("email", "==", email));
             const snapshot = await getDocs(q);
-
-            if (snapshot.empty) throw new Error("User with this email not found. Ask them to sign up!");
+            if (snapshot.empty) throw new Error("User not found");
             targetUserDoc = snapshot.docs[0];
-            resolvedTargetUid = targetUserDoc.id;
         }
-
-        if (resolvedTargetUid === user.uid) throw new Error("You cannot invite yourself");
 
         const targetUser = targetUserDoc.data() as UserProfile;
+        const resolvedTargetUid = targetUserDoc.id;
 
-        // Check if already friends
-        if (friends.some(f => f.uid === resolvedTargetUid)) {
-            throw new Error("You are already friends with this user.");
-        }
-
-        // Check if request already sent (outgoing)
-        // Accessing the subcollection might be expensive to query every time, 
-        // but we can trust the 'requests' state if we sync outgoing requests, 
-        // but currently we only sync incoming. We'll optimise by blindly writing or checking doc existence.
-        // Let's check doc existence for cleaner error message.
-        const outgoingRequestRef = doc(db, 'users', user.uid, 'friend_requests', resolvedTargetUid);
-        const outgoingRequestSnap = await getDoc(outgoingRequestRef);
-        if (outgoingRequestSnap.exists()) {
-            throw new Error("Friend request already sent.");
-        }
-
-        // Check if they already sent me a request (incoming)
-        const incomingRequest = requests.find(r => r.uid === resolvedTargetUid);
-        if (incomingRequest) {
-            // Auto-accept? Or just tell user.
-            throw new Error("This user has already sent you a request. Check your 'Requests' tab!");
-        }
+        const existingFriend = friends.find(f => f.uid === resolvedTargetUid);
+        if (existingFriend) throw new Error("Already friends");
 
         const requestForTarget: FriendRequest = {
             uid: user.uid,
@@ -257,21 +220,14 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
             gamification: targetUser.gamification ? { currentStreak: targetUser.gamification.currentStreak } : undefined
         };
 
-        // Batch write to ensure atomicity
-        // (If we had a batch instance, but separate await calls are okay for now given we don't have a transaction wrapper handy)
         await setDoc(doc(db, 'users', resolvedTargetUid, 'friend_requests', user.uid), requestForTarget);
         await setDoc(doc(db, 'users', user.uid, 'friend_requests', resolvedTargetUid), requestForMe);
     };
 
     const acceptFriendRequest = async (requestUid: string) => {
         if (!user || !userProfile) return;
-
-        // Verify request exists
         const request = requests.find(r => r.uid === requestUid && r.direction === 'received');
-        if (!request) {
-            // It might be a UI glitch, try fetching directly or just error
-            throw new Error("Request not found or already processed.");
-        }
+        if (!request) throw new Error("Request not found");
 
         const friendForMe: Friend = {
             uid: request.uid,
@@ -291,18 +247,11 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
             gamification: userProfile.gamification ? { currentStreak: userProfile.gamification.currentStreak } : undefined
         };
 
-        try {
-            // Parallelize for speed
-            await Promise.all([
-                setDoc(doc(db, 'users', user.uid, 'friends', request.uid), friendForMe),
-                setDoc(doc(db, 'users', request.uid, 'friends', user.uid), friendForThem),
-                deleteDoc(doc(db, 'users', user.uid, 'friend_requests', request.uid)),
-                deleteDoc(doc(db, 'users', request.uid, 'friend_requests', user.uid))
-            ]);
-        } catch (e) {
-            console.error("Error accepting friend request:", e);
-            throw new Error("Failed to accept friend request. Please try again.");
-        }
+        await setDoc(doc(db, 'users', user.uid, 'friends', request.uid), friendForMe);
+        await setDoc(doc(db, 'users', request.uid, 'friends', user.uid), friendForThem);
+
+        await deleteDoc(doc(db, 'users', user.uid, 'friend_requests', request.uid));
+        await deleteDoc(doc(db, 'users', request.uid, 'friend_requests', user.uid));
     };
 
     const rejectFriendRequest = async (requestUid: string) => {
