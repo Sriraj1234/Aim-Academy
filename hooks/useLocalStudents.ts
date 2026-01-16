@@ -36,16 +36,12 @@ export const useLocalStudents = (currentUserId?: string, userPincode?: string) =
                 const students: UserProfile[] = [];
                 snapshot.forEach(doc => {
                     const data = doc.data() as UserProfile;
-                    // Filter out self if desired, OR keep self to show "You" in ranking
-                    // The user usually wants to see where *they* stand, so let's keep self if consistent with UI
-                    // Previous code filtered out self: "if (data.uid !== currentUserId)". 
-                    // Let's stick to filtering out self for the "Friends/Local" list as requested, 
-                    // or maybe the user wants to see themselves?
-                    // The prompt implies "friends invite", but for leaderboard "rank", you usually want to see yourself.
-                    // However, standard specific request was "local rank v true show nahi ho raha".
-                    // I will keep the filter consistent with previous behavior (filtering self) for now to avoid duplicate "Me" cards if handled elsewhere.
-                    if (data.uid !== currentUserId) {
-                        students.push(data);
+                    // Ensure UID is set from doc.id to guarantee uniqueness
+                    // This fixes the bug where multiple users might lack a stored 'uid' field, causing UI broadcasting
+                    const userWithUid = { ...data, uid: doc.id };
+
+                    if (userWithUid.uid !== currentUserId) {
+                        students.push(userWithUid);
                     }
                 });
 
