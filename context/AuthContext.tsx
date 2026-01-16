@@ -11,7 +11,7 @@ import {
     signOut,
     onAuthStateChanged
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, getDocFromServer } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
 import { UserProfile, GamificationStats } from '@/data/types'
@@ -89,7 +89,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 try {
                     // --- STEP 1: REGISTER DEVICE (One-Time) ---
-                    const docSnap = await getDoc(docRef);
+                    // Force fetch from server to handle cases where user manually deleted doc in Console
+                    // This ensures we don't use a stale cached version where the doc still 'exists'
+                    const docSnap = await getDocFromServer(docRef).catch(() => getDoc(docRef)); // Fallback to cache if offline
 
                     if (docSnap.exists()) {
                         const profileData = docSnap.data() as UserProfile;
@@ -425,9 +427,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const isInTrial = userProfile ? (Date.now() - (parseDate(userProfile.createdAt) || 0) < 7 * 24 * 60 * 60 * 1000) && userProfile.subscription?.plan !== 'pro' : false;
 
     // Debugging (Remove in Prod)
-    // useEffect(() => {
-    //    if(userProfile) console.log("Trial Status:", { isInTrial, createdAt: userProfile.createdAt, parsed: parseDate(userProfile.createdAt), diff: Date.now() - (parseDate(userProfile.createdAt) || 0) });
-    // }, [userProfile, isInTrial]);
+    useEffect(() => {
+        if (userProfile) console.log("Trial Status Debug:", {
+            uid: userProfile.uid,
+            isInTrial,
+            createdAt: userProfile.createdAt,
+            parsed: parseDate(userProfile.createdAt),
+            now: Date.now(),
+            diff: Date.now() - (parseDate(userProfile.createdAt) || 0),
+            sevenDays: 7 * 24 * 60 * 60 * 1000,
+            isLessThan7Days: (Date.now() - (parseDate(userProfile.createdAt) || 0)) < 7 * 24 * 60 * 60 * 1000
+        });
+    }, [userProfile, isInTrial]);
 
     const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve'): boolean => {
         if (!userProfile) return false;
