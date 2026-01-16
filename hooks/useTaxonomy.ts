@@ -59,43 +59,78 @@ export const useTaxonomy = (board: string | undefined, classLevel: string | unde
 
                 if (docSnap.exists()) {
                     const fullTaxonomy = docSnap.data();
-                    let key = `${board}_${classLevel}`; // e.g. bseb_10
+
+                    // Key 1: Generic (e.g. bseb_12 or bseb_12_common)
+                    const baseKey = `${board}_${classLevel}`;
+
+                    // Key 2: Stream Specific (e.g. bseb_12_science)
+                    let streamKey = '';
                     if ((classLevel === '11' || classLevel === '12') && stream) {
-                        key = `${board}_${classLevel}_${stream}`;
+                        streamKey = `${board}_${classLevel}_${stream}`;
                     }
 
-                    if (fullTaxonomy[key]) {
-                        const rawData = fullTaxonomy[key] as TaxonomyData;
+                    // Collect data from both keys
+                    const subjectsMap = new Map<string, { name: string, chapters: any[] }>();
 
+                    const processKey = (k: string) => {
+                        if (fullTaxonomy[k]) {
+                            const rawData = fullTaxonomy[k] as TaxonomyData;
+                            rawData.subjects.forEach(subjectName => {
+                                // Normalize subject name to lowercase for deduping
+                                const norm = subjectName.toLowerCase();
+                                if (!subjectsMap.has(norm)) {
+                                    subjectsMap.set(norm, {
+                                        name: subjectName, // Keep original casing
+                                        chapters: rawData.chapters[subjectName] || []
+                                    });
+                                } else {
+                                    // Optional: Merge chapters if subject exists in both?
+                                    // For now, first come first serve (Stream specific should ideally override or merge)
+                                    // Let's merge chapters carefully
+                                    const existing = subjectsMap.get(norm)!;
+                                    const newChapters = rawData.chapters[subjectName] || [];
+                                    // Simple concat for chapters
+                                    existing.chapters = [...existing.chapters, ...newChapters];
+                                }
+                            });
+                        }
+                    }
+
+                    // Process Generic first, then Stream (so stream specific subjects are added)
+                    // actually, order doesn't strictly matter for set if unique, but let's process both
+                    processKey(baseKey);
+                    if (streamKey) processKey(streamKey);
+
+                    if (subjectsMap.size > 0) {
                         // Transform to SyllabusBoard format
-                        const transformed: SubjectSyllabus[] = rawData.subjects.map(subjectName => {
-                            // Basic mapping for colors/icons based on subject name
-                            // In a real generic app, these should also be in DB or a robust config
-
+                        const transformed: SubjectSyllabus[] = Array.from(subjectsMap.values()).map(item => {
+                            const subjectName = item.name;
                             const { icon, color } = getSubjectDetails(subjectName);
 
-
-                            // Get chapters for this subject
-                            const rawChapters = rawData.chapters[subjectName] || [];
-                            const chapters: Chapter[] = rawChapters.map(ch => ({
-                                id: ch.name, // Use name as ID for now or generate slug
+                            const chapters: Chapter[] = item.chapters.map((ch: any) => ({
+                                id: ch.name,
                                 title: ch.name,
-                                hindiTitle: '', // Not available in current taxonomy
+                                hindiTitle: '',
                                 category: ch.section || 'General'
                             }));
+
+                            // Remove Duplicate Chapters by Title
+                            const uniqueChapters = chapters.filter((c, index, self) =>
+                                index === self.findIndex((t) => t.title === c.title)
+                            );
 
                             return {
                                 id: subjectName.toLowerCase().replace(/\s+/g, '-'),
                                 name: subjectName,
                                 icon,
                                 color,
-                                chapters
+                                chapters: uniqueChapters
                             };
                         });
 
                         setData(transformed);
                     } else {
-                        setData([]); // No data for this board/class
+                        setData([]);
                     }
                 }
             } catch (err: any) {
