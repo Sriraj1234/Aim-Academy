@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { Question, CategoryData } from '@/data/types'
 import { mockQuestions } from '@/data/mock'
 import { db } from '@/lib/firebase'
+import { mistakesLocalStore } from '@/utils/mistakesLocalStore'
 import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId, setDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -395,21 +396,31 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             const mistakes = questions.filter((q, i) => answers[i] !== null && answers[i] !== q.correctAnswer);
 
             if (mistakes.length > 0) {
-                const batchPromises = mistakes.map(async (q) => {
+                // Save mistakes locally
+                mistakes.forEach(q => {
                     if (!q.id) return;
-                    const mistakeRef = doc(db, 'users', user.uid, 'mistakes', q.id);
-                    await setDoc(mistakeRef, {
-                        question: q.question,
+
+                    // Determine user answer for this question
+                    const qIndex = questions.indexOf(q);
+                    const uAnsIndex = answers[qIndex];
+                    // If q.options is array of strings, we get the string value
+                    let uAnsText: string | null = null;
+                    if (uAnsIndex !== null && uAnsIndex !== undefined && q.options && q.options[uAnsIndex]) {
+                        uAnsText = q.options[uAnsIndex];
+                    }
+
+                    // Map to LocalMistake format
+                    mistakesLocalStore.saveMistake(user.uid, {
+                        id: q.id,
+                        question: q.question, // Verify 'question' prop name in Question type, it's usually 'question' or 'text'
                         options: q.options,
-                        correctAnswer: q.correctAnswer,
-                        userAnswer: answers[questions.indexOf(q)] ?? null,
+                        correctAnswer: q.options && typeof q.correctAnswer === 'number' ? q.options[q.correctAnswer] : String(q.correctAnswer),
+                        userAnswer: uAnsText,
+                        explanation: q.explanation,
                         subject: q.subject,
-                        chapter: q.chapter || 'General',
-                        timestamp: Date.now(),
-                        difficulty: q.difficulty || 'medium'
-                    }, { merge: true });
+                        chapter: q.chapter || 'General'
+                    });
                 });
-                await Promise.all(batchPromises);
             }
 
         } catch (error) {
