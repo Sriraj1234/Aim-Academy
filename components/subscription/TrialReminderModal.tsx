@@ -31,7 +31,10 @@ export const TrialReminderModal = ({ isOpen, onClose, message, subMessage }: Tri
         if (userProfile.subscription?.plan === 'pro') return;
 
         // 3. Check if in trial period (7 days)
-        const createdAt = userProfile.createdAt || Date.now();
+        // Robust Parsing for createdAt
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = userProfile.createdAt as any;
+        const createdAt = typeof c === 'number' ? c : (c?.toMillis ? c.toMillis() : new Date(c || 0).getTime());
         const now = Date.now();
         const diffDays = (now - createdAt) / (1000 * 60 * 60 * 24);
 
