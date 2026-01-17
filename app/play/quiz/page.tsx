@@ -13,8 +13,9 @@ import { useQuiz } from '@/hooks/useQuiz'
 import { useTimer } from '@/hooks/useTimer'
 import { useAuth } from '@/hooks/useAuth'
 import { useSound } from '@/hooks/useSound'
-import { FaChevronLeft, FaPause, FaPlay, FaInfoCircle, FaBookmark, FaRegBookmark, FaStepForward, FaStepBackward, FaStar, FaFire, FaTrophy } from 'react-icons/fa'
+import { FaChevronLeft, FaPause, FaPlay, FaInfoCircle, FaBookmark, FaRegBookmark, FaStepForward, FaStepBackward, FaStar, FaFire, FaTrophy, FaLanguage } from 'react-icons/fa'
 import { HiSparkles } from 'react-icons/hi'
+import toast from 'react-hot-toast'
 
 export default function QuizPage() {
     const router = useRouter()
@@ -28,6 +29,11 @@ export default function QuizPage() {
     // Appreciation System States
     const [correctStreak, setCorrectStreak] = useState(0)
     const [showCelebration, setShowCelebration] = useState<{ type: string; message: string } | null>(null)
+
+    // Translation State
+    const [isTranslating, setIsTranslating] = useState(false)
+    const [showEnglish, setShowEnglish] = useState(false)
+    const [translatedCache, setTranslatedCache] = useState<Record<string, { q: string, o: string[] }>>({})
 
     // Double-Tap Back Logic
     const [showExitWarning, setShowExitWarning] = useState(false);
@@ -126,6 +132,43 @@ export default function QuizPage() {
 
     const question = questions[currentQuestionIndex]
 
+    // Translation Effect
+    useEffect(() => {
+        if (showEnglish && question && !translatedCache[question.id] && !isTranslating) {
+            const translateContent = async () => {
+                setIsTranslating(true)
+                try {
+                    const res = await fetch('/api/translate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            text: [question.question, ...(question.options || [])],
+                            target: 'en'
+                        })
+                    })
+                    const data = await res.json()
+
+                    if (data.translatedText && Array.isArray(data.translatedText)) {
+                        setTranslatedCache(prev => ({
+                            ...prev,
+                            [question.id]: {
+                                q: data.translatedText[0],
+                                o: data.translatedText.slice(1)
+                            }
+                        }))
+                    }
+                } catch (error) {
+                    console.error("Translation failed", error)
+                    toast.error("Translation failed")
+                    setShowEnglish(false) // Revert if failed
+                } finally {
+                    setIsTranslating(false)
+                }
+            }
+            translateContent()
+        }
+    }, [showEnglish, currentQuestionIndex, question, translatedCache])
+
     // Robust Guard: Check for question AND valid options array to prevent crashes
     if (!question || !Array.isArray(question.options)) {
         return (
@@ -140,8 +183,12 @@ export default function QuizPage() {
         )
     }
 
+    // Prepare Display Data
+    const displayQuestion = showEnglish && translatedCache[question.id] ? translatedCache[question.id].q : question.question
+    const rawOptions = showEnglish && translatedCache[question.id] ? translatedCache[question.id].o : question.options
+
     // Safety fallback for optional fields
-    const safeOptions = question.options.map(o => o || "Option Missing");
+    const safeOptions = (rawOptions || []).map(o => o || "Option Missing");
 
     const handleOptionClick = (index: number) => {
         if (!isLocked) {
@@ -310,6 +357,14 @@ export default function QuizPage() {
                         >
                             {isRunning ? <FaPause className="text-[10px]" /> : <FaPlay className="text-[10px]" />}
                         </button>
+
+                        <button
+                            onClick={() => setShowEnglish(!showEnglish)}
+                            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors active:scale-95 border ${showEnglish ? 'bg-pw-indigo text-white border-pw-indigo' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border-gray-200'}`}
+                            title="Translate to English"
+                        >
+                            <FaLanguage size={18} />
+                        </button>
                     </div>
                 </div>
 
@@ -352,7 +407,8 @@ export default function QuizPage() {
                         className="mb-8 text-left"
                     >
                         <h2 className="text-lg md:text-2xl font-display font-medium text-gray-800 leading-relaxed mb-4 text-left">
-                            {question.question}
+                            {displayQuestion}
+                            {isTranslating && <span className="inline-block ml-2 text-xs text-pw-indigo animate-pulse">(Translating...)</span>}
                         </h2>
 
                         {/* Question Meta Tags - simplified */}
