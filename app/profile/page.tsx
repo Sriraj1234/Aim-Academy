@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { useFriends } from '@/hooks/useFriends'
+import { FriendsProvider, useFriends } from '@/context/FriendsContext' // Correct import path
 import { useLanguage } from '@/context/LanguageContext'
 import { HiArrowLeft, HiChevronRight } from 'react-icons/hi'
 import { FaUserEdit, FaHistory, FaGlobe, FaQuestionCircle, FaSignOutAlt, FaCrown, FaStar, FaBolt, FaMapMarkerAlt, FaUserFriends, FaTrash, FaFire } from 'react-icons/fa'
@@ -25,7 +25,7 @@ const metadata = {
     description: 'Manage your profile'
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
     const { user, userProfile, logout, updateProfile } = useAuth()
     const { t, language, setLanguage } = useLanguage()
     const { friends, removeFriend } = useFriends()
@@ -507,5 +507,13 @@ export default function ProfilePage() {
                 )}
             </div>
         </div>
+    )
+}
+
+export default function ProfilePage() {
+    return (
+        <FriendsProvider>
+            <ProfileContent />
+        </FriendsProvider>
     )
 }
