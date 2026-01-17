@@ -139,14 +139,14 @@ export default function RootLayout({
             <QuizProvider>
               <LanguageProvider>
                 <SoundProvider>
-                  <FriendsProvider>
-                    <Suspense fallback={null}>
-                      <ClientLayoutWrapper />
-                    </Suspense>
-                    <div className="relative w-full max-w-full overflow-x-hidden">
-                      {children}
-                    </div>
-                  </FriendsProvider>
+                  {/* <FriendsProvider> */}
+                  <Suspense fallback={null}>
+                    <ClientLayoutWrapper />
+                  </Suspense>
+                  <div className="relative w-full max-w-full overflow-x-hidden">
+                    {children}
+                  </div>
+                  {/* </FriendsProvider> */}
                 </SoundProvider>
               </LanguageProvider>
             </QuizProvider>
