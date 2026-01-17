@@ -122,17 +122,9 @@ export default function QuizPage() {
         }
     }, [isFinished, router])
 
-    if (isLoading || isAILoading || isSavingResult) {
-        return (
-            <InteractiveLoading
-                message={isSavingResult ? "Saving your progress..." : "Preparing your challenge..."}
-            />
-        )
-    }
-
     const question = questions[currentQuestionIndex]
 
-    // Translation Effect
+    // Translation Effect - Moved UP to avoid conditional hook call error (React #310)
     useEffect(() => {
         if (showEnglish && question && !translatedCache[question.id] && !isTranslating) {
             const translateContent = async () => {
@@ -169,7 +161,15 @@ export default function QuizPage() {
         }
     }, [showEnglish, currentQuestionIndex, question, translatedCache])
 
-    // Robust Guard: Check for question AND valid options array to prevent crashes
+    if (isLoading || isAILoading || isSavingResult) {
+        return (
+            <InteractiveLoading
+                message={isSavingResult ? "Saving your progress..." : "Preparing your challenge..."}
+            />
+        )
+    }
+
+
     if (!question || !Array.isArray(question.options)) {
         return (
             <div className="min-h-screen bg-pw-surface flex items-center justify-center">
