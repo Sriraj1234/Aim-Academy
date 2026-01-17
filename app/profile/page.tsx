@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { FriendsProvider, useFriends } from '@/context/FriendsContext' // Correct import path
+import { FriendsProvider, useFriendsContext } from '@/context/FriendsContext' // Corrected hook name
 import { useLanguage } from '@/context/LanguageContext'
 import { HiArrowLeft, HiChevronRight } from 'react-icons/hi'
 import { FaUserEdit, FaHistory, FaGlobe, FaQuestionCircle, FaSignOutAlt, FaCrown, FaStar, FaBolt, FaMapMarkerAlt, FaUserFriends, FaTrash, FaFire } from 'react-icons/fa'
@@ -28,7 +28,7 @@ const metadata = {
 function ProfileContent() {
     const { user, userProfile, logout, updateProfile } = useAuth()
     const { t, language, setLanguage } = useLanguage()
-    const { friends, removeFriend } = useFriends()
+    const { friends, removeFriend } = useFriendsContext()
     const router = useRouter()
 
     const [isEditing, setIsEditing] = useState(false)
