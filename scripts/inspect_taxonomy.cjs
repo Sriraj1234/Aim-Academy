@@ -1,43 +1,57 @@
-const { initializeApp } = require('firebase/app');
-const { getFirestore, doc, getDoc } = require('firebase/firestore');
-require('dotenv').config({ path: '.env.local' });
+const admin = require('firebase-admin');
+const path = require('path');
+const dotenv = require('dotenv');
 
-const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+// --- Firebase Initialization ---
+try {
+    const envPathLocal = path.join(__dirname, '..', '.env.local');
+    const envPath = path.join(__dirname, '..', '.env');
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    dotenv.config({ path: envPath });
+    dotenv.config({ path: envPathLocal, override: true });
+
+    if (!admin.apps.length) {
+        let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+        if (privateKey && privateKey.includes('\\n')) {
+            privateKey = privateKey.replace(/\\n/g, '\n');
+        }
+
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                privateKey: privateKey,
+            })
+        });
+    }
+} catch (e) {
+    console.error("Error initializing Firebase:", e);
+    process.exit(1);
+}
+
+const db = admin.firestore();
 
 async function inspectTaxonomy() {
-    try {
-        const docRef = doc(db, 'metadata', 'taxonomy');
-        const docSnap = await getDoc(docRef);
+    const docRef = db.collection('metadata').doc('taxonomy');
+    const docSnap = await docRef.get();
 
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            console.log("Taxonomy Keys:", Object.keys(data));
+    if (!docSnap.exists) {
+        console.log("Taxonomy document does not exist!");
+        return;
+    }
 
-            ['bseb_12_science', 'bseb_12_commerce', 'bseb_12_arts', 'bseb_10'].forEach(key => {
-                if (data[key]) {
-                    console.log(`\n--- ${key} ---`);
-                    console.log("Subjects:", data[key].subjects);
-                } else {
-                    console.log(`\n--- ${key} ---\n(Not Found)`);
-                }
-            });
+    const data = docSnap.data();
+    const science = data['bseb_12_science'];
+
+    if (science) {
+        console.log('bseb_12_science found.');
+        if (science.chapters && science.chapters.Chemistry) {
+            console.log('Chemistry Chapters:', JSON.stringify(science.chapters.Chemistry, null, 2));
         } else {
-            console.log("No taxonomy document found!");
+            console.log('No Chemistry chapters found.');
         }
-        process.exit(0);
-    } catch (e) {
-        console.error(e);
-        process.exit(1);
+    } else {
+        console.log('bseb_12_science not found.');
     }
 }
 
