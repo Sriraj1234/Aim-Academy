@@ -1,0 +1,9 @@
+
+Results:
+- String: 1
+- Number: 3390
+- Total : 3391
+
+Samples:
+Doc c7bac21e40e2609d021ec957ea87f6ad: "डेनियल सेल"
+    
