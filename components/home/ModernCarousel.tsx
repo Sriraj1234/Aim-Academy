@@ -31,7 +31,7 @@ const adSlides: Slide[] = [
         ctaLink: "/study-hub",
         bgClass: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500", // Fallback
         icon: FaBookOpen,
-        image: "/images/saraswati_puja_banner.png"
+        image: "/images/basant_panchami_2025.png"
     },
     {
         id: 7,
