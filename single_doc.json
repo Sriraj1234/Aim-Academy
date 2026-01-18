@@ -1,0 +1,19 @@
+{
+  "chapter": "वैद्युत रसायन (Electrochemistry)",
+  "createdAt": {
+    "_seconds": 1768752940,
+    "_nanoseconds": 585000000
+  },
+  "question": "$Zn",
+  "stream": "Science",
+  "subject": "Chemistry",
+  "options": [
+    "Zn^{2+}(1M)",
+    "Cu^{2+}(1M)",
+    "Cu$ सेल को क्या कहा जाता है? [Source 120, 149]"
+  ],
+  "source": "excel_upload_jan_2026",
+  "correctAnswer": "डेनियल सेल",
+  "class": "Class 12",
+  "board": "bseb"
+}
