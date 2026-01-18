@@ -64,6 +64,11 @@ service cloud.firestore {
       match /completed_videos/{docId} {
         allow read, write: if isOwner(userId);
       }
+
+      // 8. Daily Challenges
+      match /daily_challenges/{docId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Mind Games
