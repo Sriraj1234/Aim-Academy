@@ -1,28 +1,31 @@
-const fs = require('fs');
-const path = require('path');
 const XLSX = require('xlsx');
+const path = require('path');
 
-const dataDir = path.join(__dirname, '../data');
+const filePath = path.join(__dirname, '../data/Class 12th BSEB Chemistry questions (1).xlsx');
 
-if (!fs.existsSync(dataDir)) {
-    console.log('Data directory not found:', dataDir);
-    process.exit(1);
-}
+try {
+    const workbook = XLSX.readFile(filePath);
+    console.log('Sheet Names:', workbook.SheetNames);
 
-const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.xlsx'));
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-files.forEach(file => {
-    try {
-        const fullPath = path.join(dataDir, file);
-        const workbook = XLSX.readFile(fullPath);
-        console.log(`\nFile: ${file}`);
-        console.log(`Sheets: ${workbook.SheetNames.join(', ')}`);
-
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
-        console.log(`Headers (Sheet 1): ${headers ? headers.join(', ') : 'Empty'}`);
-    } catch (err) {
-        console.error(`Error reading ${file}:`, err.message);
+    if (jsonData.length > 0) {
+        console.log('First Sheet Headers:', jsonData[0]);
+        console.log('First Row Data:', jsonData[1]);
+    } else {
+        console.log('First sheet is empty.');
     }
-});
+
+    // Check a random other sheet
+    if (workbook.SheetNames.length > 1) {
+        const secondSheetName = workbook.SheetNames[1];
+        const worksheet2 = workbook.Sheets[secondSheetName];
+        const jsonData2 = XLSX.utils.sheet_to_json(worksheet2, { header: 1 });
+        console.log('Second Sheet Headers:', jsonData2[0]);
+    }
+
+} catch (error) {
+    console.error('Error reading file:', error);
+}
