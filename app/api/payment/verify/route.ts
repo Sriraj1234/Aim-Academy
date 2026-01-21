@@ -33,6 +33,13 @@ export async function POST(req: Request) {
             planId
         } = body;
 
+        console.log("Verify Route Received:", {
+            razorpay_payment_id,
+            razorpay_subscription_id,
+            userId,
+            planId
+        });
+
         if (!razorpay_payment_id || !razorpay_signature || !userId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
@@ -94,6 +101,9 @@ export async function POST(req: Request) {
 
     } catch (error: any) {
         console.error("Payment Verification Error:", error);
-        return NextResponse.json({ error: 'Verification failed' }, { status: 500 });
+        return NextResponse.json({
+            error: error instanceof Error ? error.message : 'Verification failed',
+            details: JSON.stringify(error)
+        }, { status: 500 });
     }
 }
