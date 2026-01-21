@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { UpgradeModal } from '../subscription/UpgradeModal';
 
 export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string, playerId?: string }) => {
-    const { user, userProfile } = useAuth();
+    const { user, userProfile, isInTrial } = useAuth();
     // Use passed playerId (game specific) or fallback to auth user id or random if generic
     const stableId = playerId || user?.uid || 'guest';
 
@@ -22,7 +22,7 @@ export const VoiceChatWidget = ({ channelName, playerId }: { channelName: string
     const [error, setError] = useState<string | null>(null);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-    const isPro = userProfile?.subscription?.plan === 'pro';
+    const isPro = userProfile?.subscription?.plan === 'pro' || isInTrial;
 
     // Refs
     const clientRef = useRef<IAgoraRTCClient | null>(null);
