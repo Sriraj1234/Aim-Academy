@@ -2,24 +2,40 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import * as admin from 'firebase-admin';
 
-// Initialize Firebase Admin SDK (Singleton Pattern for Next.js)
-if (!admin.apps.length) {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY
-        ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-        : undefined;
+// Helper to get Firestore safely
+const getFirestore = () => {
+    if (!admin.apps.length) {
+        // 1. Handle Private Key (strip quotes if user pasted them, handle newlines)
+        let privateKey = process.env.FIREBASE_PRIVATE_KEY || "";
+        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+            privateKey = privateKey.slice(1, -1);
+        }
+        privateKey = privateKey.replace(/\\n/g, '\n');
 
-    if (privateKey && process.env.FIREBASE_CLIENT_EMAIL) {
+        // 2. Handle Project ID (Fallback to public one if server one is missing)
+        const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+        // 3. Validation
+        if (!privateKey || !process.env.FIREBASE_CLIENT_EMAIL || !projectId) {
+            // Log missing keys for debugging (obscured)
+            console.error("Firebase Admin Init Failed. Missing keys:", {
+                hasPrivateKey: !!privateKey,
+                hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+                hasProjectId: !!projectId
+            });
+            throw new Error("Missing FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL, or FIREBASE_PROJECT_ID");
+        }
+
         admin.initializeApp({
             credential: admin.credential.cert({
-                projectId: process.env.FIREBASE_PROJECT_ID,
+                projectId: projectId,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 privateKey: privateKey
             }),
         });
     }
-}
-
-const db = admin.firestore();
+    return admin.firestore();
+};
 
 export async function POST(req: Request) {
     try {
@@ -80,6 +96,7 @@ export async function POST(req: Request) {
             ? now + (365 * 24 * 60 * 60 * 1000)
             : now + (30 * 24 * 60 * 60 * 1000);
 
+        const db = getFirestore();
         const userRef = db.collection('users').doc(userId);
 
         await userRef.set({
