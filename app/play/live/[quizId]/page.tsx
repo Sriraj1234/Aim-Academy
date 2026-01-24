@@ -11,6 +11,8 @@ import { ModernOptionButton } from '@/components/quiz/ModernOptionButton';
 import { Button } from '@/components/shared/Button';
 import { FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
+import { LiveLeaderboard } from '@/components/quiz/LiveLeaderboard';
 
 export default function LiveQuizPlayerPage() {
     const { quizId } = useParams();
@@ -183,6 +185,14 @@ export default function LiveQuizPlayerPage() {
 
         try {
             await addDoc(collection(db, 'live_quiz_results'), resultData);
+
+            // Celebration!
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+
             // DO NOT redirect immediately. Show success screen.
         } catch (e) {
             console.error("Submit error", e);
@@ -298,29 +308,54 @@ export default function LiveQuizPlayerPage() {
                 </div>
             </div>
 
-            <div className="max-w-2xl mx-auto p-4 md:p-8 pt-6">
-                {currentQ && (
-                    <div className="bg-white p-6 rounded-[2rem] shadow-pw-lg border border-pw-border mb-6">
-                        <div className="flex justify-between mb-4">
-                            <span className="text-[10px] font-bold uppercase bg-gray-100 text-gray-500 px-2 py-1 rounded-lg tracking-wider">{currentQ.subject}</span>
-                            <span className="text-[10px] font-bold uppercase bg-green-50 text-green-600 px-2 py-1 rounded-lg tracking-wider">+{currentQ.marks || 1} Marks</span>
-                        </div>
-                        <h2 className="text-lg md:text-xl font-bold text-gray-800 leading-relaxed mb-6">{currentQ.question}</h2>
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 h-1.5">
+                <motion.div
+                    className="h-full bg-pw-indigo"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${((currentQIndex + 1) / quiz!.questions.length) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                />
+            </div>
 
-                        <div className="space-y-3">
-                            {currentQ.options.map((opt, idx) => (
-                                <ModernOptionButton
-                                    key={idx}
-                                    label={String.fromCharCode(65 + idx)}
-                                    optionText={opt}
-                                    selected={answers[currentQ.id || `q-${currentQIndex}`] === idx}
-                                    onClick={() => handleOptionSelect(currentQ.id, idx, currentQIndex)}
-                                    disabled={false}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
+            <div className="max-w-2xl mx-auto p-4 md:p-8 pt-6">
+
+                {/* Live Leaderboard Teaser */}
+                <div className="mb-6 flex justify-center">
+                    <LiveLeaderboard />
+                </div>
+
+                <AnimatePresence mode="wait">
+                    {currentQ && (
+                        <motion.div
+                            key={currentQIndex}
+                            initial={{ x: 20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -20, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="bg-white p-6 rounded-[2rem] shadow-pw-lg border border-pw-border mb-6"
+                        >
+                            <div className="flex justify-between mb-4">
+                                <span className="text-[10px] font-bold uppercase bg-gray-100 text-gray-500 px-2 py-1 rounded-lg tracking-wider">{currentQ.subject}</span>
+                                <span className="text-[10px] font-bold uppercase bg-green-50 text-green-600 px-2 py-1 rounded-lg tracking-wider">+{currentQ.marks || 1} Marks</span>
+                            </div>
+                            <h2 className="text-lg md:text-xl font-bold text-gray-800 leading-relaxed mb-6">{currentQ.question}</h2>
+
+                            <div className="space-y-3">
+                                {currentQ.options.map((opt, idx) => (
+                                    <ModernOptionButton
+                                        key={idx}
+                                        label={String.fromCharCode(65 + idx)}
+                                        optionText={opt}
+                                        selected={answers[currentQ.id || `q-${currentQIndex}`] === idx}
+                                        onClick={() => handleOptionSelect(currentQ.id, idx, currentQIndex)}
+                                        disabled={false}
+                                    />
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div className="flex justify-between items-center gap-4 mt-8">
                     <Button
