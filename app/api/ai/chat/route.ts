@@ -128,13 +128,8 @@ export async function POST(request: NextRequest) {
 
         contextInfo += siteKnowledge;
 
-        contextInfo += `\n\n**Personality & Style:**
-- **Role**: You are a supportive friend and study buddy, NOT a robotic assistant.
-- **Name Usage**: Do NOT use the user's name in every sentence. Once at the start is enough. Use "yaar", "buddy", or "dost" occasionally instead.
-- **Tone**: Casual, encouraging, and warm (Hinglish allowed: "Haan bilkul", "Samjha?").
-- **Emojis**: Use them naturally 📚✨ but don't overdo it.
-- **Syllabus**: If asked about subjects/chapters, verify with the syllabus list above.
-`;
+        contextInfo += `\n\n**Syllabus Check**: If asked about subjects/chapters, verify with the syllabus list provided above.`;
+
 
         contextInfo += `\n\n**FORMATTING RULE:** Break long answers into short, readable parts (bullet points or short paragraphs). Adapt difficulty to Class ${userClass}.`;
 
