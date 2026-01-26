@@ -34,21 +34,49 @@ export default function GamePage() {
     useEffect(() => {
         if (!roomId || !playerId) return;
 
+        // Double-Back Logic
+        // We push a state so that the first "back" just pops this state but keeps us on the page
+        window.history.pushState(null, '', window.location.href);
+
+        let lastBackPress = 0;
+
+        const handlePopState = (event: PopStateEvent) => {
+            const now = Date.now();
+            // If back pressed within 2 seconds of the last press, allow exit
+            if (now - lastBackPress < 2000) {
+                // Allow navigation (don't push state again)
+                // cleanup will run via component unmount
+                leaveRoom(roomId as string, playerId).catch(console.error);
+                router.push('/play/group');
+                return;
+            }
+
+            // First press: Prevent exit & Show warning
+            event.preventDefault();
+            window.history.pushState(null, '', window.location.href); // Re-push state to trap again
+            lastBackPress = now;
+
+            // Simple Toast (Can be replaced with a UI toast component if available)
+            // Using alert is too intrusive, so we'll set a state to show a custom UI toast
+            setShowExitWarning(true);
+            setTimeout(() => setShowExitWarning(false), 2000);
+        };
+
         const handleUnload = () => {
-            // Use navigator.sendBeacon or simple fetch for reliability on unload
-            // But for Firestore, we rely on the async call best-effort or presence system
-            // Since we can't await here easily, we trigger the async function
             leaveRoom(roomId as string, playerId).catch(console.error);
         };
 
+        window.addEventListener('popstate', handlePopState);
         window.addEventListener('beforeunload', handleUnload);
 
         return () => {
+            window.removeEventListener('popstate', handlePopState);
             window.removeEventListener('beforeunload', handleUnload);
-            // Also leave when component unmounts (navigation)
             leaveRoom(roomId as string, playerId).catch(console.error);
         };
-    }, [roomId, playerId]);
+    }, [roomId, playerId, router]);
+
+    const [showExitWarning, setShowExitWarning] = useState(false);
 
     useEffect(() => {
         if (!roomId) return;
@@ -219,6 +247,20 @@ export default function GamePage() {
                 <div className="absolute top-1/2 -right-20 w-80 h-80 bg-accent-500/10 rounded-full blur-[80px] animate-pulse-slow delay-700" />
                 <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-green-400/10 rounded-full blur-[60px]" />
             </div>
+
+            {/* Exit Warning Toast */}
+            <AnimatePresence>
+                {showExitWarning && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-black/80 text-white px-6 py-3 rounded-full shadow-lg font-bold text-sm backdrop-blur-md border border-white/10"
+                    >
+                        Press back again to exit game
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div className="relative z-10 max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-6 min-h-screen flex flex-col md:ml-80 lg:mx-auto">
 
