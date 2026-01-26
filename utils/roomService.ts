@@ -80,11 +80,12 @@ export const joinRoom = async (roomId: string, playerName: string, userId?: stri
         throw new Error('Room has expired.');
     }
 
-    // Check if player already exists (By User ID first, then Name)
+    // Check if player already exists (By User ID first)
     let existingPlayerEntry = Object.entries(roomData.players || {}).find(([_, p]) => userId && p.userId === userId);
 
-    // Fallback: Check by name if no ID matched (or for legacy anonymous joiners)
-    if (!existingPlayerEntry) {
+    // Fallback: Check by name ONLY if no userId was provided (Legacy/Guest support)
+    // If we have a userId, we DO NOT match by name, to prevent different users with same name colliding
+    if (!existingPlayerEntry && !userId) {
         existingPlayerEntry = Object.entries(roomData.players || {}).find(([_, p]) => p.name === playerName);
     }
 
