@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { submitAnswer, nextQuestion, endGame } from '@/utils/roomService';
+import { submitAnswer, nextQuestion, endGame, leaveRoom } from '@/utils/roomService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaUser, FaCheckCircle, FaClock, FaShapes, FaBolt, FaStar, FaUsers, FaTimes, FaChevronDown } from 'react-icons/fa';
 import dynamic from 'next/dynamic';
@@ -29,6 +29,26 @@ export default function GamePage() {
 
     const isHost = typeof window !== 'undefined' && localStorage.getItem(`room_host_${roomId}`) === 'true';
     const { playSound } = useSound();
+
+    // Cleanup on unmount / refresh
+    useEffect(() => {
+        if (!roomId || !playerId) return;
+
+        const handleUnload = () => {
+            // Use navigator.sendBeacon or simple fetch for reliability on unload
+            // But for Firestore, we rely on the async call best-effort or presence system
+            // Since we can't await here easily, we trigger the async function
+            leaveRoom(roomId as string, playerId).catch(console.error);
+        };
+
+        window.addEventListener('beforeunload', handleUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleUnload);
+            // Also leave when component unmounts (navigation)
+            leaveRoom(roomId as string, playerId).catch(console.error);
+        };
+    }, [roomId, playerId]);
 
     useEffect(() => {
         if (!roomId) return;
