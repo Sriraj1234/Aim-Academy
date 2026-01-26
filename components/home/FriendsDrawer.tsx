@@ -265,53 +265,100 @@ export const FriendsDrawer = ({ isOpen, onClose, onInvite, inviteLoading: extern
                             )}
 
                             {activeTab === 'requests' && (
-                                <div className="space-y-3">
-                                    {incomingRequests.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center h-64 text-center p-6 opacity-60">
-                                            <FaEnvelope className="text-4xl text-gray-300 mb-3" />
-                                            <p className="text-gray-500 dark:text-gray-400 font-medium">No pending requests</p>
-                                        </div>
-                                    ) : (
-                                        incomingRequests.map((req, idx) => (
-                                            <motion.div
-                                                key={req.uid}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: idx * 0.05 }}
-                                                className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-pw-sm border border-pw-border dark:border-slate-800"
-                                            >
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <div className="relative shrink-0 w-10 h-10">
-                                                        <div className="w-full h-full rounded-full overflow-hidden bg-gray-100 border border-pw-border">
-                                                            <SafeAvatar
-                                                                src={req.photoURL}
-                                                                alt={req.displayName}
-                                                                className="w-full h-full object-cover"
-                                                            />
+                                <div className="space-y-6">
+                                    {/* Incoming Requests */}
+                                    <div>
+                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Incoming ({incomingRequests.length})</h3>
+                                        <div className="space-y-3">
+                                            {incomingRequests.length === 0 ? (
+                                                <div className="flex flex-col items-center justify-center py-8 text-center opacity-60 bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">
+                                                    <FaEnvelope className="text-2xl text-gray-300 mb-2" />
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">No incoming requests</p>
+                                                </div>
+                                            ) : (
+                                                incomingRequests.map((req, idx) => (
+                                                    <motion.div
+                                                        key={req.uid}
+                                                        initial={{ opacity: 0, x: -10 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: idx * 0.05 }}
+                                                        className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-pw-sm border border-pw-border dark:border-slate-800"
+                                                    >
+                                                        <div className="flex items-center gap-3 mb-4">
+                                                            <div className="relative shrink-0 w-10 h-10">
+                                                                <div className="w-full h-full rounded-full overflow-hidden bg-gray-100 border border-pw-border">
+                                                                    <SafeAvatar
+                                                                        src={req.photoURL}
+                                                                        alt={req.displayName}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </div>
+                                                                <UserBadge size="sm" className="-top-1 -right-1" userProfile={req} showDefault={false} />
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="font-bold text-pw-violet dark:text-white text-sm">{req.displayName}</h3>
+                                                                <p className="text-[10px] text-pw-indigo font-medium">Wants to be your friend</p>
+                                                            </div>
                                                         </div>
-                                                        <UserBadge size="sm" className="-top-1 -right-1" userProfile={req} showDefault={false} />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-pw-violet">{req.displayName}</h3>
-                                                        <p className="text-xs text-pw-indigo font-medium">Wants to be your friend</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleAccept(req.uid)}
-                                                        className="flex-1 bg-pw-indigo text-white py-2.5 rounded-xl text-sm font-bold shadow-pw-md hover:bg-pw-violet transition-all flex items-center justify-center gap-2 active:scale-95"
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => handleAccept(req.uid)}
+                                                                className="flex-1 bg-pw-indigo text-white py-2 rounded-xl text-xs font-bold shadow-pw-md hover:bg-pw-violet transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                                                            >
+                                                                <FaCheck /> Accept
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReject(req.uid)}
+                                                                className="flex-1 bg-pw-surface text-gray-600 py-2 rounded-xl text-xs font-bold border border-pw-border hover:bg-white hover:text-pw-red transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                                                            >
+                                                                <FaTimes /> Reject
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Outgoing Requests */}
+                                    {requests.filter(r => r.direction === 'sent').length > 0 && (
+                                        <div>
+                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Sent ({requests.filter(r => r.direction === 'sent').length})</h3>
+                                            <div className="space-y-3">
+                                                {requests.filter(r => r.direction === 'sent').map((req, idx) => (
+                                                    <motion.div
+                                                        key={req.uid}
+                                                        initial={{ opacity: 0, x: -10 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: idx * 0.05 }}
+                                                        className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-pw-border dark:border-slate-800 opacity-80 hover:opacity-100 transition-opacity"
                                                     >
-                                                        <FaCheck /> Accept
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleReject(req.uid)}
-                                                        className="flex-1 bg-pw-surface text-gray-600 py-2.5 rounded-xl text-sm font-bold border border-pw-border hover:bg-white hover:text-pw-red transition-all flex items-center justify-center gap-2 active:scale-95"
-                                                    >
-                                                        <FaTimes /> Reject
-                                                    </button>
-                                                </div>
-                                            </motion.div>
-                                        ))
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 border border-pw-border">
+                                                                    <SafeAvatar
+                                                                        src={req.photoURL}
+                                                                        alt={req.displayName}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <h3 className="font-bold text-gray-700 dark:text-gray-300 text-xs">{req.displayName}</h3>
+                                                                    <p className="text-[10px] text-gray-400 font-medium">Request pending...</p>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => handleReject(req.uid)} // Using reject to cancel sent request
+                                                                className="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                                                                title="Cancel Request"
+                                                            >
+                                                                <FaTimes />
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             )}
