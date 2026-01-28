@@ -19,8 +19,8 @@ class GeminiAudioProcessor extends AudioWorkletProcessor {
             // Optimization: We can do simple decimation here if ratios match
             if (inputChannel.length > 0) {
                 this.port.postMessage({
-                    type: 'input_audio',
-                    buffer: inputChannel
+                    type: 'audioChunk',
+                    audio: inputChannel
                 });
             }
         }
