@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaMicrophone, FaStop, FaTimes } from 'react-icons/fa';
@@ -18,30 +18,19 @@ export const LiveGuruWidget = () => {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
+    // Get current avatar based on state
+    const getCurrentAvatar = useMemo(() => {
+        if (isAiSpeaking) return '/images/saraswati-speaking.png';
+        if (isConnected) return '/images/saraswati-listening.png';
+        return '/images/saraswati-idle.png';
+    }, [isConnected, isAiSpeaking]);
+
     // Auto-scroll chat to bottom
     useEffect(() => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
     }, [chatMessages]);
-
-    // Orb Animation Variants
-    const orbVariants = {
-        idle: {
-            scale: 1,
-            opacity: 0.6,
-        },
-        speaking: {
-            scale: [1, 1.15, 1],
-            opacity: 1,
-            transition: { repeat: Infinity, duration: 1.2 }
-        },
-        listening: {
-            scale: [1, 1.05, 1],
-            opacity: 0.9,
-            transition: { repeat: Infinity, duration: 2 }
-        }
-    };
 
     // Collapsed Widget Card
     if (!showWidget) {
@@ -62,14 +51,14 @@ export const LiveGuruWidget = () => {
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-indigo-400/20 to-purple-500/10 rounded-full blur-2xl -ml-10 -mb-10" />
 
                 {/* Avatar */}
-                <div className="relative w-20 h-20 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="relative w-24 h-24 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full blur-md opacity-50" />
                     <Image
-                        src="/images/guru-avatar.png"
+                        src="/images/saraswati-idle.png"
                         alt="Saraswati Devi"
-                        width={80}
-                        height={80}
-                        className="relative rounded-full border-2 border-purple-400/50 shadow-lg"
+                        width={96}
+                        height={96}
+                        className="relative rounded-full border-2 border-purple-400/50 shadow-lg object-cover"
                     />
                 </div>
 
@@ -94,13 +83,20 @@ export const LiveGuruWidget = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/50 backdrop-blur-md safe-area-top">
                     <div className="flex items-center gap-3">
-                        <Image
-                            src="/images/guru-avatar.png"
-                            alt="Saraswati Devi"
-                            width={40}
-                            height={40}
-                            className="rounded-full border border-purple-500/50"
-                        />
+                        <motion.div
+                            key={getCurrentAvatar}
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <Image
+                                src={getCurrentAvatar}
+                                alt="Saraswati Devi"
+                                width={44}
+                                height={44}
+                                className="rounded-full border border-purple-500/50 object-cover"
+                            />
+                        </motion.div>
                         <div>
                             <h2 className="text-lg font-bold text-white">सरस्वती</h2>
                             <p className="text-xs text-purple-400">
@@ -123,57 +119,80 @@ export const LiveGuruWidget = () => {
                         ॐ
                     </div>
 
-                    {/* The Orb with Avatar */}
+                    {/* The Orb with Animated Avatar */}
                     <div className="relative flex items-center justify-center mb-8">
                         {/* Outer Glow Rings */}
                         {isConnected && (
                             <>
                                 <motion.div
-                                    className="absolute w-48 h-48 rounded-full border border-purple-500/20"
+                                    className={`absolute w-56 h-56 rounded-full border ${isAiSpeaking ? 'border-pink-500/30' : 'border-green-500/20'}`}
                                     animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
                                     transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
                                 />
                                 <motion.div
-                                    className="absolute w-48 h-48 rounded-full border border-purple-500/10"
+                                    className={`absolute w-56 h-56 rounded-full border ${isAiSpeaking ? 'border-purple-500/20' : 'border-green-500/10'}`}
                                     animate={{ scale: [1, 2], opacity: [0.3, 0] }}
                                     transition={{ repeat: Infinity, duration: 2, delay: 0.5, ease: "easeOut" }}
                                 />
                             </>
                         )}
 
-                        {/* Core Orb */}
+                        {/* Core Avatar Container */}
                         <motion.div
-                            variants={orbVariants}
-                            animate={isAiSpeaking ? "speaking" : (isConnected ? "listening" : "idle")}
-                            className={`relative w-36 h-36 md:w-44 md:h-44 rounded-full flex items-center justify-center
+                            animate={isAiSpeaking ? {
+                                scale: [1, 1.05, 1],
+                                transition: { repeat: Infinity, duration: 0.8 }
+                            } : isConnected ? {
+                                scale: [1, 1.02, 1],
+                                transition: { repeat: Infinity, duration: 2 }
+                            } : {}}
+                            className={`relative w-44 h-44 md:w-52 md:h-52 rounded-full flex items-center justify-center
                                 ${isAiSpeaking
-                                    ? 'bg-gradient-to-br from-purple-500 via-pink-500 to-fuchsia-500 shadow-[0_0_60px_rgba(168,85,247,0.5)]'
+                                    ? 'shadow-[0_0_80px_rgba(168,85,247,0.6)]'
                                     : isConnected
-                                        ? 'bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 shadow-[0_0_40px_rgba(168,85,247,0.3)]'
-                                        : 'bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 shadow-[0_0_20px_rgba(0,0,0,0.5)]'
+                                        ? 'shadow-[0_0_60px_rgba(34,197,94,0.4)]'
+                                        : 'shadow-[0_0_30px_rgba(168,85,247,0.2)]'
                                 }`}
                         >
-                            <Image
-                                src="/images/guru-avatar.png"
-                                alt="Saraswati Devi"
-                                width={120}
-                                height={120}
-                                className="rounded-full border-4 border-white/20"
-                            />
+                            {/* Animated Avatar Image */}
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={getCurrentAvatar}
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.9, opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="w-full h-full"
+                                >
+                                    <Image
+                                        src={getCurrentAvatar}
+                                        alt="Saraswati Devi"
+                                        width={208}
+                                        height={208}
+                                        className={`rounded-full border-4 object-cover w-full h-full
+                                            ${isAiSpeaking
+                                                ? 'border-pink-500/50'
+                                                : isConnected
+                                                    ? 'border-green-500/50'
+                                                    : 'border-purple-500/30'}`}
+                                    />
+                                </motion.div>
+                            </AnimatePresence>
                         </motion.div>
 
                         {/* Volume Indicator */}
                         {isConnected && !isAiSpeaking && (
                             <motion.div
-                                className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-1"
-                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-1 bg-black/50 px-3 py-1 rounded-full"
+                                animate={{ opacity: [0.6, 1, 0.6] }}
                                 transition={{ repeat: Infinity, duration: 1 }}
                             >
                                 {[...Array(5)].map((_, i) => (
-                                    <div
+                                    <motion.div
                                         key={i}
-                                        className={`w-1.5 rounded-full bg-green-400 transition-all duration-100`}
-                                        style={{ height: `${Math.min(20, 4 + (volume * 100 * (i + 1) / 3))}px` }}
+                                        className="w-1.5 rounded-full bg-green-400"
+                                        animate={{ height: [4, Math.min(20, 4 + (volume * 100 * (i + 1) / 3)), 4] }}
+                                        transition={{ repeat: Infinity, duration: 0.3, delay: i * 0.05 }}
                                     />
                                 ))}
                             </motion.div>
@@ -182,12 +201,17 @@ export const LiveGuruWidget = () => {
 
                     {/* Status Text */}
                     <div className="text-center mb-6">
-                        <p className="text-xl font-bold text-white mb-1">
+                        <motion.p
+                            key={isAiSpeaking ? 'speaking' : isConnected ? 'listening' : 'idle'}
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="text-xl font-bold text-white mb-1"
+                        >
                             {isConnecting ? 'संयोजन हो रहा है...' :
-                                isAiSpeaking ? 'सरस्वती बोल रही हैं...' :
-                                    isConnected ? 'सुन रही हूं...' :
+                                isAiSpeaking ? 'सरस्वती बोल रही हैं... 🗣️' :
+                                    isConnected ? 'सुन रही हूं... 👂' :
                                         'बोलने के लिए टैप करें'}
-                        </p>
+                        </motion.p>
                         <p className="text-sm text-gray-400">
                             {isConnecting ? 'Connecting to Saraswati...' :
                                 isAiSpeaking ? 'Saraswati is speaking...' :
@@ -197,14 +221,20 @@ export const LiveGuruWidget = () => {
                     </div>
 
                     {/* Sanskrit Quote */}
-                    <div className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/10 mb-6 max-w-sm">
-                        <p className="text-purple-300/80 text-sm italic">
-                            "या कुन्देन्दुतुषारहारधवला"
-                        </p>
-                        <p className="text-gray-500 text-xs mt-1">
-                            Goddess Saraswati Prayer
-                        </p>
-                    </div>
+                    {!isConnected && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/10 mb-6 max-w-sm"
+                        >
+                            <p className="text-purple-300/80 text-sm italic">
+                                "या कुन्देन्दुतुषारहारधवला"
+                            </p>
+                            <p className="text-gray-500 text-xs mt-1">
+                                Goddess Saraswati Prayer
+                            </p>
+                        </motion.div>
+                    )}
                 </div>
 
                 {/* Chat Transcript (Scrollable) */}
@@ -233,6 +263,7 @@ export const LiveGuruWidget = () => {
                         <motion.button
                             onClick={isConnected ? disconnect : connect}
                             whileTap={{ scale: 0.9 }}
+                            whileHover={{ scale: 1.05 }}
                             className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl transition-all shadow-2xl
                                 ${isConnected
                                     ? 'bg-gradient-to-br from-red-500 to-red-700 text-white shadow-red-500/40'
