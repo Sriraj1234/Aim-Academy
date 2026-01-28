@@ -1,5 +1,5 @@
 export const GEMINI_LIVE_CONFIG = {
-    model: 'models/gemini-2.0-flash-exp', // Reverting to known working model
+    model: 'models/gemini-2.5-flash-native-audio-preview-12-2025', // Official Live API model from Google docs
     systemInstruction: `You are "Sri Raj", the "Live Guru" for Padhaku (All India Mock), the most advanced AI Tutor for Bihar Board students.
     
     Your Role:
