@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaMicrophone, FaStop, FaTimes } from 'react-icons/fa';
+import { FaMicrophone, FaStop, FaTimes, FaWaveSquare, FaVolumeUp } from 'react-icons/fa';
 import Image from 'next/image';
 
 interface ChatMessage {
@@ -34,251 +34,240 @@ export const LiveGuruWidget = () => {
         }
     }, [chatMessages]);
 
-    // Collapsed Widget Card
+    // Collapsed Widget Card (Professional Glass Card)
     if (!showWidget) {
         return (
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-purple-900/90 via-indigo-900/80 to-violet-900/70 rounded-3xl p-6 text-white text-center shadow-2xl border border-purple-400/30 relative overflow-hidden group cursor-pointer backdrop-blur-sm"
+                whileHover={{ scale: 1.02 }}
+                className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 text-white text-center shadow-2xl relative overflow-hidden group cursor-pointer w-full max-w-sm mx-auto"
                 onClick={() => setShowWidget(true)}
             >
-                {/* Decorative ॐ Background */}
-                <div className="absolute inset-0 opacity-5 text-[200px] font-bold flex items-center justify-center pointer-events-none">
-                    ॐ
-                </div>
+                {/* Abstract Background Art */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-transparent to-pink-600/20" />
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-pink-500/30 rounded-full blur-3xl" />
 
-                {/* Glow Effect */}
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-purple-400/20 to-pink-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-indigo-400/20 to-purple-500/10 rounded-full blur-2xl -ml-10 -mb-10" />
-
-                {/* Avatar */}
-                <div className="relative w-24 h-24 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full blur-md opacity-50" />
+                {/* Avatar with Ring */}
+                <div className="relative w-24 h-24 mx-auto mb-4">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur opacity-40 animate-pulse" />
                     <Image
                         src="/images/saraswati-idle.png"
                         alt="Saraswati Devi"
                         width={96}
                         height={96}
-                        className="relative rounded-full border-2 border-purple-400/50 shadow-lg object-cover"
+                        className="relative rounded-full border-[3px] border-white/30 shadow-2xl object-cover"
                     />
+                    <div className="absolute bottom-1 right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white shadow-sm" />
                 </div>
 
-                <h3 className="text-2xl font-bold font-display mb-1 bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
+                <h3 className="text-2xl font-bold font-sans tracking-tight mb-0.5 text-white">
                     सरस्वती
                 </h3>
-                <p className="text-purple-200/80 text-sm font-medium">Saraswati • AI Tutor</p>
-                <p className="text-purple-300/60 text-xs mt-2">🎙️ Tap to start voice session</p>
+                <p className="text-purple-200 text-sm font-medium tracking-wide uppercase opacity-80 mb-4">AI Personal Tutor</p>
+
+                <div className="flex items-center justify-center gap-2 text-xs font-medium text-white/50 bg-white/5 py-2 rounded-xl border border-white/5">
+                    <FaWaveSquare className="text-purple-400" />
+                    <span>Always listening • 24/7 Support</span>
+                </div>
             </motion.div>
         );
     }
 
-    // Expanded Full-Screen Modal
+    // Expanded Full-Screen Professional Interface
     return (
         <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-gray-900 via-purple-950 to-black"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed inset-0 z-[100] flex flex-col bg-[#050511] font-sans"
             >
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/50 backdrop-blur-md safe-area-top">
-                    <div className="flex items-center gap-3">
-                        <motion.div
-                            key={getCurrentAvatar}
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <Image
-                                src={getCurrentAvatar}
-                                alt="Saraswati Devi"
-                                width={44}
-                                height={44}
-                                className="rounded-full border border-purple-500/50 object-cover"
-                            />
-                        </motion.div>
-                        <div>
-                            <h2 className="text-lg font-bold text-white">सरस्वती</h2>
-                            <p className="text-xs text-purple-400">
-                                {isConnecting ? '🔄 Connecting...' : isConnected ? (isAiSpeaking ? '🗣️ Speaking...' : '👂 Listening...') : '⏸️ Ready'}
-                            </p>
-                        </div>
+                {/* Ambient Background */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-[120px] animate-pulse" />
+                    <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-pink-900/10 rounded-full blur-[100px]" />
+                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03]" /> {/* Optional noise texture */}
+                </div>
+
+                {/* Header: Status Bar */}
+                <div className="relative z-10 flex items-center justify-between px-6 py-6 safe-area-top">
+                    <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+                        <span className="text-xs font-medium text-white/70 tracking-wide uppercase">
+                            {isConnecting ? 'CONNECTING...' : isConnected ? 'LIVE SESSION' : 'READY'}
+                        </span>
                     </div>
+
                     <button
                         onClick={() => { disconnect(); setShowWidget(false); }}
-                        className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                        className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
                     >
-                        <FaTimes />
+                        <FaTimes size={14} />
                     </button>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 relative overflow-hidden">
-                    {/* Decorative ॐ Background */}
-                    <div className="absolute inset-0 opacity-[0.02] text-[400px] font-bold flex items-center justify-center pointer-events-none select-none">
-                        ॐ
-                    </div>
+                {/* Main Visualizer Area */}
+                <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6">
 
-                    {/* The Orb with Animated Avatar */}
-                    <div className="relative flex items-center justify-center mb-8">
-                        {/* Outer Glow Rings */}
+                    {/* Central Avatar Visualizer */}
+                    <div className="relative mb-12">
+                        {/* Audio Waveform/Glow Effects */}
                         {isConnected && (
                             <>
+                                {/* Large ambient pulse */}
                                 <motion.div
-                                    className={`absolute w-56 h-56 rounded-full border ${isAiSpeaking ? 'border-pink-500/30' : 'border-green-500/20'}`}
-                                    animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
-                                    transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
+                                    className={`absolute inset-0 rounded-full blur-3xl opacity-30 transition-colors duration-500 ${isAiSpeaking ? 'bg-pink-600' : 'bg-purple-600'}`}
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                                 />
-                                <motion.div
-                                    className={`absolute w-56 h-56 rounded-full border ${isAiSpeaking ? 'border-purple-500/20' : 'border-green-500/10'}`}
-                                    animate={{ scale: [1, 2], opacity: [0.3, 0] }}
-                                    transition={{ repeat: Infinity, duration: 2, delay: 0.5, ease: "easeOut" }}
-                                />
+
+                                {/* Dynamic Ripples */}
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <motion.div
+                                        className={`absolute w-full h-full rounded-full border border-white/10`}
+                                        animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
+                                        transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                                    />
+                                    <motion.div
+                                        className={`absolute w-full h-full rounded-full border border-white/5`}
+                                        animate={{ scale: [1, 1.8], opacity: [0.3, 0] }}
+                                        transition={{ duration: 2, repeat: Infinity, delay: 0.5, ease: "easeOut" }}
+                                    />
+                                </div>
                             </>
                         )}
 
-                        {/* Core Avatar Container */}
-                        <motion.div
-                            animate={isAiSpeaking ? {
-                                scale: [1, 1.05, 1],
-                                transition: { repeat: Infinity, duration: 0.8 }
-                            } : isConnected ? {
-                                scale: [1, 1.02, 1],
-                                transition: { repeat: Infinity, duration: 2 }
-                            } : {}}
-                            className={`relative w-44 h-44 md:w-52 md:h-52 rounded-full flex items-center justify-center
-                                ${isAiSpeaking
-                                    ? 'shadow-[0_0_80px_rgba(168,85,247,0.6)]'
-                                    : isConnected
-                                        ? 'shadow-[0_0_60px_rgba(34,197,94,0.4)]'
-                                        : 'shadow-[0_0_30px_rgba(168,85,247,0.2)]'
-                                }`}
-                        >
-                            {/* Animated Avatar Image */}
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={getCurrentAvatar}
-                                    initial={{ scale: 0.9, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.9, opacity: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="w-full h-full"
-                                >
-                                    <Image
-                                        src={getCurrentAvatar}
-                                        alt="Saraswati Devi"
-                                        width={208}
-                                        height={208}
-                                        className={`rounded-full border-4 object-cover w-full h-full
-                                            ${isAiSpeaking
-                                                ? 'border-pink-500/50'
-                                                : isConnected
-                                                    ? 'border-green-500/50'
-                                                    : 'border-purple-500/30'}`}
-                                    />
-                                </motion.div>
-                            </AnimatePresence>
-                        </motion.div>
-
-                        {/* Volume Indicator */}
-                        {isConnected && !isAiSpeaking && (
-                            <motion.div
-                                className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-1 bg-black/50 px-3 py-1 rounded-full"
-                                animate={{ opacity: [0.6, 1, 0.6] }}
-                                transition={{ repeat: Infinity, duration: 1 }}
+                        {/* Avatar Container */}
+                        <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full p-2">
+                            {/* Gradient Border Ring */}
+                            <div className={`absolute inset-0 rounded-full bg-gradient-to-tr transition-all duration-500 p-[2px] 
+                                ${isAiSpeaking ? 'from-pink-500 via-purple-500 to-indigo-500 shadow-xl shadow-pink-500/20' :
+                                    isConnected ? 'from-green-400 via-emerald-500 to-teal-500 shadow-xl shadow-green-500/20' :
+                                        'from-white/20 to-white/5'}`}
                             >
-                                {[...Array(5)].map((_, i) => (
+                                <div className="w-full h-full rounded-full bg-[#050511] flex items-center justify-center overflow-hidden relative">
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={getCurrentAvatar}
+                                            initial={{ opacity: 0, scale: 1.1 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.4 }}
+                                            className="w-full h-full"
+                                        >
+                                            <Image
+                                                src={getCurrentAvatar}
+                                                alt="Saraswati"
+                                                fill
+                                                className="object-cover"
+                                                priority
+                                            />
+                                        </motion.div>
+                                    </AnimatePresence>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Volume Bar Visualizer (Attached to Avatar) */}
+                        {isConnected && !isAiSpeaking && (
+                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-end gap-1.5 h-8">
+                                {[...Array(7)].map((_, i) => (
                                     <motion.div
                                         key={i}
-                                        className="w-1.5 rounded-full bg-green-400"
-                                        animate={{ height: [4, Math.min(20, 4 + (volume * 100 * (i + 1) / 3)), 4] }}
-                                        transition={{ repeat: Infinity, duration: 0.3, delay: i * 0.05 }}
+                                        className="w-1.5 rounded-full bg-gradient-to-t from-green-400 to-emerald-300 shadow-lg shadow-green-500/30"
+                                        animate={{ height: [6, Math.max(6, Math.min(32, 6 + (volume * 150 * (Math.sin(i) + 1.5)))), 6] }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
                                     />
                                 ))}
-                            </motion.div>
+                            </div>
                         )}
                     </div>
 
-                    {/* Status Text */}
-                    <div className="text-center mb-6">
-                        <motion.p
-                            key={isAiSpeaking ? 'speaking' : isConnected ? 'listening' : 'idle'}
+                    {/* Interaction Status */}
+                    <div className="text-center space-y-2">
+                        <motion.h2
+                            key={isAiSpeaking ? 'speak' : isConnected ? 'listen' : 'wait'}
                             initial={{ y: 10, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
-                            className="text-xl font-bold text-white mb-1"
+                            className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-100 to-white"
                         >
-                            {isConnecting ? 'संयोजन हो रहा है...' :
-                                isAiSpeaking ? 'सरस्वती बोल रही हैं... 🗣️' :
-                                    isConnected ? 'सुन रही हूं... 👂' :
-                                        'बोलने के लिए टैप करें'}
-                        </motion.p>
-                        <p className="text-sm text-gray-400">
-                            {isConnecting ? 'Connecting to Saraswati...' :
-                                isAiSpeaking ? 'Saraswati is speaking...' :
-                                    isConnected ? 'Listening to you...' :
-                                        'Tap mic to start'}
-                        </p>
-                    </div>
+                            {isConnecting ? 'Connecting...' :
+                                isAiSpeaking ? 'Saraswati is speaking' :
+                                    isConnected ? 'Listening to you' :
+                                        'Tap to Start'}
+                        </motion.h2>
 
-                    {/* Sanskrit Quote */}
-                    {!isConnected && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/10 mb-6 max-w-sm"
-                        >
-                            <p className="text-purple-300/80 text-sm italic">
-                                "या कुन्देन्दुतुषारहारधवला"
+                        {!isConnected && (
+                            <p className="text-white/40 text-sm max-w-xs mx-auto leading-relaxed">
+                                "Ask me anything about your studies. I am here to help."
                             </p>
-                            <p className="text-gray-500 text-xs mt-1">
-                                Goddess Saraswati Prayer
-                            </p>
-                        </motion.div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
-                {/* Chat Transcript (Scrollable) */}
+                {/* Floating Transcription Card */}
                 {chatMessages.length > 0 && (
-                    <div
-                        ref={chatContainerRef}
-                        className="max-h-32 overflow-y-auto px-4 py-2 border-t border-white/10 bg-black/30"
-                    >
-                        {chatMessages.map((msg, i) => (
-                            <div key={i} className={`flex gap-2 mb-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`px-3 py-2 rounded-2xl text-sm max-w-[80%] ${msg.role === 'user'
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-purple-900/50 text-purple-100'
-                                    }`}>
-                                    {msg.text}
-                                </div>
-                            </div>
-                        ))}
+                    <div className="relative z-10 w-full max-w-lg mx-auto px-6 mb-8">
+                        <div
+                            ref={chatContainerRef}
+                            className="max-h-40 overflow-y-auto w-full backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 shadow-2xl mask-fade-top"
+                        >
+                            {chatMessages.map((msg, i) => (
+                                <motion.div
+                                    initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    key={i}
+                                    className={`flex gap-3 mb-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed max-w-[85%] ${msg.role === 'user'
+                                            ? 'bg-purple-600 text-white rounded-br-none shadow-lg shadow-purple-900/20'
+                                            : 'bg-white/10 text-purple-100 rounded-bl-none border border-white/5'
+                                        }`}>
+                                        {msg.text}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
-                {/* Bottom Controls */}
-                <div className="px-4 py-6 border-t border-white/10 bg-black/50 backdrop-blur-md safe-area-bottom">
-                    <div className="flex items-center justify-center gap-6">
-                        {/* Main Mic Button */}
+                {/* Control Deck */}
+                <div className="relative z-10 w-full bg-white/5 backdrop-blur-2xl border-t border-white/10 pb-8 pt-6 px-6 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] safe-area-bottom">
+                    <div className="flex items-center justify-center gap-8 md:gap-12 max-w-md mx-auto">
+
+                        {/* Secondary Actions (Placeholder for now) */}
+                        <button className="w-12 h-12 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-colors">
+                            <FaVolumeUp size={18} />
+                        </button>
+
+                        {/* Main Action Trigger */}
                         <motion.button
                             onClick={isConnected ? disconnect : connect}
-                            whileTap={{ scale: 0.9 }}
+                            whileTap={{ scale: 0.95 }}
                             whileHover={{ scale: 1.05 }}
-                            className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl transition-all shadow-2xl
+                            className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl transition-all shadow-2xl relative group
                                 ${isConnected
-                                    ? 'bg-gradient-to-br from-red-500 to-red-700 text-white shadow-red-500/40'
-                                    : 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-purple-500/40'
+                                    ? 'bg-gradient-to-br from-red-500 to-pink-600 shadow-red-500/40 border-4 border-white/10'
+                                    : 'bg-gradient-to-br from-white to-purple-50 shadow-white/20 border-4 border-purple-500/30'
                                 }`}
                         >
-                            {isConnected ? <FaStop /> : <FaMicrophone />}
-                        </motion.button>
-                    </div>
+                            {/* Button inner glow */}
+                            <div className={`absolute inset-0 rounded-full blur-xl opacity-50 ${isConnected ? 'bg-red-500' : 'bg-white'}`} />
 
-                    {/* Tip Text */}
-                    <p className="text-center text-gray-500 text-xs mt-4">
-                        {isConnected ? 'Tap to end session' : 'Tap mic to start talking with Saraswati'}
+                            <span className={`relative z-10 ${isConnected ? 'text-white' : 'text-purple-900'}`}>
+                                {isConnected ? <FaStop className="ml-0.5" /> : <FaMicrophone />}
+                            </span>
+                        </motion.button>
+
+                        <button className="w-12 h-12 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-colors">
+                            <FaWaveSquare size={18} />
+                        </button>
+
+                    </div>
+                    <p className="text-center text-white/30 text-[10px] mt-6 tracking-widest uppercase font-semibold">
+                        {isConnected ? 'Tap to End Session' : 'Tap to Speak'}
                     </p>
                 </div>
             </motion.div>
