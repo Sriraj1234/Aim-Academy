@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
+import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaMicrophone, FaStop, FaTimes } from 'react-icons/fa';
 import Image from 'next/image';
@@ -13,7 +14,8 @@ interface ChatMessage {
 }
 
 export const LiveGuruWidget = () => {
-    const { isConnected, isConnecting, connect, disconnect, volume, isAiSpeaking } = useGeminiLive();
+    const { userProfile } = useAuth();
+    const { isConnected, isConnecting, connect, disconnect, volume, isAiSpeaking } = useGeminiLive({ userProfile });
     const [showWidget, setShowWidget] = useState(false);
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -246,8 +248,8 @@ export const LiveGuruWidget = () => {
                         {chatMessages.map((msg, i) => (
                             <div key={i} className={`flex gap-2 mb-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`px-3 py-2 rounded-2xl text-sm max-w-[80%] ${msg.role === 'user'
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-purple-900/50 text-purple-100'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-purple-900/50 text-purple-100'
                                     }`}>
                                     {msg.text}
                                 </div>
