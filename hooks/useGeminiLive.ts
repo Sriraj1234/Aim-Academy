@@ -107,7 +107,9 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
             const source = audioCtx.createMediaStreamSource(stream);
             sourceNodeRef.current = source;
 
-            const workletNode = new AudioWorkletNode(audioCtx, 'gemini-audio-processor');
+            const workletNode = new AudioWorkletNode(audioCtx, 'gemini-audio-processor', {
+                outputChannelCount: [2] // Force stereo output
+            });
             workletNodeRef.current = workletNode;
 
             // 3. Setup WebSocket (OFFICIAL ENDPOINT)
