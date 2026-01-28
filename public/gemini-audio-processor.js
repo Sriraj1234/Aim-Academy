@@ -3,6 +3,8 @@ class GeminiAudioProcessor extends AudioWorkletProcessor {
         super();
         this.buffer = [];
         this.hasStarted = false;
+        // Bind message handler to receive audio from main thread
+        this.port.onmessage = this.handleMessage.bind(this);
     }
 
     process(inputs, outputs, parameters) {
