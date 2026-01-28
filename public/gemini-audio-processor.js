@@ -25,22 +25,27 @@ class GeminiAudioProcessor extends AudioWorkletProcessor {
             }
         }
 
-        // Handle Output (Speaker) <- Read from Buffer
+        // Handle Output (Speaker) <- Read from Buffer (STEREO - both channels)
         if (output && output.length > 0) {
-            const outputChannel = output[0];
+            const leftChannel = output[0];
+            const rightChannel = output[1] || output[0]; // Fallback to left if no right
 
-            if (this.buffer.length >= outputChannel.length) {
-                // Fill output buffer
-                for (let i = 0; i < outputChannel.length; i++) {
-                    outputChannel[i] = this.buffer[i];
+            if (this.buffer.length >= leftChannel.length) {
+                // Fill both output channels for stereo
+                for (let i = 0; i < leftChannel.length; i++) {
+                    const sample = this.buffer[i];
+                    leftChannel[i] = sample;
+                    if (output[1]) rightChannel[i] = sample; // Copy to right channel
                 }
                 // Remove used data
-                this.buffer = this.buffer.slice(outputChannel.length);
+                this.buffer = this.buffer.slice(leftChannel.length);
                 this.hasStarted = true;
             } else if (this.hasStarted && this.buffer.length > 0) {
                 // Buffer underrun but we have some data
                 for (let i = 0; i < this.buffer.length; i++) {
-                    outputChannel[i] = this.buffer[i];
+                    const sample = this.buffer[i];
+                    leftChannel[i] = sample;
+                    if (output[1]) rightChannel[i] = sample; // Copy to right channel
                 }
                 this.buffer = [];
             } else {
