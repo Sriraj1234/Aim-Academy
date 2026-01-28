@@ -86,14 +86,13 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
             const { key } = await keyRes.json();
             if (!key) throw new Error('No API key found');
 
-            // 1. Get Microphone with enhanced noise handling
+            // 1. Get Microphone
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     sampleRate: 16000,
                     channelCount: 1,
                     echoCancellation: true,
                     noiseSuppression: true,
-                    autoGainControl: true,  // Auto adjust mic gain
                 }
             });
             streamRef.current = stream;
@@ -125,7 +124,7 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                 // Build personalized system instruction with user profile
                 const personalizedInstruction = buildPersonalizedPrompt(userProfile);
 
-                // Initial Setup Config (Bidi Protocol) with VAD settings
+                // Initial Setup Config (Bidi Protocol)
                 const setupMsg = {
                     setup: {
                         model: GEMINI_LIVE_CONFIG.model,
@@ -135,16 +134,6 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                                 voice_config: {
                                     prebuilt_voice_config: { voice_name: "Aoede" }
                                 }
-                            }
-                        },
-                        // Voice Activity Detection settings to handle background noise
-                        realtimeInputConfig: {
-                            automaticActivityDetection: {
-                                disabled: false,
-                                startOfSpeechSensitivity: "START_SENSITIVITY_LOW", // Less sensitive to noise
-                                endOfSpeechSensitivity: "END_SENSITIVITY_LOW", // Wait longer before ending
-                                prefixPaddingMs: 300,  // Buffer before speech
-                                silenceDurationMs: 1500 // Wait 1.5s of silence before considering turn complete
                             }
                         },
                         system_instruction: {
