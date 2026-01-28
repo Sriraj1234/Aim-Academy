@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket, FaYoutube, FaBookOpen, FaFlag } from 'react-icons/fa'
+import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket, FaYoutube } from 'react-icons/fa'
 import Link from 'next/link'
 import NextImage from 'next/image'
 import { useAuth } from '@/context/AuthContext'
@@ -21,30 +21,7 @@ interface Slide {
 }
 
 const adSlides: Slide[] = [
-    {
-        id: 5,
-        type: 'ad',
-        title: "Basant Panchami ✨",
-        subtitle: "Blessings of Wisdom",
-        description: "May Maa Saraswati bless you with knowledge, focus, and success in your exams.",
-        ctaText: "Start Learning",
-        ctaLink: "/study-hub",
-        bgClass: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500", // Fallback
-        icon: FaBookOpen,
-        image: "/images/basant_panchami_2025.png"
-    },
-    {
-        id: 7,
-        type: 'ad',
-        title: "Happy Republic Day 🇮🇳",
-        subtitle: "Jai Hind",
-        description: "Celebrating the spirit of India. Empowering the future through education.",
-        ctaText: "Join the Mission",
-        ctaLink: "/batches",
-        bgClass: "bg-gradient-to-br from-orange-600 via-blue-900 to-green-700", // Fallback
-        icon: FaFlag,
-        image: "/images/republic_day_banner.png"
-    },
+
     {
         id: 2,
         type: 'ad',
