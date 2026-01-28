@@ -108,8 +108,8 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             workletNodeRef.current = workletNode;
 
             // 3. Setup WebSocket (OFFICIAL ENDPOINT)
-            // Using v1alpha and gemini-2.0-flash-exp as 2.5 likely doesn't exist
-            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${key}`;
+            // Using v1beta for Live API
+            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${key}`;
             const ws = new WebSocket(url);
 
             ws.onopen = () => {
@@ -129,7 +129,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                                 }
                             }
                         },
-                        system_instructions: {
+                        system_instruction: {
                             parts: [{ text: GEMINI_LIVE_CONFIG.systemInstruction }]
                         }
                     }
