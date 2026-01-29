@@ -1,23 +1,25 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaMicrophone, FaStop, FaTimes, FaWaveSquare, FaVolumeUp } from 'react-icons/fa';
 import Image from 'next/image';
 
-interface ChatMessage {
-    role: 'user' | 'guru';
-    text: string;
-    timestamp: Date;
-}
-
 export const LiveGuruWidget = () => {
     const { userProfile } = useAuth();
-    const { isConnected, isConnecting, connect, disconnect, volume, isAiSpeaking } = useGeminiLive({ userProfile });
+    const {
+        isConnected,
+        isConnecting,
+        connect,
+        disconnect,
+        volume,
+        isAiSpeaking,
+        messages,
+        currentTranscript
+    } = useGeminiLive({ userProfile });
     const [showWidget, setShowWidget] = useState(false);
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
     // Get current avatar based on state
@@ -32,7 +34,7 @@ export const LiveGuruWidget = () => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-    }, [chatMessages]);
+    }, [messages, currentTranscript]);
 
     // Collapsed Widget Card (Professional Glass Card)
     if (!showWidget) {
@@ -208,13 +210,13 @@ export const LiveGuruWidget = () => {
                 </div>
 
                 {/* Floating Transcription Card */}
-                {chatMessages.length > 0 && (
+                {messages.length > 0 && (
                     <div className="relative z-10 w-full max-w-lg mx-auto px-6 mb-8">
                         <div
                             ref={chatContainerRef}
                             className="max-h-40 overflow-y-auto w-full backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 shadow-2xl mask-fade-top"
                         >
-                            {chatMessages.map((msg, i) => (
+                            {messages.map((msg, i) => (
                                 <motion.div
                                     initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -222,8 +224,8 @@ export const LiveGuruWidget = () => {
                                     className={`flex gap-3 mb-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed max-w-[85%] ${msg.role === 'user'
-                                            ? 'bg-purple-600 text-white rounded-br-none shadow-lg shadow-purple-900/20'
-                                            : 'bg-white/10 text-purple-100 rounded-bl-none border border-white/5'
+                                        ? 'bg-purple-600 text-white rounded-br-none shadow-lg shadow-purple-900/20'
+                                        : 'bg-white/10 text-purple-100 rounded-bl-none border border-white/5'
                                         }`}>
                                         {msg.text}
                                     </div>
