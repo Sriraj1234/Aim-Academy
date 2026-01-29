@@ -4,6 +4,12 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { GEMINI_LIVE_CONFIG, buildPersonalizedPrompt } from '@/lib/gemini-live';
 import { UserProfile } from '@/data/types';
 
+interface TranscriptMessage {
+    role: 'user' | 'ai';
+    text: string;
+    timestamp: Date;
+}
+
 interface UseGeminiLiveReturn {
     isConnected: boolean;
     isConnecting: boolean;
@@ -13,6 +19,8 @@ interface UseGeminiLiveReturn {
     isSpeaking: boolean;
     isAiSpeaking: boolean;
     volume: number;
+    messages: TranscriptMessage[];
+    currentTranscript: string;
 }
 
 interface UseGeminiLiveOptions {
@@ -28,6 +36,8 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isAiSpeaking, setIsAiSpeaking] = useState(false);
     const [volume, setVolume] = useState(0);
+    const [messages, setMessages] = useState<TranscriptMessage[]>([]);
+    const [currentTranscript, setCurrentTranscript] = useState('');
 
     const wsRef = useRef<WebSocket | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -133,7 +143,7 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                             response_modalities: ["AUDIO"],
                             speech_config: {
                                 voice_config: {
-                                    prebuilt_voice_config: { voice_name: "Aoede" }
+                                    prebuilt_voice_config: { voice_name: "Leda" }
                                 }
                             }
                         },
@@ -162,9 +172,29 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                 try {
                     const response = JSON.parse(data);
 
-                    // Handle Audio Response
+                    // Handle User Input Transcript (what user said)
+                    if (response.serverContent?.inputTranscript) {
+                        const userText = response.serverContent.inputTranscript;
+                        if (userText.trim()) {
+                            setCurrentTranscript(userText);
+                            setMessages(prev => [...prev, {
+                                role: 'user',
+                                text: userText,
+                                timestamp: new Date()
+                            }]);
+                        }
+                    }
+
+                    // Handle AI Model Response (text + audio)
                     if (response.serverContent?.modelTurn?.parts) {
+                        let aiText = '';
                         for (const part of response.serverContent.modelTurn.parts) {
+                            // Extract text response
+                            if (part.text) {
+                                aiText += part.text;
+                            }
+
+                            // Handle audio
                             if (part.inlineData?.mimeType?.startsWith('audio/')) {
                                 setIsAiSpeaking(true);
 
@@ -182,6 +212,36 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                                     audio: bytes.buffer
                                 });
                             }
+                        }
+
+                        // Add AI text to messages if present
+                        if (aiText.trim()) {
+                            setCurrentTranscript(aiText);
+                            setMessages(prev => [...prev, {
+                                role: 'ai',
+                                text: aiText,
+                                timestamp: new Date()
+                            }]);
+                        }
+                    }
+
+                    // Handle output transcript (what AI said - text version)
+                    if (response.serverContent?.outputTranscript) {
+                        const aiText = response.serverContent.outputTranscript;
+                        if (aiText.trim()) {
+                            setCurrentTranscript(aiText);
+                            // Only add if not already in messages (avoid duplicates)
+                            setMessages(prev => {
+                                const lastMsg = prev[prev.length - 1];
+                                if (lastMsg?.role === 'ai' && lastMsg?.text === aiText) {
+                                    return prev; // Skip duplicate
+                                }
+                                return [...prev, {
+                                    role: 'ai',
+                                    text: aiText,
+                                    timestamp: new Date()
+                                }];
+                            });
                         }
                     }
 
@@ -265,6 +325,8 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
         error,
         isSpeaking,
         isAiSpeaking,
-        volume
+        volume,
+        messages,
+        currentTranscript
     };
 }
