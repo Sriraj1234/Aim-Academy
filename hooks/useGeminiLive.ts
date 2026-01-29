@@ -143,8 +143,9 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                             response_modalities: ["AUDIO"],
                             speech_config: {
                                 voice_config: {
-                                    prebuilt_voice_config: { voice_name: "Leda" } // Hindi Indian female voice
-                                }
+                                    prebuilt_voice_config: { voice_name: "Kore" } // Female voice with Hindi support
+                                },
+                                language_code: "hi-IN" // Hindi India for proper Indian accent
                             }
                         },
                         // Voice Activity Detection settings - optimized for fast response
