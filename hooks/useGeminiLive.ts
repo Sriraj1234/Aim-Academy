@@ -147,14 +147,14 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                                 }
                             }
                         },
-                        // Voice Activity Detection settings to handle background noise
+                        // Voice Activity Detection settings - optimized for fast response
                         realtimeInputConfig: {
                             automaticActivityDetection: {
                                 disabled: false,
-                                startOfSpeechSensitivity: "START_SENSITIVITY_LOW", // Less sensitive to noise
-                                endOfSpeechSensitivity: "END_SENSITIVITY_LOW", // Wait longer before ending
-                                prefixPaddingMs: 300,  // Buffer before speech
-                                silenceDurationMs: 1500 // Wait 1.5s of silence before considering turn complete
+                                startOfSpeechSensitivity: "START_SENSITIVITY_MEDIUM", // Balanced detection
+                                endOfSpeechSensitivity: "END_SENSITIVITY_MEDIUM", // Faster end detection
+                                prefixPaddingMs: 100,  // Minimal buffer before speech
+                                silenceDurationMs: 800 // Quick 0.8s silence = turn complete
                             }
                         },
                         system_instruction: {
