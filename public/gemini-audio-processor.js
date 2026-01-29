@@ -25,27 +25,22 @@ class GeminiAudioProcessor extends AudioWorkletProcessor {
             }
         }
 
-        // Handle Output (Speaker) <- Read from Buffer (STEREO - both channels)
+        // Handle Output (Speaker) <- Read from Buffer
         if (output && output.length > 0) {
-            const leftChannel = output[0];
-            const rightChannel = output[1] || output[0]; // Fallback to left if no right
+            const outputChannel = output[0];
 
-            if (this.buffer.length >= leftChannel.length) {
-                // Fill both output channels for stereo
-                for (let i = 0; i < leftChannel.length; i++) {
-                    const sample = this.buffer[i];
-                    leftChannel[i] = sample;
-                    if (output[1]) rightChannel[i] = sample; // Copy to right channel
+            if (this.buffer.length >= outputChannel.length) {
+                // Fill output buffer
+                for (let i = 0; i < outputChannel.length; i++) {
+                    outputChannel[i] = this.buffer[i];
                 }
                 // Remove used data
-                this.buffer = this.buffer.slice(leftChannel.length);
+                this.buffer = this.buffer.slice(outputChannel.length);
                 this.hasStarted = true;
             } else if (this.hasStarted && this.buffer.length > 0) {
                 // Buffer underrun but we have some data
                 for (let i = 0; i < this.buffer.length; i++) {
-                    const sample = this.buffer[i];
-                    leftChannel[i] = sample;
-                    if (output[1]) rightChannel[i] = sample; // Copy to right channel
+                    outputChannel[i] = this.buffer[i];
                 }
                 this.buffer = [];
             } else {
@@ -57,13 +52,19 @@ class GeminiAudioProcessor extends AudioWorkletProcessor {
     }
 
     handleMessage(event) {
-        if (event.data.type === 'output_audio') {
-            // Receive float32 audio from WebSocket (via main thread)
-            const newAudio = new Float32Array(event.data.buffer);
-            // Append to buffer
-            // Note: In production, use a RingBuffer for performance
-            // Javascript arrays are okay for small buffers
-            this.buffer = [...this.buffer, ...newAudio];
+        if (event.data.type === 'audioData') {
+            // Receive PCM Int16 audio from Gemini API (via main thread)
+            // Convert ArrayBuffer to Int16Array, then to Float32 for WebAudio
+            const int16Data = new Int16Array(event.data.audio);
+            const floatData = new Float32Array(int16Data.length);
+
+            // Convert Int16 PCM to Float32 (-1.0 to 1.0 range)
+            for (let i = 0; i < int16Data.length; i++) {
+                floatData[i] = int16Data[i] / 32768.0;
+            }
+
+            // Append to buffer for playback
+            this.buffer = [...this.buffer, ...floatData];
         }
         if (event.data.type === 'clear') {
             this.buffer = [];
