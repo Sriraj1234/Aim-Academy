@@ -143,7 +143,7 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                             response_modalities: ["AUDIO"],
                             speech_config: {
                                 voice_config: {
-                                    prebuilt_voice_config: { voice_name: "Aoede" } // Melodious soothing female voice for Saraswati
+                                    prebuilt_voice_config: { voice_name: "Leda" } // Hindi Indian female voice
                                 }
                             }
                         },
