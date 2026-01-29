@@ -172,15 +172,43 @@ export const LiveGuruWidget = () => {
                             </div>
                         </div>
 
-                        {/* Volume Bar Visualizer (Attached to Avatar) */}
-                        {isConnected && !isAiSpeaking && (
-                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-end gap-1.5 h-8">
-                                {[...Array(7)].map((_, i) => (
+                        {/* Animated Sound Wave Visualizer */}
+                        {isConnected && (
+                            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 h-12">
+                                {[...Array(9)].map((_, i) => (
                                     <motion.div
                                         key={i}
-                                        className="w-1.5 rounded-full bg-gradient-to-t from-green-400 to-emerald-300 shadow-lg shadow-green-500/30"
-                                        animate={{ height: [6, Math.max(6, Math.min(32, 6 + (volume * 150 * (Math.sin(i) + 1.5)))), 6] }}
-                                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                        className={`w-1 rounded-full ${isAiSpeaking
+                                                ? 'bg-gradient-to-t from-pink-500 to-purple-400'
+                                                : 'bg-gradient-to-t from-green-400 to-emerald-300'
+                                            }`}
+                                        animate={isAiSpeaking ? {
+                                            // AI Speaking - smooth continuous wave
+                                            height: [
+                                                8 + Math.sin(i * 0.5) * 8,
+                                                24 + Math.sin(i * 0.8) * 16,
+                                                12 + Math.cos(i * 0.6) * 10,
+                                                32 + Math.sin(i * 0.7) * 12,
+                                                8 + Math.sin(i * 0.5) * 8
+                                            ]
+                                        } : {
+                                            // User Speaking - volume reactive
+                                            height: Math.max(6, 6 + (volume * 180 * (Math.sin(i * 0.8) + 1.2)))
+                                        }}
+                                        transition={isAiSpeaking ? {
+                                            duration: 0.8 + (i * 0.1),
+                                            repeat: Infinity,
+                                            ease: "easeInOut"
+                                        } : {
+                                            type: "spring",
+                                            stiffness: 400,
+                                            damping: 15
+                                        }}
+                                        style={{
+                                            boxShadow: isAiSpeaking
+                                                ? '0 0 10px rgba(236, 72, 153, 0.5)'
+                                                : '0 0 8px rgba(52, 211, 153, 0.4)'
+                                        }}
                                     />
                                 ))}
                             </div>
