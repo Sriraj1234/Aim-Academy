@@ -135,7 +135,7 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                 // Build personalized system instruction with user profile
                 const personalizedInstruction = buildPersonalizedPrompt(userProfile);
 
-                // Initial Setup Config (Bidi Protocol) with VAD settings
+                // Initial Setup Config (Bidi Protocol)
                 const setupMsg = {
                     setup: {
                         model: GEMINI_LIVE_CONFIG.model,
@@ -148,13 +148,14 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                             }
                         },
                         // Voice Activity Detection settings - optimized for fast response
-                        realtimeInputConfig: {
-                            automaticActivityDetection: {
-                                disabled: false,
-                                startOfSpeechSensitivity: "START_SENSITIVITY_MEDIUM", // Balanced detection
-                                endOfSpeechSensitivity: "END_SENSITIVITY_MEDIUM", // Faster end detection
-                                prefixPaddingMs: 100,  // Minimal buffer before speech
-                                silenceDurationMs: 800 // Quick 0.8s silence = turn complete
+                        // Note: Using snake_case for protocol buffer compatibility and integer values for sensitivity
+                        realtime_input_config: {
+                            automatic_activity_detection: {
+                                start_of_speech_sensitivity: 2, // Medium sensitivity
+                                end_of_speech_sensitivity: 2,   // Medium sensitivity
+                                // using defaults for timings to avoid field name mismatches
+                                // prefix_padding_ms: 100,
+                                // silence_duration_ms: 800 
                             }
                         },
                         system_instruction: {
@@ -286,14 +287,14 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                     setVolume(Math.min(1, rms * 5));
                     setIsSpeaking(rms > 0.01);
 
-                    // Send to Gemini
+                    // Send to Gemini using the new 'audio' field (mediaChunks is deprecated)
                     const base64 = btoa(String.fromCharCode(...new Uint8Array(int16Data.buffer)));
                     const msg = {
-                        realtimeInput: {
-                            mediaChunks: [{
-                                mimeType: "audio/pcm;rate=16000",
+                        realtime_input: {
+                            audio: {
+                                mime_type: "audio/pcm;rate=16000",
                                 data: base64
-                            }]
+                            }
                         }
                     };
                     wsRef.current.send(JSON.stringify(msg));
