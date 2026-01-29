@@ -174,29 +174,29 @@ export const LiveGuruWidget = () => {
 
                         {/* Animated Sound Wave Visualizer */}
                         {isConnected && (
-                            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 h-12">
-                                {[...Array(9)].map((_, i) => (
+                            <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 h-6">
+                                {[...Array(5)].map((_, i) => (
                                     <motion.div
                                         key={i}
                                         className={`w-1 rounded-full ${isAiSpeaking
-                                                ? 'bg-gradient-to-t from-pink-500 to-purple-400'
-                                                : 'bg-gradient-to-t from-green-400 to-emerald-300'
+                                            ? 'bg-gradient-to-t from-pink-500 to-purple-400'
+                                            : 'bg-gradient-to-t from-green-400 to-emerald-300'
                                             }`}
                                         animate={isAiSpeaking ? {
-                                            // AI Speaking - smooth continuous wave
+                                            // AI Speaking - smooth wave (smaller heights)
                                             height: [
-                                                8 + Math.sin(i * 0.5) * 8,
-                                                24 + Math.sin(i * 0.8) * 16,
-                                                12 + Math.cos(i * 0.6) * 10,
-                                                32 + Math.sin(i * 0.7) * 12,
-                                                8 + Math.sin(i * 0.5) * 8
+                                                4 + Math.sin(i * 0.5) * 4,
+                                                12 + Math.sin(i * 0.8) * 6,
+                                                8 + Math.cos(i * 0.6) * 4,
+                                                16 + Math.sin(i * 0.7) * 4,
+                                                4 + Math.sin(i * 0.5) * 4
                                             ]
                                         } : {
-                                            // User Speaking - volume reactive
-                                            height: Math.max(6, 6 + (volume * 180 * (Math.sin(i * 0.8) + 1.2)))
+                                            // User Speaking - volume reactive (smaller)
+                                            height: Math.max(4, 4 + (volume * 80 * (Math.sin(i * 0.8) + 1.2)))
                                         }}
                                         transition={isAiSpeaking ? {
-                                            duration: 0.8 + (i * 0.1),
+                                            duration: 0.6 + (i * 0.08),
                                             repeat: Infinity,
                                             ease: "easeInOut"
                                         } : {
@@ -206,8 +206,8 @@ export const LiveGuruWidget = () => {
                                         }}
                                         style={{
                                             boxShadow: isAiSpeaking
-                                                ? '0 0 10px rgba(236, 72, 153, 0.5)'
-                                                : '0 0 8px rgba(52, 211, 153, 0.4)'
+                                                ? '0 0 6px rgba(236, 72, 153, 0.4)'
+                                                : '0 0 5px rgba(52, 211, 153, 0.3)'
                                         }}
                                     />
                                 ))}
