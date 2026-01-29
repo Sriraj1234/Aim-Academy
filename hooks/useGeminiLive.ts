@@ -143,9 +143,8 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
                             response_modalities: ["AUDIO"],
                             speech_config: {
                                 voice_config: {
-                                    prebuilt_voice_config: { voice_name: "Zephyr" } // Bright, energetic female voice
-                                },
-                                language_code: "hi-IN" // Hindi India locale
+                                    prebuilt_voice_config: { voice_name: "Sulafat" } // Warm female voice
+                                }
                             }
                         },
                         // Voice Activity Detection settings - optimized for fast response
