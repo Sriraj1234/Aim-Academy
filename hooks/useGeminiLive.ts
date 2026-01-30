@@ -122,8 +122,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                     customInstruction += `\nADAPTIVITY RULES:\n1. Adjust explanation depth to Class ${context.class || '10'} level.\n2. Keep responses CONCISE and spoken naturally.\n3. Identify yourself as their "Live Guru".`;
                 }
 
-                // Setup message format for gemini-2.5-flash-native-audio model
-                // Based on official Google documentation
+                // Setup message for gemini-2.0-flash-exp
                 const setupMessage = {
                     setup: {
                         model: `models/${GEMINI_LIVE_CONFIG.model}`,
@@ -132,7 +131,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                             speech_config: {
                                 voice_config: {
                                     prebuilt_voice_config: {
-                                        voice_name: "Aoede"
+                                        voice_name: "Puck"
                                     }
                                 }
                             }
@@ -143,7 +142,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                     }
                 };
 
-                console.log('Sending setup:', JSON.stringify(setupMessage, null, 2));
+                console.log('Sending setup message...');
                 ws.send(JSON.stringify(setupMessage));
             };
 
