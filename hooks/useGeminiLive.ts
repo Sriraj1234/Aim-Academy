@@ -65,7 +65,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         for (let i = 0; i < float32Data.length; i++) {
             sum += Math.abs(float32Data[i]);
         }
-        setVolume(Math.min(1, sum / float32Data.length * 5)); // Boost visual volume
+        setVolume(Math.min(1, sum / float32Data.length * 5));
 
         const buffer = audioContextRef.current.createBuffer(
             1,
@@ -79,7 +79,6 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         source.connect(audioContextRef.current.destination);
 
         const currentTime = audioContextRef.current.currentTime;
-        // Schedule next chunk to play right after current one
         const startTime = Math.max(currentTime, nextStartTimeRef.current);
 
         source.start(startTime);
@@ -89,18 +88,6 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             playNextChunk();
         };
     }, []);
-
-    // Queue audio for playback
-    const queueAudio = useCallback((data: ArrayBuffer) => {
-        // Convert PCM or receive Float32 directly?
-        // Gemini sends Int16 PCM usually, but let's assume raw PCM for now.
-        // Actually, the model output config in lib says 24kHz.
-        // We receive base64 encoded PCM16 usually in the JSON response.
-
-        // For simplicity assuming we get PCM16 ArrayBuffer from the parsing logic
-        // But wait, the WebSocket logic needs to PARSE the message.
-        // Let's implement the parsing inside the onmessage.
-    }, [playNextChunk]);
 
 
     const connect = useCallback(async (context?: ConnectContext) => {
@@ -115,17 +102,17 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             if (!res.ok) throw new Error('Failed to get API key');
             const { key } = await res.json();
 
-            // Build URL
+            // Build URL - using v1beta for the native audio model
             const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${key}`;
 
             const ws = new WebSocket(url);
 
             ws.onopen = () => {
-                console.log('Gemini Live Connected');
+                console.log('Gemini Live WebSocket Connected');
                 setIsConnected(true);
                 setIsConnecting(false);
 
-                // Build detailed system instruction
+                // Build system instruction
                 let customInstruction = GEMINI_LIVE_CONFIG.systemInstruction;
                 if (context) {
                     customInstruction += `\n\nCURRENT STUDENT PROFILE:\n`;
@@ -135,10 +122,11 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                     customInstruction += `\nADAPTIVITY RULES:\n1. Adjust explanation depth to Class ${context.class || '10'} level.\n2. Keep responses CONCISE and spoken naturally.\n3. Identify yourself as their "Live Guru".`;
                 }
 
-                // Send Setup Message - Format for native audio model
+                // Setup message format for gemini-2.5-flash-native-audio model
+                // Based on official Google documentation
                 const setupMessage = {
                     setup: {
-                        model: GEMINI_LIVE_CONFIG.model,
+                        model: `models/${GEMINI_LIVE_CONFIG.model}`,
                         generation_config: {
                             response_modalities: ["AUDIO"],
                             speech_config: {
@@ -154,67 +142,67 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                         }
                     }
                 };
+
+                console.log('Sending setup:', JSON.stringify(setupMessage, null, 2));
                 ws.send(JSON.stringify(setupMessage));
             };
 
             ws.onmessage = async (event) => {
-                // Determine if it's text or binary
                 let data = event.data;
 
                 if (data instanceof Blob) {
-                    data = await data.arrayBuffer();
+                    data = await data.text();
                 }
 
-                if (data instanceof ArrayBuffer) {
-                    // Audio Data usually? Or is it JSON text?
-                    // Gemini Live Bidi API sends JSON text messages mostly, containing base64 audio.
-                    // But if we send audio as binary, maybe it replies binary?
-                    // Documentation says BidiGenerateContent uses JSON over WebSocket.
-                    try {
-                        const text = new TextDecoder().decode(data);
-                        const response = JSON.parse(text);
-                        parseResponse(response);
-                    } catch (e) {
-                        console.error('Error parsing msg', e);
-                    }
-                } else {
+                try {
                     const response = JSON.parse(data);
-                    parseResponse(response);
-                }
-            };
+                    console.log('Received:', response);
 
-            const parseResponse = (response: any) => {
-                // Handle ServerContent (Model Turn)
-                if (response.serverContent?.modelTurn?.parts) {
-                    for (const part of response.serverContent.modelTurn.parts) {
-                        if (part.inlineData && part.inlineData.mimeType.startsWith('audio/')) {
-                            // Decode Base64 audio
-                            const binaryString = atob(part.inlineData.data);
-                            const len = binaryString.length;
-                            const bytes = new Uint8Array(len);
-                            for (let i = 0; i < len; i++) {
-                                bytes[i] = binaryString.charCodeAt(i);
-                            }
-                            // This is PCM16 24kHz
-                            // Convert to Float32 for Web Audio API
-                            const pcm16 = new Int16Array(bytes.buffer);
-                            const float32 = new Float32Array(pcm16.length);
-                            for (let i = 0; i < pcm16.length; i++) {
-                                float32[i] = pcm16[i] / 32768.0;
-                            }
+                    // Handle setup complete
+                    if (response.setupComplete) {
+                        console.log('Setup complete, ready for audio');
+                    }
 
-                            audioQueueRef.current.push(float32.buffer);
-                            if (!isPlayingRef.current) {
-                                ensureAudioContext();
-                                playNextChunk();
+                    // Handle interruption
+                    if (response.serverContent?.interrupted) {
+                        audioQueueRef.current.length = 0;
+                        setIsSpeaking(false);
+                    }
+
+                    // Handle model audio response
+                    if (response.serverContent?.modelTurn?.parts) {
+                        for (const part of response.serverContent.modelTurn.parts) {
+                            if (part.inlineData && part.inlineData.data) {
+                                // Decode Base64 audio
+                                const binaryString = atob(part.inlineData.data);
+                                const len = binaryString.length;
+                                const bytes = new Uint8Array(len);
+                                for (let i = 0; i < len; i++) {
+                                    bytes[i] = binaryString.charCodeAt(i);
+                                }
+
+                                // Convert PCM16 to Float32
+                                const pcm16 = new Int16Array(bytes.buffer);
+                                const float32 = new Float32Array(pcm16.length);
+                                for (let i = 0; i < pcm16.length; i++) {
+                                    float32[i] = pcm16[i] / 32768.0;
+                                }
+
+                                audioQueueRef.current.push(float32.buffer);
+                                if (!isPlayingRef.current) {
+                                    ensureAudioContext();
+                                    playNextChunk();
+                                }
                             }
                         }
                     }
-                }
 
-                // Keep-alive or other messages
-                if (response.serverContent?.turnComplete) {
-                    setIsSpeaking(false);
+                    // Turn complete
+                    if (response.serverContent?.turnComplete) {
+                        console.log('Turn complete');
+                    }
+                } catch (e) {
+                    console.error('Error parsing message:', e);
                 }
             };
 
@@ -269,12 +257,12 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         }
         const base64Audio = btoa(binary);
 
-        // Use the newer 'audio' field format for native audio model
+        // Format from official Google docs: sendRealtimeInput({ audio: { data, mimeType } })
         const message = {
-            realtime_input: {
+            realtimeInput: {
                 audio: {
-                    mime_type: "audio/pcm;rate=16000",
-                    data: base64Audio
+                    data: base64Audio,
+                    mimeType: "audio/pcm;rate=16000"
                 }
             }
         };
