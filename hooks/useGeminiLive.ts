@@ -116,7 +116,7 @@ export function useGeminiLive(): UseGeminiLiveReturn {
             const { key } = await res.json();
 
             // Build URL
-            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${key}`;
+            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${key}`;
 
             const ws = new WebSocket(url);
 
