@@ -135,21 +135,22 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                     customInstruction += `\nADAPTIVITY RULES:\n1. Adjust explanation depth to Class ${context.class || '10'} level.\n2. Keep responses CONCISE and spoken naturally.\n3. Identify yourself as their "Live Guru".`;
                 }
 
-                // Send Setup Message
+                // Send Setup Message - Format for native audio model
                 const setupMessage = {
                     setup: {
                         model: GEMINI_LIVE_CONFIG.model,
-                        system_instructions: {
-                            parts: [{ text: customInstruction }]
-                        },
                         generation_config: {
+                            response_modalities: ["AUDIO"],
                             speech_config: {
                                 voice_config: {
                                     prebuilt_voice_config: {
-                                        voice_name: "Aoede" // Using a pleasant voice
+                                        voice_name: "Aoede"
                                     }
                                 }
                             }
+                        },
+                        system_instruction: {
+                            parts: [{ text: customInstruction }]
                         }
                     }
                 };
@@ -258,7 +259,6 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
         // Convert PCM16 ArrayBuffer to Base64
-        // data is Int16Array buffer
         const bytes = new Uint8Array(data);
         let binary = '';
         for (let i = 0; i < bytes.byteLength; i++) {
@@ -266,12 +266,13 @@ export function useGeminiLive(): UseGeminiLiveReturn {
         }
         const base64Audio = btoa(binary);
 
+        // Use the newer 'audio' field format for native audio model
         const message = {
             realtime_input: {
-                media_chunks: [{
+                audio: {
                     mime_type: "audio/pcm;rate=16000",
                     data: base64Audio
-                }]
+                }
             }
         };
 
