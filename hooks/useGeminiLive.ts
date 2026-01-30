@@ -224,10 +224,13 @@ export function useGeminiLive(): UseGeminiLiveReturn {
                 setIsConnecting(false);
             };
 
-            ws.onclose = () => {
-                console.log('Disconnected');
+            ws.onclose = (event) => {
+                console.log('Disconnected', 'Code:', event.code, 'Reason:', event.reason);
                 setIsConnected(false);
                 setIsConnecting(false);
+                if (event.reason) {
+                    setError(event.reason);
+                }
             };
 
             wsRef.current = ws;
