@@ -1,5 +1,5 @@
 export const GEMINI_LIVE_CONFIG = {
-    model: 'models/gemini-2.0-flash-exp', // Using experimental flash model that supports live audio
+    model: 'gemini-2.5-flash-native-audio-preview-12-2025', // Official Live API model from Google docs
     systemInstruction: `You are the "Live Guru" for AIM Academy (All India Mock), an advanced educational platform for Bihar Board students (Class 9-12).
     
     Your Role:
