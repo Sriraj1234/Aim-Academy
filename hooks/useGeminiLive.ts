@@ -114,7 +114,7 @@ export function useGeminiLive(options: UseGeminiLiveOptions = {}): UseGeminiLive
 
             // 3. Setup WebSocket (OFFICIAL ENDPOINT)
             // Using v1beta for Live API
-            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${key}`;
+            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${key}`;
             const ws = new WebSocket(url);
 
             ws.onopen = () => {
