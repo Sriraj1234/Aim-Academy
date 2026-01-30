@@ -1,7 +1,7 @@
 import { UserProfile } from '@/data/types';
 
 export const GEMINI_LIVE_CONFIG = {
-    model: 'models/gemini-2.5-flash-native-audio-preview-12-2025', // Official Live API model from Google docs
+    model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
     audio: {
         inputSampleRate: 16000,
         outputSampleRate: 24000,
@@ -9,104 +9,13 @@ export const GEMINI_LIVE_CONFIG = {
     }
 };
 
-// Base system instruction - Default AI Tutor
-const BASE_INSTRUCTION = `You are a helpful AI tutor for students. Help them with their questions and explain concepts clearly.`;
+// Simple system instruction
+const BASE_INSTRUCTION = `You are a female helpful AI assistant.`;
 
-// Build personalized prompt with student profile
+//Build prompt - simplified, just returns base instruction
 export function buildPersonalizedPrompt(userProfile?: UserProfile | null): string {
-    let prompt = BASE_INSTRUCTION;
-
-    if (userProfile) {
-        prompt += `\n\n## STUDENT PROFILE (Use this to personalize your teaching):`;
-
-        // Basic Info
-        if (userProfile.displayName) {
-            prompt += `\n- **Student Name**: ${userProfile.displayName} (Address them by name!)`;
-        }
-
-        if (userProfile.class) {
-            prompt += `\n- **Class**: ${userProfile.class} (Tailor difficulty to this level)`;
-        }
-
-        if (userProfile.board) {
-            prompt += `\n- **Board**: ${userProfile.board?.toUpperCase()} (Focus on this board's syllabus)`;
-        }
-
-        if (userProfile.stream) {
-            prompt += `\n- **Stream**: ${userProfile.stream} (Focus on ${userProfile.stream} subjects)`;
-        }
-
-        // Location Context
-        if (userProfile.city || userProfile.state) {
-            prompt += `\n- **Location**: ${userProfile.city || ''}, ${userProfile.state || ''} (Use local examples when possible)`;
-        }
-
-        // Performance Stats
-        if (userProfile.stats) {
-            prompt += `\n\n## PERFORMANCE DATA:`;
-            if (userProfile.stats.quizzesTaken !== undefined) {
-                prompt += `\n- **Quizzes Taken**: ${userProfile.stats.quizzesTaken}`;
-            }
-            if (userProfile.stats.avgScore !== undefined) {
-                prompt += `\n- **Average Score**: ${userProfile.stats.avgScore}%`;
-                if (userProfile.stats.avgScore < 50) {
-                    prompt += ` (Student needs extra support - be more patient and detailed)`;
-                } else if (userProfile.stats.avgScore >= 80) {
-                    prompt += ` (High performer - can handle advanced concepts)`;
-                }
-            }
-            if (userProfile.stats.rank) {
-                prompt += `\n- **Rank**: ${userProfile.stats.rank}`;
-            }
-        }
-
-        // Gamification (Motivation)
-        if (userProfile.gamification) {
-            prompt += `\n\n## MOTIVATION DATA:`;
-            if (userProfile.gamification.currentStreak > 0) {
-                prompt += `\n- **Current Streak**: ${userProfile.gamification.currentStreak} days 🔥 (Praise them for consistency!)`;
-            }
-            if (userProfile.gamification.level) {
-                prompt += `\n- **Level**: ${userProfile.gamification.level}`;
-            }
-            if (userProfile.gamification.xp) {
-                prompt += `\n- **Total XP**: ${userProfile.gamification.xp}`;
-            }
-        }
-
-        // AI Memory (Past Learning)
-        if (userProfile.aiMemory) {
-            prompt += `\n\n## LEARNING HISTORY (AI Memory):`;
-            if (userProfile.aiMemory.weakSubjects?.length) {
-                prompt += `\n- **Weak Subjects** (Focus more here): ${userProfile.aiMemory.weakSubjects.join(', ')}`;
-            }
-            if (userProfile.aiMemory.topicsStudied?.length) {
-                prompt += `\n- **Recently Studied Topics**: ${userProfile.aiMemory.topicsStudied.join(', ')}`;
-            }
-            if (userProfile.aiMemory.preferences) {
-                prompt += `\n- **Preferred Language**: ${userProfile.aiMemory.preferences.language || 'hinglish'}`;
-                prompt += `\n- **Preferred Answer Length**: ${userProfile.aiMemory.preferences.answerLength || 'detailed'}`;
-            }
-        }
-
-        // Subscription Status
-        if (userProfile.subscription) {
-            prompt += `\n\n## SUBSCRIPTION:`;
-            prompt += `\n- **Plan**: ${userProfile.subscription.plan?.toUpperCase() || 'FREE'}`;
-        }
-    }
-
-    // Final Instructions
-    prompt += `\n\n## FINAL REMINDERS:
-- ALWAYS explain topics in DETAIL with examples
-- Use the student's name when talking to them
-- Reference their class and board syllabus
-- If they're weak in a subject, be extra patient
-- Motivate them constantly - they're preparing for important exams!
-- End conversations with encouragement: "Padhte raho, aage badho! विद्या ददाति विनयं!"`;
-
-    return prompt;
+    return BASE_INSTRUCTION;
 }
 
-// Legacy export for backward compatibility
+// Legacy export
 export { BASE_INSTRUCTION as systemInstruction };
