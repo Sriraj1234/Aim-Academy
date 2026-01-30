@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useEffect, useMemo, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaMicrophone, FaStop, FaTimes, FaWaveSquare, FaVolumeUp } from 'react-icons/fa';
-import Image from 'next/image';
+import { FaMicrophone, FaStop, FaTimes } from 'react-icons/fa';
+import { HiSparkles } from 'react-icons/hi2';
 
 export const LiveGuruWidget = () => {
     const { userProfile } = useAuth();
@@ -22,13 +22,6 @@ export const LiveGuruWidget = () => {
     const [showWidget, setShowWidget] = useState(false);
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
-    // Get current avatar based on state
-    const getCurrentAvatar = useMemo(() => {
-        if (isAiSpeaking) return '/images/saraswati-speaking.png';
-        if (isConnected) return '/images/saraswati-listening.png';
-        return '/images/saraswati-idle.png';
-    }, [isConnected, isAiSpeaking]);
-
     // Auto-scroll chat to bottom
     useEffect(() => {
         if (chatContainerRef.current) {
@@ -36,224 +29,196 @@ export const LiveGuruWidget = () => {
         }
     }, [messages, currentTranscript]);
 
-    // Collapsed Widget Card (Professional Glass Card)
+    // Collapsed Widget Card - Modern Minimal Design
     if (!showWidget) {
         return (
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.02 }}
-                className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 text-white text-center shadow-2xl relative overflow-hidden group cursor-pointer w-full max-w-sm mx-auto"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 text-white text-center shadow-2xl overflow-hidden cursor-pointer w-full max-w-sm mx-auto border border-white/10 group"
                 onClick={() => setShowWidget(true)}
             >
-                {/* Abstract Background Art */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-transparent to-pink-600/20" />
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/30 rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-pink-500/30 rounded-full blur-3xl" />
+                {/* Animated Gradient Orbs */}
+                <div className="absolute -top-20 -right-20 w-40 h-40 bg-violet-600/30 rounded-full blur-3xl group-hover:bg-violet-500/40 transition-colors duration-700" />
+                <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-cyan-600/20 rounded-full blur-3xl group-hover:bg-cyan-500/30 transition-colors duration-700" />
 
-                {/* Avatar with Ring */}
-                <div className="relative w-24 h-24 mx-auto mb-4">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur opacity-40 animate-pulse" />
-                    <Image
-                        src="/images/saraswati-idle.png"
-                        alt="Saraswati Devi"
-                        width={96}
-                        height={96}
-                        className="relative rounded-full border-[3px] border-white/30 shadow-2xl object-cover"
-                    />
-                    <div className="absolute bottom-1 right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white shadow-sm" />
+                {/* Sparkle Icon */}
+                <div className="relative w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-2xl rotate-6 opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-cyan-600 rounded-2xl -rotate-3" />
+                    <HiSparkles className="relative text-4xl text-white z-10" />
                 </div>
 
-                <h3 className="text-2xl font-bold font-sans tracking-tight mb-0.5 text-white">
-                    सरस्वती
+                <h3 className="text-2xl font-bold tracking-tight mb-1 text-white relative z-10">
+                    Live Guru
                 </h3>
-                <p className="text-purple-200 text-sm font-medium tracking-wide uppercase opacity-80 mb-4">AI Personal Tutor</p>
+                <p className="text-slate-400 text-sm font-medium mb-6 relative z-10">
+                    AI Voice Assistant
+                </p>
 
-                <div className="flex items-center justify-center gap-2 text-xs font-medium text-white/50 bg-white/5 py-2 rounded-xl border border-white/5">
-                    <FaWaveSquare className="text-purple-400" />
-                    <span>Always listening • 24/7 Support</span>
+                <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500 bg-slate-800/50 py-2.5 px-4 rounded-full border border-slate-700/50 relative z-10">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span>Ready to talk</span>
                 </div>
             </motion.div>
         );
     }
 
-    // Expanded Full-Screen Professional Interface
+    // Expanded Full-Screen Modern Interface
     return (
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="fixed inset-0 z-[100] flex flex-col bg-[#050511] font-sans"
+                className="fixed inset-0 z-[100] flex flex-col bg-slate-950 font-sans"
             >
-                {/* Ambient Background */}
+                {/* Animated Background */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-[120px] animate-pulse" />
-                    <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-pink-900/10 rounded-full blur-[100px]" />
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03]" /> {/* Optional noise texture */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-violet-900/20 via-transparent to-transparent blur-3xl" />
+                    <div className="absolute bottom-0 left-0 right-0 h-[400px] bg-gradient-to-t from-slate-900 to-transparent" />
+
+                    {/* Grid Pattern */}
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
                 </div>
 
-                {/* Header: Status Bar */}
-                <div className="relative z-10 flex items-center justify-between px-6 py-6 safe-area-top">
-                    <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
-                        <span className="text-xs font-medium text-white/70 tracking-wide uppercase">
-                            {isConnecting ? 'CONNECTING...' : isConnected ? 'LIVE SESSION' : 'READY'}
-                        </span>
+                {/* Header */}
+                <div className="relative z-10 flex items-center justify-between px-6 py-5 safe-area-top">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isConnected ? 'bg-gradient-to-br from-violet-500 to-cyan-500' : 'bg-slate-800'}`}>
+                            <HiSparkles className="text-xl text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-white font-semibold text-lg">Live Guru</h1>
+                            <p className="text-slate-500 text-xs">
+                                {isConnecting ? 'Connecting...' : isConnected ? 'Session Active' : 'Ready'}
+                            </p>
+                        </div>
                     </div>
 
                     <button
                         onClick={() => { disconnect(); setShowWidget(false); }}
-                        className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+                        className="w-10 h-10 rounded-xl bg-slate-800/80 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all border border-slate-700/50"
                     >
                         <FaTimes size={14} />
                     </button>
                 </div>
 
-                {/* Main Visualizer Area */}
+                {/* Main Content Area */}
                 <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6">
 
-                    {/* Central Avatar Visualizer */}
-                    <div className="relative mb-12">
-                        {/* Audio Waveform/Glow Effects */}
+                    {/* Central Visualizer Orb */}
+                    <div className="relative mb-8">
+                        {/* Outer Glow Rings */}
                         {isConnected && (
                             <>
-                                {/* Large ambient pulse */}
                                 <motion.div
-                                    className={`absolute inset-0 rounded-full blur-3xl opacity-30 transition-colors duration-500 ${isAiSpeaking ? 'bg-pink-600' : 'bg-purple-600'}`}
-                                    animate={{ scale: [1, 1.2, 1] }}
-                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                    className={`absolute inset-0 rounded-full blur-2xl ${isAiSpeaking ? 'bg-violet-500/30' : 'bg-cyan-500/20'}`}
+                                    animate={{
+                                        scale: isAiSpeaking ? [1, 1.3, 1] : [1, 1.1, 1],
+                                        opacity: [0.3, 0.5, 0.3]
+                                    }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                                 />
-
-                                {/* Dynamic Ripples */}
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <motion.div
-                                        className={`absolute w-full h-full rounded-full border border-white/10`}
-                                        animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
-                                        transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                                    />
-                                    <motion.div
-                                        className={`absolute w-full h-full rounded-full border border-white/5`}
-                                        animate={{ scale: [1, 1.8], opacity: [0.3, 0] }}
-                                        transition={{ duration: 2, repeat: Infinity, delay: 0.5, ease: "easeOut" }}
-                                    />
-                                </div>
+                                <motion.div
+                                    className="absolute inset-[-20px] rounded-full border border-white/5"
+                                    animate={{ scale: [1, 1.2], opacity: [0.3, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                                />
                             </>
                         )}
 
-                        {/* Avatar Container */}
-                        <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full p-2">
-                            {/* Gradient Border Ring */}
-                            <div className={`absolute inset-0 rounded-full bg-gradient-to-tr transition-all duration-500 p-[2px] 
-                                ${isAiSpeaking ? 'from-pink-500 via-purple-500 to-indigo-500 shadow-xl shadow-pink-500/20' :
-                                    isConnected ? 'from-green-400 via-emerald-500 to-teal-500 shadow-xl shadow-green-500/20' :
-                                        'from-white/20 to-white/5'}`}
-                            >
-                                <div className="w-full h-full rounded-full bg-[#050511] flex items-center justify-center overflow-hidden relative">
-                                    <AnimatePresence mode="wait">
-                                        <motion.div
-                                            key={getCurrentAvatar}
-                                            initial={{ opacity: 0, scale: 1.1 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.4 }}
-                                            className="w-full h-full"
-                                        >
-                                            <Image
-                                                src={getCurrentAvatar}
-                                                alt="Saraswati"
-                                                fill
-                                                className="object-cover"
-                                                priority
-                                            />
-                                        </motion.div>
-                                    </AnimatePresence>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Main Orb */}
+                        <motion.div
+                            className={`relative w-40 h-40 md:w-48 md:h-48 rounded-full flex items-center justify-center transition-all duration-500
+                                ${isAiSpeaking
+                                    ? 'bg-gradient-to-br from-violet-500 via-purple-600 to-violet-700 shadow-2xl shadow-violet-500/30'
+                                    : isConnected
+                                        ? 'bg-gradient-to-br from-cyan-500 via-teal-500 to-cyan-600 shadow-2xl shadow-cyan-500/20'
+                                        : 'bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600/50'
+                                }`}
+                            animate={isConnected ? {
+                                scale: isAiSpeaking ? [1, 1.05, 1] : [1, 1.02, 1]
+                            } : {}}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                            {/* Inner Glow */}
+                            <div className={`absolute inset-4 rounded-full bg-gradient-to-t from-transparent ${isAiSpeaking ? 'to-white/20' : 'to-white/10'}`} />
 
-                        {/* Animated Sound Wave Visualizer */}
-                        {isConnected && (
-                            <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 h-6">
-                                {[...Array(5)].map((_, i) => (
-                                    <motion.div
-                                        key={i}
-                                        className={`w-1 rounded-full ${isAiSpeaking
-                                            ? 'bg-gradient-to-t from-pink-500 to-purple-400'
-                                            : 'bg-gradient-to-t from-green-400 to-emerald-300'
-                                            }`}
-                                        animate={isAiSpeaking ? {
-                                            // AI Speaking - smooth wave (smaller heights)
-                                            height: [
-                                                4 + Math.sin(i * 0.5) * 4,
-                                                12 + Math.sin(i * 0.8) * 6,
-                                                8 + Math.cos(i * 0.6) * 4,
-                                                16 + Math.sin(i * 0.7) * 4,
-                                                4 + Math.sin(i * 0.5) * 4
-                                            ]
-                                        } : {
-                                            // User Speaking - volume reactive (smaller)
-                                            height: Math.max(4, 4 + (volume * 80 * (Math.sin(i * 0.8) + 1.2)))
-                                        }}
-                                        transition={isAiSpeaking ? {
-                                            duration: 0.6 + (i * 0.08),
-                                            repeat: Infinity,
-                                            ease: "easeInOut"
-                                        } : {
-                                            type: "spring",
-                                            stiffness: 400,
-                                            damping: 15
-                                        }}
-                                        style={{
-                                            boxShadow: isAiSpeaking
-                                                ? '0 0 6px rgba(236, 72, 153, 0.4)'
-                                                : '0 0 5px rgba(52, 211, 153, 0.3)'
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                            {/* Sound Wave Bars */}
+                            {isConnected && (
+                                <div className="flex items-center justify-center gap-1.5">
+                                    {[...Array(5)].map((_, i) => (
+                                        <motion.div
+                                            key={i}
+                                            className="w-1.5 bg-white/90 rounded-full"
+                                            animate={isAiSpeaking ? {
+                                                height: [8 + i * 4, 24 + Math.sin(i) * 12, 8 + i * 4]
+                                            } : {
+                                                height: Math.max(6, 6 + (volume * 60 * (Math.sin(i * 0.8) + 1.2)))
+                                            }}
+                                            transition={isAiSpeaking ? {
+                                                duration: 0.4 + (i * 0.05),
+                                                repeat: Infinity,
+                                                ease: "easeInOut"
+                                            } : {
+                                                type: "spring",
+                                                stiffness: 500,
+                                                damping: 20
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Idle State Icon */}
+                            {!isConnected && (
+                                <FaMicrophone className="text-4xl text-slate-400" />
+                            )}
+                        </motion.div>
                     </div>
 
-                    {/* Interaction Status */}
+                    {/* Status Text */}
                     <div className="text-center space-y-2">
                         <motion.h2
                             key={isAiSpeaking ? 'speak' : isConnected ? 'listen' : 'wait'}
                             initial={{ y: 10, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
-                            className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-100 to-white"
+                            className="text-2xl md:text-3xl font-bold text-white"
                         >
                             {isConnecting ? 'Connecting...' :
-                                isAiSpeaking ? 'Saraswati is speaking' :
-                                    isConnected ? 'Listening to you' :
+                                isAiSpeaking ? 'AI is Speaking' :
+                                    isConnected ? 'Listening...' :
                                         'Tap to Start'}
                         </motion.h2>
 
                         {!isConnected && (
-                            <p className="text-white/40 text-sm max-w-xs mx-auto leading-relaxed">
-                                "Ask me anything about your studies. I am here to help."
+                            <p className="text-slate-500 text-sm max-w-xs mx-auto">
+                                Press the button below to start a voice conversation
                             </p>
                         )}
                     </div>
                 </div>
 
-                {/* Floating Transcription Card */}
+                {/* Chat Messages */}
                 {messages.length > 0 && (
-                    <div className="relative z-10 w-full max-w-lg mx-auto px-6 mb-8">
+                    <div className="relative z-10 w-full max-w-lg mx-auto px-6 mb-6">
                         <div
                             ref={chatContainerRef}
-                            className="max-h-40 overflow-y-auto w-full backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 shadow-2xl mask-fade-top"
+                            className="max-h-36 overflow-y-auto w-full bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4"
                         >
                             {messages.map((msg, i) => (
                                 <motion.div
-                                    initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
                                     key={i}
-                                    className={`flex gap-3 mb-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                    className={`flex gap-3 mb-3 last:mb-0 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed max-w-[85%] ${msg.role === 'user'
-                                        ? 'bg-purple-600 text-white rounded-br-none shadow-lg shadow-purple-900/20'
-                                        : 'bg-white/10 text-purple-100 rounded-bl-none border border-white/5'
+                                            ? 'bg-violet-600 text-white rounded-br-sm'
+                                            : 'bg-slate-800 text-slate-200 rounded-bl-sm border border-slate-700/50'
                                         }`}>
                                         {msg.text}
                                     </div>
@@ -263,41 +228,41 @@ export const LiveGuruWidget = () => {
                     </div>
                 )}
 
-                {/* Control Deck */}
-                <div className="relative z-10 w-full bg-white/5 backdrop-blur-2xl border-t border-white/10 pb-8 pt-6 px-6 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] safe-area-bottom">
-                    <div className="flex items-center justify-center gap-8 md:gap-12 max-w-md mx-auto">
+                {/* Bottom Control Bar */}
+                <div className="relative z-10 w-full bg-slate-900/80 backdrop-blur-2xl border-t border-slate-800 pb-8 pt-6 px-6 safe-area-bottom">
+                    <div className="flex items-center justify-center max-w-md mx-auto">
 
-                        {/* Secondary Actions (Placeholder for now) */}
-                        <button className="w-12 h-12 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-colors">
-                            <FaVolumeUp size={18} />
-                        </button>
-
-                        {/* Main Action Trigger */}
+                        {/* Main Action Button */}
                         <motion.button
                             onClick={isConnected ? disconnect : connect}
+                            disabled={isConnecting}
                             whileTap={{ scale: 0.95 }}
                             whileHover={{ scale: 1.05 }}
-                            className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl transition-all shadow-2xl relative group
+                            className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl transition-all shadow-2xl relative overflow-hidden
                                 ${isConnected
-                                    ? 'bg-gradient-to-br from-red-500 to-pink-600 shadow-red-500/40 border-4 border-white/10'
-                                    : 'bg-gradient-to-br from-white to-purple-50 shadow-white/20 border-4 border-purple-500/30'
+                                    ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/30'
+                                    : isConnecting
+                                        ? 'bg-slate-700 cursor-wait'
+                                        : 'bg-gradient-to-br from-violet-500 to-violet-600 shadow-violet-500/30 hover:shadow-violet-500/50'
                                 }`}
                         >
-                            {/* Button inner glow */}
-                            <div className={`absolute inset-0 rounded-full blur-xl opacity-50 ${isConnected ? 'bg-red-500' : 'bg-white'}`} />
+                            {/* Button Glow */}
+                            <div className={`absolute inset-0 rounded-full ${isConnected ? 'bg-red-400' : 'bg-violet-400'} blur-xl opacity-30`} />
 
-                            <span className={`relative z-10 ${isConnected ? 'text-white' : 'text-purple-900'}`}>
-                                {isConnected ? <FaStop className="ml-0.5" /> : <FaMicrophone />}
+                            <span className="relative z-10 text-white">
+                                {isConnecting ? (
+                                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : isConnected ? (
+                                    <FaStop />
+                                ) : (
+                                    <FaMicrophone />
+                                )}
                             </span>
                         </motion.button>
 
-                        <button className="w-12 h-12 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-colors">
-                            <FaWaveSquare size={18} />
-                        </button>
-
                     </div>
-                    <p className="text-center text-white/30 text-[10px] mt-6 tracking-widest uppercase font-semibold">
-                        {isConnected ? 'Tap to End Session' : 'Tap to Speak'}
+                    <p className="text-center text-slate-600 text-xs mt-4 font-medium">
+                        {isConnecting ? 'Please wait...' : isConnected ? 'Tap to end session' : 'Tap to start talking'}
                     </p>
                 </div>
             </motion.div>
