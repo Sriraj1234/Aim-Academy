@@ -112,6 +112,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false, // Ensure app-like feel
+  viewportFit: 'cover',
   themeColor: '#4437B8',
 }
 
