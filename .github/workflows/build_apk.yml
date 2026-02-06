@@ -30,7 +30,10 @@ jobs:
         run: npx cap sync android
 
       - name: Make Gradlew Executable
-        run: cd android && chmod +x gradlew
+        run: |
+          cd android
+          sed -i 's/\r$//' gradlew
+          chmod +x gradlew
 
       - name: Build APK
         run: cd android && ./gradlew assembleDebug
