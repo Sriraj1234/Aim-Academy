@@ -11,7 +11,7 @@ const firebaseConfig = {
     databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 }
 
-import { initializeFirestore, memoryLocalCache } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
 import { getDatabase } from 'firebase/database'
 import { getStorage } from 'firebase/storage'
 
@@ -23,7 +23,7 @@ const auth = getAuth(app)
 // We use persistentLocalCache which allows data to be read even when offline.
 // 'persistentMultipleTabManager' allows this to work even if multiple tabs are open.
 const db = initializeFirestore(app, {
-    localCache: memoryLocalCache()
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
 });
 
 const rtdb = getDatabase(app)
