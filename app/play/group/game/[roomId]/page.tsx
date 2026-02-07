@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot, deleteDoc } from 'firebase/firestore';
@@ -29,6 +29,9 @@ export default function GamePage() {
 
     const isHost = typeof window !== 'undefined' && localStorage.getItem(`room_host_${roomId}`) === 'true';
     const { playSound } = useSound();
+
+    // CRITICAL FIX: Track intentional navigation to results to prevent player removal
+    const isNavigatingToResults = useRef(false);
 
     // Cleanup on unmount / refresh
     useEffect(() => {
@@ -63,7 +66,10 @@ export default function GamePage() {
         };
 
         const handleUnload = () => {
-            leaveRoom(roomId as string, playerId).catch(console.error);
+            // Only leave if NOT navigating to results
+            if (!isNavigatingToResults.current) {
+                leaveRoom(roomId as string, playerId).catch(console.error);
+            }
         };
 
         window.addEventListener('popstate', handlePopState);
@@ -72,7 +78,10 @@ export default function GamePage() {
         return () => {
             window.removeEventListener('popstate', handlePopState);
             window.removeEventListener('beforeunload', handleUnload);
-            leaveRoom(roomId as string, playerId).catch(console.error);
+            // CRITICAL: Only leave room if NOT going to results
+            if (!isNavigatingToResults.current) {
+                leaveRoom(roomId as string, playerId).catch(console.error);
+            }
         };
     }, [roomId, playerId, router]);
 
@@ -116,6 +125,8 @@ export default function GamePage() {
                 }
 
                 if (data.status === 'finished') {
+                    // CRITICAL: Mark that we're navigating to results to prevent cleanup
+                    isNavigatingToResults.current = true;
                     router.push(`/play/group/result/${roomId}`);
                 }
             } else {
@@ -366,6 +377,9 @@ export default function GamePage() {
                                     <span className="text-[10px] font-medium text-gray-600 truncate w-14 text-center">
                                         {isMe ? 'You' : p.name.split(' ')[0]}
                                     </span>
+                                    <span className="text-[9px] font-bold text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded-full border border-yellow-200">
+                                        ⚡{p.score || 0}
+                                    </span>
                                 </div>
                             )
                         })}
@@ -381,6 +395,12 @@ export default function GamePage() {
                                 Q <span className="text-brand-600 text-sm md:text-lg">{room.currentQuestionIndex + 1}</span>
                                 <span className="text-gray-400 mx-1">/</span>
                                 {totalQuestions}
+                            </div>
+
+                            {/* Current User Score */}
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-400 px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-md text-xs md:text-sm font-bold text-white border border-yellow-500 flex items-center gap-1.5">
+                                <FaStar className="text-yellow-100" size={12} />
+                                <span>{room.players[playerId]?.score || 0}</span>
                             </div>
                         </div>
 
