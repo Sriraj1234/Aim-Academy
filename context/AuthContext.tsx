@@ -8,6 +8,8 @@ import {
     signInWithPopup,
     signInWithRedirect,
     getRedirectResult,
+    setPersistence,
+    indexedDBLocalPersistence,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signInAnonymously,
@@ -305,17 +307,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [])
 
-    // CAPACITOR FIX: Handle OAuth redirect result for native apps
+    // CAPACITOR FIX: Set persistence and handle OAuth redirect for native apps
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
-            getRedirectResult(auth)
+            // Set persistence to indexedDB for native apps
+            setPersistence(auth, indexedDBLocalPersistence)
+                .then(() => {
+                    console.log('✅ Auth persistence set to indexedDB');
+                    // Now handle any redirect results
+                    return getRedirectResult(auth);
+                })
                 .then((result) => {
                     if (result) {
                         console.log('✅ OAuth redirect successful:', result.user.email);
                     }
                 })
                 .catch((error) => {
-                    console.error('❌ OAuth redirect error:', error);
+                    console.error('❌ Auth setup error:', error);
                 });
         }
     }, [])
