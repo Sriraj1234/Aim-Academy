@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp, arrayUnion, deleteField, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp, arrayUnion, deleteField, query, where, getDocs, increment } from 'firebase/firestore';
 
 export interface Player {
     id: string; // This is the socket/session ID or Firestore key
@@ -205,27 +205,19 @@ export const startGame = async (roomId: string) => {
 
 export const submitAnswer = async (roomId: string, playerId: string, questionIndex: number, answerIndex: number, isCorrect: boolean) => {
     const roomRef = doc(db, 'rooms', roomId);
-    // Note: Complex nested updates can be tricky in dot notation, ensuring we don't overwrite
-    // Ideally we transaction this, but for simplicity:
     const key = `players.${playerId}`;
 
-    // We need to read first to increment score safely, or use FieldValue.increment
-    // For MVP, we'll assume local optimistic update or simple writes
-    // Let's just update the specific fields
-
-    // Check if correct to update score
-    // This is better done server-side or via transaction, but client-side is faster for MVP
-    // We will trust the client for now (FRIENDS mode)
-
-    await updateDoc(roomRef, {
+    // Build updates object
+    const updates: any = {
         [`${key}.answers.${questionIndex}`]: answerIndex,
-        // We can't conditionally increment in one go easily without knowing current score if we want to be pure atomic
-        // But we can use multiple update calls or just accept last write wins
-    });
+    };
 
-    // Separate call for score to use atomic increment if possible, 
-    // or just read-modify-write in the component. 
-    // Let's leave score calc to the end or perform a transaction in a more advanced update
+    // REAL-TIME SCORE: Add 10 points for correct answers using atomic increment
+    if (isCorrect) {
+        updates[`${key}.score`] = increment(10);
+    }
+
+    await updateDoc(roomRef, updates);
 };
 
 export const nextQuestion = async (roomId: string, currentIndex: number) => {
