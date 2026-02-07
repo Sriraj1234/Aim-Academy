@@ -45,6 +45,11 @@ export default function ResultPage() {
                 setQuestions(roomQuestions);
                 const players = Object.values(data.players || {}) as any[];
 
+                // DEBUG: Log raw data
+                console.log('🔍 DEBUG: Room data.players:', data.players);
+                console.log('🔍 DEBUG: Players array:', players);
+                console.log('🔍 DEBUG: Number of players:', players.length);
+
                 // Calculate scores
                 const results = players.map(p => {
                     let correctCount = 0;
@@ -72,6 +77,8 @@ export default function ResultPage() {
 
                 // Sort by score DESC
                 results.sort((a, b) => b.score - a.score);
+                console.log('🔍 DEBUG: Final results array:', results);
+                console.log('🔍 DEBUG: Results length:', results.length);
                 setLeaderboard(results);
 
                 // --- SAVE MISTAKES LOGIC ---
