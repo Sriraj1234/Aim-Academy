@@ -52,7 +52,9 @@ export default function ResultPage() {
                     Object.keys(answers).forEach(qIndex => {
                         const qIdx = parseInt(qIndex);
                         const ansIdx = answers[qIdx];
-                        if (roomQuestions[qIdx]?.correctAnswer === ansIdx) {
+                        // Robust comparison (Number vs Number)
+                        if (roomQuestions[qIdx]?.correctAnswer !== undefined &&
+                            Number(roomQuestions[qIdx].correctAnswer) === Number(ansIdx)) {
                             correctCount++;
                         }
                     });
@@ -83,8 +85,8 @@ export default function ResultPage() {
 
                         roomQuestions.forEach((q: any, index: number) => {
                             const myAnswer = myPlayer.answers[index];
-                            // Check if answered AND incorrect
-                            if (myAnswer !== undefined && myAnswer !== q.correctAnswer) {
+                            // Check if answered AND incorrect (Robust comparison)
+                            if (myAnswer !== undefined && Number(myAnswer) !== Number(q.correctAnswer)) {
                                 mistakesToSave.push({
                                     id: q.id || `group_q_${index}_${roomId}`, // Fallback ID if missing
                                     question: q.question,
@@ -304,7 +306,11 @@ export default function ResultPage() {
                                     {q.options.map((opt, optIndex) => {
                                         const isCorrect = optIndex === q.correctAnswer;
                                         // Find who picked this
-                                        const pickedBy = leaderboard.filter(p => p.answers[qIndex] === optIndex);
+                                        // Find who picked this (Robust match)
+                                        const pickedBy = leaderboard.filter(p => {
+                                            const ans = p.answers && p.answers[qIndex];
+                                            return ans !== undefined && Number(ans) === optIndex;
+                                        });
                                         const isPicked = pickedBy.length > 0;
 
                                         return (
@@ -326,7 +332,7 @@ export default function ResultPage() {
                                                                     <img src={p.photoURL} className="w-6 h-6 rounded-full border border-white shadow-sm" title={p.name} />
                                                                 ) : (
                                                                     <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-[10px] text-white font-bold border border-white shadow-sm" title={p.name}>
-                                                                        {p.name.charAt(0)}
+                                                                        {(p.name || 'User').charAt(0)}
                                                                     </div>
                                                                 )}
                                                             </div>
