@@ -67,8 +67,13 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   icons: {
-    icon: '/padhaku-192.png',
-    apple: '/padhaku-192.png',
+    icon: [
+      { url: '/padhaku-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/padhaku-512.png', sizes: '512x512', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/padhaku-192.png', sizes: '192x192', type: 'image/png' }
+    ],
     shortcut: '/padhaku-192.png',
   },
   appleWebApp: {
