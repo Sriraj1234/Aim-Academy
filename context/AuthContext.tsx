@@ -1,10 +1,13 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import {
     User,
     GoogleAuthProvider,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signInAnonymously,
@@ -302,10 +305,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [])
 
+    // CAPACITOR FIX: Handle OAuth redirect result for native apps
+    useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
+            getRedirectResult(auth)
+                .then((result) => {
+                    if (result) {
+                        console.log('✅ OAuth redirect successful:', result.user.email);
+                    }
+                })
+                .catch((error) => {
+                    console.error('❌ OAuth redirect error:', error);
+                });
+        }
+    }, [])
+
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider()
         try {
-            await signInWithPopup(auth, provider)
+            // CAPACITOR FIX: Use redirect for native apps, popup for web
+            if (Capacitor.isNativePlatform()) {
+                console.log('📱 Using signInWithRedirect for mobile app');
+                await signInWithRedirect(auth, provider);
+            } else {
+                console.log('🌐 Using signInWithPopup for web');
+                await signInWithPopup(auth, provider);
+            }
         } catch (error) {
             console.error("Error signing in with Google", error)
             throw error
