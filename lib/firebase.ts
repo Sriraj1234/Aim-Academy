@@ -1,5 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { getAuth, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth'
+import { Capacitor } from '@capacitor/core'
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,7 +18,14 @@ import { getStorage } from 'firebase/storage'
 
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
-const auth = getAuth(app)
+
+// CAPACITOR FIX: Use indexedDB persistence instead of sessionStorage for native apps
+// This fixes the "missing initial state" OAuth error in Android/iOS webviews
+const auth = Capacitor.isNativePlatform()
+    ? initializeAuth(app, {
+        persistence: indexedDBLocalPersistence
+    })
+    : getAuth(app)
 
 // Enable Offline Persistence (Critical for Rural Areas)
 // We use persistentLocalCache which allows data to be read even when offline.
