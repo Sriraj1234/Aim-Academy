@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket, FaYoutube } from 'react-icons/fa'
 import Link from 'next/link'
@@ -85,15 +85,15 @@ export const ModernCarousel = () => {
     ]
     const [direction, setDirection] = useState(0);
 
-    const nextSlide = () => {
+    const nextSlide = useCallback(() => {
         setDirection(1);
         setCurrent(prev => (prev + 1) % slides.length);
-    }
+    }, [slides.length])
 
-    const prevSlide = () => {
+    const prevSlide = useCallback(() => {
         setDirection(-1);
         setCurrent(prev => (prev - 1 + slides.length) % slides.length);
-    }
+    }, [slides.length])
 
     // Auto-slide logic
     useEffect(() => {
