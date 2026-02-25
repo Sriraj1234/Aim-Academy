@@ -370,7 +370,7 @@ export default function StudyHubPage() {
                                                 });
                                                 // Lock orientation to landscape if supported
                                                 if (screen.orientation && 'lock' in screen.orientation) {
-                                                    // @ts-ignore
+                                                    // @ts-expect-error — screen.orientation.lock is not in TS DOM lib yet
                                                     screen.orientation.lock('landscape').catch(() => { });
                                                 }
                                             } else {
