@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
         // --- Fetch Syllabus Context ---
         let syllabusInfo = '';
-        let chapterSummary = '';
+        const chapterSummary = '';
 
         const board = (body.context?.board || 'cbse').toLowerCase();
         const classNum = (body.context?.class || '10').toString();
