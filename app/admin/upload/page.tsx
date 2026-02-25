@@ -334,7 +334,7 @@ const UploadPage = () => {
             setUploadProgress('Updating App Menu (Metadata)...');
             const metaDocRef = doc(db, 'metadata', 'taxonomy');
             const metaSnap = await getDoc(metaDocRef);
-            let metaData = metaSnap.exists() ? metaSnap.data() : {};
+            const metaData = metaSnap.exists() ? metaSnap.data() : {};
             let metaModified = false;
 
             // Group uploaded questions by Board_Class -> Subject
