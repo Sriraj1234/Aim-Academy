@@ -63,7 +63,7 @@ export default function CreateLiveQuizPage() {
             setLoading(true);
             setAvailableQuestions([]); // Clear previous results to avoid confusion
 
-            let constraints: any[] = [limit(500), orderBy('createdAt', 'desc')];
+            const constraints: any[] = [limit(500), orderBy('createdAt', 'desc')];
 
             // Filter by Board (Bank Filter) - Keep Lowercase
             if (bankFilterBoard !== 'all') {
