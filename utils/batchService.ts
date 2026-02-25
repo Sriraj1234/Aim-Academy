@@ -45,10 +45,15 @@ export const uploadBatchThumbnail = async (file: File) => {
 
         console.log(`Client Upload Service: Starting upload for ${file.name} (${file.size} bytes, ${file.type})`);
 
+        // 30-second timeout — prevents silent hang on large files or slow network
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
         const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
-        });
+            signal: controller.signal,
+        }).finally(() => clearTimeout(timeoutId));
 
         const data = await response.json();
 
@@ -58,6 +63,10 @@ export const uploadBatchThumbnail = async (file: File) => {
 
         return data.url;
     } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            console.error("Upload timed out after 30 seconds");
+            throw new Error('Upload timeout ho gaya. Chota file try karo ya internet check karo.');
+        }
         console.error("Error uploading thumbnail:", error);
         throw error;
     }
