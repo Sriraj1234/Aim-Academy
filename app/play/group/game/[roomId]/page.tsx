@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { submitAnswer, nextQuestion, endGame, leaveRoom } from '@/utils/roomService';
+import { submitAnswer, nextQuestion, endGame, leaveRoom, markDisconnected, rejoinRoom, RECONNECT_GRACE_MS } from '@/utils/roomService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaUser, FaCheckCircle, FaClock, FaShapes, FaBolt, FaStar, FaUsers, FaTimes, FaChevronDown } from 'react-icons/fa';
 import dynamic from 'next/dynamic';
@@ -66,12 +66,13 @@ export default function GamePage() {
         };
 
         const handleUnload = (event: BeforeUnloadEvent) => {
-            // Only show confirmation + leave if NOT navigating to results
+            // Only show confirmation + mark disconnected if NOT navigating to results
             if (!isNavigatingToResults.current) {
                 // Show browser's native "Leave page?" dialog on refresh / tab close
                 event.preventDefault();
                 event.returnValue = ''; // Required for Chrome
-                leaveRoom(roomId as string, playerId).catch(console.error);
+                // ✅ CHANGED: mark disconnected instead of removing — gives 30s grace period
+                markDisconnected(roomId as string, playerId).catch(console.error);
             }
         };
 
@@ -83,12 +84,22 @@ export default function GamePage() {
             window.removeEventListener('beforeunload', handleUnload);
             // CRITICAL: Only leave room if NOT going to results
             if (!isNavigatingToResults.current) {
+                // On intentional unmount (back button confirmed), really leave
                 leaveRoom(roomId as string, playerId).catch(console.error);
             }
         };
     }, [roomId, playerId, router]);
 
     const [showExitWarning, setShowExitWarning] = useState(false);
+
+    // ─── Auto-Rejoin on mount ───────────────────────────────────────────────
+    // When the page mounts after a refresh/reconnect, if the player had a recent
+    // disconnected_at we clear it (signal that they're back online).
+    useEffect(() => {
+        if (!roomId || !playerId) return;
+        rejoinRoom(roomId as string, playerId).catch(console.error);
+    }, [roomId, playerId]);
+    // ─────────────────────────────────────────────────────────────────────────
 
     useEffect(() => {
         if (!roomId) return;
@@ -108,22 +119,32 @@ export default function GamePage() {
                 }
 
                 if (data.players) {
-                    let myEntry: any = null;
+                    let myEntry: { id: string; disconnected_at?: number | null } | null = null;
 
                     // 1. Try matching by User ID (Strongest check)
                     if (storedId) {
-                        myEntry = Object.values(data.players).find((p: any) => p.userId === storedId);
+                        myEntry = (Object.values(data.players) as { id: string; userId?: string; name?: string; disconnected_at?: number | null }[]).find((p) => p.userId === storedId) ?? null;
                     }
 
                     // 2. Fallback: Try matching by Name (Legacy/Anonymous)
                     if (!myEntry && storedName) {
-                        myEntry = Object.values(data.players).find((p: any) => p.name === storedName);
+                        myEntry = (Object.values(data.players) as { id: string; name?: string; disconnected_at?: number | null }[]).find((p) => p.name === storedName) ?? null;
                     }
 
                     if (myEntry) {
                         setPlayerId(myEntry.id);
                     } else {
                         console.warn("Game Debug: Player Identity Verification Failed", { storedName, storedId });
+                    }
+
+                    // HOST: evict players who disconnected more than RECONNECT_GRACE_MS ago
+                    if (isHost) {
+                        const now = Date.now();
+                        (Object.values(data.players) as { id: string; disconnected_at?: number | null }[]).forEach((p) => {
+                            if (p.disconnected_at && now - p.disconnected_at > RECONNECT_GRACE_MS) {
+                                leaveRoom(roomId as string, p.id).catch(console.error);
+                            }
+                        });
                     }
                 }
 
