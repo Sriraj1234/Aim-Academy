@@ -294,7 +294,7 @@ export default function QuestionsPage() {
             return null
         }
 
-        let items: { name: string, type: 'main' | 'subject' | 'chapter', count?: number }[] = []
+        const items: { name: string, type: 'main' | 'subject' | 'chapter', count?: number }[] = []
 
         if (currentLevel.type === 'root') {
             // Level 1: Show Main Groups + Ungrouped Subjects
