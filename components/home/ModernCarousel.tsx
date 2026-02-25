@@ -83,18 +83,7 @@ export const ModernCarousel = () => {
             icon: FaUserGraduate
         }
     ]
-
-    // ... [Keep existing state and handlers]
     const [direction, setDirection] = useState(0);
-
-    // Auto-slide logic
-    useEffect(() => {
-        if (isHovered) return
-        const timer = setInterval(() => {
-            nextSlide()
-        }, 5000)
-        return () => clearInterval(timer)
-    }, [isHovered, slides.length])
 
     const nextSlide = () => {
         setDirection(1);
@@ -105,6 +94,15 @@ export const ModernCarousel = () => {
         setDirection(-1);
         setCurrent(prev => (prev - 1 + slides.length) % slides.length);
     }
+
+    // Auto-slide logic
+    useEffect(() => {
+        if (isHovered) return
+        const timer = setInterval(() => {
+            nextSlide()
+        }, 5000)
+        return () => clearInterval(timer)
+    }, [isHovered, slides.length])
 
     // Animation Variants
     const variants = {
