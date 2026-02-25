@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import useSWR from 'swr'
+import toast from 'react-hot-toast'
 import { Question, CategoryData } from '@/data/types'
 import { mockQuestions } from '@/data/mock'
 import { db } from '@/lib/firebase'
@@ -44,6 +45,46 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
     const [startTime, setStartTime] = useState<number>(0)
     const [endTime, setEndTime] = useState<number>(0)
     const [isSavingResult, setIsSavingResult] = useState(false)
+
+    // ─── Session Persistence Helpers ─────────────────────────────────────────
+    const SESSION_KEY = 'quiz_session'
+
+    const saveSession = (q: Question[], idx: number, ans: (number | null)[], st: number) => {
+        try {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+                questions: q,
+                currentQuestionIndex: idx,
+                answers: ans,
+                startTime: st,
+                savedAt: Date.now()
+            }))
+        } catch (_) { /* sessionStorage might be unavailable in some browsers */ }
+    }
+
+    const clearSession = () => {
+        try { sessionStorage.removeItem(SESSION_KEY) } catch (_) { }
+    }
+
+    // Restore session on mount (only once, before any quiz is started)
+    useEffect(() => {
+        try {
+            const raw = sessionStorage.getItem(SESSION_KEY)
+            if (!raw) return
+            const session = JSON.parse(raw)
+            // Only restore if session is < 2 hours old and has questions
+            const age = Date.now() - (session.savedAt || 0)
+            if (age > 2 * 60 * 60 * 1000) { clearSession(); return }
+            if (!Array.isArray(session.questions) || session.questions.length === 0) return
+
+            setQuestions(session.questions)
+            setCurrentQuestionIndex(session.currentQuestionIndex ?? 0)
+            setAnswers(session.answers ?? new Array(session.questions.length).fill(null))
+            setStartTime(session.startTime ?? Date.now())
+            toast('Quiz resume ho gayi wahan se jahan tune chhodi thi! 📚', { icon: '🔄', duration: 3000 })
+        } catch (_) { /* corrupt session — ignore */ }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    // ─────────────────────────────────────────────────────────────────────────
 
     const [categories, setCategories] = useState<CategoryData>({ subjects: [], chapters: {} })
 
@@ -194,9 +235,12 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
             setQuestions(q)
             setAnswers(new Array(q.length).fill(null))
+            // Session save
+            saveSession(q, 0, new Array(q.length).fill(null), Date.now())
 
         } catch (error) {
             console.error("Failed to load questions", error)
+            toast.error('Questions load nahi ho sake. Check your internet connection.')
             // Fallback
             let mq = mockQuestions
             if (subject) mq = mq.filter(item => item.subject === subject)
@@ -211,11 +255,16 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
         const newAnswers = [...answers]
         newAnswers[currentQuestionIndex] = answerIndex
         setAnswers(newAnswers)
+        // Persist updated answers to session
+        saveSession(questions, currentQuestionIndex, newAnswers, startTime)
     }
 
     const nextQuestion = async () => {
         if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1)
+            const nextIdx = currentQuestionIndex + 1
+            setCurrentQuestionIndex(nextIdx)
+            // Persist new index to session
+            saveSession(questions, nextIdx, answers, startTime)
         } else {
             // FINISH QUIZ LOGIC
             setEndTime(Date.now())
@@ -230,6 +279,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             } catch (err) {
                 console.error("Critical error saving result:", err)
             } finally {
+                clearSession() // Clear session when quiz finishes
                 setIsSavingResult(false)
                 setIsFinished(true)
             }
@@ -271,12 +321,15 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 await updateProfile({ bookmarkedQuestions: newBookmarks })
             } catch (e) {
                 console.error("Failed to save bookmark", e)
-                // optional: revert on failure?
+                toast.error('Bookmark save nahi hua. Dobara try karo.')
+                // Revert local state on failure
+                setBookmarks(bookmarks)
             }
         }
     }
 
     const resetQuiz = () => {
+        clearSession()
         setCurrentQuestionIndex(0)
         setAnswers(new Array(questions.length).fill(null))
         setBookmarks([])
@@ -425,6 +478,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
         } catch (error) {
             console.error("Error saving quiz result:", error)
+            toast.error('Result save nahi ho saka — but tumhara score yahan dikha raha hai!', { duration: 5000 })
             // Don't re-throw. We want to allow the UI to finish even if saving fails.
             // The user will see locally calculated results (from Context) even if Firestore fails.
         }
