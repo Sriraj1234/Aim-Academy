@@ -53,7 +53,7 @@ export default function StudyHubAdmin() {
 
                     if (categoryData && categoryData.chapters) {
                         // Robust Subject Matching: Try exact match, then case-insensitive
-                        let targetSubject = formData.subject;
+                        const targetSubject = formData.subject;
                         const availableSubjects = Object.keys(categoryData.chapters);
 
                         // Try to find the correct casing key from available subjects
