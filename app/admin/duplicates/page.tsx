@@ -135,7 +135,7 @@ export default function DuplicatesPage() {
             const totalGroups = allGroups.length;
 
             // Collect all IDs to delete
-            let idsToDelete: string[] = [];
+            const idsToDelete: string[] = [];
 
             allGroups.forEach(group => {
                 // Assuming group is already sorted Newest First by scan logic
