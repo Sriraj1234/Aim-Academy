@@ -43,7 +43,7 @@ export async function GET() {
                 const optionC = row['Option C'] || row['option c'] || row['C'];
                 const optionD = row['Option D'] || row['option d'] || row['D'];
 
-                let rawAnswer = (row['Correct Answer'] || row['correct answer'] || row['Answer'] || '').toString().trim().toLowerCase();
+                const rawAnswer = (row['Correct Answer'] || row['correct answer'] || row['Answer'] || '').toString().trim().toLowerCase();
 
                 // 4. Normalize Answer
                 let correctAnswer = '';
