@@ -116,7 +116,18 @@ IMPORTANT: correctAnswer is 0-indexed. Return ONLY the JSON array, no other text
         });
 
         if (!response.ok) {
-            throw new Error('AI API error');
+            if (response.status === 429) {
+                return NextResponse.json(
+                    { success: false, error: 'AI service ki daily limit khatam ho gayi. Thodi der baad try karo! ⏳' },
+                    { status: 429 }
+                );
+            }
+            const errorBody = await response.text().catch(() => '');
+            console.error('GROQ API error:', response.status, errorBody);
+            return NextResponse.json(
+                { success: false, error: `AI service error (${response.status}). Please try again.` },
+                { status: 502 }
+            );
         }
 
         const data = await response.json();
