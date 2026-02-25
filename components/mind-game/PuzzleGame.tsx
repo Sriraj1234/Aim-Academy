@@ -48,7 +48,7 @@ export default function PuzzleGame({ imageUrl, difficulty, onComplete, onExit }:
         setIsSolved(false);
         setMoves(0);
 
-        let currentWrapper = [...getSolvedState()];
+        const currentWrapper = [...getSolvedState()];
         let currentEmpty = TOTAL_TILES - 1;
         let previousMove = -1;
 
