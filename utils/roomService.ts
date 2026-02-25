@@ -9,6 +9,7 @@ export interface Player {
     score: number;
     status: 'joined' | 'ready' | 'submitted';
     answers: { [key: number]: number }; // questionIndex: answerIndex
+    disconnected_at?: number | null; // Timestamp when player disconnected (null = connected)
 }
 
 export interface Room {
@@ -235,3 +236,38 @@ export const endGame = async (roomId: string) => {
         status: 'finished'
     });
 };
+
+// ─── Graceful Reconnection ─────────────────────────────────────────────────
+
+/**
+ * Mark a player as disconnected (sets a timestamp).
+ * Called on beforeunload — does NOT remove the player from the room.
+ * The room listener will clean up the player only after RECONNECT_GRACE_MS.
+ */
+export const RECONNECT_GRACE_MS = 30_000; // 30 seconds
+
+export const markDisconnected = async (roomId: string, playerId: string) => {
+    const roomRef = doc(db, 'rooms', roomId);
+    try {
+        await updateDoc(roomRef, {
+            [`players.${playerId}.disconnected_at`]: Date.now()
+        });
+    } catch {
+        // Room might already be gone — silently ignore
+    }
+};
+
+/**
+ * Clear the disconnected_at flag when a player successfully rejoins.
+ */
+export const rejoinRoom = async (roomId: string, playerId: string) => {
+    const roomRef = doc(db, 'rooms', roomId);
+    try {
+        await updateDoc(roomRef, {
+            [`players.${playerId}.disconnected_at`]: deleteField()
+        });
+    } catch {
+        // Room might no longer exist
+    }
+};
+
