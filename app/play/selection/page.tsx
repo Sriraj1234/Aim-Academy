@@ -139,7 +139,7 @@ function SelectionContent() {
 
                     const mergeData = (key: string) => {
                         if (fullTaxonomy[key]) {
-                            const data = fullTaxonomy[key] as Taxonomy;
+                            const data = fullTaxonomy[key] as CategoryData;
 
                             // Merge Subjects (avoiding strict duplicates if exact string match)
                             if (data.subjects) {
