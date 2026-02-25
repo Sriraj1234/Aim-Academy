@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp, arrayUnion, deleteField, query, where, getDocs, increment } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, deleteField, increment, FieldValue } from 'firebase/firestore';
 
 export interface Player {
     id: string; // This is the socket/session ID or Firestore key
@@ -15,10 +15,10 @@ export interface Room {
     roomId: string;
     hostId: string;
     status: 'waiting' | 'in-progress' | 'finished';
-    createdAt: any;
+    createdAt: FieldValue | number;
     subject: string;
     chapter: string;
-    questions: any[];
+    questions: Record<string, unknown>[];
     players: { [key: string]: Player };
     currentQuestionIndex: number; // For synced gameplay
     questionStartTime?: number; // Timestamp for 30s timer sync
@@ -30,7 +30,7 @@ const generateRoomId = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-export const createRoom = async (hostName: string, subject: string, chapter: string, questions: any[], userId?: string, photoURL?: string) => {
+export const createRoom = async (hostName: string, subject: string, chapter: string, questions: Record<string, unknown>[], userId?: string, photoURL?: string) => {
     // 1. Check removed: User can create multiple rooms
     const roomId = generateRoomId();
     const hostId = userId || `host-${Date.now()}`;
@@ -133,9 +133,10 @@ export const leaveRoom = async (roomId: string, playerId: string) => {
         await updateDoc(roomRef, {
             [`players.${playerId}`]: deleteField()
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Verify if error is "No document to update" (code: not-found)
-        if (error.code === 'not-found' || error.toString().includes('No document to update')) {
+        const err = error as { code?: string; toString(): string };
+        if (err.code === 'not-found' || err.toString().includes('No document to update')) {
             console.warn(`Room ${roomId} already deleted. Leave action skipped.`);
             return;
         }
@@ -185,7 +186,7 @@ export const createEmptyRoom = async (hostName: string, userId: string, photoURL
     return { roomId, isExisting: false };
 };
 
-export const updateRoomConfig = async (roomId: string, subject: string, chapter: string, questions: any[]) => {
+export const updateRoomConfig = async (roomId: string, subject: string, chapter: string, questions: Record<string, unknown>[]) => {
     const roomRef = doc(db, 'rooms', roomId);
     await updateDoc(roomRef, {
         subject,
@@ -208,7 +209,7 @@ export const submitAnswer = async (roomId: string, playerId: string, questionInd
     const key = `players.${playerId}`;
 
     // Build updates object
-    const updates: any = {
+    const updates: Record<string, unknown> = {
         [`${key}.answers.${questionIndex}`]: answerIndex,
     };
 
