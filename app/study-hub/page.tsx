@@ -50,7 +50,7 @@ export default function StudyHubPage() {
             try {
                 // Base Query
                 const resourcesRef = collection(db, 'video_resources');
-                let q = query(
+                const q = query(
                     resourcesRef,
                     where('board', '==', selectedBoard),
                     where('classLevel', '==', selectedClass),
