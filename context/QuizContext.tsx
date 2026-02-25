@@ -133,7 +133,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             const fetchLimit = Math.min(count * 2, 100); // Fetch extra for shuffling
             const qQuery = query(questionsRef, ...constraints, limit(fetchLimit));
 
-            let snapshot = await getDocs(qQuery)
+            const snapshot = await getDocs(qQuery)
             let q: Question[] = []
 
             snapshot.forEach(doc => {
