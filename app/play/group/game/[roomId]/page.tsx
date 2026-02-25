@@ -65,9 +65,12 @@ export default function GamePage() {
             setTimeout(() => setShowExitWarning(false), 2000);
         };
 
-        const handleUnload = () => {
-            // Only leave if NOT navigating to results
+        const handleUnload = (event: BeforeUnloadEvent) => {
+            // Only show confirmation + leave if NOT navigating to results
             if (!isNavigatingToResults.current) {
+                // Show browser's native "Leave page?" dialog on refresh / tab close
+                event.preventDefault();
+                event.returnValue = ''; // Required for Chrome
                 leaveRoom(roomId as string, playerId).catch(console.error);
             }
         };
