@@ -63,10 +63,24 @@ const UploadPage = () => {
                 const notesSnapshot = await getDocs(notesQuery)
                 setNotes(notesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })))
 
-                // Fetch question count
-                const questionsCol = collection(db, 'questions')
-                const countSnapshot = await getCountFromServer(questionsCol)
-                setTotalQuestions(countSnapshot.data().count)
+                // Fetch question count — now using collectionGroup across all subcollections
+                // Note: getCountFromServer doesn't support collectionGroup easily,
+                // so we store a counter in metadata or just skip the count fetch.
+                // For now, show estimated count from metadata.
+                try {
+                    const metaSnap = await getDoc(doc(db, 'metadata', 'taxonomy'));
+                    if (metaSnap.exists()) {
+                        const meta = metaSnap.data();
+                        const total = Object.values(meta).reduce((sum: number, v: any) => {
+                            if (v && v.chapters) {
+                                return sum + Object.values(v.chapters).reduce((s: number, chaps: any) =>
+                                    s + (Array.isArray(chaps) ? chaps.reduce((cs: number, c: any) => cs + (c.count || 1), 0) : 0), 0);
+                            }
+                            return sum;
+                        }, 0);
+                        setTotalQuestions(total as number);
+                    }
+                } catch { /* non-critical */ }
             } catch (error) {
                 console.error("Error fetching data:", error)
             }
@@ -298,7 +312,12 @@ const UploadPage = () => {
                         );
                         const docId = `${baseId}_${uniqueSuffix}`;
 
-                        const docRef = doc(db, 'questions', docId)
+                        // ── Hierarchical path: questions/{board}/{class}/{stream}/{subject}/{docId} ──
+                        const boardKey = (() => { const b = finalBoard.toLowerCase(); if (b === 'bihar board' || b === 'bseb') return 'BSEB'; if (b === 'cbse') return 'CBSE'; if (b === 'icse') return 'ICSE'; if (b === 'up board' || b === 'up') return 'UP'; return finalBoard.trim(); })();
+                        const classKey = (() => { const c = finalClass.toString().replace(/[^0-9]/g, ''); return c ? `Class ${c}` : finalClass.trim(); })();
+                        const streamKey = (() => { const lvl = parseInt(finalClass.toString().replace(/[^0-9]/g, '') || '0', 10); return lvl >= 11 ? (finalStream || 'Science').trim() : 'general'; })();
+                        const subjectKey2 = (q.subject || 'general').trim();
+                        const docRef = doc(db, `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey2}`, docId)
                         batch.set(docRef, {
                             question: q.question,
                             options: q.options,
