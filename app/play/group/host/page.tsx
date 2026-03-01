@@ -2,7 +2,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, getDocs, query, where, limit, doc, getDoc, orderBy, documentId } from 'firebase/firestore';
+import { collection, collectionGroup, getDocs, query, where, limit, doc, getDoc, orderBy, documentId } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { createRoom, updateRoomConfig } from '@/utils/roomService';
 import { FaBook, FaLayerGroup, FaPlay, FaSpinner, FaArrowLeft, FaCheckCircle, FaFlask, FaGlobeAmericas, FaLanguage, FaCalculator, FaTimes, FaSave, FaCrown } from 'react-icons/fa';
@@ -160,7 +160,7 @@ function HostGameContent() {
             console.warn("Metadata key missing or fetch failed. Scanning 'questions' collection...");
             console.warn("No metadata found. Scanning 'questions' collection dynamically...");
             try {
-                const qSnap = await getDocs(query(collection(db, 'questions'), limit(500)));
+                const qSnap = await getDocs(query(collectionGroup(db, 'questions'), limit(500)));
 
                 const subjectsSet = new Set<string>();
                 const chaptersMap: Record<string, { name: string; count: number }[]> = {};
@@ -220,32 +220,29 @@ function HostGameContent() {
         setIsLoading(true);
 
         try {
-            const qRef = collection(db, 'questions');
+            // ── Build hierarchical path based on user profile ──
+            const boardRaw = userProfile?.board || 'BSEB';
+            const clsRaw = userProfile?.class || '10';
+            const streamRaw = userProfile?.stream || 'Science';
+            const boardKey = (() => { const b = boardRaw.toLowerCase(); if (b === 'bihar board' || b === 'bseb') return 'BSEB'; if (b === 'cbse') return 'CBSE'; if (b === 'icse') return 'ICSE'; return boardRaw.trim(); })();
+            const classKey = (() => { const c = clsRaw.toString().replace(/[^0-9]/g, ''); return c ? `Class ${c}` : clsRaw.trim(); })();
+            const level = parseInt(clsRaw.toString().replace(/[^0-9]/g, '') || '0', 10);
+            const streamKey = level >= 11 ? (streamRaw || 'Science').trim() : 'general';
+            const subjectPath = `questions/${boardKey}/${classKey}/${streamKey}/${selectedSubject}`;
+
+            const qRef = collection(db, subjectPath);
             let q: any;
 
-            // NEW: Randomize by picking a random start point
-            const randomId = doc(collection(db, 'questions')).id;
+            // Build constraints for this subcollection (chapter filter only — board/class already in path)
             const constraints: any[] = [];
 
-            // 1. Isolation Filters (Board & Class)
-            if (userProfile?.board) {
-                constraints.push(where('board', '==', userProfile.board.toLowerCase()));
-            }
-            if (userProfile?.class) {
-                // Handle both string/number variance
-                constraints.push(where('class', 'in', [String(userProfile.class), Number(userProfile.class)]));
-            }
-
             if (selectedChapter && selectedChapter !== 'All Mixed') {
-                constraints.push(where('subject', '==', selectedSubject));
                 constraints.push(where('chapter', '==', selectedChapter));
-            } else {
-                constraints.push(where('subject', '==', selectedSubject));
             }
 
-            // Add Random Cursor + Limit
+            // Random cursor approach: get a random ID and query >= it
+            const randomId = doc(qRef).id;
             const randomConstraints = [...constraints, where(documentId(), '>=', randomId), orderBy(documentId()), limit(selectedCount)];
-
             q = query(qRef, ...randomConstraints);
             const snap = await getDocs(q);
             let questions = snap.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
@@ -253,7 +250,6 @@ function HostGameContent() {
             // Wrap around if not enough
             if (questions.length < selectedCount) {
                 const remaining = selectedCount - questions.length;
-                console.log(`Host Game: Hit end, wrapping for ${remaining}...`);
                 const wrapConstraints = [...constraints, where(documentId(), '>=', ' '), orderBy(documentId()), limit(remaining)];
                 const wrapQuery = query(qRef, ...wrapConstraints);
                 const wrapSnap = await getDocs(wrapQuery);
