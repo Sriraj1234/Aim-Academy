@@ -232,28 +232,31 @@ export async function* getGroqChatStream(
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
+        let buffer = "";
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // Keep the last incomplete line in the buffer
 
             for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6).trim();
-                    if (data === '[DONE]') break;
+                const trimmedLine = line.trim();
+                if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
 
-                    try {
-                        const parsed = JSON.parse(data);
-                        const content = parsed.choices?.[0]?.delta?.content;
-                        if (content) {
-                            yield content;
-                        }
-                    } catch (e) {
-                        // ignore malformed JSON chunks
+                const data = trimmedLine.slice(6).trim();
+                if (data === '[DONE]') break;
+
+                try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.choices?.[0]?.delta?.content;
+                    if (content) {
+                        yield content;
                     }
+                } catch (e) {
+                    // silently ignore malformed inner JSON
                 }
             }
         }
