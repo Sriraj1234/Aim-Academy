@@ -220,15 +220,20 @@ function HostGameContent() {
         setIsLoading(true);
 
         try {
-            // ── Build hierarchical path based on user profile ──
-            const boardRaw = userProfile?.board || 'BSEB';
+            // ── Build hierarchical path (ALL LOWERCASE — matches clean migration) ──
+            // Path: questions/{board}/{class_N}/{stream}/{subject}
+            const boardRaw = userProfile?.board || 'bseb';
             const clsRaw = userProfile?.class || '10';
-            const streamRaw = userProfile?.stream || 'Science';
-            const boardKey = (() => { const b = boardRaw.toLowerCase(); if (b === 'bihar board' || b === 'bseb') return 'BSEB'; if (b === 'cbse') return 'CBSE'; if (b === 'icse') return 'ICSE'; return boardRaw.trim(); })();
-            const classKey = (() => { const c = clsRaw.toString().replace(/[^0-9]/g, ''); return c ? `Class ${c}` : clsRaw.trim(); })();
+            const streamRaw = userProfile?.stream || '';
             const level = parseInt(clsRaw.toString().replace(/[^0-9]/g, '') || '0', 10);
-            const streamKey = level >= 11 ? (streamRaw || 'Science').trim() : 'general';
-            const subjectPath = `questions/${boardKey}/${classKey}/${streamKey}/${selectedSubject}`;
+
+            const boardKey = (() => { const b = boardRaw.toLowerCase(); if (b === 'bihar board' || b === 'bseb') return 'bseb'; if (b === 'cbse') return 'cbse'; if (b === 'icse') return 'icse'; return b || 'bseb'; })();
+            const classKey = (() => { const n = clsRaw.toString().replace(/[^0-9]/g, ''); return n ? `class_${n}` : 'class_other'; })();
+            const streamKey = level >= 11 ? ((streamRaw || 'science').toLowerCase().trim() || 'science') : 'general';
+            // Lowercase subject + spaces → underscores  ("Social Science" → "social_science")
+            const subjectKey = selectedSubject.toLowerCase().trim().replace(/\s+/g, '_');
+            const subjectPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
+
 
             const qRef = collection(db, subjectPath);
             let q: any;
