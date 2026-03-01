@@ -22,8 +22,9 @@ export async function GET() {
         console.log("Found sheets:", sheetNames);
 
         let totalUploaded = 0;
-        const questionsCollection = collection(db, 'questions');
-        const taxonomyUpdates: Record<string, any> = {};
+        // Hierarchical path: questions/BSEB/Class 10/general/sanskrit
+        const questionsCollection = collection(db, 'questions/BSEB/Class 10/general/sanskrit');
+
 
         // 2. Iterate Sheets
         for (const sheetName of sheetNames) {
