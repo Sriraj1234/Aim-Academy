@@ -7,7 +7,7 @@ import { Question, CategoryData } from '@/data/types'
 import { mockQuestions } from '@/data/mock'
 import { db } from '@/lib/firebase'
 import { mistakesLocalStore } from '@/utils/mistakesLocalStore'
-import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId, setDoc } from 'firebase/firestore'
+import { collection, collectionGroup, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId, setDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
 
 interface QuizContextType {
@@ -118,85 +118,72 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
         setEndTime(0)
 
         try {
-            const questionsRef = collection(db, 'questions')
-            // Remove hardcoded limit(50), use the requested count
-            const constraints: any[] = [limit(count)];
+            // ── Build hierarchical path: questions/{board}/{class}/{stream}/{subject} ──
+            const boardRaw = userProfile?.board || '';
+            const clsRaw = userProfile?.class || '';
+            const streamRaw = userProfile?.stream || 'Science';
 
-            // Essential Filters: Board & Class (Isolation)
-            if (userProfile?.board) {
-                // Handle Case Mismatch: Upload might be 'BSEB', app uses 'bseb'
-                // We use 'in' operator to catch both. This is safe as it's the only 'in' (or 'array-contains') clause currently.
-                const rawBoard = userProfile.board;
-                // Generate lower and UPPER case variants to catch 'bseb' AND 'BSEB'
-                const variants = Array.from(new Set([
-                    rawBoard,
-                    rawBoard.toLowerCase(),
-                    rawBoard.toUpperCase()
-                ]));
+            // Normalize board
+            const boardKey = (() => {
+                const b = boardRaw.toLowerCase();
+                if (b === 'bihar board' || b === 'bseb') return 'BSEB';
+                if (b === 'cbse') return 'CBSE';
+                if (b === 'icse') return 'ICSE';
+                if (b === 'up board' || b === 'up') return 'UP';
+                return boardRaw.trim() || 'BSEB'; // default fallback
+            })();
 
-                constraints.push(where('board', 'in', variants));
+            // Normalize class
+            const classKey = (() => {
+                const c = clsRaw.toString().replace(/[^0-9]/g, '');
+                return c ? `Class ${c}` : clsRaw.trim() || 'Class 10';
+            })();
+
+            // Resolve stream (only for Class 11+)
+            const level = parseInt(clsRaw.toString().replace(/[^0-9]/g, '') || '0', 10);
+            const streamKey = level >= 11 ? (streamRaw || 'Science').trim() : 'general';
+
+            // Map UI subject names to DB subject names
+            let dbSubject = subject || '';
+            if (dbSubject.includes('English')) dbSubject = 'English';
+            else if (dbSubject.includes('Hindi')) dbSubject = 'Hindi';
+
+            // Capitalise first letter to match DB (e.g. "chemistry" → "Chemistry")
+            if (dbSubject) {
+                dbSubject = dbSubject.charAt(0).toUpperCase() + dbSubject.slice(1);
             }
-            // CLASS FILTER REMOVED from Firestore query to avoid Composite Index errors.
-            // We now fetch by Board + Subject + Chapter (sufficiently small dataset) 
-            // and filter by Class in-memory below.
 
-            if (subject) {
-                // Map UI Subject (e.g. "English Prose") to DB Subject ("English")
-                let dbSubject = subject;
-                if (subject.includes('English')) dbSubject = 'English';
-                else if (subject.includes('Hindi')) dbSubject = 'Hindi'; // Handles "Hindi Prose", "Hindi Gadya" etc.
-
-                // Robust filtering: Check both Title Case and lowercase
-                const variants = Array.from(new Set([
-                    dbSubject,
-                    dbSubject.toLowerCase(),
-                    dbSubject.charAt(0).toUpperCase() + dbSubject.slice(1).toLowerCase()
-                ]));
-                constraints.push(where('subject', 'in', variants));
+            let questionsRef;
+            if (boardKey && classKey && dbSubject) {
+                // Use precise subcollection path
+                const colPath = `questions/${boardKey}/${classKey}/${streamKey}/${dbSubject}`;
+                console.log('QuizContext: querying path', colPath);
+                questionsRef = collection(db, colPath);
+            } else {
+                // Fallback: collectionGroup (slower, requires index)
+                console.warn('QuizContext: falling back to collectionGroup');
+                questionsRef = collectionGroup(db, 'questions') as any;
             }
+
+            // Only add chapter filter — board/class/subject are encoded in the path
+            const constraints: any[] = [];
             if (chapter) {
                 constraints.push(where('chapter', '==', chapter));
             }
 
-            // Note: Firestore requires composite indexes for multiple 'where' clauses.
-            // If this fails, we might need to filter client-side or create those indexes.
-            // For safety and strict isolation, server-side filtering is best.
-
-            // Simple query without randomization (avoids complex composite index requirements)
-            console.log("Fetching questions with constraints:", {
-                board: userProfile?.board,
-                class: userProfile?.class,
-                subject,
-                chapter
-            });
-
-            // Fetch more than needed, then shuffle and slice client-side
-            const fetchLimit = Math.min(count * 2, 100); // Fetch extra for shuffling
+            // Fetch 2x the count for shuffling
+            const fetchLimit = Math.min(count * 3, 200);
             const qQuery = query(questionsRef, ...constraints, limit(fetchLimit));
+
+            console.log('QuizContext: fetching questions', { boardKey, classKey, streamKey, subject: dbSubject, chapter, count });
 
             const snapshot = await getDocs(qQuery)
             let q: Question[] = []
 
-            snapshot.forEach(doc => {
-                const data = doc.data();
-
-                // IN-MEMORY FILTER: Ensure Class matches
-                // Firestore query dropped class filter to avoid index issues, so we MUST check here.
-                if (userProfile?.class && data.class) {
-                    const userClass = String(userProfile.class).replace(/\D/g, '');
-                    const qClass = String(data.class).replace(/\D/g, '');
-
-                    // Relaxed Check: If both result in a valid number, compare them.
-                    // If either is empty (e.g. "General"), let it pass or strict? 
-                    // Let's assume if user has class, we strictly want that class's content OR content marked 'all'.
-                    if (userClass && qClass && userClass !== qClass && String(data.class).toLowerCase() !== 'all') {
-                        return;
-                    }
-                }
-
-                // Ensure we haven't already added it from wrap-around (unlikely order but safe)
-                if (!q.some(existing => existing.id === doc.id)) {
-                    q.push({ id: doc.id, ...data } as Question)
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data() as Record<string, unknown>;
+                if (!q.some(existing => existing.id === docSnap.id)) {
+                    q.push({ id: docSnap.id, ...data } as unknown as Question)
                 }
             })
 
