@@ -149,12 +149,33 @@ export const DashboardHeader = () => {
                                 <p className="text-pw-indigo/80 text-xs md:text-sm font-medium flex items-center gap-1.5 mb-0.5" suppressHydrationWarning>
                                     {greeting.text} <span className="text-sm md:text-base">{greeting.emoji}</span>
                                 </p>
-                                <div className="flex flex-col items-start">
+                                <div className="flex flex-col items-start gap-1">
                                     <h2 className="text-xl md:text-2xl font-bold text-pw-violet leading-tight truncate tracking-tight">
                                         {user?.displayName || 'Future Scholar'}
                                     </h2>
+
+                                    {/* Pro Plan Banner */}
+                                    {userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.expiryDate && (() => {
+                                        const now = Date.now();
+                                        const expiry = userProfile.subscription.expiryDate;
+                                        const remainingDays = Math.max(0, Math.ceil((expiry - now) / (1000 * 60 * 60 * 24)));
+
+                                        if (remainingDays > 0) {
+                                            return (
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-amber-100 to-yellow-50 border border-amber-200 rounded-full shadow-sm">
+                                                    <span className="text-amber-500 text-xs">👑</span>
+                                                    <span className="text-[10px] md:text-xs font-bold text-amber-700 uppercase tracking-wide">
+                                                        Pro Active • {remainingDays} Days Left
+                                                    </span>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
+
+                                    {/* Guest Login Hint */}
                                     {!user && (
-                                        <button onClick={() => router.push('/login')} className="mt-1 flex items-center gap-2 group">
+                                        <button onClick={() => router.push('/login')} className="flex items-center gap-2 group">
                                             <span className="text-xs font-bold text-pw-indigo group-hover:text-pw-violet transition-colors">
                                                 Guest Student
                                             </span>
