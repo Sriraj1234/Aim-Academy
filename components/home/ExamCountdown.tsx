@@ -58,15 +58,20 @@ export const ExamCountdown = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [customDate, setCustomDate] = useState('');
     const [saving, setSaving] = useState(false);
+    // Immediate local override — set when user saves so countdown updates
+    // without waiting for Firestore onSnapshot network round-trip
+    const [manualDate, setManualDate] = useState<Date | null>(null);
 
-    // Memoize exam date calculation, with localStorage cache for instant load
+    // Resolved exam date: manualDate (user just saved) > userProfile > localStorage cache
     const examDate = useMemo(() => {
+        // 0. User just saved a new date — use immediately (no network wait)
+        if (manualDate) return manualDate;
+
         // 1. If userProfile has loaded, use it and update cache
         if (userProfile) {
             let date: Date;
             if (userProfile.examDate) {
                 const custom = new Date(userProfile.examDate);
-                // If custom date is in the past, fall back to board default
                 date = custom > new Date() ? custom : getNextExamDate(
                     BOARD_EXAM_MONTH_DAY[(userProfile.board || 'other').toLowerCase()]
                     ?? BOARD_EXAM_MONTH_DAY['other']
@@ -76,7 +81,6 @@ export const ExamCountdown = () => {
                 const monthDay = BOARD_EXAM_MONTH_DAY[board] ?? BOARD_EXAM_MONTH_DAY['other'];
                 date = getNextExamDate(monthDay);
             }
-            // Persist to localStorage for instant next load
             try { localStorage.setItem(EXAM_DATE_CACHE_KEY, date.toISOString()); } catch { /* ignore */ }
             return date;
         }
@@ -88,8 +92,7 @@ export const ExamCountdown = () => {
         } catch { /* ignore */ }
 
         return null;
-    }, [userProfile]);
-
+    }, [manualDate, userProfile]);
 
     useEffect(() => {
         if (!examDate) return;
@@ -127,22 +130,29 @@ export const ExamCountdown = () => {
     const handleSaveDate = async () => {
         if (!user || !customDate) return;
 
+        const date = new Date(customDate);
+        if (isNaN(date.getTime()) || date <= new Date()) {
+            toast.error('Please select a future date!');
+            return;
+        }
+
         setSaving(true);
+        // ✅ Update countdown IMMEDIATELY — don't wait for Firestore
+        setManualDate(date);
+        setIsEditing(false);
+
         try {
-            const date = new Date(customDate);
             const ts = date.getTime();
             await updateDoc(doc(db, 'users', user.uid), { examDate: ts });
             // Save ISO string to cache (more reliable than raw timestamp string)
             try { localStorage.setItem(EXAM_DATE_CACHE_KEY, date.toISOString()); } catch { /* ignore */ }
             toast.success('Exam date saved! ✅');
-            setIsEditing(false);
         } catch (error) {
             console.error('Error saving exam date:', error);
-            toast.error('Could not save exam date. Try again.');
+            toast.error('Could not save. Date set locally only.');
         } finally {
             setSaving(false);
         }
-
     };
 
     const motivation = getMotivationalMessage();
