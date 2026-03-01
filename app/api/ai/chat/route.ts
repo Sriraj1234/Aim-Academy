@@ -16,7 +16,7 @@ import {
     AIM_BUDDY_INSTRUCTION
 } from '@/lib/gemini';
 import { adminDb } from '@/lib/firebase-admin';
-import { getGroqChatCompletion } from '@/lib/groq';
+import { getGroqChatCompletion, getGroqChatStream } from '@/lib/groq';
 import { performWebSearch, performImageSearch } from '@/lib/search';
 import { syllabusData } from '@/data/syllabusData';
 
@@ -178,7 +178,7 @@ Respond ONLY with the category value.`
                             { role: 'user', content: body.message }
                         ];
 
-                        const intentCheck = await getGroqChatCompletion(intentMessages, 0.1, 10, 'llama-3.1-8b-instant');
+                        const intentCheck = await getGroqChatCompletion(intentMessages, 0.1, 10, 'llama-3.3-70b-versatile');
                         const intent = intentCheck.reply.trim().toUpperCase();
 
                         // 2. Execute Tools
@@ -207,7 +207,7 @@ Respond ONLY with the category value.`
                             }
                         }
 
-                        else if (intent.includes('WEB') || body.message.match(/current|latest|news|who is|price|date|syllabus/i)) {
+                        else if (intent.includes('WEB') || body.message.match(/current|latest|news|who is|price|date|syllabus|search|find out|duckduckgo|google|live/i)) {
                             sendEvent({ status: 'searching_web' });
                             const query = body.message.replace(/search|find|google|about/gi, '').trim();
                             const searchResults = await performWebSearch(query);
@@ -238,15 +238,17 @@ Respond ONLY with the category value.`
                             { role: 'user', content: body.message }
                         ];
 
-                        const groqResult = await getGroqChatCompletion(groqMessages, 0.7, 1024, 'llama-3.1-8b-instant');
-
-                        if (groqResult.success && groqResult.reply) {
-                            sendEvent({ text: groqResult.reply });
+                        try {
+                            const streamGenerator = getGroqChatStream(groqMessages, 0.7, 1024, 'llama-3.3-70b-versatile');
+                            for await (const chunk of streamGenerator) {
+                                sendEvent({ text: chunk });
+                            }
                             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
                             controller.close();
                             return;
-                        } else {
-                            sendEvent({ debug_error: `Groq Failed: ${groqResult.error}` });
+                        } catch (groqError: any) {
+                            console.error('Groq Streaming Failed:', groqError);
+                            sendEvent({ debug_error: `Groq Failed: ${groqError.message}` });
                         }
                     }
 
