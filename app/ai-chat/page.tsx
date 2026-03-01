@@ -17,7 +17,7 @@ interface Message {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
-    images?: { title: string; image: string; thumbnail?: string }[];
+    images?: { title: string; image: string; url?: string; thumbnail?: string }[];
 }
 
 export default function AIChatPage() {
@@ -402,6 +402,20 @@ export default function AIChatPage() {
                                         </ReactMarkdown>
                                     </div>
                                 </div>
+
+                                {/* Render Inline Web Search Images */}
+                                {msg.images && msg.images.length > 0 && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                                        {msg.images.slice(0, 3).map((img, idx) => (
+                                            <a key={idx} href={img.url} target="_blank" rel="noopener noreferrer" className="block group rounded-xl overflow-hidden border border-gray-200 shadow-sm relative aspect-video bg-gray-100">
+                                                <SafeImage src={img.thumbnail || img.image} alt={img.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" width={300} />
+                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-white text-[10px] font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {img.title}
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
 
                                 {msg.role === 'assistant' && (
                                     <div className="flex ml-2">
