@@ -30,20 +30,43 @@ const DiscussionSection = dynamic(() => import('@/components/home/DiscussionSect
 
 
 import { useAuth } from '@/context/AuthContext'
-import { useRouter } from 'next/navigation' // Add router
-import { useEffect } from 'react' // Add useEffect
-import { InteractiveLoading } from '@/components/shared/InteractiveLoading' // Add loader
+import { useRouter } from 'next/navigation'
+import { useEffect, useRef } from 'react'
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading'
+
+const SCROLL_CACHE_KEY = 'home_scroll_position';
 
 export default function DashboardPage() {
     const { user, loading } = useAuth()
     const router = useRouter()
+    const scrollSaverRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Removed forced redirect to login for guest access
-    // useEffect(() => {
-    //     if (!loading && !user) {
-    //         router.push('/login')
-    //     }
-    // }, [user, loading, router])
+    // ── Last Visited Section: save & restore scroll ──────────────────────────
+    useEffect(() => {
+        // Restore scroll position from last visit (within same session)
+        const saved = sessionStorage.getItem(SCROLL_CACHE_KEY);
+        if (saved) {
+            const y = parseInt(saved, 10);
+            // Small delay so DOM has rendered
+            const t = setTimeout(() => window.scrollTo({ top: y, behavior: 'instant' }), 100);
+            return () => clearTimeout(t);
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            // Debounce: only save scroll position 300ms after user stops scrolling
+            if (scrollSaverRef.current) clearTimeout(scrollSaverRef.current);
+            scrollSaverRef.current = setTimeout(() => {
+                sessionStorage.setItem(SCROLL_CACHE_KEY, String(window.scrollY));
+            }, 300);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            if (scrollSaverRef.current) clearTimeout(scrollSaverRef.current);
+        };
+    }, []);
 
     if (loading) return <InteractiveLoading message="Loading Dashboard..." fullScreen />
 

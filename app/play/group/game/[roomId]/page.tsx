@@ -65,13 +65,11 @@ export default function GamePage() {
             setTimeout(() => setShowExitWarning(false), 2000);
         };
 
-        const handleUnload = (event: BeforeUnloadEvent) => {
-            // Only show confirmation + mark disconnected if NOT navigating to results
+        const handleUnload = () => {
+            // On refresh/tab close: silently mark disconnected (30s grace period to rejoin)
+            // NOTE: We intentionally do NOT call event.preventDefault() — that was causing
+            // the "Reload site?" dialog on Android Chrome which confused users.
             if (!isNavigatingToResults.current) {
-                // Show browser's native "Leave page?" dialog on refresh / tab close
-                event.preventDefault();
-                event.returnValue = ''; // Required for Chrome
-                // ✅ CHANGED: mark disconnected instead of removing — gives 30s grace period
                 markDisconnected(roomId as string, playerId).catch(console.error);
             }
         };

@@ -1,18 +1,47 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { FaBookmark, FaTrash, FaPlay, FaChevronRight } from 'react-icons/fa'
+import { FaBookmark, FaTrash, FaChevronRight } from 'react-icons/fa'
 import { useAuth } from '@/context/AuthContext'
 import { db } from '@/lib/firebase'
 import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore'
 import { Question } from '@/data/types'
 import Link from 'next/link'
 
+const CACHE_KEY = 'bookmarked_questions_cache';
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+interface CachedBookmarks {
+    ids: string[];          // the bookmark IDs this cache represents
+    questions: Question[];
+    fetchedAt: number;
+}
+
+function loadCache(): CachedBookmarks | null {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw) as CachedBookmarks;
+    } catch {
+        return null;
+    }
+}
+
+function saveCache(ids: string[], questions: Question[]) {
+    try {
+        const data: CachedBookmarks = { ids, questions, fetchedAt: Date.now() };
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    } catch {
+        // QuotaExceededError — ignore, cache is optional
+    }
+}
+
 export const BookmarkedQuestionsSection = () => {
     const { user, userProfile } = useAuth()
     const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Question[]>([])
     const [loading, setLoading] = useState(true)
+    const fetchedRef = useRef(false)
 
     useEffect(() => {
         const fetchBookmarks = async () => {
@@ -21,18 +50,33 @@ export const BookmarkedQuestionsSection = () => {
                 return
             }
 
+            const ids = userProfile.bookmarkedQuestions.slice(0, 10);
+
+            // ── 1. Check localStorage cache ──────────────────────────────────
+            const cached = loadCache();
+            const cacheValid =
+                cached &&
+                Date.now() - cached.fetchedAt < CACHE_TTL &&
+                ids.length === cached.ids.length &&
+                ids.every((id, i) => cached.ids[i] === id);
+
+            if (cacheValid && cached) {
+                setBookmarkedQuestions(cached.questions);
+                setLoading(false);
+                return;
+            }
+
+            // ── 2. Fetch from Firestore and save to cache ────────────────────
             try {
                 const questions: Question[] = []
-                // Fetch each bookmarked question (limit to 10 for display)
-                const idsToFetch = userProfile.bookmarkedQuestions.slice(0, 10)
-
-                for (const qId of idsToFetch) {
+                for (const qId of ids) {
                     const qDoc = await getDoc(doc(db, 'questions', qId))
                     if (qDoc.exists()) {
                         questions.push({ id: qDoc.id, ...qDoc.data() } as Question)
                     }
                 }
                 setBookmarkedQuestions(questions)
+                saveCache(ids, questions);
             } catch (error) {
                 console.error('Error fetching bookmarks:', error)
             } finally {
@@ -40,7 +84,11 @@ export const BookmarkedQuestionsSection = () => {
             }
         }
 
-        fetchBookmarks()
+        // Only fetch once per mount — userProfile changes shouldn't re-trigger if IDs are same
+        if (!fetchedRef.current) {
+            fetchedRef.current = true;
+            fetchBookmarks()
+        }
     }, [user, userProfile?.bookmarkedQuestions])
 
     const removeBookmark = async (questionId: string) => {
@@ -50,6 +98,8 @@ export const BookmarkedQuestionsSection = () => {
                 bookmarkedQuestions: arrayRemove(questionId)
             })
             setBookmarkedQuestions(prev => prev.filter(q => q.id !== questionId))
+            // Invalidate cache on removal
+            localStorage.removeItem(CACHE_KEY);
         } catch (error) {
             console.error('Error removing bookmark:', error)
         }

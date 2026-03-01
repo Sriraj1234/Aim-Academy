@@ -37,20 +37,42 @@ const notoSans = Noto_Sans({
   subsets: ['latin', 'devanagari'],
   weight: ['400', '500', '600'],
   display: 'swap',
-  preload: true,
+  preload: false, // Don't block startup — loads on demand
 })
 
 export const metadata: Metadata = {
   title: {
-    default: 'Padhaku - Best Bihar Board Learning App for Class 10 & 12',
-    template: '%s | Padhaku'
+    default: 'Padhaku — Free Bihar Board Online Test | BSEB Class 10 & 12 MCQ 2025',
+    template: '%s | Padhaku — Bihar Board'
   },
-  description: 'Master Bihar Board (BSEB) exams with Padhaku. Free online tests, objective questions, viral questions, and chapter-wise notes for Class 10 & 12 Matric/Inter exams 2025.',
+  description: 'Padhaku is Bihar\'s #1 free online test platform for BSEB Class 10 (Matric) & Class 12 (Inter) 2025. Practice chapter-wise objective questions, viral MCQs, model paper tests, and live quiz battles. 10,000+ students trust Padhaku.',
   keywords: [
-    'Bihar Board', 'Class 10', 'Class 12', 'Matric Exam 2025', 'Inter Exam 2025',
-    'Online Test', 'Objective Questions', 'BSEB', 'Bihar School Examination Board',
-    'Padhaku', 'Model Paper 2025', 'Viral Questions'
+    // Core brand
+    'Padhaku', 'Padhaku app', 'padhaku.co.in',
+    // Bihar Board primary
+    'Bihar Board online test', 'BSEB online test', 'Bihar Board MCQ',
+    'Bihar Board objective questions', 'Bihar Board 2025',
+    // Class 10
+    'Bihar Board Class 10', 'BSEB Matric exam', 'Class 10 MCQ Bihar Board',
+    'Bihar Board matric objective questions', 'matric exam online test 2025',
+    // Class 12
+    'Bihar Board Class 12', 'BSEB Inter exam', 'Class 12 MCQ Bihar Board',
+    'Bihar Board inter objective questions', 'inter exam online test 2025',
+    // Specific
+    'Bihar Board viral questions', 'BSEB model paper 2025',
+    'Bihar Board Science MCQ', 'Bihar Board Math MCQ', 'Bihar Board Hindi MCQ',
+    'Bihar Board Physics MCQ', 'Bihar Board Chemistry MCQ',
+    'Online test Bihar Board free', 'BSEB chapter wise MCQ',
+    'Bihar Board previous year questions'
   ],
+  alternates: {
+    canonical: 'https://padhaku.co.in',
+  },
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
   authors: [{ name: 'Padhaku Team' }],
   creator: 'Padhaku Team',
   publisher: 'Padhaku',
@@ -128,12 +150,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-          rel="stylesheet"
-        />
-      </head>
       <body
         className={`${outfit.variable} ${spaceGrotesk.variable} ${notoSans.variable} antialiased selection:bg-purple-500 selection:text-white overflow-x-hidden w-full`}
         suppressHydrationWarning
@@ -160,6 +176,6 @@ export default function RootLayout({
         </AuthProvider>
         <SpeedInsights />
       </body>
-    </html>
+    </html >
   )
 }

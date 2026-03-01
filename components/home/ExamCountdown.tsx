@@ -8,6 +8,8 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import toast from 'react-hot-toast';
 
+const EXAM_DATE_CACHE_KEY = 'exam_date_cache';
+
 interface TimeLeft {
     days: number;
     hours: number;
@@ -46,18 +48,29 @@ export const ExamCountdown = () => {
     const [customDate, setCustomDate] = useState('');
     const [saving, setSaving] = useState(false);
 
-    // Memoize exam date calculation to prevent re-renders and ensure stability
+    // Memoize exam date calculation, with localStorage cache for instant load
     const examDate = useMemo(() => {
-        if (!userProfile) return null;
-
-        if (userProfile.examDate) {
-            return new Date(userProfile.examDate);
+        // 1. If userProfile has loaded, use it and update cache
+        if (userProfile) {
+            let dateStr: string;
+            if (userProfile.examDate) {
+                dateStr = String(userProfile.examDate);
+            } else {
+                const board = (userProfile.board || 'other').toLowerCase();
+                dateStr = BOARD_EXAM_DATES[board] || BOARD_EXAM_DATES['other'];
+            }
+            // Persist to localStorage for instant next load
+            try { localStorage.setItem(EXAM_DATE_CACHE_KEY, dateStr); } catch { /* ignore */ }
+            return new Date(dateStr);
         }
 
-        const board = (userProfile.board || 'other').toLowerCase();
-        // Ensure strictly matched key or fallback
-        const dateString = BOARD_EXAM_DATES[board] || BOARD_EXAM_DATES['other'];
-        return new Date(dateString);
+        // 2. userProfile not yet loaded — use cached value for instant render
+        try {
+            const cached = localStorage.getItem(EXAM_DATE_CACHE_KEY);
+            if (cached) return new Date(cached);
+        } catch { /* ignore */ }
+
+        return null;
     }, [userProfile]);
 
     useEffect(() => {
@@ -98,9 +111,10 @@ export const ExamCountdown = () => {
 
         setSaving(true);
         try {
-            await updateDoc(doc(db, 'users', user.uid), {
-                examDate: new Date(customDate).getTime()
-            });
+            const ts = new Date(customDate).getTime();
+            await updateDoc(doc(db, 'users', user.uid), { examDate: ts });
+            // Update local cache immediately
+            try { localStorage.setItem(EXAM_DATE_CACHE_KEY, String(ts)); } catch { /* ignore */ }
             toast.success('Exam date updated!');
             setIsEditing(false);
         } catch (error) {
@@ -114,7 +128,7 @@ export const ExamCountdown = () => {
     const motivation = getMotivationalMessage();
 
 
-    if (!userProfile || !timeLeft) return null;
+    if (!timeLeft) return null;
 
     // Calculate progress (assuming 6 month preparation period)
     const totalDays = 180;

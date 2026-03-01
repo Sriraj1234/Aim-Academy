@@ -77,7 +77,7 @@ export const GameInviteListener = () => {
         setConfirmedInvite(null);
         setFeedbackMessage({ type: 'accepted', text: '✅ Joining Lobby...' });
 
-        router.push(`/play/group/lobby/${roomId}`);
+        router.push(`/play/group/lobby/${roomId}?autoJoin=true`);
     };
 
     const handleReject = async () => {

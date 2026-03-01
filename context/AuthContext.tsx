@@ -16,7 +16,7 @@ import {
     signOut,
     onAuthStateChanged
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, getDocFromServer, increment } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, increment } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
 import { UserProfile, GamificationStats } from '@/data/types'
@@ -93,10 +93,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 let isRegistered = false;
 
                 try {
-                    // --- STEP 1: REGISTER DEVICE (One-Time) ---
-                    // Force fetch from server to handle cases where user manually deleted doc in Console
-                    // This ensures we don't use a stale cached version where the doc still 'exists'
-                    const docSnap = await getDocFromServer(docRef).catch(() => getDoc(docRef)); // Fallback to cache if offline
+                    // Cache-first fetch — uses Firestore offline cache when available.
+                    // This is much faster than getDocFromServer which always hits the network.
+                    const docSnap = await getDoc(docRef).catch(async () => {
+                        // Fallback: if cache fails (highly unlikely), just getDoc again
+                        return getDoc(docRef);
+                    });
 
                     if (docSnap.exists()) {
                         const profileData = docSnap.data() as UserProfile;
@@ -121,19 +123,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                         await setDoc(docRef, {
                             activeDevices,
-                            email: user.email || profileData.email, // Sync latest email
-                            displayName: user.displayName || profileData.displayName, // Sync latest name
-                            photoURL: user.photoURL || profileData.photoURL // Sync latest photo
+                            email: user.email || profileData.email,
+                            displayName: user.displayName || profileData.displayName,
+                            photoURL: user.photoURL || profileData.photoURL
                         }, { merge: true });
-                        isRegistered = true; // Mark as successfully registered in DB
+                        isRegistered = true;
                     } else {
-                        // New Profile Creation handles the initial device array, so we consider it registered.
-                        // (Logic handled in the else block below for new users)
                         isRegistered = true;
                     }
                 } catch (e) {
                     console.error("Device registration failed", e);
-                    // If we can't register, we shouldn't enforce the kick logic yet, or maybe we should?
                 }
 
                 // --- STEP 2: REAL-TIME LISTENER ---
@@ -469,20 +468,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Safe Trial Logic: Robustly parse createdAt to handle potential Strings/Timestamps
     const isInTrial = userProfile ? (Date.now() - (parseDate(userProfile.createdAt) || 0) < 7 * 24 * 60 * 60 * 1000) && userProfile.subscription?.plan !== 'pro' : false;
-
-    // Debugging (Remove in Prod)
-    useEffect(() => {
-        if (userProfile) console.log("Trial Status Debug:", {
-            uid: userProfile.uid,
-            isInTrial,
-            createdAt: userProfile.createdAt,
-            parsed: parseDate(userProfile.createdAt),
-            now: Date.now(),
-            diff: Date.now() - (parseDate(userProfile.createdAt) || 0),
-            sevenDays: 7 * 24 * 60 * 60 * 1000,
-            isLessThan7Days: (Date.now() - (parseDate(userProfile.createdAt) || 0)) < 7 * 24 * 60 * 60 * 1000
-        });
-    }, [userProfile, isInTrial]);
 
     const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve'): boolean => {
         if (!userProfile) return false;

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { joinRoom, startGame, leaveRoom } from '@/utils/roomService';
@@ -12,13 +12,14 @@ import { useFriends } from '@/hooks/useFriends';
 import { LobbyChat } from '@/components/play/LobbyChat';
 import dynamic from 'next/dynamic';
 import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
+import { Suspense } from 'react';
 
 const VoiceChatWidget = dynamic(
     () => import('@/components/group/VoiceChatWidget').then((mod) => mod.VoiceChatWidget),
     { ssr: false }
 );
 
-export default function LobbyPage() {
+function LobbyPageContent() {
     const { roomId } = useParams();
     const router = useRouter();
     const { user } = useAuth();
@@ -31,6 +32,9 @@ export default function LobbyPage() {
     const { sendGameInvite } = useFriends();
     const [inviteLoading, setInviteLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'players' | 'chat'>('players');
+    const searchParams = useSearchParams();
+    const autoJoin = searchParams.get('autoJoin') === 'true';
+    const autoJoinTriggeredRef = useRef(false);
 
     const handleInviteFriend = async (friendUid: string) => {
         setInviteLoading(true);
@@ -87,6 +91,16 @@ export default function LobbyPage() {
             }
         };
     }, [roomId, user]);
+
+    // Auto-join when coming from a game invite (avoids double Enter Lobby)
+    useEffect(() => {
+        if (!autoJoin || !user || hasJoined || autoJoinTriggeredRef.current) return;
+        autoJoinTriggeredRef.current = true;
+        // Small delay ensures room snapshot has loaded
+        const timer = setTimeout(() => handleJoin(), 500);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoJoin, user, hasJoined]);
 
     // 1.5 Ensure Presence (Fix for React StrictMode & Persistence)
     // This re-adds the user if StrictMode cleanup removed them, or if manual refresh happened
@@ -572,5 +586,13 @@ export default function LobbyPage() {
                 inviteLoading={inviteLoading}
             />
         </div >
+    );
+}
+
+export default function LobbyPage() {
+    return (
+        <Suspense fallback={<InteractiveLoading message="Connecting to Lobby..." />}>
+            <LobbyPageContent />
+        </Suspense>
     );
 }
