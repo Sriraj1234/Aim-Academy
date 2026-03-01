@@ -17,20 +17,31 @@ interface TimeLeft {
     seconds: number;
 }
 
-// Board exam dates for 2026 (approximate)
-const BOARD_EXAM_DATES: Record<string, string> = {
-    'bseb': '2026-02-14', // Bihar Board typically starts mid-Feb
-    'cbse': '2026-02-15', // CBSE typically starts mid-Feb
-    'icse': '2026-02-20',
-    'up': '2026-02-18',
-    'mp': '2026-02-17',
-    'maharashtra': '2026-02-21',
-    'rbse': '2026-03-01',
-    'jac': '2026-02-25',
-    'uk': '2026-02-20',
-    'wb': '2026-02-18',
-    'other': '2026-03-01'
+// Board exam dates (month-day only — year is auto-calculated)
+// Smart: if the date has already passed this year, it automatically shows next year's date.
+const BOARD_EXAM_MONTH_DAY: Record<string, string> = {
+    'bseb': '02-14', // Bihar Board — typically starts mid-Feb
+    'cbse': '02-15',
+    'icse': '02-20',
+    'up': '02-18',
+    'mp': '02-17',
+    'maharashtra': '02-21',
+    'rbse': '03-05',
+    'jac': '02-25',
+    'uk': '02-20',
+    'wb': '02-18',
+    'other': '03-05',
 };
+
+/** Returns the next upcoming exam date — always future, auto-advances each year */
+function getNextExamDate(monthDay: string): Date {
+    const now = new Date();
+    const thisYear = now.getFullYear();
+    const candidate = new Date(`${thisYear}-${monthDay}`);
+    // If already past, use next year
+    return candidate > now ? candidate : new Date(`${thisYear + 1}-${monthDay}`);
+}
+
 
 const MOTIVATIONAL_MESSAGES = [
     { threshold: 100, message: "You have time! Stick to your study plan 📚", color: "text-green-600" },
@@ -52,16 +63,22 @@ export const ExamCountdown = () => {
     const examDate = useMemo(() => {
         // 1. If userProfile has loaded, use it and update cache
         if (userProfile) {
-            let dateStr: string;
+            let date: Date;
             if (userProfile.examDate) {
-                dateStr = String(userProfile.examDate);
+                const custom = new Date(userProfile.examDate);
+                // If custom date is in the past, fall back to board default
+                date = custom > new Date() ? custom : getNextExamDate(
+                    BOARD_EXAM_MONTH_DAY[(userProfile.board || 'other').toLowerCase()]
+                    ?? BOARD_EXAM_MONTH_DAY['other']
+                );
             } else {
                 const board = (userProfile.board || 'other').toLowerCase();
-                dateStr = BOARD_EXAM_DATES[board] || BOARD_EXAM_DATES['other'];
+                const monthDay = BOARD_EXAM_MONTH_DAY[board] ?? BOARD_EXAM_MONTH_DAY['other'];
+                date = getNextExamDate(monthDay);
             }
             // Persist to localStorage for instant next load
-            try { localStorage.setItem(EXAM_DATE_CACHE_KEY, dateStr); } catch { /* ignore */ }
-            return new Date(dateStr);
+            try { localStorage.setItem(EXAM_DATE_CACHE_KEY, date.toISOString()); } catch { /* ignore */ }
+            return date;
         }
 
         // 2. userProfile not yet loaded — use cached value for instant render
@@ -72,6 +89,7 @@ export const ExamCountdown = () => {
 
         return null;
     }, [userProfile]);
+
 
     useEffect(() => {
         if (!examDate) return;
@@ -111,18 +129,20 @@ export const ExamCountdown = () => {
 
         setSaving(true);
         try {
-            const ts = new Date(customDate).getTime();
+            const date = new Date(customDate);
+            const ts = date.getTime();
             await updateDoc(doc(db, 'users', user.uid), { examDate: ts });
-            // Update local cache immediately
-            try { localStorage.setItem(EXAM_DATE_CACHE_KEY, String(ts)); } catch { /* ignore */ }
-            toast.success('Exam date updated!');
+            // Save ISO string to cache (more reliable than raw timestamp string)
+            try { localStorage.setItem(EXAM_DATE_CACHE_KEY, date.toISOString()); } catch { /* ignore */ }
+            toast.success('Exam date saved! ✅');
             setIsEditing(false);
         } catch (error) {
             console.error('Error saving exam date:', error);
-            toast.error('Failed to save exam date');
+            toast.error('Could not save exam date. Try again.');
         } finally {
             setSaving(false);
         }
+
     };
 
     const motivation = getMotivationalMessage();
