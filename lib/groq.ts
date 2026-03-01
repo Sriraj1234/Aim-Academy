@@ -191,3 +191,74 @@ export async function getGroqChatCompletion(
         };
     }
 }
+
+export async function* getGroqChatStream(
+    messages: ChatMessage[],
+    temperature: number = 0.7,
+    maxTokens: number = 1024,
+    model: string = 'llama-3.3-70b-versatile'
+): AsyncGenerator<string, void, unknown> {
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+    if (!GROQ_API_KEY) {
+        console.error("Groq Error: API key missing in getGroqChatStream");
+        throw new Error("API key not configured");
+    }
+
+    try {
+        const response = await fetch(GROQ_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: model,
+                messages,
+                temperature,
+                max_tokens: maxTokens,
+                stream: true,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Groq Stream API error:', errorData);
+            throw new Error(`API error: ${response.status}`);
+        }
+
+        if (!response.body) {
+            throw new Error("No response body returned from Groq stream");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6).trim();
+                    if (data === '[DONE]') break;
+
+                    try {
+                        const parsed = JSON.parse(data);
+                        const content = parsed.choices?.[0]?.delta?.content;
+                        if (content) {
+                            yield content;
+                        }
+                    } catch (e) {
+                        // ignore malformed JSON chunks
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Groq Stream execute failed:', error);
+        throw error;
+    }
+}
