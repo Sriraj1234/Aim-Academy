@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { collectionGroup, getDocs, doc, setDoc } from 'firebase/firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,10 +8,9 @@ export async function GET() {
     try {
         console.log("Starting Taxonomy Rebuild (Client SDK)...");
 
-        // 1. Fetch all questions
-        const questionsRef = collection(db, 'questions');
-        const snapshot = await getDocs(questionsRef);
-        console.log(`Fetched ${snapshot.size} questions.`);
+        // 1. Fetch all questions from ALL subcollections via collectionGroup
+        const snapshot = await getDocs(collectionGroup(db, 'questions'));
+        console.log(`Fetched ${snapshot.size} questions from all subcollections.`);
 
         const taxonomy: Record<string, any> = {};
 
