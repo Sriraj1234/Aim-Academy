@@ -39,13 +39,18 @@ try {
 const db = admin.firestore();
 
 // --- Configuration ---
-// Path to the downloaded file
 const FILE_PATH = path.join('C:', 'Users', 'jayan', 'Downloads', 'Class 12th BSEB Chemistry questions (1) (1).xlsx');
-const BOARD = 'Bihar Board';
-const CLASS_LEVEL = 'Class 12';
-const STREAM = 'Science';
+const BOARD_KEY = 'BSEB';    // Normalized board
+const CLASS_KEY = 'Class 12'; // Normalized class
+const STREAM_KEY = 'Science';  // Stream (for Class 11/12)
 const DEFAULT_SUBJECT = 'Chemistry';
-const BATCH_SIZE = 50; // Parallel writes count
+const BATCH_SIZE = 50;
+
+// Collection base for hierarchical path
+function getCollectionPath(subject) {
+    return `questions/${BOARD_KEY}/${CLASS_KEY}/${STREAM_KEY}/${subject}`;
+}
+
 
 // --- Helpers ---
 function generateId(data) {
@@ -55,7 +60,8 @@ function generateId(data) {
 
 async function processBatch(batch) {
     const promises = batch.map(async (item) => {
-        const docRef = db.collection('questions').doc(item.id);
+        const colPath = getCollectionPath(item.subject || DEFAULT_SUBJECT);
+        const docRef = db.doc(`${colPath}/${item.id}`);
         const { id, ...data } = item;
         try {
             await docRef.set(data, { merge: true });
@@ -66,6 +72,7 @@ async function processBatch(batch) {
     });
     return Promise.all(promises);
 }
+
 
 // --- Main Upload Logic ---
 async function uploadQuestions() {
