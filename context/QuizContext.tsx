@@ -7,7 +7,7 @@ import { Question, CategoryData } from '@/data/types'
 import { mockQuestions } from '@/data/mock'
 import { db } from '@/lib/firebase'
 import { mistakesLocalStore } from '@/utils/mistakesLocalStore'
-import { collection, collectionGroup, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId, setDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId, setDoc } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
 
 interface QuizContextType {
@@ -118,76 +118,79 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
         setEndTime(0)
 
         try {
-            // ── Build hierarchical path: questions/{board}/{class}/{stream}/{subject} ──
-            const boardRaw = userProfile?.board || '';
-            const clsRaw = userProfile?.class || '';
-            const streamRaw = userProfile?.stream || 'Science';
+            // ── Build hierarchical path (all lowercase) ──────────────────────
+            // Path: questions/{board}/{class_N}/{stream}/{subject}
+            // e.g.  questions/bseb/class_12/science/chemistry
+            const brd = userProfile?.board || '';
+            const cls = userProfile?.class || '';
+            const strm = userProfile?.stream || '';
+            const level = parseInt(cls.toString().replace(/[^0-9]/g, '') || '0', 10);
 
-            // Normalize board
-            const boardKey = (() => {
-                const b = boardRaw.toLowerCase();
-                if (b === 'bihar board' || b === 'bseb') return 'BSEB';
-                if (b === 'cbse') return 'CBSE';
-                if (b === 'icse') return 'ICSE';
-                if (b === 'up board' || b === 'up') return 'UP';
-                return boardRaw.trim() || 'BSEB'; // default fallback
-            })();
+            const boardKey = (() => { const b = brd.toLowerCase(); if (b === 'bihar board' || b === 'bseb') return 'bseb'; if (b === 'cbse') return 'cbse'; if (b === 'icse') return 'icse'; return b || 'other'; })();
+            const classKey = (() => { const n = cls.toString().replace(/[^0-9]/g, ''); return n ? `class_${n}` : 'class_other'; })();
+            const streamKey = level >= 11 ? ((strm || 'science').toLowerCase().trim() || 'science') : 'general';
 
-            // Normalize class
-            const classKey = (() => {
-                const c = clsRaw.toString().replace(/[^0-9]/g, '');
-                return c ? `Class ${c}` : clsRaw.trim() || 'Class 10';
-            })();
+            // Normalise subject → lowercase, spaces→underscore ("Social Science" → "social_science")
+            let subjectKey = (subject || '').toLowerCase().trim().replace(/\s+/g, '_');
+            // Common UI aliases
+            if ((subject || '').includes('English')) subjectKey = 'english';
+            else if ((subject || '').includes('Hindi')) subjectKey = 'hindi';
 
-            // Resolve stream (only for Class 11+)
-            const level = parseInt(clsRaw.toString().replace(/[^0-9]/g, '') || '0', 10);
-            const streamKey = level >= 11 ? (streamRaw || 'Science').trim() : 'general';
-
-            // Map UI subject names to DB subject names
-            let dbSubject = subject || '';
-            if (dbSubject.includes('English')) dbSubject = 'English';
-            else if (dbSubject.includes('Hindi')) dbSubject = 'Hindi';
-
-            // Capitalise first letter to match DB (e.g. "chemistry" → "Chemistry")
-            if (dbSubject) {
-                dbSubject = dbSubject.charAt(0).toUpperCase() + dbSubject.slice(1);
-            }
-
-            let questionsRef;
-            if (boardKey && classKey && dbSubject) {
-                // Use precise subcollection path
-                const colPath = `questions/${boardKey}/${classKey}/${streamKey}/${dbSubject}`;
-                console.log('QuizContext: querying path', colPath);
-                questionsRef = collection(db, colPath);
-            } else {
-                // Fallback: collectionGroup (slower, requires index)
-                console.warn('QuizContext: falling back to collectionGroup');
-                questionsRef = collectionGroup(db, 'questions') as any;
-            }
-
-            // Only add chapter filter — board/class/subject are encoded in the path
             const constraints: any[] = [];
-            if (chapter) {
-                constraints.push(where('chapter', '==', chapter));
+            if (chapter) constraints.push(where('chapter', '==', chapter));
+
+            const fetchLimit = Math.min(count * 3, 200);
+
+            // ── Try hierarchical path first ───────────────────────────────────
+            let q: Question[] = [];
+            if (boardKey && classKey && subjectKey) {
+                const colPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
+                console.log('QuizContext: querying hierarchy', colPath, chapter ? `chapter=${chapter}` : '');
+                const hierRef = collection(db, colPath);
+                const hierQuery = query(hierRef, ...constraints, limit(fetchLimit));
+                const hierSnap = await getDocs(hierQuery);
+                hierSnap.forEach(docSnap => {
+                    const data = docSnap.data() as Record<string, unknown>;
+                    if (!q.some(e => e.id === docSnap.id)) {
+                        q.push({ id: docSnap.id, ...data } as unknown as Question);
+                    }
+                });
             }
 
-            // Fetch 2x the count for shuffling
-            const fetchLimit = Math.min(count * 3, 200);
-            const qQuery = query(questionsRef, ...constraints, limit(fetchLimit));
-
-            console.log('QuizContext: fetching questions', { boardKey, classKey, streamKey, subject: dbSubject, chapter, count });
-
-            const snapshot = await getDocs(qQuery)
-            let q: Question[] = []
-
-            snapshot.forEach(docSnap => {
-                const data = docSnap.data() as Record<string, unknown>;
-                if (!q.some(existing => existing.id === docSnap.id)) {
-                    q.push({ id: docSnap.id, ...data } as unknown as Question)
+            // ── Fallback to flat collection if hierarchy returned nothing ─────
+            if (q.length === 0) {
+                console.warn('QuizContext: hierarchy returned 0, falling back to flat collection');
+                const flatRef = collection(db, 'questions');
+                const flatConstraints: any[] = [];
+                if (brd) {
+                    const bs = Array.from(new Set([brd, brd.toLowerCase(), brd.toUpperCase(), 'Bihar Board', 'bseb', 'BSEB'])).slice(0, 10);
+                    flatConstraints.push(where('board', 'in', bs));
                 }
-            })
+                if (subject) {
+                    let dbSub = subject;
+                    if (subject.includes('English')) dbSub = 'English';
+                    else if (subject.includes('Hindi')) dbSub = 'Hindi';
+                    const ss = Array.from(new Set([dbSub, dbSub.toLowerCase(), dbSub.charAt(0).toUpperCase() + dbSub.slice(1)])).slice(0, 10);
+                    flatConstraints.push(where('subject', 'in', ss));
+                }
+                if (chapter) flatConstraints.push(where('chapter', '==', chapter));
+                const flatQuery = query(flatRef, ...flatConstraints, limit(fetchLimit));
+                const flatSnap = await getDocs(flatQuery);
+                flatSnap.forEach(docSnap => {
+                    const data = docSnap.data() as Record<string, unknown>;
+                    if (cls && data.class) {
+                        const userCls = cls.toString().replace(/\D/g, '');
+                        const qCls = String(data.class).replace(/\D/g, '');
+                        if (userCls && qCls && userCls !== qCls && String(data.class).toLowerCase() !== 'all') return;
+                    }
+                    if (!q.some(e => e.id === docSnap.id)) {
+                        q.push({ id: docSnap.id, ...data } as unknown as Question);
+                    }
+                });
+            }
 
-            if (snapshot.empty && !q.length) {
+
+            if (q.length === 0) {
                 console.warn(`No questions found in DB for filter, checking mock`)
                 // Fallback to mock (and filter mock manually)
                 const mq = mockQuestions.filter(x => {
