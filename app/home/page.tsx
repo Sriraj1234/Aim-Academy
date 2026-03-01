@@ -5,8 +5,12 @@ import { ModernModeGrid } from '@/components/home/ModernModeGrid'
 import { ModernCarousel } from '@/components/home/ModernCarousel'
 import { AIChatWidget } from '@/components/shared/AIChatWidget'
 import { Footer } from '@/components/shared/Footer'
-import { motion } from 'framer-motion'
+import { QuickActionStrip } from '@/components/home/QuickActionStrip'
 import dynamic from 'next/dynamic'
+import { useAuth } from '@/context/AuthContext'
+import { useRouter } from 'next/navigation'
+import { useEffect, useRef } from 'react'
+import { InteractiveLoading } from '@/components/shared/InteractiveLoading'
 
 // Components with user/auth data - disable SSR to prevent hydration mismatches
 const DashboardHeader = dynamic(() => import('@/components/home/DashboardHeader').then(m => m.DashboardHeader), { ssr: false })
@@ -15,24 +19,17 @@ const LiveQuizBanner = dynamic(() => import('@/components/home/LiveQuizBanner').
 const GamificationCard = dynamic(() => import('@/components/home/GamificationCard').then(m => m.GamificationCard), { ssr: false })
 const ExamCountdown = dynamic(() => import('@/components/home/ExamCountdown').then(m => m.ExamCountdown), { loading: () => <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />, ssr: false })
 
-// Lazy Load Heavy/Below-Fold Components
-const OfflineTuitionCard = dynamic(() => import('@/components/home/OfflineTuitionCard').then(m => m.OfflineTuitionCard), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" /> })
-const BookmarkedQuestionsSection = dynamic(() => import('@/components/home/BookmarkedQuestionsSection').then(m => m.BookmarkedQuestionsSection), { ssr: false })
-const NotesSection = dynamic(() => import('@/components/home/NotesSection').then(m => m.NotesSection), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />, ssr: false })
+// Below-fold — lazy loaded
 const AIPerformanceCard = dynamic(() => import('@/components/home/AIPerformanceCard').then(m => m.AIPerformanceCard), { ssr: false })
 const DailyChallengeCard = dynamic(() => import('@/components/home/DailyChallengeCard').then(m => m.DailyChallengeCard), { ssr: false })
+const BookmarkedQuestionsSection = dynamic(() => import('@/components/home/BookmarkedQuestionsSection').then(m => m.BookmarkedQuestionsSection), { ssr: false })
+const NotesSection = dynamic(() => import('@/components/home/NotesSection').then(m => m.NotesSection), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />, ssr: false })
+const OfflineTuitionCard = dynamic(() => import('@/components/home/OfflineTuitionCard').then(m => m.OfflineTuitionCard), { loading: () => <div className="h-40 bg-gray-100 rounded-2xl animate-pulse" /> })
 const AIQuestionGenerator = dynamic(() => import('@/components/home/AIQuestionGenerator').then(m => m.AIQuestionGenerator), { loading: () => <div className="h-20 bg-gray-100 rounded-2xl animate-pulse" /> })
 const AIFlashcardGenerator = dynamic(() => import('@/components/home/AIFlashcardGenerator').then(m => m.AIFlashcardGenerator))
 const ChapterSummary = dynamic(() => import('@/components/home/ChapterSummary').then(m => m.ChapterSummary))
 const TrialReminderModal = dynamic(() => import('@/components/subscription/TrialReminderModal').then(m => m.TrialReminderModal), { ssr: false })
 const DiscussionSection = dynamic(() => import('@/components/home/DiscussionSection').then(m => m.DiscussionSection), { ssr: false })
-
-
-
-import { useAuth } from '@/context/AuthContext'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef } from 'react'
-import { InteractiveLoading } from '@/components/shared/InteractiveLoading'
 
 const SCROLL_CACHE_KEY = 'home_scroll_position';
 
@@ -43,11 +40,9 @@ export default function DashboardPage() {
 
     // ── Last Visited Section: save & restore scroll ──────────────────────────
     useEffect(() => {
-        // Restore scroll position from last visit (within same session)
         const saved = sessionStorage.getItem(SCROLL_CACHE_KEY);
         if (saved) {
             const y = parseInt(saved, 10);
-            // Small delay so DOM has rendered
             const t = setTimeout(() => window.scrollTo({ top: y, behavior: 'instant' }), 100);
             return () => clearTimeout(t);
         }
@@ -55,7 +50,6 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const handleScroll = () => {
-            // Debounce: only save scroll position 300ms after user stops scrolling
             if (scrollSaverRef.current) clearTimeout(scrollSaverRef.current);
             scrollSaverRef.current = setTimeout(() => {
                 sessionStorage.setItem(SCROLL_CACHE_KEY, String(window.scrollY));
@@ -74,120 +68,98 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-pw-surface pb-20 font-sans selection:bg-pw-indigo selection:text-white">
             <Header />
 
-            <main className="pt-20 pb-16 md:pt-24 md:pb-20 space-y-3 md:space-y-5">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ staggerChildren: 0.1 }}
-                    className="px-4 max-w-7xl mx-auto"
-                >
+            <main className="pt-20 pb-16 md:pt-24 md:pb-20">
+                <div className="px-4 max-w-7xl mx-auto space-y-4 md:space-y-5 w-full overflow-x-hidden">
+
+                    {/* ── 1. Greeting Header ─────────────────────────────────── */}
                     <DashboardHeader />
-                </motion.div>
 
-                {/* Hero Carousel - Edge to Edge */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                >
+                    {/* ── 2. Quick Action Strip (most important — top always) ── */}
+                    <section aria-label="Quick actions">
+                        <QuickActionStrip />
+                    </section>
+
+                    {/* ── 3. Stats Bar (compact, always visible to motivate) ─── */}
+                    <div className="bg-white rounded-2xl p-3 md:p-4 border border-pw-border shadow-pw-md">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-base">📊</span>
+                            <h2 className="text-sm font-bold text-pw-violet">Your Progress</h2>
+                        </div>
+                        <StatsOverview />
+                    </div>
+
+                    {/* ── 4. Announcement Carousel ────────────────────────────── */}
                     <ModernCarousel />
-                </motion.div>
 
-                <div className="px-4 max-w-7xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-                        {/* Left Column */}
-                        <div className="lg:col-span-2 space-y-4 md:space-y-6">
+                    {/* ── 5. Live Quiz Banner (time-sensitive, high urgency) ─── */}
+                    <LiveQuizBanner />
 
-                            {/* Exam Countdown Widget */}
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.1 }}
-                            >
-                                <ExamCountdown />
-                            </motion.div>
+                    {/* ── 6. All Study Modes Grid (core feature) ──────────────── */}
+                    <section id="study-modes" aria-label="Study modes">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-base">🎯</span>
+                            <h2 className="text-base font-bold text-pw-violet">Study & Play Modes</h2>
+                        </div>
+                        <ModernModeGrid />
+                    </section>
 
-                            {/* Stats Overview */}
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.1 }}
-                                className="bg-white rounded-2xl p-3 md:p-5 border border-pw-border shadow-pw-md"
-                            >
-                                <h3 className="text-lg font-bold text-pw-violet mb-3 md:mb-4 flex items-center gap-2">
-                                    <span className="text-xl">📊</span> Overview
-                                </h3>
-                                <StatsOverview />
-                            </motion.div>
+                    {/* ── 7. Two-column layout for tablet & desktop ─────────── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
 
-                            <LiveQuizBanner />
+                        {/* Left Column (2/3 width on large) */}
+                        <div className="lg:col-span-2 space-y-4 md:space-y-5">
 
+                            {/* Exam Countdown */}
+                            <ExamCountdown />
+
+                            {/* Gamification / XP Card */}
                             <GamificationCard />
+
+                            {/* AI Performance Insights */}
                             <AIPerformanceCard />
 
-                            {/* Study Modes */}
-                            <div id="study-modes" className="space-y-4 pt-4"> {/* Added wrapper for scroll target */}
-                                <motion.div
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="shadow-sm rounded-xl p-1"
-                                >
-                                    <h3 className="text-xl font-bold text-pw-violet pl-3 border-l-4 border-pw-indigo mb-4">
-                                        Study Modes
-                                    </h3>
-                                    <ModernModeGrid />
-                                </motion.div>
-                            </div>
+                            {/* Bookmarks */}
+                            <BookmarkedQuestionsSection />
 
+                            {/* Notes */}
+                            <NotesSection />
 
-                        </div>
-
-                        {/* Right Column: AI Tools & Extras */}
-                        <div className="space-y-6">
-                            <DiscussionSection />
-
-                            <div className="hidden lg:block">
+                            {/* Offline Tuition — mobile only (desktop in right col) */}
+                            <div className="block lg:hidden">
                                 <OfflineTuitionCard />
                             </div>
+                        </div>
 
-                            <motion.div
-                                initial={{ x: 20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                                className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-md"
-                            >
-                                <h3 className="text-lg font-bold text-pw-violet mb-4 flex items-center gap-2">
-                                    <span className="text-xl">🤖</span> AI Study Tools
-                                </h3>
+                        {/* Right Column (1/3 width on large) */}
+                        <div className="space-y-4 md:space-y-5">
+
+                            {/* AI Tools Card */}
+                            <div className="bg-white rounded-2xl p-4 md:p-5 border border-pw-border shadow-pw-md">
+                                <h2 className="text-base font-bold text-pw-violet mb-4 flex items-center gap-2">
+                                    <span>🤖</span> AI Study Tools
+                                </h2>
                                 <div className="space-y-3">
                                     <AIQuestionGenerator />
                                     <AIFlashcardGenerator />
                                     <ChapterSummary />
                                 </div>
-                            </motion.div>
+                            </div>
 
-                            {/* Moved Sections for Compact View */}
-                            <BookmarkedQuestionsSection />
-                            <NotesSection />
+                            {/* Community Discussions */}
+                            <DiscussionSection />
+
+                            {/* Offline Tuition — desktop only */}
+                            <div className="hidden lg:block">
+                                <OfflineTuitionCard />
+                            </div>
                         </div>
-
-                        {/* Mobile Only: Offline Tuition at Bottom */}
-                        <div className="px-4 max-w-7xl mx-auto block lg:hidden pb-6">
-                            <OfflineTuitionCard />
-                        </div>
-
                     </div>
                 </div>
             </main>
 
             <DailyChallengeCard />
-
-
-
             <AIChatWidget />
             <TrialReminderModal />
-
             <Footer />
         </div>
     )
