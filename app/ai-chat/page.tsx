@@ -244,29 +244,32 @@ export default function AIChatPage() {
                 let serverImages: any[] = [];
 
                 if (reader) {
+                    let buffer = '';
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
 
-                        const chunk = decoder.decode(value);
-                        const lines = chunk.split('\\n');
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || ''; // keep incomplete line in buffer
 
                         for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                                const data = line.slice(6);
-                                if (data === '[DONE]') break;
+                            const trimmedLine = line.trim();
+                            if (!trimmedLine.startsWith('data: ')) continue;
 
-                                try {
-                                    const parsed = JSON.parse(data);
-                                    if (parsed.status) setCurrentStatus(parsed.status);
-                                    if (parsed.text) {
-                                        fullText += parsed.text;
-                                        setStreamingText(fullText);
-                                        setCurrentStatus(null);
-                                    }
-                                    if (parsed.images) serverImages = parsed.images;
-                                } catch {
+                            const data = trimmedLine.slice(6).trim();
+                            if (data === '[DONE]') break;
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.status) setCurrentStatus(parsed.status);
+                                if (parsed.text) {
+                                    fullText += parsed.text;
+                                    setStreamingText(fullText);
+                                    setCurrentStatus(null);
                                 }
+                                if (parsed.images) serverImages = parsed.images;
+                            } catch {
                             }
                         }
                     }
