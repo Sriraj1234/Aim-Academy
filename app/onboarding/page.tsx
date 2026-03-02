@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { FaCheckCircle, FaLocationArrow } from 'react-icons/fa'
 import { useLocation } from '@/hooks/useLocation'
 
-type Board = 'bseb' | 'cbse' | 'icse' | 'up' | 'mp' | 'maharashtra' | 'rbse' | 'jac' | 'uk' | 'wb' | 'other';
+type Board = 'bseb' | 'cbse' | 'icse';
 type Class = '9' | '10' | '11' | '12';
 
 export default function OnboardingPage() {
@@ -80,14 +80,6 @@ export default function OnboardingPage() {
         { id: 'bseb', name: 'BSEB', full: 'Bihar School Examination Board' },
         { id: 'cbse', name: 'CBSE', full: 'Central Board of Secondary Education' },
         { id: 'icse', name: 'ICSE', full: 'Indian Certificate of Secondary Education' },
-        { id: 'up', name: 'UP Board', full: 'Uttar Pradesh Madhyamik Shiksha Parishad' },
-        { id: 'mp', name: 'MP Board', full: 'Madhya Pradesh Board of Secondary Education' },
-        { id: 'maharashtra', name: 'Maharashtra', full: 'Maharashtra State Board' },
-        { id: 'rbse', name: 'RBSE', full: 'Rajasthan Board of Secondary Education' },
-        { id: 'jac', name: 'JAC', full: 'Jharkhand Academic Council' },
-        { id: 'uk', name: 'UK Board', full: 'Uttarakhand Board of School Education' },
-        { id: 'wb', name: 'WB Board', full: 'West Bengal Council of Higher Secondary Education' },
-        { id: 'other', name: 'Other', full: 'Other State Boards' },
     ]
 
     const handlePincodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
