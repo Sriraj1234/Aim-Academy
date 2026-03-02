@@ -160,16 +160,25 @@ export async function POST(request: NextRequest) {
                         const intentMessages: any[] = [
                             {
                                 role: 'system',
-                                content: `You are an Intent Classifier. Your job is to classify the user's latest message into one of these categories:
-- "WEB_SEARCH": If the user is asking for specific facts, current events, dates, latest syllabus changes, or real-world data (e.g. "Who is PM", "JEE Main 2025 Date").
-- "IMAGE_SEARCH": If the user is asking for:
-    1. Direct visual requests ("Show me", "Diagram of").
-    2. NATURALLY VISUAL topics (Biology organs, Chemical Structures, Physics setups, Maps, Geometry).
-    **Rule: If the user asks "What is X?" or "Explain X", and X is a PHYSICAL OBJECT (e.g. Heart, Prism, Volcano, Circuit, Cell), ALWAYS choose IMAGE_SEARCH.**
-    **Rule: If an image would make the explanation CLEARER, always choose IMAGE_SEARCH.**
-- "CHAT": For general conversation, coding help, mathematical derivations, or purely theoretical concepts (e.g. "Define Force", "What is Love").
+                                content: `You are an Intent Classifier. Classify the user's latest message into ONE of these categories:
 
-Respond ONLY with the category value.`
+- "WEB_SEARCH": Use this when the user asks about:
+  * Current/live data: prices (gold, petrol, crypto), exchange rates, weather
+  * Current events, news, recent happenings
+  * People currently in positions ("Who is PM", "current CEO of")
+  * Dates of upcoming events (exams, elections, matches)
+  * "Aaj", "today", "latest", "abhi", "current", "live", "kitna hai" (real-world queries)
+  * Sports scores, movie releases, stock market, election results
+  * Any question where the answer changes day to day
+
+- "IMAGE_SEARCH": Use this when:
+  1. User directly asks for visual ("Show me", "Diagram of", "Image of")
+  2. Topic is naturally visual (Biology organs, Chemical structures, Physics setups, Maps, Geometry)
+  Rule: If user asks "What is X?" and X is a PHYSICAL OBJECT (Heart, Prism, Volcano, Circuit, Cell), choose IMAGE_SEARCH.
+
+- "CHAT": For general conversation, math derivations, theoretical concepts, opinions, or anything that does not need live data or images.
+
+Respond ONLY with: WEB_SEARCH, IMAGE_SEARCH, or CHAT`
                             },
                             ...(body.history || []).slice(-2).map(m => ({
                                 role: m.role === 'model' ? 'assistant' : m.role,
@@ -207,16 +216,23 @@ Respond ONLY with the category value.`
                             }
                         }
 
-                        else if (intent.includes('WEB') || body.message.match(/current|latest|news|who is|price|date|syllabus|search|find out|duckduckgo|google|live/i)) {
+                        else if (intent.includes('WEB') || body.message.match(/current|latest|news|today|aaj|abhi|price|kitna|kya hai|gold|petrol|crude|crypto|bitcoin|rate|rupee|dollar|rupaya|share|stock|sensex|nifty|match score|ipl|world cup|election|result|who is|pm |cm |minister|exam date|admit card|syllabus 2025|cutoff|weather|temperature|breaking|live update|search|find out/i)) {
                             sendEvent({ status: 'searching_web' });
-                            const query = body.message.replace(/search|find|google|about/gi, '').trim();
+                            // Clean up the query
+                            const query = body.message
+                                .replace(/search karke bata|search karo|google karo|dhundho|batao|bata do|mujhe bata|kya hai aaj/gi, '')
+                                .replace(/aaj ka|aaj ki|aaj ke/gi, 'today')
+                                .trim();
                             const searchResults = await performWebSearch(query);
+                            const searchDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
                             if (searchResults.length > 0) {
-                                const snippets = searchResults.map((r: any) => `- ${r.title}: ${r.description} (Source: ${r.source})`).join('\n');
-                                toolResults += `\n[SYSTEM: Web Results for "${query}":\n${snippets}\nUse this verified info to answer.]`;
+                                const snippets = searchResults.map((r: any, i: number) =>
+                                    `${i + 1}. **${r.title}**\n   ${r.description}\n   🔗 Source: ${r.source}${r.url ? ` (${r.url})` : ''}`
+                                ).join('\n\n');
+                                toolResults += `\n\n[SYSTEM: 🔍 Web Search Results for "${query}" — searched on ${searchDate}:\n\n${snippets}\n\nINSTRUCTION: Use the above verified real-time data to answer. Follow the WEB SEARCH ANSWER FORMAT from your instructions: use emojis, bullet points, and tables. Cite the source at the end. Do NOT say you lack real-time access.]`;
                             } else {
-                                toolResults += `\n[SYSTEM: Search returned nothing.]`;
+                                toolResults += `\n\n[SYSTEM: Web search returned no results for "${query}" (${searchDate}). Answer using your best knowledge. Mention the search date context and advise user to verify on official sources like RBI, MCX, or official government portals.]`;
                             }
                         }
                     }
