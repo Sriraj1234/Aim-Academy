@@ -472,7 +472,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve'): boolean => {
         if (!userProfile) return false;
 
-        const isPro = userProfile.subscription?.plan === 'pro';
+        const sub = userProfile.subscription;
+        const now = Date.now();
+        // Auto-renew subscriptions: trust status (webhook keeps them current)
+        // One-time / manual subscriptions: require expiryDate to still be in the future
+        const isPro = sub?.plan === 'pro' &&
+            sub?.status === 'active' &&
+            (sub?.autoRenew && sub?.subscriptionId
+                ? true
+                : (sub?.expiryDate ? sub.expiryDate > now : false)
+            );
         const limits = userProfile.dailyLimits || { aiChatCount: 0, flashcardGenCount: 0, groupPlayCount: 0, noteGenCount: 0, snapSolveCount: 0 };
 
         // --- PRO USER LOGIC ---
