@@ -16,10 +16,19 @@ export const UserBadge: React.FC<BadgeProps> = ({ className = '', size = 'md', u
     const textSize = size === 'sm' ? 'text-[8px]' : size === 'lg' ? 'text-xs' : 'text-[10px]';
 
     // Debugging
-    // console.log("UserBadge Profile:", userProfile?.displayName, userProfile?.subscription);
-
     // 1. Pro Badge (Highest Priority)
-    const isPro = userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.status === 'active';
+    const isPro = (() => {
+        const sub = userProfile?.subscription;
+        if (sub?.plan !== 'pro' || sub?.status !== 'active') return false;
+
+        // If it's an auto-renewing subscription with an ID, it's managed by Razorpay webhooks
+        if (sub.autoRenew && sub.subscriptionId) return true;
+
+        // For one-time purchases, strictly check expiry date
+        if (sub.expiryDate && Date.now() > sub.expiryDate) return false;
+
+        return true;
+    })();
 
     // 2. Streak Badge (Secondary)
     const isStreakMaster = !isPro && (userProfile?.gamification?.currentStreak || 0) >= 30;
