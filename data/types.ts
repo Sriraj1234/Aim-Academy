@@ -125,6 +125,9 @@ export interface UserProfile {
         startDate: number;
         expiryDate?: number;
         autoRenew?: boolean;
+        subscriptionId?: string | null;
+        paymentId?: string;
+        lastPaymentDate?: number;
     };
     dailyLimits?: {
         date: string; // 'YYYY-MM-DD' to track resets
