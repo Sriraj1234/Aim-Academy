@@ -35,7 +35,14 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
             items: [
                 { icon: FaCamera, label: 'Snap & Solve', href: '/play/snap-solve' },
                 { icon: FaBook, label: 'Wisdom Book', href: '/wisdom', isNew: true },
-                { icon: FaHandsHelping, label: 'AI Guru', href: '/live-guru' },
+                {
+                    icon: FaHandsHelping,
+                    label: 'AI Buddy',
+                    action: () => {
+                        onClose();
+                        window.dispatchEvent(new CustomEvent('openAIBuddy'));
+                    }
+                },
             ]
         },
         {
@@ -45,8 +52,9 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                 { icon: FaBookOpen, label: 'Study Hub', href: '/study-hub' },
                 { icon: FaLaptopCode, label: 'Practice Zone', href: '/play/selection' },
                 { icon: FaComments, label: 'Discussions', href: '/discussions', isNew: true },
-                { icon: FaChalkboardTeacher, label: 'Teacher Panel', href: '/teachers/admin' },
-            ]
+                // Only show Teacher Panel if user is teacher or admin
+                (userProfile?.role === 'teacher' || userProfile?.role === 'admin') ? { icon: FaChalkboardTeacher, label: 'Teacher Panel', href: '/teachers/admin' } : null,
+            ].filter(Boolean)
         },
         {
             id: 'settings',
@@ -61,40 +69,38 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         }
     ];
 
-    // Smooth Animation Curve (Spring Physics)
+    // Remove empty groups or conditionally hidden items
+    const filteredMenuGroups = menuGroups.map(group => ({
+        ...group,
+        items: group.items.filter(Boolean)
+    })).filter(group => group.items.length > 0);
+
+    // Fast Tween Animation
     const sidebarVariants: Variants = {
         hidden: {
             x: '-100%',
-            opacity: 0.5,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 30
-            }
+            opacity: 0,
+            transition: { type: "tween", duration: 0.15, ease: "easeInOut" }
         },
         show: {
             x: 0,
             opacity: 1,
             transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-                staggerChildren: 0.05,
-                delayChildren: 0.1
+                type: "tween",
+                duration: 0.25,
+                ease: [0.25, 1, 0.5, 1], // Deceleration easing
+                staggerChildren: 0.03,
+                delayChildren: 0.05
             }
         }
     };
 
     const itemVariants: Variants = {
-        hidden: { x: -20, opacity: 0 },
+        hidden: { x: -10, opacity: 0 },
         show: {
             x: 0,
             opacity: 1,
-            transition: {
-                type: "spring",
-                stiffness: 400,
-                damping: 25
-            }
+            transition: { type: "tween", duration: 0.2, ease: "easeOut" }
         }
     };
 
@@ -169,7 +175,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                         {/* Scrollable Content */}
                         <div className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar">
                             <div className="space-y-6">
-                                {menuGroups.map((group) => (
+                                {filteredMenuGroups.map((group) => (
                                     <div key={group.id}>
                                         {group.label && (
                                             <motion.div variants={itemVariants} className="px-3 mb-2 flex items-center gap-2">
