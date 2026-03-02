@@ -23,8 +23,15 @@ export default function PricingPage() {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [processing, setProcessing] = useState(false);
 
-    const isPro = userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.status === 'active';
     const sub = userProfile?.subscription;
+
+    const isPro = (() => {
+        if (!sub || sub.plan !== 'pro' || sub.status !== 'active') return false;
+        // Auto-pay users: always trust status (webhook keeps them updated)
+        if (sub.autoRenew && sub.subscriptionId) return true;
+        // One-time users: check expiry
+        return sub.expiryDate ? sub.expiryDate > Date.now() : false;
+    })();
     const isAutoRenew = sub?.autoRenew && sub?.subscriptionId;
 
     const now = Date.now();
