@@ -35,6 +35,13 @@ interface AIChatWidgetProps {
 
 export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ context }) => {
     const [isOpen, setIsOpen] = useState(false);
+
+    // Listen for the global openAIBuddy event (triggered by AI Tutor button)
+    useEffect(() => {
+        const handleOpenEvent = () => setIsOpen(true);
+        window.addEventListener('openAIBuddy', handleOpenEvent);
+        return () => window.removeEventListener('openAIBuddy', handleOpenEvent);
+    }, []);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
