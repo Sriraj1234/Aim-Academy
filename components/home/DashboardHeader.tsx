@@ -155,22 +155,25 @@ export const DashboardHeader = () => {
                                     </h2>
 
                                     {/* Pro Plan Banner */}
-                                    {userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.expiryDate && (() => {
+                                    {userProfile?.subscription?.plan === 'pro' && userProfile?.subscription?.status === 'active' && (() => {
+                                        const sub = userProfile.subscription;
+                                        const isAutoRenew = sub?.autoRenew && sub?.subscriptionId;
+                                        const expiry = sub?.expiryDate;
                                         const now = Date.now();
-                                        const expiry = userProfile.subscription.expiryDate;
-                                        const remainingDays = Math.max(0, Math.ceil((expiry - now) / (1000 * 60 * 60 * 24)));
+                                        const remainingDays = expiry ? Math.max(0, Math.ceil((expiry - now) / (1000 * 60 * 60 * 24))) : null;
+                                        const nextBillingStr = expiry ? new Date(expiry).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
 
-                                        if (remainingDays > 0) {
-                                            return (
-                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-amber-100 to-yellow-50 border border-amber-200 rounded-full shadow-sm">
-                                                    <span className="text-amber-500 text-xs">👑</span>
-                                                    <span className="text-[10px] md:text-xs font-bold text-amber-700 uppercase tracking-wide">
-                                                        Pro Active • {remainingDays} Days Left
-                                                    </span>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
+                                        return (
+                                            <button onClick={() => router.push('/pro')} className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-amber-100 to-yellow-50 border border-amber-200 rounded-full shadow-sm hover:shadow-md transition-all">
+                                                <span className="text-amber-500 text-xs">👑</span>
+                                                <span className="text-[10px] md:text-xs font-bold text-amber-700 uppercase tracking-wide">
+                                                    {isAutoRenew
+                                                        ? nextBillingStr ? `Pro • Renews ${nextBillingStr}` : 'Pro Active • Auto-Pay'
+                                                        : remainingDays !== null ? `Pro Active • ${remainingDays} Days Left` : 'Pro Active'
+                                                    }
+                                                </span>
+                                            </button>
+                                        );
                                     })()}
 
                                     {/* Guest Login Hint */}
