@@ -60,40 +60,73 @@ export const Header = () => {
                             <div className="w-24 h-9 bg-gray-100/50 rounded-full animate-pulse" />
                         ) : user ? (
                             <>
-                                {userProfile?.subscription?.plan !== 'pro' && (
-                                    isInTrial ? (
+                                {user && (() => {
+                                    const sub = userProfile?.subscription;
+                                    const now = Date.now();
+                                    const isAutoPay = sub?.autoRenew && sub?.subscriptionId;
+                                    const isExpired = sub?.expiryDate ? sub.expiryDate <= now : false;
+                                    const remainingDays = sub?.expiryDate
+                                        ? Math.max(0, Math.ceil((sub.expiryDate - now) / (1000 * 60 * 60 * 24)))
+                                        : null;
+
+                                    if (sub?.plan === 'pro' && sub?.status === 'active') {
+                                        // Active Pro user (auto-pay or one-time)
+                                        const label = isAutoPay
+                                            ? 'PRO ∞'
+                                            : isExpired
+                                                ? 'PRO Expired'
+                                                : `PRO · ${remainingDays}d left`;
+                                        const colorClass = isExpired
+                                            ? 'from-red-400 to-rose-500'
+                                            : 'from-amber-400 to-yellow-500';
+                                        const textColor = isExpired ? 'text-white' : 'text-black';
+
+                                        return (
+                                            <Link href="/pro">
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-gradient-to-r ${colorClass} ${textColor} shadow-md hover:shadow-lg transition-all border border-white/20`}
+                                                >
+                                                    <FaCrown className="text-xs sm:text-sm flex-shrink-0" />
+                                                    <span className="text-[10px] sm:text-xs font-black whitespace-nowrap tracking-wide">{label}</span>
+                                                </motion.button>
+                                            </Link>
+                                        );
+                                    }
+
+                                    // Non-pro users
+                                    if (isInTrial) {
+                                        const c = userProfile?.createdAt as any;
+                                        const createdMs = typeof c === 'number' ? c : (c?.toMillis ? c.toMillis() : new Date(c || 0).getTime());
+                                        const daysLeft = Math.ceil(7 - ((Date.now() - createdMs) / (24 * 60 * 60 * 1000)));
+                                        return (
+                                            <Link href="/pro">
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
+                                                >
+                                                    <FaCrown className="text-xs sm:text-sm flex-shrink-0" />
+                                                    <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap">Trial: {daysLeft}d</span>
+                                                </motion.button>
+                                            </Link>
+                                        );
+                                    }
+
+                                    return (
                                         <Link href="/pro">
                                             <motion.button
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
+                                                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
                                             >
-                                                <FaCrown className="text-sm" />
-                                                <span className="text-xs font-bold whitespace-nowrap">
-                                                    Trial: {(() => {
-                                                        // Robust Time Calculation
-                                                        const c = userProfile?.createdAt as any;
-                                                        const createdMs = typeof c === 'number' ? c : (c?.toMillis ? c.toMillis() : new Date(c || 0).getTime());
-                                                        const diffMs = Date.now() - createdMs;
-                                                        const daysLeft = 7 - (diffMs / (24 * 60 * 60 * 1000));
-                                                        return Math.ceil(daysLeft);
-                                                    })()}d Left
-                                                </span>
+                                                <FaCrown className="text-xs sm:text-sm flex-shrink-0" />
+                                                <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap hidden xs:inline">Try Pro</span>
                                             </motion.button>
                                         </Link>
-                                    ) : (
-                                        <Link href="/pro">
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md hover:shadow-lg transition-all border border-white/20"
-                                            >
-                                                <FaCrown className="text-sm" />
-                                                <span className="text-xs font-bold whitespace-nowrap">Try Pro</span>
-                                            </motion.button>
-                                        </Link>
-                                    )
-                                )}
+                                    );
+                                })()}
 
                                 <Link href="/profile">
                                     <motion.div
