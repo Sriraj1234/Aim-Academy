@@ -139,8 +139,8 @@ export default function LandingPage() {
                 Login
               </Link>
               <Link
-                href="/login"
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm shadow-indigo-200"
+                href="/home"
+                className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5"
               >
                 Start Free →
               </Link>
@@ -174,10 +174,14 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link
-                href="/login"
-                className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-2xl shadow-xl shadow-indigo-200 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+                href="/home"
+                className="relative group px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] hover:bg-[center_right_1rem] text-white font-black text-lg sm:text-xl rounded-2xl shadow-[0_0_40px_-10px_rgba(99,102,241,0.5)] hover:shadow-[0_0_60px_-15px_rgba(99,102,241,0.7)] transition-all duration-500 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 overflow-hidden"
               >
-                🚀 Start Practicing Free
+                <div className="absolute inset-0 bg-white/20 blur-md group-hover:opacity-0 transition-opacity" />
+                <span className="relative z-10 flex items-center gap-2 drop-shadow-md">
+                  🚀 Start Practicing Free
+                </span>
+                <span className="relative z-10 group-hover:translate-x-1 transition-transform">→</span>
               </Link>
               <Link
                 href="#subjects"
