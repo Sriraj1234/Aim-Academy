@@ -28,18 +28,24 @@ function CustomizeModal({
 }: {
     totalCount: number,
     chapterName: string,
-    onConfirm: (count: number) => void,
+    onConfirm: (count: number, difficulty: string) => void,
     onClose: () => void
 }) {
     // Generate Options
     const baseOptions = [20, 40, 60, 80, 100];
     const options = baseOptions.filter(opt => opt < totalCount);
-    // Always append "All" (which is totalCount)
     options.push(totalCount);
-    // Remove duplicates if totalCount matches a base option exactly
     const uniqueOptions = Array.from(new Set(options));
 
     const [selected, setSelected] = useState<number>(options[0] || totalCount);
+    const [difficulty, setDifficulty] = useState<string>('mix');
+
+    const difficultyOptions = [
+        { value: 'easy', label: '😊 Easy', color: 'text-green-700 border-green-500 bg-green-50' },
+        { value: 'medium', label: '🔥 Medium', color: 'text-yellow-700 border-yellow-500 bg-yellow-50' },
+        { value: 'hard', label: '💪 Hard', color: 'text-red-700 border-red-500 bg-red-50' },
+        { value: 'mix', label: '🎲 Mix', color: 'text-purple-700 border-purple-500 bg-purple-50' },
+    ];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
@@ -49,16 +55,38 @@ function CustomizeModal({
                 onClick={(e) => e.stopPropagation()}
                 className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl"
             >
-                <div className="flex justify-between items-start mb-6">
+                <div className="flex justify-between items-start mb-5">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">Customize Quiz</h3>
-                        <p className="text-sm text-gray-500">{chapterName}</p>
+                        <p className="text-sm text-gray-500 line-clamp-1">{chapterName}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400">
                         <HiX size={20} />
                     </button>
                 </div>
 
+                {/* Difficulty Selection */}
+                <div className="mb-5">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Difficulty Level</label>
+                    <div className="grid grid-cols-2 gap-2">
+                        {difficultyOptions.map((opt) => (
+                            <button
+                                key={opt.value}
+                                onClick={() => setDifficulty(opt.value)}
+                                className={`
+                                    py-2.5 px-3 rounded-xl text-sm font-bold transition-all border-2
+                                    ${difficulty === opt.value
+                                        ? opt.color
+                                        : 'border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                                `}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Question Count */}
                 <div className="mb-6">
                     <label className="block text-sm font-semibold text-gray-700 mb-3">Number of Questions</label>
                     <div className="grid grid-cols-3 gap-3">
@@ -80,10 +108,10 @@ function CustomizeModal({
                 </div>
 
                 <button
-                    onClick={() => onConfirm(selected)}
+                    onClick={() => onConfirm(selected, difficulty)}
                     className="w-full py-3.5 rounded-xl bg-purple-600 text-white font-bold text-lg hover:bg-purple-700 transition-colors shadow-lg shadow-purple-600/30"
                 >
-                    Start Quiz
+                    Start Quiz 🚀
                 </button>
             </motion.div>
         </div>
@@ -303,11 +331,11 @@ function SelectionContent() {
         setCustomizing({ name: chap, count: count })
     }
 
-    const handleConfirmStart = (count: number) => {
+    const handleConfirmStart = (count: number, difficulty: string) => {
         if (customizing) {
             // Safely decode and trim chapter name to prevent query mismatch
             const safeChapterName = decodeURIComponent(customizing.name).trim();
-            startQuiz(selectedSubject!, count, safeChapterName)
+            startQuiz(selectedSubject!, count, safeChapterName, difficulty)
             router.push('/play/quiz')
         }
     }
