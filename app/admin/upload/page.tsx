@@ -598,49 +598,32 @@ const UploadPage = () => {
         }
     }
 
-    const deleteBSEBClass10Questions = async () => {
-        if (!confirm('DANGER: Delete ALL BSEB Class 10 questions? This permanently removes the entire questions/BSEB/Class 10 hierarchy. This CANNOT be undone.')) return;
-        const confirmText = prompt('Type "DELETE BSEB 10" to confirm:');
-        if (confirmText !== 'DELETE BSEB 10') {
+    const deleteAllClass10Questions = async () => {
+        if (!confirm('⚠️ DANGER: Delete ALL Class 10 questions from EVERY board (BSEB, CBSE, ICSE, UP)?\nThis permanently deletes the entire Class 10 question bank. This CANNOT be undone.')) return;
+        const confirmText = prompt('Type "DELETE CLASS 10" to permanently confirm:');
+        if (confirmText !== 'DELETE CLASS 10') {
             alert('Deletion cancelled — text did not match.');
             return;
         }
         setLoading(true);
-        let totalDeleted = 0;
         try {
-            // Subjects stored under questions/BSEB/Class 10/general/
-            const subjects = ['maths', 'mathematics', 'science', 'physics', 'chemistry', 'biology',
-                'history', 'geography', 'civics', 'economics', 'hindi', 'english', 'sanskrit',
-                'social science', 'social_science', 'disaster management'];
-
-            for (const subj of subjects) {
-                const colRef = collection(db, `questions/BSEB/Class 10/general/${subj}`);
-                const snap = await getDocs(colRef);
-                if (snap.empty) continue;
-                const batch = writeBatch(db);
-                snap.docs.forEach(d => batch.delete(d.ref));
-                await batch.commit();
-                totalDeleted += snap.size;
-            }
-
-            // Also clean metadata taxonomy for bseb_10
-            const metaRef = doc(db, 'metadata', 'taxonomy');
-            const metaSnap = await getDoc(metaRef);
-            if (metaSnap.exists()) {
-                const data = metaSnap.data();
-                delete data['bseb_10'];
-                await setDoc(metaRef, data);
-            }
-
-            alert(`✅ Deleted ${totalDeleted} BSEB Class 10 questions and cleaned metadata.`);
+            const res = await fetch('/api/admin/delete-class-questions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ classNum: '10', secret: 'padhaku-admin-2024' }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'API error');
+            alert(`✅ ${data.message}\n\nPaths cleaned:\n${data.deletedPaths.join('\n') || 'None (already empty)'}`);
             window.location.reload();
-        } catch (err) {
-            console.error('Delete BSEB 10 failed', err);
-            alert('Failed to delete. Check console for details.');
+        } catch (err: any) {
+            console.error('Delete Class 10 failed', err);
+            alert(`Failed: ${err.message}. Check console.`);
         } finally {
             setLoading(false);
         }
     }
+
 
     const deleteSubjectQuestions = async () => {
         const subjectToDelete = 'mathematics'; // Target
@@ -767,10 +750,10 @@ const UploadPage = () => {
                                         ⚠️ These actions permanently delete data. Use with caution.
                                     </p>
                                     <button
-                                        onClick={deleteBSEBClass10Questions}
+                                        onClick={deleteAllClass10Questions}
                                         className="w-full py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 transition-colors border border-red-700"
                                     >
-                                        🗑️ Delete All BSEB Class 10 Questions
+                                        🗑️ Delete ALL Class 10 Questions (All Boards)
                                     </button>
                                     <button
                                         onClick={deleteSubjectQuestions}
