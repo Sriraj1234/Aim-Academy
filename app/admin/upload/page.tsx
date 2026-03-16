@@ -208,6 +208,18 @@ const UploadPage = () => {
                     if (idx !== -1) correctAnswer = idx;
                 }
 
+                // Level (Difficulty): Easy, Medium, Hard
+                const levelKey = findKeySmart(['level', 'difficulty', 'diff']);
+                const level = levelKey ? String(row[levelKey]).trim() : '';
+
+                // Topic (sub-chapter topic)
+                const topicKey = findKeySmart(['topic', 'subtopic', 'sub_topic']);
+                const topic = topicKey ? String(row[topicKey]).trim() : '';
+
+                // Image URL
+                const imageKey = findKeySmart(['image_url', 'image url', 'imageurl', 'image', 'img', 'img_url']);
+                const imageUrl = imageKey ? String(row[imageKey] ?? '').trim() : '';
+
                 // Apply specific row override OR global setting
                 const classKey = findKeySmart(['class', 'grade', 'standard', 'cls', 'std']);
                 const rowClass = classKey ? row[classKey].toString() : globalSettings.class;
@@ -226,6 +238,9 @@ const UploadPage = () => {
                     question,
                     options,
                     correctAnswer,
+                    level,
+                    topic,
+                    imageUrl,
                     class: rowClass,
                     board: rowBoard,
                     stream: rowStream,
@@ -327,7 +342,10 @@ const UploadPage = () => {
                             board: finalBoard,
                             class: finalClass,
                             stream: finalStream,
-                            mainSubject: q.mainSubject,
+                            mainSubject: q.mainSubject || null,
+                            level: q.level || '',
+                            topic: q.topic || '',
+                            imageUrl: q.imageUrl || '',
                             createdAt: Date.now(),
                             active: true
                         })
@@ -580,6 +598,50 @@ const UploadPage = () => {
         }
     }
 
+    const deleteBSEBClass10Questions = async () => {
+        if (!confirm('DANGER: Delete ALL BSEB Class 10 questions? This permanently removes the entire questions/BSEB/Class 10 hierarchy. This CANNOT be undone.')) return;
+        const confirmText = prompt('Type "DELETE BSEB 10" to confirm:');
+        if (confirmText !== 'DELETE BSEB 10') {
+            alert('Deletion cancelled — text did not match.');
+            return;
+        }
+        setLoading(true);
+        let totalDeleted = 0;
+        try {
+            // Subjects stored under questions/BSEB/Class 10/general/
+            const subjects = ['maths', 'mathematics', 'science', 'physics', 'chemistry', 'biology',
+                'history', 'geography', 'civics', 'economics', 'hindi', 'english', 'sanskrit',
+                'social science', 'social_science', 'disaster management'];
+
+            for (const subj of subjects) {
+                const colRef = collection(db, `questions/BSEB/Class 10/general/${subj}`);
+                const snap = await getDocs(colRef);
+                if (snap.empty) continue;
+                const batch = writeBatch(db);
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                totalDeleted += snap.size;
+            }
+
+            // Also clean metadata taxonomy for bseb_10
+            const metaRef = doc(db, 'metadata', 'taxonomy');
+            const metaSnap = await getDoc(metaRef);
+            if (metaSnap.exists()) {
+                const data = metaSnap.data();
+                delete data['bseb_10'];
+                await setDoc(metaRef, data);
+            }
+
+            alert(`✅ Deleted ${totalDeleted} BSEB Class 10 questions and cleaned metadata.`);
+            window.location.reload();
+        } catch (err) {
+            console.error('Delete BSEB 10 failed', err);
+            alert('Failed to delete. Check console for details.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
     const deleteSubjectQuestions = async () => {
         const subjectToDelete = 'mathematics'; // Target
         if (!confirm(`DANGER: Are you sure you want to PERMANENTLY DELETE ALL questions for '${subjectToDelete}'? This cannot be undone.`)) return;
@@ -705,10 +767,16 @@ const UploadPage = () => {
                                         ⚠️ These actions permanently delete data. Use with caution.
                                     </p>
                                     <button
+                                        onClick={deleteBSEBClass10Questions}
+                                        className="w-full py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 transition-colors border border-red-700"
+                                    >
+                                        🗑️ Delete All BSEB Class 10 Questions
+                                    </button>
+                                    <button
                                         onClick={deleteSubjectQuestions}
                                         className="w-full py-2 bg-red-100 text-red-700 rounded-lg font-bold text-sm hover:bg-red-200 transition-colors border border-red-200"
                                     >
-                                        Delete All "Mathematics" Questions
+                                        Delete All &quot;Mathematics&quot; Questions
                                     </button>
                                     <button
                                         onClick={sanitizeMetadata}
