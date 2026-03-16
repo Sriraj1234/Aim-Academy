@@ -6,30 +6,35 @@ export type Class = '9' | '10' | '11' | '12'
 
 export interface Question {
     id: string
-    board: Board
-    language: Language
+    board: Board | string   // relaxed to support uploaded board strings
+    language?: Language
     subject: Subject
     subSubject?: string
-    mainSubject?: string // Added for bulk uploads structure
-    class: Class
-    year: number
+    mainSubject?: string    // Added for bulk uploads structure
+    class: Class | string   // relaxed to support uploaded class strings
+    year?: number
     question: string
     options: string[]
     correctAnswer: number
-    chapter: string
-    topic: string
-    difficulty: Difficulty
-    marks: number
-    questionType: 'mcq' | 'short' | 'long' | 'numerical'
-    explanation: string
+    chapter?: string
+    topic?: string
+    difficulty?: Difficulty
+    level?: string          // Upload field: Easy / Medium / Hard (maps from 'Level' column)
+    imageUrl?: string       // Upload field: image URL (maps from 'Image_URL' column)
+    marks?: number
+    questionType?: 'mcq' | 'short' | 'long' | 'numerical'
+    explanation?: string
     solutionSteps?: string[]
     formulaText?: string
-    tags: string[]
+    tags?: string[]
+    stream?: string         // For class 11/12 stream awareness
 
     // Auto-Translation Fields
     questionHi?: string
     optionsHi?: string[]
     explanationHi?: string
+    active?: boolean
+    createdAt?: number
 }
 
 export interface User {
