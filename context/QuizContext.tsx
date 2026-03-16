@@ -21,7 +21,7 @@ interface QuizContextType {
     startTime: number
     endTime: number
     categories: CategoryData
-    startQuiz: (subject?: string, count?: number, chapter?: string) => Promise<void>
+    startQuiz: (subject?: string, count?: number, chapter?: string, difficulty?: string) => Promise<void>
     startAIQuiz: (questions: Question[]) => void
     submitAnswer: (answerIndex: number | null) => void
     nextQuestion: () => void
@@ -107,7 +107,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [swrCategories])
 
-    const startQuiz = async (subject?: string, count: number = 20, chapter?: string) => {
+    const startQuiz = async (subject?: string, count: number = 20, chapter?: string, difficulty?: string) => {
         setIsLoading(true)
         setIsFinished(false)
         setIsSavingResult(false)
@@ -118,17 +118,28 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
         setEndTime(0)
 
         try {
-            // ── Build hierarchical path (all lowercase) ──────────────────────
-            // Path: questions/{board}/{class_N}/{stream}/{subject}
-            // e.g.  questions/bseb/class_12/science/chemistry
+            // ── Build hierarchical path matching upload format ─────────────────────
+            // Path: questions/{BOARD}/{Class N}/{stream}/{subject}
+            // e.g.  questions/BSEB/Class 10/general/maths
             const brd = userProfile?.board || '';
             const cls = userProfile?.class || '';
             const strm = userProfile?.stream || '';
-            const level = parseInt(cls.toString().replace(/[^0-9]/g, '') || '0', 10);
+            const classNum = parseInt(cls.toString().replace(/[^0-9]/g, '') || '0', 10);
 
-            const boardKey = (() => { const b = brd.toLowerCase(); if (b === 'bihar board' || b === 'bseb') return 'bseb'; if (b === 'cbse') return 'cbse'; if (b === 'icse') return 'icse'; return b || 'other'; })();
-            const classKey = (() => { const n = cls.toString().replace(/[^0-9]/g, ''); return n ? `class_${n}` : 'class_other'; })();
-            const streamKey = level >= 11 ? ((strm || 'science').toLowerCase().trim() || 'science') : 'general';
+            // ── FIXED: Match exact format used during upload ──────────────────────
+            const boardKey = (() => {
+                const b = brd.toLowerCase();
+                if (b === 'bihar board' || b === 'bseb') return 'BSEB';
+                if (b === 'cbse') return 'CBSE';
+                if (b === 'icse') return 'ICSE';
+                if (b === 'up board' || b === 'up') return 'UP';
+                return brd.trim() || 'Other';
+            })();
+            const classKey = (() => {
+                const n = cls.toString().replace(/[^0-9]/g, '');
+                return n ? `Class ${n}` : cls.trim();
+            })();
+            const streamKey = classNum >= 11 ? ((strm || 'Science').trim() || 'Science') : 'general';
 
             // Normalise subject → lowercase, spaces→underscore ("Social Science" → "social_science")
             let subjectKey = (subject || '').toLowerCase().trim().replace(/\s+/g, '_');
@@ -138,6 +149,10 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
             const constraints: any[] = [];
             if (chapter) constraints.push(where('chapter', '==', chapter));
+            // ── Difficulty filter (skip if 'mix' or undefined) ────────────────────
+            if (difficulty && difficulty !== 'mix') {
+                constraints.push(where('level', '==', difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase()));
+            }
 
             const fetchLimit = Math.min(count * 3, 200);
 
@@ -502,7 +517,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             startTime,
             endTime,
             categories,
-            startQuiz,
+            startQuiz: startQuiz as (subject?: string, count?: number, chapter?: string, difficulty?: string) => Promise<void>,
             startAIQuiz,
             submitAnswer,
             nextQuestion,
