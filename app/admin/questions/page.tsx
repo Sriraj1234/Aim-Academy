@@ -68,51 +68,60 @@ export default function QuestionsPage() {
     const [isManageChaptersOpen, setIsManageChaptersOpen] = useState(false)
 
     const fetchQuestions = async (isNew = false) => {
+        // Require at least board + class + subject to build a hierarchical path
+        if (filterBoard === 'all' || filterClass === 'all' || !filterSubject) {
+            if (isNew) {
+                setQuestions([])
+                setHasMore(false)
+            }
+            setLoading(false)
+            return
+        }
+
         setLoading(true)
         try {
-            const constraints: any[] = [limit(PAGE_SIZE)]
+            // Build hierarchical path matching upload format
+            // Board: 'bseb' → 'BSEB', 'cbse' → 'CBSE' etc.
+            const boardKey = filterBoard.toUpperCase();
+            // Class: '10' → 'Class 10', '12' → 'Class 12'
+            const classKey = `Class ${filterClass}`;
+            // Stream: always 'general' for class 9/10, else look at stream
+            const classNum = parseInt(filterClass);
+            const streamKey = classNum >= 11 ? 'Science' : 'general';
+            // Subject: lowercase, spaces → underscores for keys like 'social_science'
+            const subjectKey = filterSubject.toLowerCase().replace(/\s+/g, '_');
 
-            // Apply Filters
-            // Note: If we use 'where' filters, we CANNOT easily sort by 'createdAt' without a composite index.
-            // To avoid errors for the user without them creating indexes manually, we only sort if NO filters are active.
-            let hasFilters = false;
+            const colPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
+            console.log('Admin Questions: querying', colPath);
 
-            if (filterBoard !== 'all') { constraints.push(where('board', '==', filterBoard)); hasFilters = true; }
-            if (filterClass !== 'all') { constraints.push(where('class', '==', filterClass)); hasFilters = true; }
-            if (filterSubject) { constraints.push(where('subject', '==', filterSubject.toLowerCase())); hasFilters = true; }
-            if (filterChapter) { constraints.push(where('chapter', '==', filterChapter)); hasFilters = true; }
+            const constraints: any[] = [orderBy('createdAt', 'desc'), limit(PAGE_SIZE)];
+            if (filterChapter) constraints.push(where('chapter', '==', filterChapter));
+            if (!isNew && lastDoc) constraints.push(startAfter(lastDoc));
 
-            // Only sort by creation date if we are just browsing (no filters)
-            if (!hasFilters) {
-                constraints.unshift(orderBy('createdAt', 'desc'))
-            }
-
-            if (!isNew && lastDoc) {
-                constraints.push(startAfter(lastDoc))
-            }
-
-            const q = query(collection(db, 'questions'), ...constraints)
-            const snapshot = await getDocs(q)
+            const snapshot = await getDocs(query(collection(db, colPath), ...constraints))
 
             if (snapshot.empty) {
                 setHasMore(false)
-                if (isNew) {
-                    setQuestions([])
-                }
+                if (isNew) setQuestions([])
             } else {
                 setLastDoc(snapshot.docs[snapshot.docs.length - 1])
-                const newQuestions = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Question))
+                const newQuestions = snapshot.docs.map(d => ({
+                    id: d.id,
+                    _path: d.ref.path, // Store full doc path for deletion
+                    ...d.data()
+                } as Question & { _path: string }))
 
-                if (isNew) {
-                    setQuestions(newQuestions)
-                } else {
-                    setQuestions(prev => [...prev, ...newQuestions])
-                }
+                if (isNew) setQuestions(newQuestions as any)
+                else setQuestions(prev => [...prev, ...newQuestions] as any)
+                setHasMore(snapshot.size === PAGE_SIZE)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching questions:", error)
             if (isNew) setQuestions([])
-            alert("Error fetching (Check Console)")
+            // Don't alert for index-building errors, just log
+            if (error?.code !== 'failed-precondition') {
+                alert("Error fetching — check console")
+            }
         } finally {
             setLoading(false)
         }
@@ -188,14 +197,26 @@ export default function QuestionsPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filterBoard, filterClass, filterSubject, filterChapter])
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (q: any) => {
         if (!confirm("Are you sure you want to delete this question?")) return
         try {
-            await deleteDoc(doc(db, 'questions', id))
-            setQuestions(prev => prev.filter(q => q.id !== id))
+            // Use the stored _path if available; otherwise reconstruct from fields
+            let docRef;
+            if (q._path) {
+                docRef = doc(db, q._path);
+            } else {
+                // Reconstruct from fields as fallback
+                const boardKey = (q.board || 'other').toUpperCase();
+                const classKey = `Class ${String(q.class).replace(/\D/g, '')}`;
+                const streamKey = parseInt(q.class) >= 11 ? (q.stream || 'Science') : 'general';
+                const subjectKey = (q.subject || 'general').toLowerCase().replace(/\s+/g, '_');
+                docRef = doc(db, `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}/${q.id}`);
+            }
+            await deleteDoc(docRef)
+            setQuestions(prev => prev.filter(item => item.id !== q.id))
         } catch (error) {
             console.error("Delete failed", error)
-            alert("Delete failed")
+            alert("Delete failed — check console")
         }
     }
 
@@ -527,6 +548,16 @@ export default function QuestionsPage() {
                     renderFolderContent()
                 ) : (
                     <div className="space-y-4">
+
+                        {/* Info banner when filters not set */}
+                        {(filterBoard === 'all' || filterClass === 'all' || !filterSubject) && (
+                            <div className="text-center py-12 bg-blue-50 border border-dashed border-blue-200 rounded-[2rem] mb-4">
+                                <div className="text-4xl mb-3">📂</div>
+                                <p className="text-gray-700 font-bold mb-1">Select Board + Class + Subject to Browse Questions</p>
+                                <p className="text-gray-500 text-sm">Questions are stored hierarchically by board and class.</p>
+                            </div>
+                        )}
+
                         {questions.map((q, index) => (
                             <div key={q.id} className="bg-white p-6 rounded-[1.5rem] border border-pw-border shadow-sm hover:shadow-pw-lg transition-all relative group hover:-translate-y-0.5">
                                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -538,7 +569,7 @@ export default function QuestionsPage() {
                                         <HiPencil />
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(q.id)}
+                                        onClick={() => handleDelete(q as any)}
                                         className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
                                         title="Delete"
                                     >
@@ -547,28 +578,32 @@ export default function QuestionsPage() {
                                 </div>
 
                                 <div className="flex flex-wrap gap-2 mb-3 items-center">
-                                    {/* Serial Number */}
                                     <span className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-600 font-mono font-bold rounded-lg text-xs">
                                         #{index + 1}
                                     </span>
-
                                     <span className="px-3 py-1 bg-pw-surface border border-pw-border text-gray-500 text-xs font-bold rounded-lg uppercase tracking-wider">
                                         {q.board} {q.class}
                                     </span>
-
-                                    {/* Main Subject Badge */}
                                     {q.mainSubject && (
                                         <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-blue-100">
                                             {q.mainSubject}
                                         </span>
                                     )}
-
                                     <span className="px-3 py-1 bg-pw-indigo/10 text-pw-indigo text-xs font-bold rounded-lg uppercase tracking-wider">
                                         {q.subject}
                                     </span>
                                     <span className="px-3 py-1 bg-purple-50 text-purple-600 text-xs font-bold rounded-lg uppercase tracking-wider">
                                         {q.chapter}
                                     </span>
+                                    {(q as any).level && (
+                                        <span className={`px-3 py-1 text-xs font-bold rounded-lg uppercase tracking-wider border ${
+                                            (q as any).level === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
+                                            (q as any).level === 'Hard' ? 'bg-red-50 text-red-700 border-red-200' :
+                                            'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                        }`}>
+                                            {(q as any).level}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <p className="font-bold text-pw-violet text-lg mb-4 pr-20 leading-relaxed">
@@ -591,13 +626,13 @@ export default function QuestionsPage() {
                             </div>
                         ))}
 
-                        {questions.length === 0 && !loading && (
+                        {questions.length === 0 && !loading && filterBoard !== 'all' && filterClass !== 'all' && filterSubject && (
                             <div className="text-center py-20 bg-white border border-dashed border-gray-200 rounded-[2rem]">
                                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mx-auto mb-4">
                                     <HiSearch className="text-2xl" />
                                 </div>
                                 <p className="text-gray-400 font-bold mb-1">No questions found</p>
-                                <p className="text-gray-500 text-sm">Try adjusting your filters or add a new question.</p>
+                                <p className="text-gray-500 text-sm">Try adjusting your filters or upload questions via the Upload page.</p>
                             </div>
                         )}
                     </div>
