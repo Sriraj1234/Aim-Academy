@@ -220,17 +220,30 @@ function HostGameContent() {
         setIsLoading(true);
 
         try {
-            // ── Build hierarchical path (ALL LOWERCASE — matches clean migration) ──
-            // Path: questions/{board}/{class_N}/{stream}/{subject}
+            // ── Build hierarchical path matching upload format ───────────────────
+            // Path: questions/{BOARD}/{Class N}/{stream}/{subject}
+            // e.g.  questions/BSEB/Class 10/general/maths
             const boardRaw = userProfile?.board || 'bseb';
             const clsRaw = userProfile?.class || '10';
             const streamRaw = userProfile?.stream || '';
-            const level = parseInt(clsRaw.toString().replace(/[^0-9]/g, '') || '0', 10);
+            const classNum = parseInt(clsRaw.toString().replace(/[^0-9]/g, '') || '0', 10);
 
-            const boardKey = (() => { const b = boardRaw.toLowerCase(); if (b === 'bihar board' || b === 'bseb') return 'bseb'; if (b === 'cbse') return 'cbse'; if (b === 'icse') return 'icse'; return b || 'bseb'; })();
-            const classKey = (() => { const n = clsRaw.toString().replace(/[^0-9]/g, ''); return n ? `class_${n}` : 'class_other'; })();
-            const streamKey = level >= 11 ? ((streamRaw || 'science').toLowerCase().trim() || 'science') : 'general';
-            // Lowercase subject + spaces → underscores  ("Social Science" → "social_science")
+            // ── FIXED: Match exact format used during upload ─────────────────────
+            const boardKey = (() => {
+                const b = boardRaw.toLowerCase();
+                if (b === 'bihar board' || b === 'bseb') return 'BSEB';
+                if (b === 'cbse') return 'CBSE';
+                if (b === 'icse') return 'ICSE';
+                if (b === 'up board' || b === 'up') return 'UP';
+                return boardRaw.trim() || 'Other';
+            })();
+            const classKey = (() => {
+                const n = clsRaw.toString().replace(/[^0-9]/g, '');
+                return n ? `Class ${n}` : clsRaw.trim();
+            })();
+            const streamKey = classNum >= 11 ? ((streamRaw || 'Science').trim() || 'Science') : 'general';
+
+            // Subject: lowercase, spaces → underscores  ("Social Science" → "social_science")
             const subjectKey = selectedSubject.toLowerCase().trim().replace(/\s+/g, '_');
             const subjectPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
 
