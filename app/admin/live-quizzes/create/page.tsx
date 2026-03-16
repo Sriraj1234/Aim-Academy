@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, getDocs, where, limit, orderBy } from 'firebase/firestore';
+import { collection, addDoc, query, getDocs, limit, orderBy } from 'firebase/firestore';
 import { LiveQuiz, Question, Batch } from '@/data/types';
 import { FaSave, FaSearch, FaCheck, FaPlus, FaCalendarAlt, FaClock, FaMinusCircle, FaFilter } from 'react-icons/fa';
 import { HiArrowLeft } from 'react-icons/hi';
@@ -40,8 +40,8 @@ export default function CreateLiveQuizPage() {
 
     // BANK FILTERS (Independent of Quiz Settings)
     const [searchTerm, setSearchTerm] = useState('');
-    const [bankFilterBoard, setBankFilterBoard] = useState('all');
-    const [bankFilterClass, setBankFilterClass] = useState('all');
+    const [bankFilterBoard, setBankFilterBoard] = useState('BSEB');
+    const [bankFilterClass, setBankFilterClass] = useState('10');
     const [bankFilterSubject, setBankFilterSubject] = useState('all');
 
     // Data Headers
@@ -60,51 +60,53 @@ export default function CreateLiveQuizPage() {
     useEffect(() => {
         // Fetch Questions for Selection
         const fetchQuestions = async () => {
+            // Require at least board+class+subject to avoid loading 1000+ questions
+            if (bankFilterBoard === 'all' || bankFilterClass === 'all' || bankFilterSubject === 'all') {
+                setAvailableQuestions([]);
+                return;
+            }
+
             setLoading(true);
-            setAvailableQuestions([]); // Clear previous results to avoid confusion
+            setAvailableQuestions([]);
 
-            const constraints: any[] = [limit(500), orderBy('createdAt', 'desc')];
-
-            // Filter by Board (Bank Filter) - Keep Lowercase
-            if (bankFilterBoard !== 'all') {
-                constraints.push(where('board', '==', bankFilterBoard.toLowerCase()));
-            }
-
-            // Filter by Subject (Bank Filter) - Use Lowercase to match DB
-            if (bankFilterSubject !== 'all') {
-                constraints.push(where('subject', '==', bankFilterSubject.toLowerCase()));
-            }
-
-            // Filter by Class (Bank Filter)
-            if (bankFilterClass !== 'all') {
-                constraints.push(where('class', '==', bankFilterClass));
-            }
-
-            const q = query(collection(db, 'questions'), ...constraints);
             try {
-                const snap = await getDocs(q);
-                const fetchedQuestions = snap.docs.map(d => ({ id: d.id, ...d.data() } as Question));
+                // ── Build hierarchical path matching upload format ─────────────────
+                const boardKey = bankFilterBoard.toUpperCase(); // e.g. 'BSEB'
+                const classKey = `Class ${bankFilterClass}`; // e.g. 'Class 10'
+                const classNumInt = parseInt(bankFilterClass);
+                const streamKey = classNumInt >= 11 ? 'Science' : 'general';
+                const subjectKey = bankFilterSubject.toLowerCase().replace(/\s+/g, '_');
+
+                const colPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
+                console.log('LiveQuiz Admin: querying', colPath);
+
+                const snap = await getDocs(query(
+                    collection(db, colPath),
+                    orderBy('createdAt', 'desc'),
+                    limit(500)
+                ));
+
+                const fetchedQuestions = snap.docs.map(d => ({
+                    id: d.id,
+                    ...d.data()
+                })) as any[];
+
                 setAvailableQuestions(fetchedQuestions);
 
                 if (fetchedQuestions.length === 0) {
-                    console.log("No questions found for these filters.");
+                    console.log('No questions found at:', colPath);
                 }
             } catch (error: any) {
-                console.error("Error fetching questions:", error);
-                // Handle Missing Index Error gracefully
-                if (error.message.includes('index')) {
-                    alert("System Notice: This specific combination of filters requires a new database index. Please ask the developer to create it, or try fewer filters.");
+                console.error('Error fetching questions:', error);
+                if (!error?.message?.includes('index')) {
+                    alert(`Failed to load questions: ${error.message}`);
                 }
             } finally {
                 setLoading(false);
             }
         };
 
-        // Debounce fetch slightly to avoid rapid fires
-        const timeoutId = setTimeout(() => {
-            fetchQuestions();
-        }, 300);
-
+        const timeoutId = setTimeout(fetchQuestions, 300);
         return () => clearTimeout(timeoutId);
     }, [bankFilterBoard, bankFilterSubject, bankFilterClass]);
 
@@ -511,10 +513,10 @@ export default function CreateLiveQuizPage() {
                                             className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none capitalize"
                                         >
                                             <option value="all">All Boards</option>
-                                            <option value="cbse">CBSE</option>
-                                            <option value="icse">ICSE</option>
-                                            <option value="bseb">BSEB (Bihar)</option>
-                                            <option value="up">UP Board</option>
+                                            <option value="BSEB">BSEB (Bihar)</option>
+                                            <option value="CBSE">CBSE</option>
+                                            <option value="ICSE">ICSE</option>
+                                            <option value="UP">UP Board</option>
                                         </select>
 
                                         {/* Class Filter */}
@@ -566,6 +568,25 @@ export default function CreateLiveQuizPage() {
                                 </div>
 
                                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                                    {/* Prompt when filters not fully set */}
+                                    {(bankFilterBoard === 'all' || bankFilterClass === 'all' || bankFilterSubject === 'all') && (
+                                        <div className="text-center py-12 bg-blue-50 rounded-2xl border border-dashed border-blue-200">
+                                            <div className="text-4xl mb-3">📂</div>
+                                            <p className="font-bold text-gray-700">Select Board + Class + Subject</p>
+                                            <p className="text-xs text-gray-500 mt-1">Questions will load from the question bank</p>
+                                        </div>
+                                    )}
+                                    {loading && (
+                                        <div className="text-center py-8 text-gray-400 font-bold">Loading questions...</div>
+                                    )}
+                                    {!loading && availableQuestions.length === 0
+                                        && bankFilterBoard !== 'all' && bankFilterClass !== 'all' && bankFilterSubject !== 'all' && (
+                                        <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                            <div className="text-4xl mb-3">🔍</div>
+                                            <p className="font-bold text-gray-600">No questions found</p>
+                                            <p className="text-xs text-gray-400 mt-1">Upload questions first via the Upload page</p>
+                                        </div>
+                                    )}
                                     {availableQuestions
                                         .filter(q => q.question.toLowerCase().includes(searchTerm.toLowerCase()))
                                         .map(q => {
