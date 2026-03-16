@@ -406,17 +406,33 @@ export default function QuizPage() {
                         key={currentQuestionIndex + '-text'}
                         className="mb-8 text-left"
                     >
+                        {/* Question Image (if available) */}
+                        {question.imageUrl && (
+                            <div className="mb-4 rounded-xl overflow-hidden border border-pw-border bg-gray-50">
+                                <img
+                                    src={question.imageUrl}
+                                    alt="Question diagram"
+                                    className="w-full max-h-64 object-contain"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                />
+                            </div>
+                        )}
+
                         <h2 className="text-lg md:text-2xl font-display font-medium text-gray-800 leading-relaxed mb-4 text-left">
                             {displayQuestion}
                             {isTranslating && <span className="inline-block ml-2 text-xs text-pw-indigo animate-pulse">(Translating...)</span>}
                         </h2>
 
-                        {/* Question Meta Tags - simplified */}
-                        {/* <div className="flex flex-wrap gap-2 mb-2">
-                            <span className="px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 text-[10px] font-semibold rounded uppercase tracking-wider">
-                                {question.chapter}
+                        {/* Level badge */}
+                        {question.level && (
+                            <span className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full mb-2 border ${
+                                question.level === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
+                                question.level === 'Hard' ? 'bg-red-50 text-red-700 border-red-200' :
+                                'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            }`}>
+                                {question.level}
                             </span>
-                        </div> */}
+                        )}
                     </motion.div>
 
                     {/* Options Grid */}
