@@ -1076,7 +1076,7 @@ const UploadPage = () => {
                                     <FaFileExcel className="text-4xl text-green-600 mx-auto mb-4" />
                                     <h3 className="font-bold text-gray-700 text-lg">Click to Upload Excel/CSV</h3>
                                     <p className="text-sm text-gray-500 mt-2">
-                                        Supported columns: Main subject, Subject, Chapter, Question, Option A-D, Correct Answer
+                                        Supported columns: Subject, Chapter, Question, Option A-D, Correct Answer, <strong>Level</strong>, <strong>Topic</strong>, <strong>Image_URL</strong>
                                     </p>
                                 </div>
 
@@ -1086,15 +1086,17 @@ const UploadPage = () => {
                                         onClick={() => {
                                             const templateData = [
                                                 {
-                                                    "Main subject": "Science",
-                                                    "Subject": "Physics",
-                                                    "Chapter": "Light Reflection",
-                                                    "Question": "What is the speed of light?",
-                                                    "Option A": "3x10^8 m/s",
-                                                    "Option B": "300 km/s",
-                                                    "Option C": "Sound speed",
-                                                    "Option D": "Infinite",
-                                                    "Correct Answer": "a"
+                                                    "Subject": "Maths",
+                                                    "Chapter": "वास्तविक संख्याएँ",
+                                                    "Question": "सबसे छोटी अभाज्य संख्या (Smallest Prime Number) कौन सी है?",
+                                                    "Option A": "1",
+                                                    "Option B": "2",
+                                                    "Option C": "3",
+                                                    "Option D": "0",
+                                                    "Correct Answer": "Option B",
+                                                    "Level": "Easy",
+                                                    "Topic": "गुणधर्म एवं परिभाषा",
+                                                    "Image_URL": ""
                                                 }
                                             ];
                                             const ws = XLSX.utils.json_to_sheet(templateData);
@@ -1170,6 +1172,8 @@ const UploadPage = () => {
                                                 <th className="p-3 min-w-[300px]">Question</th>
                                                 <th className="p-3 w-32">Chapter</th>
                                                 <th className="p-3 w-32">Subject</th>
+                                                <th className="p-3 w-24">Level</th>
+                                                <th className="p-3 w-16">Img</th>
                                                 <th className="p-3 w-24">Answer</th>
                                             </tr>
                                         </thead>
@@ -1247,6 +1251,40 @@ const UploadPage = () => {
                                                             className="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-pw-indigo outline-none py-1 px-1 text-xs text-gray-600 focus:text-gray-900 capitalize"
                                                             placeholder="Subject"
                                                         />
+                                                    </td>
+                                                    <td className="p-2">
+                                                        {/* Level Badge + editable */}
+                                                        <select
+                                                            value={(q as any).level || ''}
+                                                            onChange={(e) => {
+                                                                const newVal = e.target.value;
+                                                                setParsedSheets(prev => {
+                                                                    const sheets = [...prev];
+                                                                    (sheets[activeSheet].questions[idx] as any).level = newVal;
+                                                                    return sheets;
+                                                                });
+                                                            }}
+                                                            className={`text-xs font-bold px-2 py-1 rounded-lg border outline-none w-full cursor-pointer
+                                                                ${(q as any).level === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                                (q as any).level === 'Hard' ? 'bg-red-50 text-red-700 border-red-200' :
+                                                                (q as any).level === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                                                'bg-gray-50 text-gray-400 border-gray-200'}`}
+                                                        >
+                                                            <option value="">—</option>
+                                                            <option value="Easy">Easy</option>
+                                                            <option value="Medium">Medium</option>
+                                                            <option value="Hard">Hard</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="p-2 text-center">
+                                                        {(q as any).imageUrl ? (
+                                                            <a href={(q as any).imageUrl} target="_blank" rel="noreferrer" title={(q as any).imageUrl}
+                                                                className="text-blue-500 hover:text-blue-700 font-bold text-xs">
+                                                                🖼️
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-gray-300 text-xs">—</span>
+                                                        )}
                                                     </td>
                                                     <td className="p-2">
                                                         <select
