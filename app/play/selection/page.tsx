@@ -164,7 +164,7 @@ function SelectionContent() {
     const [mode, setMode] = useState<'subject' | 'chapter'>('subject') // derived from interactions
 
     // Customization State
-    const [customizing, setCustomizing] = useState<{ name: string, count: number, levels?: { Easy: number, Medium: number, Hard: number } } | null>(null)
+    const [customizing, setCustomizing] = useState<{ name: string, count: number, origSubject?: string, subject?: string, levels?: { Easy: number, Medium: number, Hard: number } } | null>(null)
 
     // ... (rest of useEffects remain same until handlers)
 
@@ -290,7 +290,11 @@ function SelectionContent() {
     const [selectedLang, setSelectedLang] = useState(false)
 
     const scienceSubjects = ['physics', 'chemistry', 'biology']
-    const sstSubjects = ['history', 'geography', 'civics', 'economics', 'political science', 'disaster management', 'social studies']
+    const sstSubjects = [
+        'history', 'geography', 'civics', 'economics', 'political science', 'disaster management', 'social studies', 
+        'social science', 'sst', 'pol science', 'political_science', 'disaster_management', 'social_science', 'social_studies',
+        'itihas', 'bhugol', 'nagrik', 'arthshastra'
+    ];
 
     // Robust Language Check: Helper Function
     const isLanguage = (sub: string) => {
@@ -299,11 +303,15 @@ function SelectionContent() {
     };
 
     const displayedSubjects = activeCategories.subjects?.filter(
-        sub => !scienceSubjects.includes(sub.toLowerCase()) &&
-            !sstSubjects.includes(sub.toLowerCase()) &&
-            !isLanguage(sub) &&
-            sub.toLowerCase() !== 'social studies' &&
-            sub.toLowerCase() !== 'mathematics'
+        sub => {
+            const s = sub.toLowerCase();
+            return !scienceSubjects.includes(s) &&
+                   !sstSubjects.includes(s) &&
+                   !isLanguage(sub) &&
+                   s !== 'social studies' &&
+                   s !== 'social science' &&
+                   s !== 'social_science';
+        }
     ) || []
 
     const hasScience = activeCategories.subjects?.some(sub => scienceSubjects.includes(sub.toLowerCase()))
@@ -332,7 +340,15 @@ function SelectionContent() {
             setSelectedSST(false)
             setSelectedLang(false)
         } else if (lower === 'social science') {
-            setSelectedSST(true)
+            const hasMergedSST = activeCategories.subjects?.some(s => s.toLowerCase() === 'social_science' || s.toLowerCase() === 'social science');
+            const hasOtherSST = activeCategories.subjects?.some(s => sstSubjects.includes(s.toLowerCase()) && s.toLowerCase() !== 'social_science' && s.toLowerCase() !== 'social science');
+            
+            if (hasMergedSST && !hasOtherSST) {
+                const subKey = activeCategories.subjects?.find(s => s.toLowerCase() === 'social_science' || s.toLowerCase() === 'social science') || 'social_science';
+                setSelectedSubject(subKey);
+            } else {
+                setSelectedSST(true)
+            }
             setSelectedScience(false)
             setSelectedLang(false)
         } else if (lower === 'languages') {
@@ -352,12 +368,16 @@ function SelectionContent() {
             if (scienceSubjects.includes(selectedSubject.toLowerCase())) {
                 setSelectedSubject(null)
                 setSelectedScience(true)
-            } else if (sstSubjects.includes(selectedSubject.toLowerCase())) {
-                setSelectedSubject(null)
-                setSelectedSST(true)
-            } else if (sstSubjects.includes(selectedSubject.toLowerCase())) {
-                setSelectedSubject(null)
-                setSelectedSST(true)
+            } else if (sstSubjects.includes(selectedSubject.toLowerCase()) || selectedSubject.toLowerCase() === 'social science' || selectedSubject.toLowerCase() === 'social_science') {
+                const hasMergedSST = activeCategories.subjects?.some(s => s.toLowerCase() === 'social_science' || s.toLowerCase() === 'social science');
+                const hasOtherSST = activeCategories.subjects?.some(s => sstSubjects.includes(s.toLowerCase()) && s.toLowerCase() !== 'social_science' && s.toLowerCase() !== 'social science');
+                
+                if (hasMergedSST && !hasOtherSST) {
+                    setSelectedSubject(null)
+                } else {
+                    setSelectedSubject(null)
+                    setSelectedSST(true)
+                }
             } else if (isLanguage(selectedSubject)) {
                 setSelectedSubject(null)
                 setSelectedLang(true)
@@ -380,7 +400,7 @@ function SelectionContent() {
         if (customizing) {
             // Safely decode and trim chapter name to prevent query mismatch
             const safeChapterName = decodeURIComponent(customizing.name).trim();
-            startQuiz(selectedSubject!, count, safeChapterName, difficulty)
+            startQuiz(selectedSubject!, count, safeChapterName, difficulty, customizing.origSubject || customizing.subject)
             router.push('/play/quiz')
         }
     }
