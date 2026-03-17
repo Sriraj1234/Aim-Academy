@@ -25,9 +25,9 @@ const normalizeSubject = (sub) => {
 
 const mapScienceChapter = (chapter) => {
     const c = chapter.toLowerCase();
-    const physicsChaps = ['प्रकाश', 'मानव नेत्र', 'विद्युत', 'ऊर्जा', 'prakash', 'manav netra', 'vidyut', 'urja'];
-    const chemistryChaps = ['तत्वों', 'कार्बन', 'अम्ल', 'धातु', 'रासायनिक', 'acids', 'carbon', 'metals', 'chemical'];
-    const biologyChaps = ['जैव', 'नियंत्रण', 'जनन', 'आनुवंशिकता', 'हमारा पर्यावरण', 'पर्यावरण', 'प्रबंधन', 'life processes', 'control', 'reproduce', 'heredity', 'environment', 'management', 'resources'];
+    const physicsChaps = ['प्रकाश', 'मानव नेत्र', 'विद्युत', 'ऊर्जा', 'prakash', 'manav netra', 'vidyut', 'energy', 'urja'];
+    const chemistryChaps = ['तत्वों', 'कार्बन', 'अम्ल', 'धाtu', 'रासायनिक', 'acids', 'carbon', 'metals', 'chemical'];
+    const biologyChaps = ['जैव', 'नियंत्रण', 'जनन', 'आनुवंशिकता', 'reproduc', 'हमara पर्यावरण', 'पर्यावरण', 'प्रबंधन', 'life processes', 'control', 'reproduce', 'reproduction', 'heredity', 'environment', 'management', 'resources'];
 
     if (physicsChaps.some(kw => c.includes(kw))) return 'physics';
     if (chemistryChaps.some(kw => c.includes(kw))) return 'chemistry';
