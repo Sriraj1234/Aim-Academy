@@ -313,6 +313,18 @@ function SelectionContent() {
     const subjects = displayedSubjects
     const chapters = selectedSubject ? (activeCategories.chapters?.[selectedSubject] || []) : []
 
+    // Dynamic Text Generation for Groups
+    const sstAvailable = activeCategories.subjects?.filter(sub => sstSubjects.includes(sub.toLowerCase())) || [];
+    const sstText = sstAvailable.length > 0
+        ? sstAvailable.slice(0, 3).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ') + (sstAvailable.length > 3 ? '...' : '')
+        : 'History, Civics, Geography...';
+
+    const langAvailable = activeCategories.subjects?.filter(sub => isLanguage(sub)) || [];
+    const langText = langAvailable.length > 0
+        ? langAvailable.slice(0, 3).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ') + (langAvailable.length > 3 ? '...' : '')
+        : 'Hindi, Sanskrit, English';
+
+
     const handleSubjectClick = (sub: string) => {
         const lower = sub.toLowerCase()
         if (lower === 'science') {
@@ -443,7 +455,7 @@ function SelectionContent() {
                 </motion.div>
 
                 {/* GRID Container */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
 
                     {loading ? (
                         [...Array(6)].map((_, i) => (
@@ -498,7 +510,7 @@ function SelectionContent() {
                                                 <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-orange-600 px-2 py-1 rounded-lg border border-orange-200">Group</span>
                                             </div>
                                             <h3 className="text-xl font-bold text-pw-violet group-hover:text-orange-600 transition-colors capitalize mb-1 relative z-10">Social Science</h3>
-                                            <p className="text-sm text-gray-500 relative z-10">History, Civics, Geography...</p>
+                                            <p className="text-sm text-gray-500 relative z-10">{sstText}</p>
                                         </motion.div>
                                     )}
 
@@ -520,7 +532,7 @@ function SelectionContent() {
                                                 <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-pink-600 px-2 py-1 rounded-lg border border-pink-200">Group</span>
                                             </div>
                                             <h3 className="text-xl font-bold text-pw-violet group-hover:text-pink-600 transition-colors capitalize mb-1 relative z-10">Languages</h3>
-                                            <p className="text-sm text-gray-500 relative z-10">Hindi, Sanskrit, English</p>
+                                            <p className="text-sm text-gray-500 relative z-10">{langText}</p>
                                         </motion.div>
                                     )}
                                     {subjects.map((sub, idx) => (
