@@ -145,7 +145,8 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             let subjectKey = subjectKeyOverride || (subject || '').toLowerCase().trim().replace(/\s+/g, '_');
             // Common UI aliases
             if (!subjectKeyOverride) {
-                if ((subject || '').includes('English')) subjectKey = 'english';
+                if (subjectKey === 'mathematics' || subjectKey === 'maths') subjectKey = 'math';
+                else if ((subject || '').includes('English')) subjectKey = 'english';
                 else if ((subject || '').includes('Hindi')) subjectKey = 'hindi';
             }
 
