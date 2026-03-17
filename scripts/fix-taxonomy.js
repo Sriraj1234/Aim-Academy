@@ -24,106 +24,151 @@ if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
     privateKey = privateKey.replace(/\\n/g, '\n');
 }
 
-admin.initializeApp({
-    credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-    })
-});
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId,
+            clientEmail,
+            privateKey,
+        })
+    });
+}
 
 const db = admin.firestore();
 
-const sstMergeList = [
-    'political_science', 'disaster_management', 'civics', 'geography', 'history', 
-    'economics', 'social_science', 'sst', 'social_studies', 'pol_science', 'political science',
-    'itihas', 'bhugol', 'nagrik', 'arthshastra'
-];
+const normalizeSubject = (sub) => {
+    const s = sub.toLowerCase().trim().replace(/\s+/g, '_');
+    if (s === 'mathematics' || s === 'maths' || s === 'math') return 'math';
+    
+    // Consolidated Social Science Grouping
+    const sstKeywords = [
+        'social_science', 'soc_science', 'social_studies',
+        'pol_science', 'political_science', 'civics',
+        'history', 'geography', 'economics', 'disaster_management',
+        'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
+    ];
+    
+    if (sstKeywords.includes(s)) {
+        return 'social_science';
+    }
+    
+    return s;
+};
+
+const mapScienceChapter = (chapter) => {
+    const c = chapter.toLowerCase();
+    const physicsChaps = ['प्रकाश', 'मानव नेत्र', 'विद्युत', 'ऊर्जा', 'prakash', 'manav netra', 'vidyut', 'energy', 'urja'];
+    const chemistryChaps = ['तत्वों', 'कार्बन', 'अम्ल', 'धातु', 'रासायनिक', 'acids', 'carbon', 'metals', 'chemical'];
+    const biologyChaps = ['जैव', 'नियंत्रण', 'जनन', 'आनुवंशिकता', 'reproduc', 'हमara पर्यावरण', 'पर्यावरण', 'प्रबंधन', 'life processes', 'control', 'reproduce', 'reproduction', 'heredity', 'environment', 'management', 'resources'];
+
+    if (physicsChaps.some(kw => c.includes(kw))) return 'physics';
+    if (chemistryChaps.some(kw => c.includes(kw))) return 'chemistry';
+    if (biologyChaps.some(kw => c.includes(kw))) return 'biology';
+    return 'science';
+};
 
 async function fixTaxonomy() {
-    console.log("🚀 Starting Advanced Database Taxonomy Fix (with Section Categorization)...");
-    try {
-        const docRef = db.collection('metadata').doc('taxonomy');
-        const docSnap = await docRef.get();
+    console.log("🚀 Starting Advanced Taxonomy Fix (Database-wide Scan)...");
 
-        if (!docSnap.exists) {
-            console.error("❌ Metadata not found!");
-            return;
-        }
+    const taxonomy = {};
+    const boards = ['BSEB', 'CBSE', 'UP', 'ICSE', 'Other'];
+    const classes = ['Class 10', 'Class 11', 'Class 12', 'Class 9'];
+    const streams = ['general', 'Science', 'Commerce', 'Arts'];
+    const commonSubjects = [
+        'science', 'physics', 'chemistry', 'biology', 
+        'math', 'mathematics', 'maths', 'hindi', 'english', 
+        'history', 'geography', 'political_science', 'economics', 
+        'disaster_management', 'social_science', 'civics'
+    ];
 
-        const data = docSnap.data();
-        let modified = false;
+    for (const board of boards) {
+        for (const cls of classes) {
+            for (const stream of streams) {
+                for (const sub of commonSubjects) {
+                    const colPath = `questions/${board}/${cls}/${stream}/${sub}`;
+                    const snapshot = await db.collection(colPath).get();
+                    
+                    if (snapshot.empty) continue;
+                    
+                    console.log(`✅ Found ${snapshot.size} Qs in ${colPath}`);
 
-        Object.keys(data).forEach(key => {
-            const entry = data[key];
-            if (!entry || !entry.chapters) return;
-
-            const combinedChapters = [];
-            const foundSSTKeys = [];
-
-            // 1. Gather all SST chapters
-            Object.keys(entry.chapters).forEach(subKey => {
-                const normKey = subKey.toLowerCase().replace(/\s+/g, '_');
-                if (sstMergeList.includes(normKey) || sstMergeList.includes(subKey.toLowerCase())) {
-                    const chapters = entry.chapters[subKey] || [];
-                    chapters.forEach((chap) => {
-                        // PRESERVE ORIGINAL SUBJECT in 'section' field for UI grouping & pathing
-                        const exists = combinedChapters.find(c => c.name === chap.name);
+                    snapshot.docs.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const chapter = (data.chapter || 'general').trim();
+                        const level = (data.level || 'Easy').trim();
                         
-                        // Human readable section names
-                        let sectionName = subKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        if (sectionName.toLowerCase() === 'social science') sectionName = 'General';
+                        let finalSubject = normalizeSubject(sub);
+                        
+                        let sstSection = 'General';
+                        let origSubject = sub;
+                        if (finalSubject === 'social_science') {
+                            sstSection = sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            if (sstSection.toLowerCase() === 'social science') sstSection = 'General';
+                        }
+                        
+                        if (finalSubject === 'science' && cls === 'Class 10') {
+                            const mapped = mapScienceChapter(chapter);
+                            if (mapped !== 'science') finalSubject = mapped;
+                        }
 
-                        if (!exists) {
-                            combinedChapters.push({
-                                ...chap,
-                                section: sectionName,
-                                origSubject: subKey // Add this for precise pathing
-                            });
-                        } else if (chap.count) {
-                            exists.count = (exists.count || 0) + (chap.count || 0);
-                            if (!exists.section) exists.section = sectionName;
-                            if (!exists.origSubject) exists.origSubject = subKey;
+                        const key = `${board.toLowerCase()}_${cls.replace(/[^0-9]/g, '')}`;
+
+                        if (!taxonomy[key]) {
+                            taxonomy[key] = { subjects: new Set(), chapters: {} };
+                        }
+
+                        taxonomy[key].subjects.add(finalSubject);
+
+                        if (!taxonomy[key].chapters[finalSubject]) {
+                            taxonomy[key].chapters[finalSubject] = [];
+                        }
+
+                        let existingChap = taxonomy[key].chapters[finalSubject].find((c) => c.name === chapter);
+                        if (!existingChap) {
+                            existingChap = { 
+                                name: chapter, 
+                                count: 0, 
+                                section: sstSection,
+                                origSubject: origSubject,
+                                levels: { Easy: 0, Medium: 0, Hard: 0 } 
+                            };
+                            taxonomy[key].chapters[finalSubject].push(existingChap);
+                        }
+                        
+                        existingChap.count++;
+                        const normalizedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+                        if (['Easy', 'Medium', 'Hard'].includes(normalizedLevel)) {
+                            existingChap.levels[normalizedLevel]++;
+                        } else {
+                            existingChap.levels['Easy']++;
                         }
                     });
-                    foundSSTKeys.push(subKey);
                 }
-            });
-
-            // 2. If we found SST content, merge it into 'social_science'
-            if (foundSSTKeys.length > 0) {
-                console.log(`[${key}] Merging ${foundSSTKeys.join(', ')} into social_science with sectioning`);
-                foundSSTKeys.forEach(k => delete entry.chapters[k]);
-                entry.chapters['social_science'] = combinedChapters;
-
-                if (entry.subjects) {
-                    const newSubjects = entry.subjects.filter((s) => !foundSSTKeys.includes(s));
-                    if (!newSubjects.includes('social_science')) {
-                        newSubjects.push('social_science');
-                    }
-                    entry.subjects = newSubjects;
-                }
-                modified = true;
             }
+        }
+    }
 
-            // 3. Ensure Mathematics is in subjects if it has chapters
-            if (entry.chapters['mathematics'] && entry.subjects && !entry.subjects.includes('mathematics')) {
-                console.log(`[${key}] Restoring Mathematics visibility`);
-                entry.subjects.push('mathematics');
-                modified = true;
+    const cleanTaxonomy = {};
+    Object.keys(taxonomy).forEach(key => {
+        let subjects = Array.from(taxonomy[key].subjects);
+        cleanTaxonomy[key] = {
+            subjects: subjects.map(s => s === 'math' ? 'mathematics' : s),
+            chapters: {}
+        };
+        
+        Object.keys(taxonomy[key].chapters).forEach(subKey => {
+            const finalSubKey = subKey === 'math' ? 'mathematics' : subKey;
+            cleanTaxonomy[key].chapters[finalSubKey] = taxonomy[key].chapters[subKey];
+            if (finalSubKey === 'mathematics') {
+                cleanTaxonomy[key].chapters[finalSubKey].forEach((c) => {
+                    c.origSubject = 'math';
+                });
             }
         });
+    });
 
-        if (modified) {
-            await docRef.set(data);
-            console.log("✅ Advanced Database Fix Completed Successfully!");
-        } else {
-            console.log("✨ Database is already using section categorization. No changes needed.");
-        }
-
-    } catch (e) {
-        console.error("❌ Error fixing taxonomy:", e);
-    }
+    await db.collection('metadata').doc('taxonomy').set(cleanTaxonomy);
+    console.log("✨ Taxonomy Rebuild Complete!");
 }
 
-fixTaxonomy();
+fixTaxonomy().catch(console.error);
