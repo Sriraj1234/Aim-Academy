@@ -18,8 +18,19 @@ import Link from 'next/link'
 const normalizeSubject = (sub: string): string => {
     const s = sub.toLowerCase().trim();
     if (s === 'math' || s === 'maths') return 'mathematics';
-    if (s === 'soc science' || s === 'social science') return 'social_science';
-    if (s === 'pol science' || s === 'political science') return 'political_science';
+    
+    // Consolidated Social Science Grouping
+    const sstKeywords = [
+        'social science', 'soc science', 'social_science', 'soc_science',
+        'pol science', 'political science', 'political_science', 'pol_science',
+        'history', 'geography', 'civics', 'economics', 'disaster management', 'social studies',
+        'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
+    ];
+    
+    if (sstKeywords.some(kw => s === kw || s.includes(kw))) {
+        return 'social_science';
+    }
+    
     return s.replace(/\s+/g, '_');
 };
 
@@ -443,6 +454,8 @@ const UploadPage = () => {
                         // Store as object with level tracking
                         chapterList.push({ 
                             name: q.chapter, 
+                            section: q.subject.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()), // Prettier section name
+                            origSubject: q.subject, // Store original subject for pathing
                             count: 1,
                             levels: {
                                 Easy: q.level === 'Easy' ? 1 : 0,
@@ -595,9 +608,9 @@ const UploadPage = () => {
     const parsedQuestions = parsedSheets[activeSheet]?.questions || []
 
 
-    // NEW: Clean Metadata (Taxonomy)
-    const sanitizeMetadata = async () => {
-        if (!confirm("Are you sure you want to remove 'Mathematics' from the APP MENU (Metadata)?")) return;
+    // NEW: Fix Taxonomy (Merge SST Subjects and Cleanup)
+    const fixTaxonomyMetadata = async () => {
+        if (!confirm("Are you sure you want to fix the APP MENU (Metadata)? This will merge all Social Science branches and fix visibility.")) return;
         setLoading(true);
         try {
             const docRef = doc(db, 'metadata', 'taxonomy');
@@ -611,39 +624,85 @@ const UploadPage = () => {
             const data = docSnap.data();
             let modified = false;
 
+            const sstMergeList = [
+                'political_science', 'disaster_management', 'civics', 'geography', 'history', 
+                'economics', 'social_science', 'sst', 'social_studies', 'pol_science', 'political science',
+                'itihas', 'bhugol', 'nagrik', 'arthshastra'
+            ];
+
             // Iterate over all keys (e.g., cbse_10, icse_9)
             Object.keys(data).forEach(key => {
                 const entry = data[key];
-                if (entry && entry.subjects) {
-                    // Filter out math
-                    const newSubjects = entry.subjects.filter((s: string) => s !== 'mathematics' && s !== 'maths');
-                    if (newSubjects.length !== entry.subjects.length) {
+                if (!entry || !entry.chapters) return;
+
+                const combinedChapters: any[] = [];
+                const foundSSTKeys: string[] = [];
+
+                // 1. Gather all SST chapters
+                Object.keys(entry.chapters).forEach(subKey => {
+                    const normKey = subKey.toLowerCase().replace(/\s+/g, '_');
+                    if (sstMergeList.includes(normKey) || sstMergeList.includes(subKey.toLowerCase())) {
+                        const chapters = entry.chapters[subKey] || [];
+                        chapters.forEach((chap: any) => {
+                            const exists = combinedChapters.find(c => c.name === chap.name);
+                            if (!exists) {
+                                let sectionName = subKey.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+                                if (sectionName.toLowerCase() === 'social science') sectionName = 'General';
+                                
+                                combinedChapters.push({
+                                    ...chap,
+                                    section: sectionName,
+                                    origSubject: subKey // Preserve original subject
+                                });
+                            } else if (chap.count) {
+                                exists.count = (exists.count || 0) + (chap.count || 0);
+                                if (!exists.section) {
+                                    let sectionName = subKey.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+                                    exists.section = sectionName;
+                                }
+                                if (!exists.origSubject) exists.origSubject = subKey;
+                            }
+                        });
+                        foundSSTKeys.push(subKey);
+                    }
+                });
+
+                // 2. If we found SST content, merge it into 'social_science'
+                if (foundSSTKeys.length > 0) {
+                    // Remove old keys
+                    foundSSTKeys.forEach(k => delete entry.chapters[k]);
+                    
+                    // Set merged key
+                    entry.chapters['social_science'] = combinedChapters;
+
+                    // Update subjects list
+                    if (entry.subjects) {
+                        const newSubjects = entry.subjects.filter((s: string) => !foundSSTKeys.includes(s));
+                        if (!newSubjects.includes('social_science')) {
+                            newSubjects.push('social_science');
+                        }
                         entry.subjects = newSubjects;
-                        modified = true;
                     }
+                    modified = true;
                 }
-                if (entry && entry.chapters) {
-                    if (entry.chapters['mathematics']) {
-                        delete entry.chapters['mathematics'];
-                        modified = true;
-                    }
-                    if (entry.chapters['maths']) {
-                        delete entry.chapters['maths'];
-                        modified = true;
-                    }
+
+                // 3. Ensure Mathematics is in subjects if it has chapters
+                if (entry.chapters['mathematics'] && entry.subjects && !entry.subjects.includes('mathematics')) {
+                    entry.subjects.push('mathematics');
+                    modified = true;
                 }
             });
 
             if (modified) {
                 await setDoc(docRef, data); // Overwrite with cleaned data
-                alert("Metadata cleaned! 'Mathematics' should be gone from the app menu now.");
+                alert("Taxonomy Fixed! Social Science merged and Mathematics visibility restored.");
             } else {
-                alert("No 'Mathematics' found in metadata.");
+                alert("Taxonomy is already clean.");
             }
 
         } catch (e) {
-            console.error("Error cleaning metadata", e);
-            alert("Failed to clean metadata");
+            console.error("Error fixing taxonomy", e);
+            alert("Failed to fix taxonomy");
         } finally {
             setLoading(false);
         }
@@ -807,17 +866,18 @@ const UploadPage = () => {
                                         🗑️ Delete ALL Class 10 Questions (All Boards)
                                     </button>
                                     <button
+                                        onClick={fixTaxonomyMetadata}
+                                        className="w-full py-2 bg-emerald-600 text-white rounded-lg font-bold text-sm hover:bg-emerald-700 transition-colors border border-emerald-700"
+                                    >
+                                        🛠️ Fix Taxonomy (Merge SST & Restore Math)
+                                    </button>
+                                    <button
                                         onClick={deleteSubjectQuestions}
                                         className="w-full py-2 bg-red-100 text-red-700 rounded-lg font-bold text-sm hover:bg-red-200 transition-colors border border-red-200"
                                     >
                                         Delete All &quot;Mathematics&quot; Questions
                                     </button>
-                                    <button
-                                        onClick={sanitizeMetadata}
-                                        className="w-full py-2 bg-orange-100 text-orange-700 rounded-lg font-bold text-sm hover:bg-orange-200 transition-colors border border-orange-200"
-                                    >
-                                        Clean App Menu (Remove Subject)
-                                    </button>
+
                                 </div>
                             </motion.div>
                         )}
