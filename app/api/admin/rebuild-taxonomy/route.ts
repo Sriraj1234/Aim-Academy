@@ -1,72 +1,115 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collectionGroup, getDocs, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, query, limit } from 'firebase/firestore';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Normalizes subject names for consistency
+ */
+const normalizeSubject = (sub: string): string => {
+    const s = sub.toLowerCase().trim();
+    if (s === 'math' || s === 'maths') return 'mathematics';
+    if (s === 'soc science' || s === 'social science') return 'social_science';
+    if (s === 'pol science' || s === 'political science') return 'political_science';
+    return s.replace(/\s+/g, '_');
+};
+
+/**
+ * Maps chapters from the 'science' collection to specific sub-subjects
+ */
+const mapScienceChapter = (chapter: string): string => {
+    const c = chapter.toLowerCase();
+    
+    const physicsChaps = ['प्रकाश', 'मानव नेत्र', 'विद्युत', 'ऊर्जा', 'prakash', 'manav netra', 'vidyut', 'urja'];
+    const chemistryChaps = ['तत्वों', 'कार्बन', 'अम्ल', 'धातु', 'रासायनिक', 'acids', 'carbon', 'metals', 'chemical'];
+    const biologyChaps = ['जैव', 'नियंत्रण', 'जनन', 'आनुवंशिकता', 'हमारा पर्यावरण', 'life processes', 'control', 'reproduce', 'heredity', 'environment'];
+
+    if (physicsChaps.some(kw => c.includes(kw))) return 'physics';
+    if (chemistryChaps.some(kw => c.includes(kw))) return 'chemistry';
+    if (biologyChaps.some(kw => c.includes(kw))) return 'biology';
+    
+    return 'science'; // Fallback
+};
+
 export async function GET() {
     try {
-        console.log("Starting Taxonomy Rebuild (Client SDK)...");
-
-        // 1. Fetch all questions from ALL subcollections via collectionGroup
-        const snapshot = await getDocs(collectionGroup(db, 'questions'));
-        console.log(`Fetched ${snapshot.size} questions from all subcollections.`);
+        console.log("Starting Taxonomy Rebuild (Advanced Scan)...");
 
         const taxonomy: Record<string, any> = {};
+        
+        // Boards and Classes to scan
+        const boards = ['BSEB', 'CBSE', 'UP', 'ICSE', 'Other'];
+        const classes = ['Class 10', 'Class 11', 'Class 12', 'Class 9'];
+        const streams = ['general', 'Science', 'Commerce', 'Arts'];
+        
+        // Known subject collections to scan (since we can't listCollections on Client SDK)
+        const commonSubjects = [
+            'science', 'physics', 'chemistry', 'biology', 
+            'mathematics', 'maths', 'hindi', 'english', 
+            'history', 'geography', 'political_science', 'economics', 
+            'disaster_management', 'social_science'
+        ];
 
-        // 2. Aggregate Data
-        snapshot.docs.forEach(docSnap => {
-            const data = docSnap.data();
-            let subject = (data.subject || 'general').toLowerCase().trim();
-            const chapter = (data.chapter || 'general').trim();
-            const level = (data.level || 'Easy').trim(); // Default to Easy if missing
+        for (const board of boards) {
+            for (const cls of classes) {
+                for (const stream of streams) {
+                    for (const sub of commonSubjects) {
+                        const colPath = `questions/${board}/${cls}/${stream}/${sub}`;
+                        const snapshot = await getDocs(collection(db, colPath));
+                        
+                        if (snapshot.empty) continue;
+                        
+                        console.log(`Scanning ${colPath}: found ${snapshot.size} questions.`);
 
-            // board_class key (e.g., bseb_10)
-            const board = (data.board || 'other').toLowerCase();
-            const classLevel = (data.class || 'other').toString();
-            const key = `${board}_${classLevel}`;
+                        snapshot.docs.forEach(docSnap => {
+                            const data = docSnap.data();
+                            const chapter = (data.chapter || 'general').trim();
+                            const level = (data.level || 'Easy').trim();
+                            
+                            // Determine final subject (Auto-separation for Science)
+                            let finalSubject = normalizeSubject(sub);
+                            if (finalSubject === 'science' && cls === 'Class 10') {
+                                finalSubject = mapScienceChapter(chapter);
+                            }
 
-            if (!taxonomy[key]) {
-                taxonomy[key] = {
-                    subjects: new Set(),
-                    chapters: {}
-                };
+                            const key = `${board.toLowerCase()}_${cls.replace(/[^0-9]/g, '')}`;
+
+                            if (!taxonomy[key]) {
+                                taxonomy[key] = { subjects: new Set(), chapters: {} };
+                            }
+
+                            taxonomy[key].subjects.add(finalSubject);
+
+                            if (!taxonomy[key].chapters[finalSubject]) {
+                                taxonomy[key].chapters[finalSubject] = [];
+                            }
+
+                            let existingChap = taxonomy[key].chapters[finalSubject].find((c: any) => c.name === chapter);
+                            if (!existingChap) {
+                                existingChap = { 
+                                    name: chapter, 
+                                    count: 0, 
+                                    levels: { Easy: 0, Medium: 0, Hard: 0 } 
+                                };
+                                taxonomy[key].chapters[finalSubject].push(existingChap);
+                            }
+                            
+                            existingChap.count++;
+                            
+                            const normalizedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+                            if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
+                                existingChap.levels[normalizedLevel]++;
+                            } else {
+                                existingChap.levels['Easy']++;
+                            }
+                        });
+                    }
+                }
             }
+        }
 
-            // Normalization
-            if (subject === 'math') subject = 'mathematics';
-
-            // Add normalized subject to set
-            taxonomy[key].subjects.add(subject);
-
-            if (!taxonomy[key].chapters[subject]) {
-                taxonomy[key].chapters[subject] = [];
-            }
-
-            // Check if chapter already exists in list (by name)
-            let existingChap = taxonomy[key].chapters[subject].find((c: any) => c.name === chapter);
-            if (!existingChap) {
-                existingChap = { 
-                    name: chapter, 
-                    count: 0, 
-                    levels: { Easy: 0, Medium: 0, Hard: 0 } 
-                };
-                taxonomy[key].chapters[subject].push(existingChap);
-            }
-            
-            existingChap.count++;
-            
-            // Increment level count (case-insensitive key check)
-            const normalizedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
-            if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
-                existingChap.levels[normalizedLevel] = (existingChap.levels[normalizedLevel] || 0) + 1;
-            } else {
-                // Fallback for weird data
-                existingChap.levels['Easy'] = (existingChap.levels['Easy'] || 0) + 1;
-            }
-        });
-
-        // 3. Convert Sets to Arrays for Firestore
+        // Convert Sets to Arrays
         const cleanTaxonomy: any = {};
         Object.keys(taxonomy).forEach(key => {
             cleanTaxonomy[key] = {
@@ -75,19 +118,15 @@ export async function GET() {
             };
         });
 
-        // 4. Update Metadata Document
         await setDoc(doc(db, 'metadata', 'taxonomy'), cleanTaxonomy);
 
         return NextResponse.json({
             success: true,
-            message: "Taxonomy rebuilt successfully (Client SDK).",
-            details: {
-                keys: Object.keys(cleanTaxonomy),
-                stats: Object.keys(cleanTaxonomy).map(k => ({
-                    key: k,
-                    subjects: cleanTaxonomy[k].subjects
-                }))
-            }
+            message: "Taxonomy rebuilt successfully with autoseparation.",
+            subjectsFound: Object.keys(cleanTaxonomy).reduce((acc: any, k) => {
+                acc[k] = cleanTaxonomy[k].subjects;
+                return acc;
+            }, {})
         });
 
     } catch (error: any) {
