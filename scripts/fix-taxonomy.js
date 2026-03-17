@@ -13,15 +13,10 @@ const projectId = process.env.FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
 let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-if (!projectId || !clientEmail || !privateKey) {
-    console.error('❌ Missing Firebase Admin credentials in .env.local');
-    process.exit(1);
-}
-
-if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+if (privateKey?.startsWith('"') && privateKey?.endsWith('"')) {
     privateKey = JSON.parse(`{"key": ${privateKey}}`).key;
 } else {
-    privateKey = privateKey.replace(/\\n/g, '\n');
+    privateKey = privateKey?.replace(/\\n/g, '\n');
 }
 
 if (!admin.apps.length) {
@@ -48,7 +43,7 @@ const normalizeSubject = (sub) => {
         'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
     ];
     
-    if (sstKeywords.includes(s)) {
+    if (sstKeywords.some(kw => s === kw || s.includes(kw))) {
         return 'social_science';
     }
     
@@ -68,42 +63,51 @@ const mapScienceChapter = (chapter) => {
 };
 
 async function fixTaxonomy() {
-    console.log("🚀 Starting Advanced Taxonomy Fix (Database-wide Scan)...");
+    console.log("🚀 Starting Dynamic Taxonomy Rebuild...");
 
     const taxonomy = {};
     const boards = ['BSEB', 'CBSE', 'UP', 'ICSE', 'Other'];
     const classes = ['Class 10', 'Class 11', 'Class 12', 'Class 9'];
     const streams = ['general', 'Science', 'Commerce', 'Arts'];
-    const commonSubjects = [
-        'science', 'physics', 'chemistry', 'biology', 
-        'math', 'mathematics', 'maths', 'hindi', 'english', 
-        'history', 'geography', 'political_science', 'economics', 
-        'disaster_management', 'social_science', 'civics'
-    ];
 
     for (const board of boards) {
         for (const cls of classes) {
             for (const stream of streams) {
-                for (const sub of commonSubjects) {
-                    const colPath = `questions/${board}/${cls}/${stream}/${sub}`;
+                const basePath = `questions/${board}/${cls}/${stream}`;
+                const baseRef = db.doc(basePath);
+                
+                let subjects = [];
+                try {
+                    const collections = await baseRef.listCollections();
+                    subjects = collections.map(col => col.id);
+                } catch (e) {}
+
+                if (subjects.length === 0) continue;
+
+                for (const subId of subjects) {
+                    const colPath = `${basePath}/${subId}`;
                     const snapshot = await db.collection(colPath).get();
                     
                     if (snapshot.empty) continue;
                     
-                    console.log(`✅ Found ${snapshot.size} Qs in ${colPath}`);
+                    console.log(`✅ [${board} ${cls}] Found ${snapshot.size} Qs in "${subId}"`);
 
                     snapshot.docs.forEach(docSnap => {
                         const data = docSnap.data();
                         const chapter = (data.chapter || 'general').trim();
                         const level = (data.level || 'Easy').trim();
                         
-                        let finalSubject = normalizeSubject(sub);
+                        let finalSubject = normalizeSubject(subId);
                         
                         let sstSection = 'General';
-                        let origSubject = sub;
+                        let origSubject = subId;
+                        
                         if (finalSubject === 'social_science') {
-                            sstSection = sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                            if (sstSection.toLowerCase() === 'social science') sstSection = 'General';
+                            sstSection = subId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            
+                            if (sstSection.toLowerCase().includes('social science')) sstSection = 'General';
+                            if (sstSection.toLowerCase().includes('disaster')) sstSection = 'Disaster Management';
+                            if (sstSection.toLowerCase().includes('political') || sstSection.toLowerCase().includes('pol')) sstSection = 'Political Science';
                         }
                         
                         if (finalSubject === 'science' && cls === 'Class 10') {
@@ -151,6 +155,8 @@ async function fixTaxonomy() {
     const cleanTaxonomy = {};
     Object.keys(taxonomy).forEach(key => {
         let subjects = Array.from(taxonomy[key].subjects);
+        console.log(`📝 Finalizing ${key}: ${subjects.join(', ')}`);
+        
         cleanTaxonomy[key] = {
             subjects: subjects.map(s => s === 'math' ? 'mathematics' : s),
             chapters: {}
@@ -159,10 +165,10 @@ async function fixTaxonomy() {
         Object.keys(taxonomy[key].chapters).forEach(subKey => {
             const finalSubKey = subKey === 'math' ? 'mathematics' : subKey;
             cleanTaxonomy[key].chapters[finalSubKey] = taxonomy[key].chapters[subKey];
-            if (finalSubKey === 'mathematics') {
-                cleanTaxonomy[key].chapters[finalSubKey].forEach((c) => {
-                    c.origSubject = 'math';
-                });
+            
+            if (subKey === 'social_science') {
+                const uniqueSections = new Set(taxonomy[key].chapters[subKey].map(c => c.section));
+                console.log(`   - Social Science sections: ${Array.from(uniqueSections).join(', ')}`);
             }
         });
     });
