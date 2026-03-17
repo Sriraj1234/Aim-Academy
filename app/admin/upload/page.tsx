@@ -407,11 +407,11 @@ const UploadPage = () => {
                 if (q.isValid) {
                     const key = `${q.board.toLowerCase()}_${q.class}`;
                     // Determine final subject (Auto-separation for Science)
-                    let finalSubject = normalizeSubject(subject);
+                    let finalSubject = normalizeSubject(q.subject);
                     
                     // SCIENCE DEDUPLICATION: If Class 10 science, map to Phys/Chem/Bio
                     if (finalSubject === 'science' && q.class.includes('10')) {
-                        const mapped = mapScienceChapter(chapter);
+                        const mapped = mapScienceChapter(q.chapter);
                         if (mapped !== 'science') {
                             finalSubject = mapped;
                         }
@@ -437,12 +437,12 @@ const UploadPage = () => {
 
                     // FIX: Check if chapter already exists in metadata
                     const chapterList = metaData[key].chapters[finalSubject];
-                    const chapRef = chapterList.find((c: any) => c.name === chapter);
+                    const chapRef = chapterList.find((c: any) => c.name === q.chapter);
 
                     if (!chapRef) {
                         // Store as object with level tracking
                         chapterList.push({ 
-                            name: chapter, 
+                            name: q.chapter, 
                             count: 1,
                             levels: {
                                 Easy: q.level === 'Easy' ? 1 : 0,
