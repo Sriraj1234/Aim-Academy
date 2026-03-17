@@ -19,6 +19,7 @@ export async function GET() {
             const data = docSnap.data();
             let subject = (data.subject || 'general').toLowerCase().trim();
             const chapter = (data.chapter || 'general').trim();
+            const level = (data.level || 'Easy').trim(); // Default to Easy if missing
 
             // board_class key (e.g., bseb_10)
             const board = (data.board || 'other').toLowerCase();
@@ -43,11 +44,25 @@ export async function GET() {
             }
 
             // Check if chapter already exists in list (by name)
-            const existingChap = taxonomy[key].chapters[subject].find((c: any) => c.name === chapter);
-            if (existingChap) {
-                existingChap.count++;
+            let existingChap = taxonomy[key].chapters[subject].find((c: any) => c.name === chapter);
+            if (!existingChap) {
+                existingChap = { 
+                    name: chapter, 
+                    count: 0, 
+                    levels: { Easy: 0, Medium: 0, Hard: 0 } 
+                };
+                taxonomy[key].chapters[subject].push(existingChap);
+            }
+            
+            existingChap.count++;
+            
+            // Increment level count (case-insensitive key check)
+            const normalizedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+            if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
+                existingChap.levels[normalizedLevel] = (existingChap.levels[normalizedLevel] || 0) + 1;
             } else {
-                taxonomy[key].chapters[subject].push({ name: chapter, count: 1 });
+                // Fallback for weird data
+                existingChap.levels['Easy'] = (existingChap.levels['Easy'] || 0) + 1;
             }
         });
 
