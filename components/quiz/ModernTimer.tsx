@@ -49,41 +49,37 @@ export const ModernTimer: React.FC<ModernTimerProps> = ({ duration, current, onT
     return (
         <div className={`relative ${className}`}>
             <div className={`
-                flex items-center gap-3 bg-white p-1.5 rounded-full shadow-md border 
-                ${isCritical ? 'border-red-200 shadow-red-500/20' : 'border-pw-border shadow-pw-indigo/10'}
-                transition-all duration-300
+                relative overflow-hidden rounded-full shadow-md border 
+                ${isCritical ? 'border-red-500 shadow-red-500/20' : 'border-pw-border shadow-pw-indigo/10'}
+                transition-all duration-300 w-28 h-8 flex items-center justify-center
             `}>
-                {/* Time Badge (Fixed Width) */}
+                {/* Background Progress */}
+                <motion.div
+                    initial={false}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: isControlled ? 0.5 : 1, ease: "linear" }}
+                    className={`
+                        absolute left-0 top-0 bottom-0
+                        ${isCritical ? 'bg-red-100' : isWarning ? 'bg-amber-100' : 'bg-pw-indigo/10'}
+                        transition-colors duration-500 origin-left
+                    `}
+                />
+                
+                {/* Foreground Text */}
                 <div className={`
-                    flex items-center gap-2 px-3 py-1.5 rounded-full font-mono font-bold text-base leading-none
-                    ${isCritical ? 'bg-red-50 text-red-600' : isWarning ? 'bg-amber-50 text-amber-600' : 'bg-pw-indigo/10 text-pw-indigo'}
-                    transition-colors duration-300 shrink-0 min-w-[90px] justify-center
+                    relative z-10 flex items-center gap-1.5 font-mono font-bold text-sm leading-none
+                    ${isCritical ? 'text-red-600' : isWarning ? 'text-amber-600' : 'text-pw-indigo'}
+                    transition-colors duration-300
                 `}>
-                    <FaClock className={isCritical ? 'animate-pulse' : ''} size={14} />
+                    <FaClock className={isCritical ? 'animate-pulse' : ''} size={12} />
                     <span>{formatTime(timeLeft)}</span>
                 </div>
-
-                {/* Progress Bar Container */}
-                <div className="flex-1 h-2 bg-pw-surface rounded-full overflow-hidden relative min-w-[50px]">
-                    <motion.div
-                        initial={false} // Disable initial animation to prevent jumping updates
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: isControlled ? 0.5 : 1, ease: "linear" }}
-                        className={`
-                            h-full rounded-full
-                            ${isCritical ? 'bg-red-500' :
-                                isWarning ? 'bg-amber-500' :
-                                    'bg-pw-indigo'}
-                            transition-colors duration-500
-                        `}
-                    />
-                </div>
+                
+                {/* Critical Warning Pulse Overlay */}
+                {isCritical && (
+                    <div className="absolute inset-0 rounded-full border border-red-500/50 animate-ping pointer-events-none opacity-50"></div>
+                )}
             </div>
-
-            {/* Critical Warning Pulse Overlay */}
-            {isCritical && (
-                <div className="absolute inset-0 rounded-full border border-red-500/50 animate-ping pointer-events-none opacity-50"></div>
-            )}
         </div>
     );
 };
