@@ -399,13 +399,13 @@ const UploadPage = () => {
                         metaModified = true;
                     }
 
-                    if (!existingChapterNames.includes(chapter)) {
-                        // FIX: Initialize array if it doesn't exist
-                        if (!metaData[key].chapters[subject]) {
-                            metaData[key].chapters[subject] = [];
-                        }
+                    // FIX: Check if chapter already exists in metadata
+                    const chapterList = metaData[key].chapters[subject];
+                    const chapRef = chapterList.find((c: any) => c.name === chapter);
+
+                    if (!chapRef) {
                         // Store as object with level tracking
-                        metaData[key].chapters[subject].push({ 
+                        chapterList.push({ 
                             name: chapter, 
                             count: 1,
                             levels: {
@@ -417,18 +417,15 @@ const UploadPage = () => {
                         metaModified = true;
                     } else {
                         // Increment existing counts
-                        const chapRef = metaData[key].chapters[subject].find((c: any) => c.name === chapter);
-                        if (chapRef) {
-                            chapRef.count++;
-                            if (!chapRef.levels) chapRef.levels = { Easy: 0, Medium: 0, Hard: 0 };
-                            const normalizedLevel = q.level.charAt(0).toUpperCase() + q.level.slice(1).toLowerCase();
-                            if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
-                                chapRef.levels[normalizedLevel]++;
-                            } else {
-                                chapRef.levels['Easy']++;
-                            }
-                            metaModified = true;
+                        chapRef.count++;
+                        if (!chapRef.levels) chapRef.levels = { Easy: 0, Medium: 0, Hard: 0 };
+                        const normalizedLevel = q.level.charAt(0).toUpperCase() + q.level.slice(1).toLowerCase();
+                        if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
+                            chapRef.levels[normalizedLevel]++;
+                        } else {
+                            chapRef.levels['Easy']++;
                         }
+                        metaModified = true;
                     }
                 }
             });
