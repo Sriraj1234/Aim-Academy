@@ -16,22 +16,22 @@ import Link from 'next/link'
  * Normalizes subject names for consistency
  */
 const normalizeSubject = (sub: string): string => {
-    const s = sub.toLowerCase().trim();
-    if (s === 'math' || s === 'maths') return 'mathematics';
+    const s = sub.toLowerCase().trim().replace(/\s+/g, '_');
+    if (s === 'mathematics' || s === 'maths' || s === 'math') return 'math';
     
     // Consolidated Social Science Grouping
     const sstKeywords = [
-        'social science', 'soc science', 'social_science', 'soc_science',
-        'pol science', 'political science', 'political_science', 'pol_science',
-        'history', 'geography', 'civics', 'economics', 'disaster management', 'social studies',
+        'social_science', 'soc_science', 'social_studies',
+        'pol_science', 'political_science', 'civics',
+        'history', 'geography', 'economics', 'disaster_management',
         'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
     ];
     
-    if (sstKeywords.some(kw => s === kw || s.includes(kw))) {
+    if (sstKeywords.includes(s)) {
         return 'social_science';
     }
     
-    return s.replace(/\s+/g, '_');
+    return s;
 };
 
 /**
