@@ -170,13 +170,29 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 const hierRef = collection(db, colPath);
                 const hierQuery = query(hierRef, ...constraints, limit(fetchLimit));
                 const hierSnap = await getDocs(hierQuery);
-                console.log(`[QuizContext] Found ${hierSnap.size} hierarchical questions`);
+                console.log(`[QuizContext] Found ${hierSnap.size} hierarchical questions at ${colPath}`);
                 hierSnap.forEach(docSnap => {
                     const data = docSnap.data() as Record<string, unknown>;
                     if (!q.some(e => e.id === docSnap.id)) {
                         q.push({ id: docSnap.id, ...data } as unknown as Question);
                     }
                 });
+
+                // ── SCIENCE FALLBACK ──
+                // If subject is Physics/Chem/Bio and we found nothing in specific folders, look in 'science'
+                if (q.length === 0 && ['physics', 'chemistry', 'biology'].includes(subjectKey)) {
+                    const sciencePath = `questions/${boardKey}/${classKey}/${streamKey}/science`;
+                    console.log(`[QuizContext] Falling back to Science path: ${sciencePath}`);
+                    const sciRef = collection(db, sciencePath);
+                    const sciQuery = query(sciRef, ...constraints, limit(fetchLimit));
+                    const sciSnap = await getDocs(sciQuery);
+                    sciSnap.forEach(docSnap => {
+                        const data = docSnap.data() as Record<string, unknown>;
+                        if (!q.some(e => e.id === docSnap.id)) {
+                            q.push({ id: docSnap.id, ...data } as unknown as Question);
+                        }
+                    });
+                }
             }
 
             // ── Fallback to flat collection if hierarchy returned nothing ─────
