@@ -10,8 +10,19 @@ export const dynamic = 'force-dynamic';
 const normalizeSubject = (sub: string): string => {
     const s = sub.toLowerCase().trim();
     if (s === 'math' || s === 'maths') return 'mathematics';
-    if (s === 'soc science' || s === 'social science') return 'social_science';
-    if (s === 'pol science' || s === 'political science') return 'political_science';
+    
+    // Consolidated Social Science Grouping
+    const sstKeywords = [
+        'social science', 'soc science', 'social_science', 'soc_science',
+        'pol science', 'political science', 'political_science', 'pol_science',
+        'history', 'geography', 'civics', 'economics', 'disaster management', 'social studies',
+        'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
+    ];
+    
+    if (sstKeywords.some(kw => s === kw || s.includes(kw))) {
+        return 'social_science';
+    }
+    
     return s.replace(/\s+/g, '_');
 };
 
