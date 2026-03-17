@@ -21,30 +21,48 @@ import { ChapterSummary } from '@/components/home/ChapterSummary'
 
 // Internal Component for Customization
 function CustomizeModal({
-    totalCount,
-    chapterName,
+    chapter,
     onConfirm,
     onClose
 }: {
-    totalCount: number,
-    chapterName: string,
+    chapter: { name: string, count: number, levels?: { Easy: number, Medium: number, Hard: number } },
     onConfirm: (count: number, difficulty: string) => void,
     onClose: () => void
 }) {
-    // Generate Options
-    const baseOptions = [20, 40, 60, 80, 100];
-    const options = baseOptions.filter(opt => opt < totalCount);
-    options.push(totalCount);
-    const uniqueOptions = Array.from(new Set(options));
-
-    const [selected, setSelected] = useState<number>(options[0] || totalCount);
     const [difficulty, setDifficulty] = useState<string>('mix');
+    
+    // Get available count for current difficulty
+    const getAvailableCount = () => {
+        if (difficulty === 'mix' || !chapter.levels) return chapter.count;
+        const key = difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase();
+        return (chapter.levels as any)[key] || 0;
+    };
+
+    const availableCount = getAvailableCount();
+
+    // Generate Options dynamically based on available count
+    const baseOptions = [20, 40, 60, 80, 100];
+    const options = baseOptions.filter(opt => opt < availableCount);
+    if (availableCount > 0) options.push(availableCount);
+    const uniqueOptions = Array.from(new Set(options)).sort((a,b) => a-b);
+
+    const [selected, setSelected] = useState<number>(uniqueOptions[0] || availableCount);
+
+    // Update selected count if difficulty changes and current selection > new max
+    useEffect(() => {
+        if (selected > availableCount) {
+            setSelected(uniqueOptions[uniqueOptions.length - 1] || availableCount);
+        } else if (uniqueOptions.length > 0 && !uniqueOptions.includes(selected)) {
+            // If previous selection isn't in new options, pick closest or max
+            setSelected(uniqueOptions[uniqueOptions.length - 1]);
+        }
+    }, [difficulty, availableCount, uniqueOptions]);
 
     const difficultyOptions = [
-        { value: 'easy', label: '😊 Easy', color: 'text-green-700 border-green-500 bg-green-50' },
-        { value: 'medium', label: '🔥 Medium', color: 'text-yellow-700 border-yellow-500 bg-yellow-50' },
-        { value: 'hard', label: '💪 Hard', color: 'text-red-700 border-red-500 bg-red-50' },
-        { value: 'mix', label: '🎲 Mix', color: 'text-purple-700 border-purple-500 bg-purple-50' },
+        { value: 'easy', label: '😊 Easy', color: 'text-green-700 border-green-500 bg-green-50', count: chapter.levels?.Easy || 0 },
+        { value: 'medium', label: '🔥 Medium', color: 'text-yellow-700 border-yellow-500 bg-yellow-50', count: chapter.levels?.Medium || 0 },
+        { value: 'hard', label: '💪 Hard', color: 'text-red-700 border-red-500 bg-red-50', count: chapter.levels?.Hard || 0 },
+        { value: 'mix', label: '🎲 Mix', color: 'text-purple-700 border-purple-500 bg-purple-50', count: chapter.count },
     ];
 
     return (
@@ -53,12 +71,12 @@ function CustomizeModal({
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+                className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-pw-border"
             >
                 <div className="flex justify-between items-start mb-5">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">Customize Quiz</h3>
-                        <p className="text-sm text-gray-500 line-clamp-1">{chapterName}</p>
+                        <p className="text-sm text-gray-500 line-clamp-1">{chapter.name}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400">
                         <HiX size={20} />
@@ -67,20 +85,25 @@ function CustomizeModal({
 
                 {/* Difficulty Selection */}
                 <div className="mb-5">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Difficulty Level</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-tight">Difficulty Level</label>
                     <div className="grid grid-cols-2 gap-2">
                         {difficultyOptions.map((opt) => (
                             <button
                                 key={opt.value}
-                                onClick={() => setDifficulty(opt.value)}
+                                onClick={() => opt.count > 0 && setDifficulty(opt.value)}
+                                disabled={opt.count === 0}
                                 className={`
-                                    py-2.5 px-3 rounded-xl text-sm font-bold transition-all border-2
+                                    py-2.5 px-3 rounded-xl text-sm font-bold transition-all border-2 flex flex-col items-center justify-center gap-0.5
+                                    ${opt.count === 0 ? 'opacity-40 cursor-not-allowed grayscale' : 'cursor-pointer'}
                                     ${difficulty === opt.value
                                         ? opt.color
                                         : 'border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200'}
                                 `}
                             >
-                                {opt.label}
+                                <span>{opt.label}</span>
+                                <span className={`text-[10px] font-black opacity-60 ${difficulty === opt.value ? 'opacity-100' : ''}`}>
+                                    ({opt.count} Qs)
+                                </span>
                             </button>
                         ))}
                     </div>
@@ -88,34 +111,44 @@ function CustomizeModal({
 
                 {/* Question Count */}
                 <div className="mb-6">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Number of Questions</label>
-                    <div className="grid grid-cols-3 gap-3">
-                        {uniqueOptions.map((opt) => (
-                            <button
-                                key={opt}
-                                onClick={() => setSelected(opt)}
-                                className={`
-                                    py-2 px-3 rounded-xl text-sm font-bold transition-all border-2
-                                    ${selected === opt
-                                        ? 'border-purple-600 bg-purple-50 text-purple-700'
-                                        : 'border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200'}
-                                `}
-                            >
-                                {opt === totalCount ? `All (${opt})` : opt}
-                            </button>
-                        ))}
-                    </div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-tight">Number of Questions</label>
+                    {uniqueOptions.length > 0 ? (
+                        <div className="grid grid-cols-3 gap-3">
+                            {uniqueOptions.map((opt) => (
+                                <button
+                                    key={opt}
+                                    onClick={() => setSelected(opt)}
+                                    className={`
+                                        py-2 px-3 rounded-xl text-sm font-bold transition-all border-2
+                                        ${selected === opt
+                                            ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm'
+                                            : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'}
+                                    `}
+                                >
+                                    {opt === availableCount ? `All (${opt})` : opt}
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-red-50 text-red-600 py-3 px-4 rounded-xl text-xs font-bold border border-red-100">
+                            No questions available for this level.
+                        </div>
+                    )}
                 </div>
 
                 <button
-                    onClick={() => onConfirm(selected, difficulty)}
-                    className="w-full py-3.5 rounded-xl bg-purple-600 text-white font-bold text-lg hover:bg-purple-700 transition-colors shadow-lg shadow-purple-600/30"
+                    onClick={() => availableCount > 0 && onConfirm(selected, difficulty)}
+                    disabled={availableCount === 0}
+                    className={`
+                        w-full py-4 rounded-2xl font-black text-white shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2
+                        ${availableCount === 0 ? 'bg-gray-300 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-pw-indigo to-pw-violet hover:shadow-pw-indigo/25'}
+                    `}
                 >
                     Start Quiz 🚀
                 </button>
             </motion.div>
         </div>
-    )
+    );
 }
 
 function SelectionContent() {
@@ -131,7 +164,7 @@ function SelectionContent() {
     const [mode, setMode] = useState<'subject' | 'chapter'>('subject') // derived from interactions
 
     // Customization State
-    const [customizing, setCustomizing] = useState<{ name: string, count: number } | null>(null)
+    const [customizing, setCustomizing] = useState<{ name: string, count: number, levels?: { Easy: number, Medium: number, Hard: number } } | null>(null)
 
     // ... (rest of useEffects remain same until handlers)
 
@@ -326,9 +359,9 @@ function SelectionContent() {
         }
     }
 
-    const handleChapterClick = (chap: string, count: number = 20) => {
-        // Trigger Modal instead of immediate start
-        setCustomizing({ name: chap, count: count })
+    const handleChapterClick = (chapterObj: any) => {
+        // Trigger Modal with full chapter details
+        setCustomizing(chapterObj)
     }
 
     const handleConfirmStart = (count: number, difficulty: string) => {
@@ -354,8 +387,7 @@ function SelectionContent() {
             <AnimatePresence>
                 {customizing && (
                     <CustomizeModal
-                        totalCount={customizing.count}
-                        chapterName={customizing.name}
+                        chapter={customizing}
                         onConfirm={handleConfirmStart}
                         onClose={() => setCustomizing(null)}
                     />
@@ -585,7 +617,7 @@ function SelectionContent() {
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: idx * 0.03 }}
-                                                    onClick={() => handleChapterClick(name, count)}
+                                                    onClick={() => handleChapterClick(item)}
                                                     className="bg-white p-5 rounded-2xl border border-pw-border hover:border-pw-indigo hover:shadow-pw-sm cursor-pointer transition-all flex items-center justify-between group"
                                                 >
                                                     <div className="flex items-center gap-4">
@@ -618,7 +650,7 @@ function SelectionContent() {
                                                             key={`${section}-${idx}`}
                                                             initial={{ opacity: 0, y: 10 }}
                                                             animate={{ opacity: 1, y: 0 }}
-                                                            onClick={() => handleChapterClick(name, count)}
+                                                            onClick={() => handleChapterClick(item)}
                                                             className="bg-white p-4 rounded-xl border border-pw-border hover:border-pw-indigo hover:shadow-md cursor-pointer transition-all flex items-center justify-between group"
                                                         >
                                                             <div className="flex items-center gap-3">
