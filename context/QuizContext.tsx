@@ -21,7 +21,7 @@ interface QuizContextType {
     startTime: number
     endTime: number
     categories: CategoryData
-    startQuiz: (subject?: string, count?: number, chapter?: string, difficulty?: string) => Promise<void>
+    startQuiz: (subject?: string, count?: number, chapter?: string, difficulty?: string, subjectKeyOverride?: string) => Promise<void>
     startAIQuiz: (questions: Question[]) => void
     submitAnswer: (answerIndex: number | null) => void
     nextQuestion: () => void
@@ -107,7 +107,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [swrCategories])
 
-    const startQuiz = async (subject?: string, count: number = 20, chapter?: string, difficulty?: string) => {
+    const startQuiz = async (subject?: string, count: number = 20, chapter?: string, difficulty?: string, subjectKeyOverride?: string) => {
         setIsLoading(true)
         setIsFinished(false)
         setIsSavingResult(false)
@@ -142,10 +142,12 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             const streamKey = classNum >= 11 ? ((strm || 'Science').trim() || 'Science') : 'general';
 
             // Normalise subject → lowercase, spaces→underscore ("Social Science" → "social_science")
-            let subjectKey = (subject || '').toLowerCase().trim().replace(/\s+/g, '_');
+            let subjectKey = subjectKeyOverride || (subject || '').toLowerCase().trim().replace(/\s+/g, '_');
             // Common UI aliases
-            if ((subject || '').includes('English')) subjectKey = 'english';
-            else if ((subject || '').includes('Hindi')) subjectKey = 'hindi';
+            if (!subjectKeyOverride) {
+                if ((subject || '').includes('English')) subjectKey = 'english';
+                else if ((subject || '').includes('Hindi')) subjectKey = 'hindi';
+            }
 
             const constraints: any[] = [];
             if (chapter) constraints.push(where('chapter', '==', chapter));
@@ -540,7 +542,7 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             startTime,
             endTime,
             categories,
-            startQuiz: startQuiz as (subject?: string, count?: number, chapter?: string, difficulty?: string) => Promise<void>,
+            startQuiz: startQuiz as (subject?: string, count?: number, chapter?: string, difficulty?: string, subjectKeyOverride?: string) => Promise<void>,
             startAIQuiz,
             submitAnswer,
             nextQuestion,
