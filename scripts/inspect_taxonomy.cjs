@@ -1,58 +1,53 @@
 const admin = require('firebase-admin');
-const path = require('path');
-const dotenv = require('dotenv');
+require('dotenv').config({ path: '.env.local' });
 
-// --- Firebase Initialization ---
-try {
-    const envPathLocal = path.join(__dirname, '..', '.env.local');
-    const envPath = path.join(__dirname, '..', '.env');
+const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
-    dotenv.config({ path: envPath });
-    dotenv.config({ path: envPathLocal, override: true });
-
-    if (!admin.apps.length) {
-        let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-        if (privateKey && privateKey.includes('\\n')) {
-            privateKey = privateKey.replace(/\\n/g, '\n');
-        }
-
-        admin.initializeApp({
-            credential: admin.credential.cert({
-                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                privateKey: privateKey,
-            })
-        });
-    }
-} catch (e) {
-    console.error("Error initializing Firebase:", e);
-    process.exit(1);
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: privateKey,
+        }),
+    });
 }
 
 const db = admin.firestore();
 
 async function inspectTaxonomy() {
-    const docRef = db.collection('metadata').doc('taxonomy');
-    const docSnap = await docRef.get();
-
-    if (!docSnap.exists) {
-        console.log("Taxonomy document does not exist!");
+    console.log("--- INSPECTING TAXONOMY DOCUMENT ---");
+    const docSnap = await db.doc('metadata/taxonomy').get();
+    const taxonomy = docSnap.data();
+    
+    if (!taxonomy) {
+        console.log("Taxonomy Document Missing!");
         return;
     }
 
-    const data = docSnap.data();
-    const science = data['bseb_12_science'];
-
-    if (science) {
-        console.log('bseb_12_science found.');
-        if (science.chapters && science.chapters.Chemistry) {
-            console.log('Chemistry Chapters:', JSON.stringify(science.chapters.Chemistry, null, 2));
-        } else {
-            console.log('No Chemistry chapters found.');
-        }
-    } else {
-        console.log('bseb_12_science not found.');
+    const bseb10 = taxonomy['bseb_10'] || {};
+    console.log("BSEB 10 Keys:", Object.keys(bseb10));
+    console.log("Subjects Array:", bseb10.subjects);
+    
+    if (bseb10.chapters) {
+        Object.keys(bseb10.chapters).forEach(sub => {
+            const chaps = bseb10.chapters[sub];
+            console.log(`Subject [${sub}]: ${chaps.length} chapters.`);
+            if (chaps.length > 0) {
+                console.log(`  - First Chapter: ${chaps[0].name} (${chaps[0].count} Qs)`);
+            }
+        });
     }
+
+    console.log("\n--- SEARCHING FOR 'SCIENCE' FOLDERS ---");
+    const boards = ['BSEB', 'CBSE', 'UP', 'ICSE', 'Other', 'bseb'];
+    for (const b of boards) {
+      const p = `questions/${b}/Class 10/general/science`;
+      const s = await db.collection(p).get();
+      if (s.size > 0) console.log(`Path [${p}] has ${s.size} questions.`);
+    }
+
+    console.log("--- INSPECTION DONE ---");
 }
 
-inspectTaxonomy();
+inspectTaxonomy().catch(console.error);
