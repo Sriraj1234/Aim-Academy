@@ -149,9 +149,15 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
 
             const constraints: any[] = [];
             if (chapter) constraints.push(where('chapter', '==', chapter));
-            // ── Difficulty filter (skip if 'mix' or undefined) ────────────────────
-            if (difficulty && difficulty !== 'mix') {
-                constraints.push(where('level', '==', difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase()));
+            
+            // ── Difficulty filter ─────────────────────────────────────────────
+            // Normalize casing to match database: "Easy", "Medium", "Hard"
+            const normalizedDifficulty = difficulty && difficulty !== 'mix' 
+                ? difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase() 
+                : null;
+
+            if (normalizedDifficulty) {
+                constraints.push(where('level', '==', normalizedDifficulty));
             }
 
             const fetchLimit = Math.min(count * 3, 200);
@@ -160,10 +166,11 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             let q: Question[] = [];
             if (boardKey && classKey && subjectKey) {
                 const colPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
-                console.log('QuizContext: querying hierarchy', colPath, chapter ? `chapter=${chapter}` : '');
+                console.log(`[QuizContext] Level: ${normalizedDifficulty || 'Mix'}, Path: ${colPath}`);
                 const hierRef = collection(db, colPath);
                 const hierQuery = query(hierRef, ...constraints, limit(fetchLimit));
                 const hierSnap = await getDocs(hierQuery);
+                console.log(`[QuizContext] Found ${hierSnap.size} hierarchical questions`);
                 hierSnap.forEach(docSnap => {
                     const data = docSnap.data() as Record<string, unknown>;
                     if (!q.some(e => e.id === docSnap.id)) {
