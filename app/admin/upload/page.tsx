@@ -12,6 +12,34 @@ import * as XLSX from 'xlsx'
 import { generateQuestionId } from '@/utils/idGenerator'
 import Link from 'next/link'
 
+/**
+ * Normalizes subject names for consistency
+ */
+const normalizeSubject = (sub: string): string => {
+    const s = sub.toLowerCase().trim();
+    if (s === 'math' || s === 'maths') return 'mathematics';
+    if (s === 'soc science' || s === 'social science') return 'social_science';
+    if (s === 'pol science' || s === 'political science') return 'political_science';
+    return s.replace(/\s+/g, '_');
+};
+
+/**
+ * Maps chapters from the 'science' collection to specific sub-subjects
+ */
+const mapScienceChapter = (chapter: string): string => {
+    const c = chapter.toLowerCase();
+    
+    const physicsChaps = ['प्रकाश', 'मानव नेत्र', 'विद्युत', 'ऊर्जा', 'prakash', 'manav netra', 'vidyut', 'energy', 'urja'];
+    const chemistryChaps = ['तत्वों', 'कार्बन', 'अम्ल', 'धातु', 'रासायनिक', 'acids', 'carbon', 'metals', 'chemical'];
+    const biologyChaps = ['जैव', 'नियंत्रण', 'जनन', 'आनुवंशिकता', 'reproduc', 'हमara पर्यावरण', 'पर्यावरण', 'प्रबंधन', 'life processes', 'control', 'reproduce', 'reproduction', 'heredity', 'environment', 'management', 'resources'];
+
+    if (physicsChaps.some(kw => c.includes(kw))) return 'physics';
+    if (chemistryChaps.some(kw => c.includes(kw))) return 'chemistry';
+    if (biologyChaps.some(kw => c.includes(kw))) return 'biology';
+    
+    return 'science'; // Fallback
+};
+
 const UploadPage = () => {
     const { user } = useAuth()
 
@@ -378,29 +406,37 @@ const UploadPage = () => {
             allQuestions.forEach(q => {
                 if (q.isValid) {
                     const key = `${q.board.toLowerCase()}_${q.class}`;
-                    const subject = q.subject.toLowerCase();
-                    const chapter = q.chapter;
+                    // Determine final subject (Auto-separation for Science)
+                    let finalSubject = normalizeSubject(subject);
+                    
+                    // SCIENCE DEDUPLICATION: If Class 10 science, map to Phys/Chem/Bio
+                    if (finalSubject === 'science' && q.class.includes('10')) {
+                        const mapped = mapScienceChapter(chapter);
+                        if (mapped !== 'science') {
+                            finalSubject = mapped;
+                        }
+                    }
 
                     // Ensure keys exist
                     if (!metaData[key]) {
                         metaData[key] = { subjects: [], chapters: {} };
                         metaModified = true;
                     }
-                    if (!metaData[key].subjects.includes(subject)) {
-                        metaData[key].subjects.push(subject);
+                    if (!metaData[key].subjects.includes(finalSubject)) {
+                        metaData[key].subjects.push(finalSubject);
                         metaModified = true;
                     }
                     if (!metaData[key].chapters) {
                         metaData[key].chapters = {};
                         metaModified = true;
                     }
-                    if (!metaData[key].chapters[subject]) {
-                        metaData[key].chapters[subject] = [];
+                    if (!metaData[key].chapters[finalSubject]) {
+                        metaData[key].chapters[finalSubject] = [];
                         metaModified = true;
                     }
 
                     // FIX: Check if chapter already exists in metadata
-                    const chapterList = metaData[key].chapters[subject];
+                    const chapterList = metaData[key].chapters[finalSubject];
                     const chapRef = chapterList.find((c: any) => c.name === chapter);
 
                     if (!chapRef) {
