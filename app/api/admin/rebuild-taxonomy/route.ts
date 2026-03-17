@@ -23,7 +23,7 @@ const mapScienceChapter = (chapter: string): string => {
     
     const physicsChaps = ['प्रकाश', 'मानव नेत्र', 'विद्युत', 'ऊर्जा', 'prakash', 'manav netra', 'vidyut', 'urja'];
     const chemistryChaps = ['तत्वों', 'कार्बन', 'अम्ल', 'धातु', 'रासायनिक', 'acids', 'carbon', 'metals', 'chemical'];
-    const biologyChaps = ['जैव', 'नियंत्रण', 'जनन', 'आनुवंशिकता', 'हमारा पर्यावरण', 'life processes', 'control', 'reproduce', 'heredity', 'environment'];
+    const biologyChaps = ['जैव', 'नियंत्रण', 'जनन', 'आनुवंशिकता', 'हमारा पर्यावरण', 'पर्यावरण', 'प्रबंधन', 'life processes', 'control', 'reproduce', 'heredity', 'environment', 'management', 'resources'];
 
     if (physicsChaps.some(kw => c.includes(kw))) return 'physics';
     if (chemistryChaps.some(kw => c.includes(kw))) return 'chemistry';
@@ -69,8 +69,17 @@ export async function GET() {
                             
                             // Determine final subject (Auto-separation for Science)
                             let finalSubject = normalizeSubject(sub);
+                            
+                            // ── SCIENCE DEDUPLICATION ──
+                            // If the source collection is 'science', we ONLY want it to appear under mapped subjects (Phys/Chem/Bio)
+                            // and NOT under a general 'science' subject in the taxonomy to avoid duplicate cards.
                             if (finalSubject === 'science' && cls === 'Class 10') {
-                                finalSubject = mapScienceChapter(chapter);
+                                const mapped = mapScienceChapter(chapter);
+                                if (mapped !== 'science') {
+                                    finalSubject = mapped;
+                                } else {
+                                    // If no mapping found, we keep it as 'science' but this usually shouldn't happen for Class 10
+                                }
                             }
 
                             const key = `${board.toLowerCase()}_${cls.replace(/[^0-9]/g, '')}`;
