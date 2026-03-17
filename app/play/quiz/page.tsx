@@ -417,22 +417,28 @@ export default function QuizPage() {
                                 />
                             </div>
                         )}
+                                           {/* Level badge - Prominent placement */}
+                        <div className="flex items-center gap-2 mb-3">
+                            {question.level && (
+                                <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${
+                                    question.level === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
+                                    question.level === 'Hard' ? 'bg-red-50 text-red-700 border-red-200' :
+                                    'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                }`}>
+                                    {question.level} Level
+                                </span>
+                            )}
+                            {question.topic && (
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                                    {question.topic}
+                                </span>
+                            )}
+                        </div>
 
-                        <h2 className="text-lg md:text-2xl font-display font-medium text-gray-800 leading-relaxed mb-4 text-left">
+                        <h2 className="text-xl md:text-3xl font-display font-bold text-gray-800 leading-snug mb-4 text-left">
                             {displayQuestion}
                             {isTranslating && <span className="inline-block ml-2 text-xs text-pw-indigo animate-pulse">(Translating...)</span>}
                         </h2>
-
-                        {/* Level badge */}
-                        {question.level && (
-                            <span className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full mb-2 border ${
-                                question.level === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
-                                question.level === 'Hard' ? 'bg-red-50 text-red-700 border-red-200' :
-                                'bg-yellow-50 text-yellow-700 border-yellow-200'
-                            }`}>
-                                {question.level}
-                            </span>
-                        )}
                     </motion.div>
 
                     {/* Options Grid */}
