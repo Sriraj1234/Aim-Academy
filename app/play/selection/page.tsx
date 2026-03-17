@@ -450,7 +450,7 @@ function SelectionContent() {
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-black text-pw-violet capitalize tracking-tight">
                             {selectedSubject
-                                ? `${selectedSubject} Chapters`
+                                ? `${selectedSubject.replace(/_/g, ' ')} Chapters`
                                 : selectedScience || selectedSST
                                     ? 'Select Branch'
                                     : `Practice Questions`}
@@ -590,28 +590,31 @@ function SelectionContent() {
                                     : selectedLang
                                         ? isLanguage(s)
                                         : sstSubjects.includes(s.toLowerCase())
-                            ).map((sub, idx) => (
-                                <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    onClick={() => handleSubjectClick(sub)}
-                                    className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
-                                >
-                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                        <HiAcademicCap className={`text-8xl transform rotate-[-20deg] ${selectedSST ? 'text-orange-500' : selectedLang ? 'text-pink-500' : 'text-pw-indigo'}`} />
-                                    </div>
-
-                                    <div className="flex justify-between items-start mb-4 relative z-10">
-                                        <div className={`p-3 rounded-xl transition-colors ${selectedSST ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : selectedLang ? 'bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
-                                            <HiAcademicCap className="text-2xl" />
+                            ).map((sub, idx) => {
+                                const displaySub = sub === 'mathematics' ? 'Mathematics' : sub.replace(/_/g, ' ');
+                                return (
+                                    <motion.div
+                                        key={idx}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        onClick={() => handleSubjectClick(sub)}
+                                        className="bg-white p-6 rounded-2xl shadow-pw-sm border border-pw-border cursor-pointer hover:shadow-pw-md hover:-translate-y-1 transition-all group relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                            <HiAcademicCap className={`text-8xl transform rotate-[-20deg] ${selectedSST ? 'text-orange-500' : selectedLang ? 'text-pink-500' : 'text-pw-indigo'}`} />
                                         </div>
-                                    </div>
-                                    <h3 className="text-xl font-bold text-pw-violet group-hover:text-pw-indigo transition-colors capitalize mb-1 relative z-10">{sub}</h3>
-                                    <p className="text-sm text-gray-500 relative z-10">{(activeCategories.chapters?.[sub] || []).length} Chapters</p>
-                                </motion.div>
-                            ))}
+
+                                        <div className="flex justify-between items-start mb-4 relative z-10">
+                                            <div className={`p-3 rounded-xl transition-colors ${selectedSST ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : selectedLang ? 'bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
+                                                <HiAcademicCap className="text-2xl" />
+                                            </div>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-pw-violet group-hover:text-pw-indigo transition-colors capitalize mb-1 relative z-10">{displaySub}</h3>
+                                        <p className="text-sm text-gray-500 relative z-10">{(activeCategories.chapters?.[sub] || []).length} Chapters</p>
+                                    </motion.div>
+                                );
+                            })}
                         </>
                     ) : (
                         /* CHAPTER VIEW */
