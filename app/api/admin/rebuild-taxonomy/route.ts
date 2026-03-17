@@ -8,22 +8,22 @@ export const dynamic = 'force-dynamic';
  * Normalizes subject names for consistency
  */
 const normalizeSubject = (sub: string): string => {
-    const s = sub.toLowerCase().trim();
-    if (s === 'math' || s === 'maths') return 'mathematics';
+    const s = sub.toLowerCase().trim().replace(/\s+/g, '_');
+    if (s === 'mathematics' || s === 'maths' || s === 'math') return 'math';
     
     // Consolidated Social Science Grouping
     const sstKeywords = [
-        'social science', 'soc science', 'social_science', 'soc_science',
-        'pol science', 'political science', 'political_science', 'pol_science',
-        'history', 'geography', 'civics', 'economics', 'disaster management', 'social studies',
+        'social_science', 'soc_science', 'social_studies',
+        'pol_science', 'political_science', 'civics',
+        'history', 'geography', 'economics', 'disaster_management',
         'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
     ];
     
-    if (sstKeywords.some(kw => s === kw || s.includes(kw))) {
+    if (sstKeywords.includes(s)) {
         return 'social_science';
     }
     
-    return s.replace(/\s+/g, '_');
+    return s;
 };
 
 /**
@@ -45,7 +45,7 @@ const mapScienceChapter = (chapter: string): string => {
 
 export async function GET() {
     try {
-        console.log("Starting Taxonomy Rebuild (Advanced Scan)...");
+        console.log("Starting Taxonomy Rebuild (Advanced Scan - with SST Sections)...");
 
         const taxonomy: Record<string, any> = {};
         
@@ -54,12 +54,12 @@ export async function GET() {
         const classes = ['Class 10', 'Class 11', 'Class 12', 'Class 9'];
         const streams = ['general', 'Science', 'Commerce', 'Arts'];
         
-        // Known subject collections to scan (since we can't listCollections on Client SDK)
+        // Known subject collections to scan
         const commonSubjects = [
             'science', 'physics', 'chemistry', 'biology', 
-            'mathematics', 'maths', 'hindi', 'english', 
+            'math', 'mathematics', 'maths', 'hindi', 'english', 
             'history', 'geography', 'political_science', 'economics', 
-            'disaster_management', 'social_science'
+            'disaster_management', 'social_science', 'civics'
         ];
 
         for (const board of boards) {
@@ -78,18 +78,22 @@ export async function GET() {
                             const chapter = (data.chapter || 'general').trim();
                             const level = (data.level || 'Easy').trim();
                             
-                            // Determine final subject (Auto-separation for Science)
+                            // Determine final subject
                             let finalSubject = normalizeSubject(sub);
                             
+                            // SST Sectioning Info
+                            let sstSection = 'General';
+                            let origSubject = sub;
+                            if (finalSubject === 'social_science') {
+                                sstSection = sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                if (sstSection.toLowerCase() === 'social science') sstSection = 'General';
+                            }
+                            
                             // ── SCIENCE DEDUPLICATION ──
-                            // If the source collection is 'science', we ONLY want it to appear under mapped subjects (Phys/Chem/Bio)
-                            // and NOT under a general 'science' subject in the taxonomy to avoid duplicate cards.
                             if (finalSubject === 'science' && cls === 'Class 10') {
                                 const mapped = mapScienceChapter(chapter);
                                 if (mapped !== 'science') {
                                     finalSubject = mapped;
-                                } else {
-                                    // If no mapping found, we keep it as 'science' but this usually shouldn't happen for Class 10
                                 }
                             }
 
@@ -110,6 +114,8 @@ export async function GET() {
                                 existingChap = { 
                                     name: chapter, 
                                     count: 0, 
+                                    section: sstSection,
+                                    origSubject: origSubject,
                                     levels: { Easy: 0, Medium: 0, Hard: 0 } 
                                 };
                                 taxonomy[key].chapters[finalSubject].push(existingChap);
@@ -129,13 +135,28 @@ export async function GET() {
             }
         }
 
-        // Convert Sets to Arrays
+        // Convert Sets to Arrays and Cleanup
         const cleanTaxonomy: any = {};
         Object.keys(taxonomy).forEach(key => {
+            let subjects = Array.from(taxonomy[key].subjects) as string[];
+            
             cleanTaxonomy[key] = {
-                subjects: Array.from(taxonomy[key].subjects),
-                chapters: taxonomy[key].chapters
+                subjects: subjects.map(s => s === 'math' ? 'mathematics' : s),
+                chapters: {}
             };
+            
+            // Rename math chapters key too
+            Object.keys(taxonomy[key].chapters).forEach(subKey => {
+                const finalSubKey = subKey === 'math' ? 'mathematics' : subKey;
+                cleanTaxonomy[key].chapters[finalSubKey] = taxonomy[key].chapters[subKey];
+                
+                // Ensure all math chapters have origSubject = 'math'
+                if (finalSubKey === 'mathematics') {
+                    cleanTaxonomy[key].chapters[finalSubKey].forEach((c: any) => {
+                        c.origSubject = 'math';
+                    });
+                }
+            });
         });
 
         await setDoc(doc(db, 'metadata', 'taxonomy'), cleanTaxonomy);
