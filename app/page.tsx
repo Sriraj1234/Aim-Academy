@@ -117,13 +117,17 @@ export default function LandingPage() {
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
-            <a href="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
-                <span className="text-white text-base font-black">P</span>
-              </div>
-              <div>
-                <span className="text-xl font-black text-gray-900">Padhaku</span>
-                <span className="hidden sm:inline text-xs text-indigo-500 font-bold ml-1.5 tracking-widest uppercase">Bihar Board</span>
+            <a href="/" className="flex items-center gap-3 active:scale-95 transition-transform">
+              <Image 
+                src="/padhaku-192.png" 
+                alt="Padhaku" 
+                width={38} 
+                height={38} 
+                className="rounded-xl shadow-md border border-gray-50"
+              />
+              <div className="flex flex-col -gap-1">
+                <span className="text-xl font-black text-gray-900 leading-none">Padhaku</span>
+                <span className="hidden sm:inline text-[10px] text-indigo-500 font-black tracking-widest uppercase mt-0.5">Bihar Board</span>
               </div>
             </a>
 
