@@ -386,10 +386,10 @@ export default function QuizPage() {
                         Question {currentQuestionIndex + 1} <span className="text-gray-400">/ {questions.length}</span>
                     </span>
                     <div className="flex items-center gap-2">
-                        <div className="px-2 py-1 rounded-md bg-green-50 text-green-700 text-[10px] font-bold border border-green-200 shadow-sm">
+                        <div className="px-2 py-1 rounded-md bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold border border-green-200 dark:border-green-500/30 shadow-sm">
                             +1.0
                         </div>
-                        <div className="px-2 py-1 rounded-md bg-red-50 text-red-700 text-[10px] font-bold border border-red-200 shadow-sm">
+                        <div className="px-2 py-1 rounded-md bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold border border-red-200 dark:border-red-500/30 shadow-sm">
                             -0.25
                         </div>
                     </div>
@@ -421,9 +421,9 @@ export default function QuizPage() {
                         <div className="flex items-center gap-2 mb-3">
                             {question.level && (
                                 <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${
-                                    question.level === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
-                                    question.level === 'Hard' ? 'bg-red-50 text-red-700 border-red-200' :
-                                    'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                    question.level === 'Easy' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/30' :
+                                    question.level === 'Hard' ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/30' :
+                                    'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/30'
                                 }`}>
                                     {question.level} Level
                                 </span>
@@ -479,7 +479,7 @@ export default function QuizPage() {
 
 
                 {/* Floating Bottom Bar - Optimized for Mobile */}
-                <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none pb-6">
+                <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-[#F8F9FC] via-[#F8F9FC]/95 dark:from-[#0f172a] dark:via-[#0f172a]/95 to-transparent pointer-events-none pb-6">
                     <div className="max-w-3xl mx-auto pointer-events-auto">
                         <div className="bg-white p-3 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-pw-border flex items-center justify-between gap-3">
 
