@@ -44,20 +44,15 @@ const mapScienceChapter = (chapter: string): string => {
 
 export async function GET() {
     try {
-        console.log("Starting Taxonomy Rebuild (Admin SDK - Subcollection Scan)...");
+        console.log("Starting Taxonomy Rebuild (Admin SDK - Optimized collectionGroup Scan)...");
 
         // Use Firebase Admin SDK to bypass Firestore rules
         const db = getAdminDb();
         
         const taxonomy: Record<string, any> = {};
         
-        // Boards, Classes, Streams, and Subjects to scan
-        const boards = ['BSEB', 'CBSE', 'UP', 'ICSE', 'Other'];
-        const classes = ['Class 10', 'Class 11', 'Class 12', 'Class 9'];
-        const streams = ['general', 'Science', 'Commerce', 'Arts'];
-        
-        // Known subject collections to scan
-        const commonSubjects = [
+        // Subject collections to scan via collectionGroup
+        const subjectsToScan = [
             'science', 'physics', 'chemistry', 'biology', 
             'math', 'mathematics', 'maths', 'hindi', 'english', 'sanskrit',
             'history', 'geography', 'political_science', 'economics', 
@@ -65,87 +60,94 @@ export async function GET() {
         ];
 
         let totalScanned = 0;
-        let pathsScanned = 0;
+        let subjectsFound = 0;
 
-        for (const board of boards) {
-            for (const cls of classes) {
-                for (const stream of streams) {
-                    for (const sub of commonSubjects) {
-                        const colPath = `questions/${board}/${cls}/${stream}/${sub}`;
-                        pathsScanned++;
-                        
-                        try {
-                            const snapshot = await db.collection(colPath).get();
-                            
-                            if (snapshot.empty) continue;
-                            
-                            console.log(`Scanning ${colPath}: found ${snapshot.size} questions.`);
-                            totalScanned += snapshot.size;
+        // Perform parallel collectionGroup queries (significantly faster than nested loops)
+        const scanPromises = subjectsToScan.map(async (subjectName) => {
+            try {
+                // This queries for the collection name globally, much faster than manually iterating paths
+                const snapshot = await db.collectionGroup(subjectName).get();
+                if (snapshot.empty) return;
 
-                            snapshot.docs.forEach(docSnap => {
-                                const data = docSnap.data();
-                                const chapter = (data.chapter || 'general').trim();
-                                const level = (data.level || 'Easy').trim();
-                                
-                                // Determine final subject
-                                let finalSubject = normalizeSubject(sub);
-                                
-                                // SST Sectioning Info
-                                let sstSection = 'General';
-                                let origSubject = sub;
-                                if (finalSubject === 'social_science') {
-                                    sstSection = sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                    if (sstSection.toLowerCase() === 'social science') sstSection = 'General';
-                                }
-                                
-                                // Science deduplication for Class 10
-                                if (finalSubject === 'science' && cls === 'Class 10') {
-                                    const mapped = mapScienceChapter(chapter);
-                                    if (mapped !== 'science') {
-                                        finalSubject = mapped;
-                                    }
-                                }
+                console.log(`Found collectionGroup '${subjectName}': ${snapshot.size} docs.`);
+                
+                snapshot.docs.forEach(docSnap => {
+                    const path = docSnap.ref.path;
+                    const segments = path.split('/');
+                    
+                    // Path format: questions/{board}/{class}/{stream}/{subject}/{docId}
+                    // segments[0] should be 'questions'
+                    if (segments[0] !== 'questions' || segments.length < 6) return;
 
-                                const key = `${board.toLowerCase()}_${cls.replace(/[^0-9]/g, '')}`;
-
-                                if (!taxonomy[key]) {
-                                    taxonomy[key] = { subjects: new Set(), chapters: {} };
-                                }
-
-                                taxonomy[key].subjects.add(finalSubject);
-
-                                if (!taxonomy[key].chapters[finalSubject]) {
-                                    taxonomy[key].chapters[finalSubject] = [];
-                                }
-
-                                let existingChap = taxonomy[key].chapters[finalSubject].find((c: any) => c.name === chapter);
-                                if (!existingChap) {
-                                    existingChap = { 
-                                        name: chapter, 
-                                        count: 0, 
-                                        section: sstSection,
-                                        origSubject: origSubject,
-                                        levels: { Easy: 0, Medium: 0, Hard: 0 } 
-                                    };
-                                    taxonomy[key].chapters[finalSubject].push(existingChap);
-                                }
-                                
-                                existingChap.count++;
-                                
-                                const normalizedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
-                                if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
-                                    existingChap.levels[normalizedLevel]++;
-                                } else {
-                                    existingChap.levels['Easy']++;
-                                }
-                            });
-                        } catch (err: any) {
-                            // Skip inaccessible paths silently
+                    const board = segments[1];
+                    const cls = segments[2];
+                    const stream = segments[3];
+                    const subject = segments[4]; // Should be subjectName or similar
+                    
+                    const data = docSnap.data();
+                    const chapter = (data.chapter || 'general').trim();
+                    const level = (data.level || 'Easy').trim();
+                    
+                    // Determine final subject
+                    let finalSubject = normalizeSubject(subject);
+                    
+                    // SST Sectioning Info
+                    let sstSection = 'General';
+                    let origSubject = subject;
+                    if (finalSubject === 'social_science') {
+                        sstSection = subject.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        if (sstSection.toLowerCase() === 'social science') sstSection = 'General';
+                    }
+                    
+                    // Science deduplication for Class 10
+                    if (finalSubject === 'science' && cls === 'Class 10') {
+                        const mapped = mapScienceChapter(chapter);
+                        if (mapped !== 'science') {
+                            finalSubject = mapped;
                         }
                     }
-                }
+
+                    const key = `${board.toLowerCase()}_${cls.replace(/[^0-9]/g, '')}`;
+
+                    if (!taxonomy[key]) {
+                        taxonomy[key] = { subjects: new Set(), chapters: {} };
+                    }
+
+                    taxonomy[key].subjects.add(finalSubject);
+
+                    if (!taxonomy[key].chapters[finalSubject]) {
+                        taxonomy[key].chapters[finalSubject] = [];
+                    }
+
+                    let existingChap = taxonomy[key].chapters[finalSubject].find((c: any) => c.name === chapter);
+                    if (!existingChap) {
+                        existingChap = { 
+                            name: chapter, 
+                            count: 0, 
+                            section: sstSection,
+                            origSubject: origSubject,
+                            levels: { Easy: 0, Medium: 0, Hard: 0 } 
+                        };
+                        taxonomy[key].chapters[finalSubject].push(existingChap);
+                    }
+                    
+                    existingChap.count++;
+                    totalScanned++;
+                    
+                    const normalizedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+                    if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
+                        existingChap.levels[normalizedLevel]++;
+                    } else {
+                        existingChap.levels['Easy']++;
+                    }
+                });
+                subjectsFound++;
+            } catch (err: any) {
+                console.error(`Error scanning subject ${subjectName}:`, err.message);
             }
-        }
+        });
+
+        await Promise.all(scanPromises);
 
         // Convert Sets to Arrays and Cleanup
         const cleanTaxonomy: any = {};
@@ -187,7 +189,7 @@ export async function GET() {
 
         return NextResponse.json({
             success: true,
-            message: `Taxonomy rebuilt successfully. Scanned ${totalScanned} questions across ${pathsScanned} paths.`,
+            message: `Taxonomy rebuilt successfully in record time! Scanned ${totalScanned} questions across ${subjectsFound} subjects.`,
             summary
         });
 
