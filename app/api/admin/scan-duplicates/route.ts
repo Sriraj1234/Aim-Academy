@@ -17,22 +17,18 @@ export async function GET(request: Request) {
     try {
         const db = getAdminDb();
 
-        // Dynamically find all subject collections
-        const foundSubjectKeys = new Set<string>();
-        const boardsSnap = await db.collection('questions').get();
-        
-        await Promise.all(boardsSnap.docs.map(async boardDoc => {
-             const classes = await boardDoc.ref.listCollections();
-             await Promise.all(classes.map(async classCol => {
-                 const streamsSnap = await classCol.get();
-                 await Promise.all(streamsSnap.docs.map(async streamDoc => {
-                     const subjects = await streamDoc.ref.listCollections();
-                     subjects.forEach(s => foundSubjectKeys.add(s.id));
-                 }));
-             }));
-        }));
-        
-        const subjectsToScan = Array.from(foundSubjectKeys);
+        const subjectsToScan = [
+            'physics', 'chemistry', 'biology', 'science',
+            'mathematics', 'maths', 'math',
+            'history', 'geography', 'political_science', 'pol_science', 'civics',
+            'economics', 'social_science', 'soc_science', 'social_studies', 
+            'disaster_management', 'digaster_management', 'disastermanagement',
+            'hindi', 'english', 'sanskrit', 'urdu',
+            'accountancy', 'business_studies', 'commerce',
+            'computer_science', 'information_technology', 'general_knowledge',
+            // Hindi transliterations
+            'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
+        ];
 
         const allDocs: { id: string; path: string; question: string; board: string; class: string; subject: string; chapter: string; createdAt: number }[] = [];
         let totalScanned = 0;
