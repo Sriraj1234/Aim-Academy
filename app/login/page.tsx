@@ -101,6 +101,15 @@ export default function LoginPage() {
                     transition={{ delay: 0.1 }}
                     className="mb-8 text-center md:text-left"
                 >
+                    <div className="flex justify-center md:justify-start mb-4">
+                        <Image 
+                            src="/padhaku-192.png" 
+                            alt="Padhaku" 
+                            width={48} 
+                            height={48} 
+                            className="rounded-2xl shadow-pw-md"
+                        />
+                    </div>
                     <h1 className="text-4xl font-display font-black mb-2 text-pw-violet leading-tight">
                         {t('auth.welcomeBack')} <span className="text-pw-indigo underline decoration-pw-lavender decoration-4 underline-offset-4">{t('auth.topper')}</span>
                     </h1>
