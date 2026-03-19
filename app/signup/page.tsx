@@ -129,6 +129,22 @@ export default function SignupPage() {
                     className="bg-white p-6 rounded-3xl shadow-pw-lg border border-pw-border"
                 >
                     <form onSubmit={handleSignup} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4">
+                            <button
+                                type="button"
+                                onClick={handleGoogleLogin}
+                                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 hover:border-pw-indigo/30 hover:text-pw-indigo transition-all h-12 shadow-sm"
+                            >
+                                <FaGoogle className="text-lg text-red-500" /> {t('auth.continueWith')} Google
+                            </button>
+                        </div>
+
+                        <div className="relative py-2 flex items-center justify-center gap-4">
+                            <div className="h-[1px] bg-gray-200 flex-1"></div>
+                            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">OR SIGNUP WITH EMAIL</span>
+                            <div className="h-[1px] bg-gray-200 flex-1"></div>
+                        </div>
+
                         <div className="space-y-4">
                             <div>
                                 <label htmlFor="signup-name" className="block text-sm font-bold text-gray-700 mb-1.5 ml-1">{t('auth.fullNameLabel')}</label>
@@ -204,21 +220,6 @@ export default function SignupPage() {
                             {t('auth.createAccount')} <span className="ml-2">→</span>
                         </Button>
 
-                        <div className="relative py-4 flex items-center justify-center gap-4">
-                            <div className="h-[1px] bg-gray-200 flex-1"></div>
-                            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">{t('auth.continueWith')}</span>
-                            <div className="h-[1px] bg-gray-200 flex-1"></div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4">
-                            <button
-                                type="button"
-                                onClick={handleGoogleLogin}
-                                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 hover:border-pw-indigo/30 hover:text-pw-indigo transition-all h-12 shadow-sm"
-                            >
-                                <FaGoogle className="text-lg text-red-500" /> Continue with Google
-                            </button>
-                        </div>
                     </form>
                 </motion.div>
 
