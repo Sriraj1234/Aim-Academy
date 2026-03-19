@@ -131,7 +131,7 @@ export const DashboardHeader = () => {
                                                 {user?.displayName ? (
                                                     <span className="font-bold text-lg md:text-xl">{user.displayName[0]}</span>
                                                 ) : (
-                                                    <FaGraduationCap className="text-2xl md:text-3xl opacity-80" />
+                                                    <img src="/ai-avatar/teacher-idle.png" alt="Guest" className="w-full h-full object-cover transform scale-110" />
                                                 )}
                                             </div>
                                         )}
