@@ -12,8 +12,13 @@ export const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* Brand & Description */}
                     <div className="col-span-1 md:col-span-1">
-                        <Link href="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-violet-400">
-                            Padhaku
+                        <Link href="/" className="flex items-center gap-2 text-2xl font-black text-white">
+                            <img 
+                                src="/padhaku-192.png" 
+                                alt="Padhaku" 
+                                className="w-8 h-8 rounded-lg shadow-sm"
+                            />
+                            <span>Padhaku</span>
                         </Link>
                         <p className="mt-4 text-sm text-gray-400 leading-relaxed">
                             Empowering students with AI-driven learning tools. Master Bihar Board exams with confidence.
