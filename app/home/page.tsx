@@ -69,7 +69,7 @@ export default function DashboardPage() {
             <Header />
 
             <main className="pt-20 pb-16 md:pt-24 md:pb-20">
-                <div className="px-4 max-w-7xl mx-auto space-y-4 md:space-y-5 w-full overflow-x-hidden">
+                <div className="px-5 max-w-7xl mx-auto space-y-6 md:space-y-8 w-full overflow-x-hidden">
 
                     {/* ── 1. Greeting Header ─────────────────────────────────── */}
                     <DashboardHeader />
