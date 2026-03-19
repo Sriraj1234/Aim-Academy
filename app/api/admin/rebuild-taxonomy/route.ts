@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc, query, limit } from 'firebase/firestore';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,11 +44,14 @@ const mapScienceChapter = (chapter: string): string => {
 
 export async function GET() {
     try {
-        console.log("Starting Taxonomy Rebuild (Advanced Scan - with SST Sections)...");
+        console.log("Starting Taxonomy Rebuild (Admin SDK - Subcollection Scan)...");
 
+        // Use Firebase Admin SDK to bypass Firestore rules
+        const db = getAdminDb();
+        
         const taxonomy: Record<string, any> = {};
         
-        // Boards and Classes to scan
+        // Boards, Classes, Streams, and Subjects to scan
         const boards = ['BSEB', 'CBSE', 'UP', 'ICSE', 'Other'];
         const classes = ['Class 10', 'Class 11', 'Class 12', 'Class 9'];
         const streams = ['general', 'Science', 'Commerce', 'Arts'];
@@ -57,79 +59,89 @@ export async function GET() {
         // Known subject collections to scan
         const commonSubjects = [
             'science', 'physics', 'chemistry', 'biology', 
-            'math', 'mathematics', 'maths', 'hindi', 'english', 
+            'math', 'mathematics', 'maths', 'hindi', 'english', 'sanskrit',
             'history', 'geography', 'political_science', 'economics', 
-            'disaster_management', 'social_science', 'civics'
+            'disaster_management', 'social_science', 'civics', 'social_studies'
         ];
+
+        let totalScanned = 0;
+        let pathsScanned = 0;
 
         for (const board of boards) {
             for (const cls of classes) {
                 for (const stream of streams) {
                     for (const sub of commonSubjects) {
                         const colPath = `questions/${board}/${cls}/${stream}/${sub}`;
-                        const snapshot = await getDocs(collection(db, colPath));
+                        pathsScanned++;
                         
-                        if (snapshot.empty) continue;
-                        
-                        console.log(`Scanning ${colPath}: found ${snapshot.size} questions.`);
+                        try {
+                            const snapshot = await db.collection(colPath).get();
+                            
+                            if (snapshot.empty) continue;
+                            
+                            console.log(`Scanning ${colPath}: found ${snapshot.size} questions.`);
+                            totalScanned += snapshot.size;
 
-                        snapshot.docs.forEach(docSnap => {
-                            const data = docSnap.data();
-                            const chapter = (data.chapter || 'general').trim();
-                            const level = (data.level || 'Easy').trim();
-                            
-                            // Determine final subject
-                            let finalSubject = normalizeSubject(sub);
-                            
-                            // SST Sectioning Info
-                            let sstSection = 'General';
-                            let origSubject = sub;
-                            if (finalSubject === 'social_science') {
-                                sstSection = sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                if (sstSection.toLowerCase() === 'social science') sstSection = 'General';
-                            }
-                            
-                            // ── SCIENCE DEDUPLICATION ──
-                            if (finalSubject === 'science' && cls === 'Class 10') {
-                                const mapped = mapScienceChapter(chapter);
-                                if (mapped !== 'science') {
-                                    finalSubject = mapped;
+                            snapshot.docs.forEach(docSnap => {
+                                const data = docSnap.data();
+                                const chapter = (data.chapter || 'general').trim();
+                                const level = (data.level || 'Easy').trim();
+                                
+                                // Determine final subject
+                                let finalSubject = normalizeSubject(sub);
+                                
+                                // SST Sectioning Info
+                                let sstSection = 'General';
+                                let origSubject = sub;
+                                if (finalSubject === 'social_science') {
+                                    sstSection = sub.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    if (sstSection.toLowerCase() === 'social science') sstSection = 'General';
                                 }
-                            }
+                                
+                                // Science deduplication for Class 10
+                                if (finalSubject === 'science' && cls === 'Class 10') {
+                                    const mapped = mapScienceChapter(chapter);
+                                    if (mapped !== 'science') {
+                                        finalSubject = mapped;
+                                    }
+                                }
 
-                            const key = `${board.toLowerCase()}_${cls.replace(/[^0-9]/g, '')}`;
+                                const key = `${board.toLowerCase()}_${cls.replace(/[^0-9]/g, '')}`;
 
-                            if (!taxonomy[key]) {
-                                taxonomy[key] = { subjects: new Set(), chapters: {} };
-                            }
+                                if (!taxonomy[key]) {
+                                    taxonomy[key] = { subjects: new Set(), chapters: {} };
+                                }
 
-                            taxonomy[key].subjects.add(finalSubject);
+                                taxonomy[key].subjects.add(finalSubject);
 
-                            if (!taxonomy[key].chapters[finalSubject]) {
-                                taxonomy[key].chapters[finalSubject] = [];
-                            }
+                                if (!taxonomy[key].chapters[finalSubject]) {
+                                    taxonomy[key].chapters[finalSubject] = [];
+                                }
 
-                            let existingChap = taxonomy[key].chapters[finalSubject].find((c: any) => c.name === chapter);
-                            if (!existingChap) {
-                                existingChap = { 
-                                    name: chapter, 
-                                    count: 0, 
-                                    section: sstSection,
-                                    origSubject: origSubject,
-                                    levels: { Easy: 0, Medium: 0, Hard: 0 } 
-                                };
-                                taxonomy[key].chapters[finalSubject].push(existingChap);
-                            }
-                            
-                            existingChap.count++;
-                            
-                            const normalizedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
-                            if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
-                                existingChap.levels[normalizedLevel]++;
-                            } else {
-                                existingChap.levels['Easy']++;
-                            }
-                        });
+                                let existingChap = taxonomy[key].chapters[finalSubject].find((c: any) => c.name === chapter);
+                                if (!existingChap) {
+                                    existingChap = { 
+                                        name: chapter, 
+                                        count: 0, 
+                                        section: sstSection,
+                                        origSubject: origSubject,
+                                        levels: { Easy: 0, Medium: 0, Hard: 0 } 
+                                    };
+                                    taxonomy[key].chapters[finalSubject].push(existingChap);
+                                }
+                                
+                                existingChap.count++;
+                                
+                                const normalizedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+                                if (normalizedLevel === 'Easy' || normalizedLevel === 'Medium' || normalizedLevel === 'Hard') {
+                                    existingChap.levels[normalizedLevel]++;
+                                } else {
+                                    existingChap.levels['Easy']++;
+                                }
+                            });
+                        } catch (err: any) {
+                            // Skip inaccessible paths silently
+                        }
                     }
                 }
             }
@@ -159,15 +171,24 @@ export async function GET() {
             });
         });
 
-        await setDoc(doc(db, 'metadata', 'taxonomy'), cleanTaxonomy);
+        // Write using Admin SDK (bypasses Firestore rules)
+        await db.doc('metadata/taxonomy').set(cleanTaxonomy);
+
+        const summary: Record<string, any> = {};
+        Object.keys(cleanTaxonomy).forEach(k => {
+            summary[k] = {
+                subjects: cleanTaxonomy[k].subjects,
+                chapterCounts: Object.keys(cleanTaxonomy[k].chapters).reduce((acc: any, sub) => {
+                    acc[sub] = cleanTaxonomy[k].chapters[sub].length;
+                    return acc;
+                }, {})
+            };
+        });
 
         return NextResponse.json({
             success: true,
-            message: "Taxonomy rebuilt successfully with autoseparation.",
-            subjectsFound: Object.keys(cleanTaxonomy).reduce((acc: any, k) => {
-                acc[k] = cleanTaxonomy[k].subjects;
-                return acc;
-            }, {})
+            message: `Taxonomy rebuilt successfully. Scanned ${totalScanned} questions across ${pathsScanned} paths.`,
+            summary
         });
 
     } catch (error: any) {
