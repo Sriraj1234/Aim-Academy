@@ -51,23 +51,25 @@ export async function GET() {
         
         const taxonomy: Record<string, any> = {};
         
-        // Dynamically find all subject collections
-        const foundSubjectKeys = new Set<string>();
-        const boardsSnap = await db.collection('questions').get();
+        // ── Firestore Phantom Document Workaround ─────────────────
+        // In Firestore, if you upload directly to `questions/BSEB/Class 10/general/maths`,
+        // the documents `BSEB`, `Class 10`, and `general` do NOT officially exist, so traversing
+        // them via `.listCollections()` fails. Instead, we use `collectionGroup` with an exhaustive list of known subject names.
         
-        await Promise.all(boardsSnap.docs.map(async boardDoc => {
-             const classes = await boardDoc.ref.listCollections();
-             await Promise.all(classes.map(async classCol => {
-                 const streamsSnap = await classCol.get();
-                 await Promise.all(streamsSnap.docs.map(async streamDoc => {
-                     const subjects = await streamDoc.ref.listCollections();
-                     subjects.forEach(s => foundSubjectKeys.add(s.id));
-                 }));
-             }));
-        }));
-        
-        const subjectsToScan = Array.from(foundSubjectKeys);
-        console.log(`Dynamically discovered ${subjectsToScan.length} unique subject collections:`, subjectsToScan.join(', '));
+        const subjectsToScan = [
+            'physics', 'chemistry', 'biology', 'science',
+            'mathematics', 'maths', 'math',
+            'history', 'geography', 'political_science', 'pol_science', 'civics',
+            'economics', 'social_science', 'soc_science', 'social_studies', 
+            'disaster_management', 'digaster_management', 'disastermanagement',
+            'hindi', 'english', 'sanskrit', 'urdu',
+            'accountancy', 'business_studies', 'commerce',
+            'computer_science', 'information_technology', 'general_knowledge',
+            // Hindi transliterations just in case
+            'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
+        ];
+
+        console.log(`Scanning across ${subjectsToScan.length} known subject variations globally...`);
 
         let totalScanned = 0;
         let subjectsFound = 0;
