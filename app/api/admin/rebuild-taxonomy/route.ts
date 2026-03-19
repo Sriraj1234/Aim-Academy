@@ -14,7 +14,7 @@ const normalizeSubject = (sub: string): string => {
     const sstKeywords = [
         'social_science', 'soc_science', 'social_studies',
         'pol_science', 'political_science', 'civics',
-        'history', 'geography', 'economics', 'disaster_management',
+        'history', 'geography', 'economics', 'disaster_management', 'digaster_management',
         'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
     ];
     
@@ -51,13 +51,23 @@ export async function GET() {
         
         const taxonomy: Record<string, any> = {};
         
-        // Subject collections to scan via collectionGroup
-        const subjectsToScan = [
-            'science', 'physics', 'chemistry', 'biology', 
-            'math', 'mathematics', 'maths', 'hindi', 'english', 'sanskrit',
-            'history', 'geography', 'political_science', 'economics', 
-            'disaster_management', 'social_science', 'civics', 'social_studies'
-        ];
+        // Dynamically find all subject collections
+        const foundSubjectKeys = new Set<string>();
+        const boardsSnap = await db.collection('questions').get();
+        
+        await Promise.all(boardsSnap.docs.map(async boardDoc => {
+             const classes = await boardDoc.ref.listCollections();
+             await Promise.all(classes.map(async classCol => {
+                 const streamsSnap = await classCol.get();
+                 await Promise.all(streamsSnap.docs.map(async streamDoc => {
+                     const subjects = await streamDoc.ref.listCollections();
+                     subjects.forEach(s => foundSubjectKeys.add(s.id));
+                 }));
+             }));
+        }));
+        
+        const subjectsToScan = Array.from(foundSubjectKeys);
+        console.log(`Dynamically discovered ${subjectsToScan.length} unique subject collections:`, subjectsToScan.join(', '));
 
         let totalScanned = 0;
         let subjectsFound = 0;
