@@ -17,13 +17,10 @@ export async function GET(request: Request) {
     try {
         const db = getAdminDb();
 
-        // Scan all known question paths using collectionGroup via subcollection enumeration
-        const boards = ['BSEB', 'CBSE', 'UP', 'ICSE'];
-        const classes = ['Class 9', 'Class 10', 'Class 11', 'Class 12'];
-        const streams = ['general', 'Science', 'Commerce', 'Arts'];
-        const subjects = [
+        // Subjects to scan via collectionGroup
+        const subjectsToScan = [
             'science', 'physics', 'chemistry', 'biology',
-            'math', 'mathematics', 'hindi', 'english', 'sanskrit',
+            'math', 'mathematics', 'maths', 'hindi', 'english', 'sanskrit',
             'history', 'geography', 'political_science', 'economics',
             'disaster_management', 'social_science', 'civics',
             'maths', 'social_studies'
@@ -32,36 +29,38 @@ export async function GET(request: Request) {
         const allDocs: { id: string; path: string; question: string; board: string; class: string; subject: string; chapter: string; createdAt: number }[] = [];
         let totalScanned = 0;
 
-        for (const board of boards) {
-            for (const cls of classes) {
-                for (const stream of streams) {
-                    for (const sub of subjects) {
-                        const colPath = `questions/${board}/${cls}/${stream}/${sub}`;
-                        try {
-                            const snapshot = await db.collection(colPath).get();
-                            if (snapshot.empty) continue;
+        // Optimized parallel scan using collectionGroup
+        const scanPromises = subjectsToScan.map(async (subjectName) => {
+            try {
+                const snapshot = await db.collectionGroup(subjectName).get();
+                if (snapshot.empty) return;
 
-                            snapshot.docs.forEach(docSnap => {
-                                const data = docSnap.data();
-                                allDocs.push({
-                                    id: docSnap.id,
-                                    path: colPath,
-                                    question: data.question || '',
-                                    board: data.board || board,
-                                    class: data.class || cls,
-                                    subject: data.subject || sub,
-                                    chapter: data.chapter || '',
-                                    createdAt: data.createdAt || 0
-                                });
-                                totalScanned++;
-                            });
-                        } catch {
-                            // Skip inaccessible paths
-                        }
-                    }
-                }
+                snapshot.docs.forEach(docSnap => {
+                    const path = docSnap.ref.path;
+                    const segments = path.split('/');
+                    
+                    // Filter: questions/{board}/{class}/{stream}/{subject}/{docId}
+                    if (segments[0] !== 'questions' || segments.length < 6) return;
+
+                    const data = docSnap.data();
+                    allDocs.push({
+                        id: docSnap.id,
+                        path: path.split('/').slice(0, -1).join('/'), // Just the collection path
+                        question: data.question || '',
+                        board: segments[1],
+                        class: segments[2],
+                        subject: segments[4],
+                        chapter: data.chapter || '',
+                        createdAt: data.createdAt || 0
+                    });
+                    totalScanned++;
+                });
+            } catch (err) {
+                console.error(`Error scanning ${subjectName}:`, err);
             }
-        }
+        });
+
+        await Promise.all(scanPromises);
 
         // Group by content hash (question text + board + class + subject)
         const groups: Record<string, typeof allDocs> = {};
@@ -103,11 +102,11 @@ export async function GET(request: Request) {
     }
 }
 
-// Delete specific docs by path and ID
+// Delete specific docs by full path (including doc ID)
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { secret, action, docPaths } = body;
+        const { secret, docPaths } = body;
 
         if (secret !== ADMIN_SECRET) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
