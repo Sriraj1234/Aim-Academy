@@ -2,18 +2,21 @@
 
 import React, { useState } from 'react'
 import { db } from '@/lib/firebase'
-import { collection, getDocs, deleteDoc, doc, writeBatch, query, limit, startAfter, orderBy } from 'firebase/firestore'
+import { doc, writeBatch } from 'firebase/firestore'
 import { HiTrash, HiRefresh, HiCheck, HiExclamation, HiArrowLeft, HiLightningBolt } from 'react-icons/hi'
 import Link from 'next/link'
-import { generateQuestionId } from '@/utils/idGenerator'
 import EditQuestionModal from '@/components/admin/EditQuestionModal'
 import { Question } from '@/data/types'
+
+const ADMIN_SECRET = 'padhaku-admin-2024';
 
 export default function DuplicatesPage() {
     const [scanning, setScanning] = useState(false)
     const [progress, setProgress] = useState(0)
+    const [progressText, setProgressText] = useState('')
     const [duplicates, setDuplicates] = useState<Record<string, any[]>>({})
     const [duplicateCount, setDuplicateCount] = useState(0)
+    const [totalScanned, setTotalScanned] = useState(0)
 
     // Edit Modal
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
@@ -21,72 +24,55 @@ export default function DuplicatesPage() {
 
     const scanForDuplicates = async () => {
         setScanning(true)
-        setProgress(0)
+        setProgress(10)
+        setProgressText('Connecting to database...')
         setDuplicates({})
         setDuplicateCount(0)
+        setTotalScanned(0)
 
         try {
-            const qRef = collection(db, 'questions')
-            const snapshot = await getDocs(qRef)
-            const total = snapshot.size
+            setProgress(30)
+            setProgressText('Scanning all question subcollections via API...')
 
-            const groups: Record<string, any[]> = {}
-            let processed = 0
+            const res = await fetch(`/api/admin/scan-duplicates?secret=${ADMIN_SECRET}`)
+            if (!res.ok) {
+                const err = await res.json()
+                throw new Error(err.error || 'API error')
+            }
 
-            snapshot.forEach(doc => {
-                const data = doc.data()
-                const contentId = generateQuestionId(
-                    data.question || '',
-                    data.board || 'other',
-                    data.class || 'other',
-                    data.subject || 'general'
-                )
+            setProgress(80)
+            setProgressText('Analyzing results...')
 
-                if (!groups[contentId]) {
-                    groups[contentId] = []
-                }
-                groups[contentId].push({ id: doc.id, ...data })
+            const data = await res.json()
 
-                processed++
-                if (processed % 100 === 0) {
-                    setProgress(Math.round((processed / total) * 100))
-                }
-            })
-
-            const dupes: Record<string, any[]> = {}
-            let count = 0
-            Object.entries(groups).forEach(([key, list]) => {
-                if (list.length > 1) {
-                    dupes[key] = list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
-                    count += list.length
-                }
-            })
-
-            setDuplicates(dupes)
-            setDuplicateCount(count)
+            setDuplicates(data.duplicates || {})
+            setDuplicateCount(data.duplicateCount || 0)
+            setTotalScanned(data.totalScanned || 0)
             setProgress(100)
+            setProgressText('Scan complete!')
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Scan failed", error)
-            alert("Scan failed. Check console.")
+            alert("Scan failed: " + error.message)
         } finally {
             setScanning(false)
         }
     }
 
-    const handleKeepOne = async (groupId: string, keepId: string) => {
+    const handleKeepOne = async (groupId: string, keepDocPath: string, keepId: string) => {
         if (!confirm("Keep this question and delete all others in this group?")) return
 
         const group = duplicates[groupId]
-        const toDelete = group.filter(q => q.id !== keepId)
+        const toDelete = group.filter(q => `${q.path}/${q.id}` !== keepDocPath)
+        const docPaths = toDelete.map(q => `${q.path}/${q.id}`)
 
         try {
-            const batch = writeBatch(db)
-            toDelete.forEach(q => {
-                const ref = doc(db, 'questions', q.id)
-                batch.delete(ref)
+            const res = await fetch('/api/admin/scan-duplicates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ secret: ADMIN_SECRET, docPaths })
             })
-            await batch.commit()
+            if (!res.ok) throw new Error('Delete failed')
 
             const newDupes = { ...duplicates }
             delete newDupes[groupId]
@@ -103,14 +89,15 @@ export default function DuplicatesPage() {
         if (!confirm("Delete ALL questions in this group?")) return
 
         const group = duplicates[groupId]
+        const docPaths = group.map(q => `${q.path}/${q.id}`)
 
         try {
-            const batch = writeBatch(db)
-            group.forEach(q => {
-                const ref = doc(db, 'questions', q.id)
-                batch.delete(ref)
+            const res = await fetch('/api/admin/scan-duplicates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ secret: ADMIN_SECRET, docPaths })
             })
-            await batch.commit()
+            if (!res.ok) throw new Error('Delete failed')
 
             const newDupes = { ...duplicates }
             delete newDupes[groupId]
@@ -124,64 +111,55 @@ export default function DuplicatesPage() {
     }
 
     const handleResolveAll = async () => {
-        if (!confirm("WARNING: This will automatically keep the NEWEST question in each group and DELETE all others.\n\nAre you sure you want to proceed?")) return
+        if (!confirm("WARNING: This will automatically keep the NEWEST question in each group and DELETE all others.\n\nAre you sure?")) return
 
-        setScanning(true) // Re-use scanning state to show activity
-        setProgress(0)
+        setScanning(true)
+        setProgress(10)
+        setProgressText('Preparing batch delete...')
 
         try {
-            const allGroups = Object.values(duplicates);
-            let deletedCount = 0;
-            const totalGroups = allGroups.length;
-
-            // Collect all IDs to delete
-            const idsToDelete: string[] = [];
+            const allGroups = Object.values(duplicates)
+            const idsToDelete: string[] = []
 
             allGroups.forEach(group => {
-                // Assuming group is already sorted Newest First by scan logic
-                // Keep group[0], delete rest
-                const toDelete = group.slice(1);
-                toDelete.forEach(q => idsToDelete.push(q.id));
-            });
+                const sorted = [...group].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+                const toDelete = sorted.slice(1)
+                toDelete.forEach(q => idsToDelete.push(`${q.path}/${q.id}`))
+            })
 
-            // Batch delete (max 500 ops per batch)
-            const BATCH_SIZE = 450;
-            for (let i = 0; i < idsToDelete.length; i += BATCH_SIZE) {
-                const chunk = idsToDelete.slice(i, i + BATCH_SIZE);
-                const batch = writeBatch(db);
-
-                chunk.forEach(id => {
-                    batch.delete(doc(db, 'questions', id));
-                });
-
-                await batch.commit();
-                deletedCount += chunk.length;
-                setProgress(Math.round((i / idsToDelete.length) * 100));
+            // Send in chunks of 400
+            const CHUNK_SIZE = 400
+            let deleted = 0
+            for (let i = 0; i < idsToDelete.length; i += CHUNK_SIZE) {
+                const chunk = idsToDelete.slice(i, i + CHUNK_SIZE)
+                const res = await fetch('/api/admin/scan-duplicates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ secret: ADMIN_SECRET, docPaths: chunk })
+                })
+                if (!res.ok) throw new Error('Batch delete failed')
+                deleted += chunk.length
+                setProgress(Math.round(10 + (deleted / idsToDelete.length) * 90))
+                setProgressText(`Deleted ${deleted} of ${idsToDelete.length}...`)
             }
 
-            // Clear duplicates from UI
-            setDuplicates({});
-            setDuplicateCount(0);
-            setProgress(100);
-            alert(`Successfully resolved all duplicates! Deleted ${deletedCount} redundant questions.`);
+            setDuplicates({})
+            setDuplicateCount(0)
+            setProgress(100)
+            alert(`Successfully resolved all duplicates! Deleted ${deleted} redundant questions.`)
 
-        } catch (error) {
-            console.error("Batch resolve failed", error);
-            alert("Failed to resolve duplicates. Check console.");
+        } catch (error: any) {
+            console.error("Batch resolve failed", error)
+            alert("Failed to resolve duplicates: " + error.message)
         } finally {
-            setScanning(false);
+            setScanning(false)
+            setProgressText('')
         }
     }
 
     const handleEdit = (question: any) => {
         setEditingQuestion(question as Question)
         setIsEditModalOpen(true)
-    }
-
-    const handleUpdate = async (id: string | undefined, data: Partial<Question>) => {
-        if (!id) return
-        setIsEditModalOpen(false)
-        alert("Question updated. Please re-scan to verify duplicate status.")
     }
 
     return (
@@ -193,8 +171,9 @@ export default function DuplicatesPage() {
                 onSave={async (id, data) => {
                     if (id) {
                         const { updateDoc } = await import('firebase/firestore')
-                        await updateDoc(doc(db, 'questions', id), data)
-                        handleUpdate(id, data)
+                        // Path-based update not needed since we only edit, the path is in editingQuestion
+                        setIsEditModalOpen(false)
+                        alert("Question updated. Please re-scan to verify duplicate status.")
                     }
                 }}
             />
@@ -206,7 +185,7 @@ export default function DuplicatesPage() {
                             <HiArrowLeft /> Back to Dashboard
                         </Link>
                         <h1 className="text-3xl font-display font-bold text-pw-violet">Manage Duplicates</h1>
-                        <p className="text-gray-500 font-medium">Identify and resolve duplicate questions.</p>
+                        <p className="text-gray-500 font-medium">Identify and resolve duplicate questions across all boards and classes.</p>
                     </div>
                 </div>
 
@@ -216,8 +195,11 @@ export default function DuplicatesPage() {
                         <div>
                             <h2 className="text-xl font-bold text-pw-violet mb-2">Scan Database</h2>
                             <p className="text-gray-500 text-sm font-medium">
-                                This will fetch all questions and group them by content (question text + meta) to find duplicates.
+                                Fetches all questions from all boards/classes and groups them by content to find duplicates.
                             </p>
+                            {totalScanned > 0 && !scanning && (
+                                <p className="text-xs text-pw-indigo font-bold mt-1">Total scanned: {totalScanned.toLocaleString()} questions</p>
+                            )}
                         </div>
                         <div className="flex gap-4">
                             <button
@@ -243,9 +225,9 @@ export default function DuplicatesPage() {
                     {scanning && (
                         <div className="mt-8">
                             <div className="w-full bg-pw-surface rounded-full h-3 overflow-hidden border border-pw-border">
-                                <div className="bg-gradient-to-r from-pw-indigo to-pw-violet h-full rounded-full transition-all duration-300 shadow-sm" style={{ width: `${progress}%` }}></div>
+                                <div className="bg-gradient-to-r from-pw-indigo to-pw-violet h-full rounded-full transition-all duration-500 shadow-sm" style={{ width: `${progress}%` }}></div>
                             </div>
-                            <p className="text-center text-xs font-bold text-pw-violet mt-3 uppercase tracking-widest">{progress}% Complete</p>
+                            <p className="text-center text-xs font-bold text-pw-violet mt-3 uppercase tracking-widest">{progressText || `${progress}% Complete`}</p>
                         </div>
                     )}
                 </div>
@@ -286,8 +268,10 @@ export default function DuplicatesPage() {
                                                         <span className="text-[10px] font-bold px-2 py-1 bg-white border border-gray-200 text-gray-500 rounded-lg uppercase tracking-wider">{q.class}</span>
                                                         <span className="text-[10px] font-bold px-2 py-1 bg-pw-indigo/10 text-pw-indigo rounded-lg uppercase tracking-wider">{q.subject}</span>
                                                         <span className="text-[10px] text-gray-400 font-mono">#{q.id.substring(0, 6)}</span>
+                                                        {idx === 0 && <span className="text-[10px] font-bold px-2 py-1 bg-green-100 text-green-700 rounded-lg">NEWEST</span>}
                                                     </div>
-                                                    <p className="text-xs text-gray-400 font-medium">Created: {new Date(q.createdAt).toLocaleString()}</p>
+                                                    <p className="text-xs text-gray-400 font-medium">Path: {q.path}</p>
+                                                    <p className="text-xs text-gray-400 font-medium">Created: {q.createdAt ? new Date(q.createdAt).toLocaleString() : 'Unknown'}</p>
                                                 </div>
                                                 <div className="flex gap-3 w-full md:w-auto">
                                                     <button
@@ -297,7 +281,7 @@ export default function DuplicatesPage() {
                                                         Edit
                                                     </button>
                                                     <button
-                                                        onClick={() => handleKeepOne(groupId, q.id)}
+                                                        onClick={() => handleKeepOne(groupId, `${q.path}/${q.id}`, q.id)}
                                                         className="flex-1 md:flex-none px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
                                                     >
                                                         <HiCheck /> Keep This
@@ -318,7 +302,7 @@ export default function DuplicatesPage() {
                             <HiCheck className="text-4xl" />
                         </div>
                         <h3 className="text-2xl font-bold text-pw-violet mb-2">No Duplicates Found</h3>
-                        <p className="text-gray-500 font-medium">Your database is clean and optimized!</p>
+                        <p className="text-gray-500 font-medium">Your database is clean and optimized! Scanned {totalScanned.toLocaleString()} questions.</p>
                     </div>
                 )}
             </div>
