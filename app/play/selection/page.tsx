@@ -59,10 +59,10 @@ function CustomizeModal({
     }, [difficulty, availableCount, uniqueOptions]);
 
     const difficultyOptions = [
-        { value: 'easy', label: '😊 Easy', color: 'text-green-700 border-green-500 bg-green-50', count: chapter.levels?.Easy || 0 },
-        { value: 'medium', label: '🔥 Medium', color: 'text-yellow-700 border-yellow-500 bg-yellow-50', count: chapter.levels?.Medium || 0 },
-        { value: 'hard', label: '💪 Hard', color: 'text-red-700 border-red-500 bg-red-50', count: chapter.levels?.Hard || 0 },
-        { value: 'mix', label: '🎲 Mix', color: 'text-purple-700 border-purple-500 bg-purple-50', count: chapter.count },
+        { value: 'easy', label: '😊 Easy', color: 'text-green-700 dark:text-green-400 border-green-500 bg-green-50 dark:bg-green-900/30', count: chapter.levels?.Easy || 0 },
+        { value: 'medium', label: '🔥 Medium', color: 'text-yellow-700 dark:text-yellow-400 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30', count: chapter.levels?.Medium || 0 },
+        { value: 'hard', label: '💪 Hard', color: 'text-red-700 dark:text-red-400 border-red-500 bg-red-50 dark:bg-red-900/30', count: chapter.levels?.Hard || 0 },
+        { value: 'mix', label: '🎲 Mix', color: 'text-purple-700 dark:text-purple-400 border-purple-500 bg-purple-50 dark:bg-purple-900/30', count: chapter.count },
     ];
 
     return (
@@ -97,7 +97,7 @@ function CustomizeModal({
                                     ${opt.count === 0 ? 'opacity-40 cursor-not-allowed grayscale' : 'cursor-pointer'}
                                     ${difficulty === opt.value
                                         ? opt.color
-                                        : 'border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                                        : 'border-transparent bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}
                                 `}
                             >
                                 <span>{opt.label}</span>
@@ -121,8 +121,8 @@ function CustomizeModal({
                                     className={`
                                         py-2 px-3 rounded-xl text-sm font-bold transition-all border-2
                                         ${selected === opt
-                                            ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm'
-                                            : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'}
+                                            ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 shadow-sm'
+                                            : 'border-transparent bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}
                                     `}
                                 >
                                     {opt === availableCount ? `All (${opt})` : opt}
@@ -130,7 +130,7 @@ function CustomizeModal({
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-red-50 text-red-600 py-3 px-4 rounded-xl text-xs font-bold border border-red-100">
+                        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 py-3 px-4 rounded-xl text-xs font-bold border border-red-100 dark:border-red-900/50">
                             No questions available for this level.
                         </div>
                     )}
@@ -524,10 +524,10 @@ function SelectionContent() {
                                             </div>
 
                                             <div className="flex justify-between items-start mb-4 relative z-10">
-                                                <div className="p-3 rounded-xl bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                                                <div className="p-3 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 group-hover:bg-orange-600 group-hover:text-white transition-colors">
                                                     <HiAcademicCap className="text-2xl" />
                                                 </div>
-                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-orange-600 px-2 py-1 rounded-lg border border-orange-200">Group</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-orange-600 dark:text-orange-400 px-2 py-1 rounded-lg border border-orange-200 dark:border-orange-500/30">Group</span>
                                             </div>
                                             <h3 className="text-xl font-bold text-pw-violet group-hover:text-orange-600 transition-colors capitalize mb-1 relative z-10">Social Science</h3>
                                             <p className="text-sm text-gray-500 relative z-10">{sstText}</p>
@@ -546,10 +546,10 @@ function SelectionContent() {
                                             </div>
 
                                             <div className="flex justify-between items-start mb-4 relative z-10">
-                                                <div className="p-3 rounded-xl bg-pink-100 text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-colors">
+                                                <div className="p-3 rounded-xl bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 group-hover:bg-pink-600 group-hover:text-white transition-colors">
                                                     <HiAcademicCap className="text-2xl" />
                                                 </div>
-                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-pink-600 px-2 py-1 rounded-lg border border-pink-200">Group</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-pw-surface text-pink-600 dark:text-pink-400 px-2 py-1 rounded-lg border border-pink-200 dark:border-pink-500/30">Group</span>
                                             </div>
                                             <h3 className="text-xl font-bold text-pw-violet group-hover:text-pink-600 transition-colors capitalize mb-1 relative z-10">Languages</h3>
                                             <p className="text-sm text-gray-500 relative z-10">{langText}</p>
@@ -606,7 +606,7 @@ function SelectionContent() {
                                         </div>
 
                                         <div className="flex justify-between items-start mb-4 relative z-10">
-                                            <div className={`p-3 rounded-xl transition-colors ${selectedSST ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : selectedLang ? 'bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
+                                            <div className={`p-3 rounded-xl transition-colors ${selectedSST ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 group-hover:bg-orange-600 group-hover:text-white' : selectedLang ? 'bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 group-hover:bg-pink-600 group-hover:text-white' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white'}`}>
                                                 <HiAcademicCap className="text-2xl" />
                                             </div>
                                         </div>
