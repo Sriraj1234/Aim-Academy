@@ -354,7 +354,7 @@ const ResultContent = () => {
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
                         className="fixed inset-0 z-[100] bg-pw-surface overflow-y-auto"
                     >
-                        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-xl border-b border-pw-border p-4 flex items-center justify-between shadow-sm">
+                        <div className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-pw-border p-4 flex items-center justify-between shadow-sm">
                             <div className="flex items-center gap-4">
                                 <button
                                     onClick={() => setShowReview(false)}
@@ -456,7 +456,7 @@ const ResultContent = () => {
                                     transition={{ delay: 0.5 }}
                                     className="bg-pw-surface rounded-2xl p-4 flex flex-col items-center justify-center border border-pw-border relative overflow-hidden group hover:shadow-pw-sm transition-all"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform border border-blue-100">
+                                    <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform border border-blue-100 dark:border-blue-500/30">
                                         <FaBullseye size={18} />
                                     </div>
                                     <span className="text-xl font-bold text-pw-violet">{accuracy}%</span>
@@ -470,7 +470,7 @@ const ResultContent = () => {
                                     transition={{ delay: 0.6 }}
                                     className="bg-pw-surface rounded-2xl p-4 flex flex-col items-center justify-center border border-pw-border relative overflow-hidden group hover:shadow-pw-sm transition-all"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform border border-orange-100">
+                                    <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400 flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform border border-orange-100 dark:border-orange-500/30">
                                         <FaClock size={18} />
                                     </div>
                                     <span className="text-xl font-bold whitespace-nowrap text-pw-violet">{timeString}</span>
@@ -484,7 +484,7 @@ const ResultContent = () => {
                                     transition={{ delay: 0.7 }}
                                     className="bg-pw-surface rounded-2xl p-4 flex flex-col items-center justify-center border border-pw-border relative overflow-hidden group hover:shadow-pw-sm transition-all"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform border border-green-100">
+                                    <div className="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/30 text-green-500 dark:text-green-400 flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform border border-green-100 dark:border-green-500/30">
                                         <FaCheckCircle size={18} />
                                     </div>
                                     <span className="text-xl font-bold text-pw-violet">{score}/{totalQuestions}</span>
@@ -542,7 +542,7 @@ const ResultContent = () => {
                     <span className="text-[10px] font-bold tracking-wide">Home</span>
                 </Link>
                 <Link href="/" className="flex flex-col items-center gap-1.5 text-pw-indigo relative">
-                    <div className="absolute -top-10 bg-pw-indigo rounded-full p-4 shadow-xl shadow-pw-indigo/30 border-4 border-white transform transition-transform hover:-translate-y-1">
+                    <div className="absolute -top-10 bg-pw-indigo rounded-full p-4 shadow-xl shadow-pw-indigo/30 border-4 border-white dark:border-[#020617] transform transition-transform hover:-translate-y-1">
                         <FaGamepad className="text-2xl text-white" />
                     </div>
                     <span className="text-[10px] font-bold tracking-wide mt-6">Play</span>
