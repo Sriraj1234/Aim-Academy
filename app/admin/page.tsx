@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { HiCloudUpload, HiChartPie, HiDocumentText, HiLightningBolt, HiDuplicate, HiUsers } from 'react-icons/hi'
-import { collection, getCountFromServer } from 'firebase/firestore'
+import { collection, getCountFromServer, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 export default function AdminDashboard() {
@@ -21,13 +21,24 @@ export default function AdminDashboard() {
                 const usersSnapshot = await getCountFromServer(usersColl);
 
                 // Fetch Questions Count
-                // Based on previous contexts, questions might be in 'questions' collection.
-                const questionsColl = collection(db, 'questions');
-                const questionsSnapshot = await getCountFromServer(questionsColl);
+                let totalQuestionsCount = 0;
+                try {
+                    const metaSnap = await getDoc(doc(db, 'metadata', 'taxonomy'));
+                    if (metaSnap.exists()) {
+                        const meta = metaSnap.data();
+                        totalQuestionsCount = Object.values(meta).reduce((sum: number, v: any) => {
+                            if (v && v.chapters) {
+                                return sum + Object.values(v.chapters).reduce((s: number, chaps: any) =>
+                                    s + (Array.isArray(chaps) ? chaps.reduce((cs: number, c: any) => cs + (c.count || 0), 0) : 0), 0) as number;
+                            }
+                            return sum;
+                        }, 0) as number;
+                    }
+                } catch (e) { console.error(e) }
 
                 setStats({
                     users: usersSnapshot.data().count,
-                    questions: questionsSnapshot.data().count,
+                    questions: totalQuestionsCount,
                     loading: false
                 })
             } catch (error) {
