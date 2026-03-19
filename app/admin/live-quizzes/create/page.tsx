@@ -70,37 +70,25 @@ export default function CreateLiveQuizPage() {
             setAvailableQuestions([]);
 
             try {
-                // ── Build hierarchical path matching upload format ─────────────────
-                const boardKey = bankFilterBoard.toUpperCase(); // e.g. 'BSEB'
-                const classKey = `Class ${bankFilterClass}`; // e.g. 'Class 10'
-                const classNumInt = parseInt(bankFilterClass);
-                const streamKey = classNumInt >= 11 ? 'Science' : 'general';
-                const subjectKey = bankFilterSubject.toLowerCase().replace(/\s+/g, '_');
+                // Use the robust fetch-questions API route that handles dynamic subjects
+                const apiUrl = `/api/admin/fetch-questions?board=${encodeURIComponent(bankFilterBoard)}&class=${encodeURIComponent(bankFilterClass)}&subject=${encodeURIComponent(bankFilterSubject)}`;
+                console.log('LiveQuiz Admin: querying API', apiUrl);
 
-                const colPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
-                console.log('LiveQuiz Admin: querying', colPath);
+                const res = await fetch(apiUrl);
+                if (!res.ok) throw new Error(`API returned ${res.status}`);
+                
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
 
-                const snap = await getDocs(query(
-                    collection(db, colPath),
-                    orderBy('createdAt', 'desc'),
-                    limit(500)
-                ));
-
-                const fetchedQuestions = snap.docs.map(d => ({
-                    id: d.id,
-                    ...d.data()
-                })) as any[];
-
+                const fetchedQuestions = data.questions || [];
                 setAvailableQuestions(fetchedQuestions);
 
                 if (fetchedQuestions.length === 0) {
-                    console.log('No questions found at:', colPath);
+                    console.log('No questions found via API');
                 }
             } catch (error: any) {
                 console.error('Error fetching questions:', error);
-                if (!error?.message?.includes('index')) {
-                    alert(`Failed to load questions: ${error.message}`);
-                }
+                alert(`Failed to load questions: ${error.message}`);
             } finally {
                 setLoading(false);
             }
