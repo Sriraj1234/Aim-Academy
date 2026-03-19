@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
+import html2canvas from 'html2canvas'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -25,6 +26,7 @@ const ResultContent = () => {
     const [loading, setLoading] = useState(true)
     const [showReview, setShowReview] = useState(false)
     const [showConfetti, setShowConfetti] = useState(false)
+    const [isSharing, setIsSharing] = useState(false)
 
     // Double-Tap Back Logic
     const [showExitWarning, setShowExitWarning] = useState(false);
@@ -283,6 +285,54 @@ const ResultContent = () => {
     const isHighScore = accuracy >= 80
     const isPass = accuracy >= 40
 
+    const handleWhatsAppShare = async () => {
+        setIsSharing(true);
+        try {
+            const element = document.getElementById('score-card');
+            if (!element) throw new Error("Score card not found");
+
+            // Temporarily hide the action buttons for a cleaner screenshot
+            const actionsDiv = document.getElementById('score-actions');
+            if (actionsDiv) actionsDiv.style.display = 'none';
+
+            const canvas = await html2canvas(element, { 
+                scale: 2, 
+                backgroundColor: '#F8F9FC',
+                useCORS: true
+            });
+            
+            if (actionsDiv) actionsDiv.style.display = 'flex'; // Restore
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) throw new Error("Failed to generate image blob");
+                
+                const file = new File([blob], 'padhaku-score.png', { type: 'image/png' });
+                const shareText = `🏆 I just scored ${score}/${totalQuestions} (${accuracy}% accuracy) on Padhaku! Can you beat me? 💪\n\nPlay now at: https://padhaku.co`;
+
+                // Check if Web Share API with files is supported
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'My Padhaku Score',
+                        text: shareText,
+                        files: [file]
+                    });
+                } else {
+                    // Fallback to text sharing if image sharing is not supported by browser
+                    const shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+                    window.open(shareUrl, '_blank');
+                }
+            }, 'image/png', 1.0);
+
+        } catch (error) {
+            console.error("Error sharing image:", error);
+            // Absolute fallback
+            const shareText = `🏆 I just scored ${score}/${totalQuestions} (${accuracy}% accuracy) on Padhaku! Can you beat me? 💪`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+        } finally {
+            setIsSharing(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-pw-surface text-pw-violet pb-32 overflow-x-hidden font-sans">
             {/* Confetti Celebration */}
@@ -332,6 +382,7 @@ const ResultContent = () => {
             <main className="relative pt-8 px-6 max-w-lg mx-auto flex flex-col items-center z-10">
                 {/* Result Card */}
                 <motion.div
+                    id="score-card"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: "spring", duration: 0.8 }}
@@ -442,7 +493,7 @@ const ResultContent = () => {
                             </div>
 
                             {/* Actions */}
-                            <div className="w-full flex flex-col gap-3">
+                            <div id="score-actions" className="w-full flex flex-col gap-3">
                                 <Button
                                     onClick={() => setShowReview(true)}
                                     fullWidth
@@ -463,25 +514,13 @@ const ResultContent = () => {
 
                                 {/* Share on WhatsApp */}
                                 <Button
-                                    onClick={() => {
-                                        const shareText = `🏆 I just scored ${score}/${totalQuestions} (${accuracy}% accuracy) on Padhaku! Can you beat me? 💪`;
-                                        const shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-
-                                        // Try native share first, fallback to WhatsApp link
-                                        if (navigator.share) {
-                                            navigator.share({
-                                                title: 'My Quiz Score',
-                                                text: shareText
-                                            }).catch(() => window.open(shareUrl, '_blank'));
-                                        } else {
-                                            window.open(shareUrl, '_blank');
-                                        }
-                                    }}
+                                    loading={isSharing}
+                                    onClick={handleWhatsAppShare}
                                     fullWidth
-                                    className="h-14 bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20 text-sm font-bold tracking-wide rounded-xl transform transition-transform active:scale-95 border-none"
+                                    className="h-14 bg-[#25D366] hover:bg-[#128C7E] text-white shadow-lg shadow-[#25D366]/20 text-sm font-bold tracking-wide rounded-xl transform transition-transform active:scale-95 border-none"
                                 >
-                                    <FaWhatsapp className="mr-2 text-lg" />
-                                    SHARE ON WHATSAPP
+                                    {!isSharing && <FaWhatsapp className="mr-2 text-lg" />}
+                                    {isSharing ? 'GENERATING IMAGE...' : 'SHARE ON WHATSAPP'}
                                 </Button>
                             </div>
                         </div>
