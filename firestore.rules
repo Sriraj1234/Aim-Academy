@@ -11,16 +11,27 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    // Role-Based Access Control
+    // Admin check via hardcoded email whitelist (fast, no extra DB read)
+    function isAdminByEmail() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'jayant.kgp81@gmail.com' ||
+        request.auth.token.email == 'jayantkumar1985kh@gmail.com'
+      );
+    }
+
+    // Role-Based Access Control (DB role check for teachers/admins with role field)
     function isAdmin() {
-      let role = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-      return isAuthenticated() && (role == 'admin' || role == 'teacher' || role == 'super_admin');
+      return isAdminByEmail() || (
+        isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'teacher', 'super_admin']
+      );
     }
 
     // --- 1. User Data (Strict Ownership) ---
     match /users/{userId} {
-      // Users can modify their own data. Admins can read all.
-      allow write: if isOwner(userId) || isAdmin();
+      // Users can modify their own data. Admins can read and write all.
+      allow write: if isOwner(userId) || isAdminByEmail();
       // Public Read (Authenticated) required for Leaderboards/Search logic
       allow read: if isAuthenticated();
       
@@ -130,6 +141,12 @@ service cloud.firestore {
     match /video_resources/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // --- Teachers Collection (Super Admin Panel) ---
+    // Allow admin emails to fully manage teachers
+    match /teachers/{email} {
+      allow read, write: if isAdminByEmail();
     }
 
     // --- 3. Interactive Features ---
