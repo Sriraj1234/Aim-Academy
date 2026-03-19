@@ -23,7 +23,7 @@ const normalizeSubject = (sub: string): string => {
     const sstKeywords = [
         'social_science', 'soc_science', 'social_studies',
         'pol_science', 'political_science', 'civics',
-        'history', 'geography', 'economics', 'disaster_management',
+        'history', 'geography', 'economics', 'disaster_management', 'digaster_management',
         'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
     ];
     
@@ -625,7 +625,7 @@ const UploadPage = () => {
             let modified = false;
 
             const sstMergeList = [
-                'political_science', 'disaster_management', 'civics', 'geography', 'history', 
+                'political_science', 'disaster_management', 'digaster_management', 'civics', 'geography', 'history', 
                 'economics', 'social_science', 'sst', 'social_studies', 'pol_science', 'political science',
                 'itihas', 'bhugol', 'nagrik', 'arthshastra'
             ];
