@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { HiHome, HiUpload, HiDatabase, HiUsers, HiChartBar, HiMenu, HiX } from 'react-icons/hi'
-import { FaYoutube, FaPuzzlePiece, FaBell, FaUserShield, FaChalkboardTeacher, FaClock } from 'react-icons/fa'
+import { HiHome, HiUpload, HiUsers, HiChartBar, HiMenu, HiX } from 'react-icons/hi'
+import { FaYoutube, FaPuzzlePiece, FaBell, FaUserShield, FaClock } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { useAuth } from '@/context/AuthContext'
@@ -27,10 +28,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             if (user?.email && AUTHORIZED_EMAILS.includes(user.email)) {
                 setIsAuthorized(true);
             } else if (user?.email) {
-                // Logged in but not authorized
                 setIsAuthorized(false);
             } else {
-                // Not logged in
                 setIsAuthorized(false)
             }
         }
@@ -40,6 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { label: 'Dashboard', href: '/admin', icon: HiChartBar },
         { label: 'Super Admin', href: '/admin/super', icon: FaUserShield },
         { label: 'Upload Questions', href: '/admin/upload', icon: HiUpload },
+        { label: 'User Management', href: '/admin/users', icon: HiUsers },
         { label: 'Live Quiz Manager', href: '/admin/live-quizzes', icon: FaClock },
         { label: 'Study Hub Manager', href: '/admin/study-hub', icon: FaYoutube },
         { label: 'Mind Game Manager', href: '/admin/mind-game', icon: FaPuzzlePiece },
@@ -89,44 +89,63 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )
     }
 
+    const SidebarContent = ({ onLinkClick }: { onLinkClick?: () => void }) => (
+        <>
+            {/* Logo Section */}
+            <div className="p-5 border-b border-slate-800">
+                <Link href="/" onClick={onLinkClick} className="flex items-center gap-3 group">
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white/10 flex-shrink-0 shadow-lg">
+                        <Image
+                            src="/padhaku-192.png"
+                            alt="Padhaku Logo"
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                        />
+                    </div>
+                    <div>
+                        <h1 className="text-lg font-bold text-white leading-tight">Padhaku</h1>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Admin Panel</p>
+                    </div>
+                </Link>
+            </div>
+
+            <nav className="flex-1 px-3 py-4 overflow-y-auto">
+                {navItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.href
+
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={onLinkClick}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${isActive
+                                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/20 shadow-lg shadow-purple-900/10'
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                }`}
+                        >
+                            <Icon className="text-xl flex-shrink-0" />
+                            <span className="font-semibold text-sm">{item.label}</span>
+                        </Link>
+                    )
+                })}
+            </nav>
+
+            <div className="p-4 border-t border-slate-800">
+                <Link href="/" onClick={onLinkClick} className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                    <HiHome className="text-xl" />
+                    <span className="font-semibold text-sm">Back to App</span>
+                </Link>
+            </div>
+        </>
+    )
+
     return (
         <div className="flex min-h-screen bg-slate-50">
             {/* Desktop Sidebar */}
-            <aside className="w-64 bg-slate-900 text-white hidden md:block border-r border-slate-800 sticky top-0 h-screen overflow-y-auto">
-                <div className="p-6">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-                        AIM Admin
-                    </h1>
-                    <p className="text-xs text-slate-400 mt-1">Control Center</p>
-                </div>
-
-                <nav className="mt-6 px-3">
-                    {navItems.map((item) => {
-                        const Icon = item.icon
-                        const isActive = pathname === item.href
-
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${isActive
-                                    ? 'bg-purple-600/20 text-purple-400 border border-purple-500/20 shadow-lg shadow-purple-900/10'
-                                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                    }`}
-                            >
-                                <Icon className="text-xl" />
-                                <span className="font-semibold text-sm">{item.label}</span>
-                            </Link>
-                        )
-                    })}
-                </nav>
-
-                <div className="p-4 mt-auto border-t border-slate-800">
-                    <Link href="/" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors">
-                        <HiHome className="text-xl" />
-                        <span className="font-semibold text-sm">Back to App</span>
-                    </Link>
-                </div>
+            <aside className="w-64 bg-slate-900 text-white hidden md:flex flex-col border-r border-slate-800 sticky top-0 h-screen overflow-y-auto">
+                <SidebarContent />
             </aside>
 
             {/* Mobile Nav Overlay */}
@@ -147,46 +166,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             transition={{ type: "spring", bounce: 0, duration: 0.3 }}
                             className="fixed inset-y-0 left-0 w-64 bg-slate-900 text-white z-50 md:hidden flex flex-col shadow-2xl"
                         >
-                            <div className="p-6 flex justify-between items-center bg-slate-900/50">
-                                <div>
-                                    <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-                                        AIM Admin
-                                    </h1>
-                                    <p className="text-xs text-slate-400">Mobile Panel</p>
-                                </div>
+                            <div className="p-4 flex justify-between items-center border-b border-slate-800">
+                                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3">
+                                    <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-white/10 flex-shrink-0">
+                                        <Image src="/padhaku-192.png" alt="Padhaku" width={36} height={36} className="object-cover" />
+                                    </div>
+                                    <div>
+                                        <h1 className="text-base font-bold text-white leading-tight">Padhaku</h1>
+                                        <p className="text-[10px] text-slate-400">Admin Panel</p>
+                                    </div>
+                                </Link>
                                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white">
                                     <HiX className="text-xl" />
                                 </button>
                             </div>
-
-                            <nav className="flex-1 px-3 py-4 overflow-y-auto">
-                                {navItems.map((item) => {
-                                    const Icon = item.icon
-                                    const isActive = pathname === item.href
-
-                                    return (
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${isActive
-                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
-                                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                                }`}
-                                        >
-                                            <Icon className="text-xl" />
-                                            <span className="font-semibold text-sm">{item.label}</span>
-                                        </Link>
-                                    )
-                                })}
-                            </nav>
-
-                            <div className="p-4 border-t border-slate-800 bg-slate-900">
-                                <Link href="/" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
-                                    <HiHome className="text-xl" />
-                                    <span className="font-semibold text-sm">Back to App</span>
-                                </Link>
-                            </div>
+                            <SidebarContent onLinkClick={() => setIsMobileMenuOpen(false)} />
                         </motion.aside>
                     </>
                 )}
@@ -202,7 +196,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         >
                             <HiMenu className="text-2xl" />
                         </button>
-                        <span className="font-bold text-slate-800">Admin Dashboard</span>
+                        <div className="flex items-center gap-2">
+                            <div className="relative w-7 h-7 rounded-lg overflow-hidden">
+                                <Image src="/padhaku-192.png" alt="Padhaku" width={28} height={28} className="object-cover" />
+                            </div>
+                            <span className="font-bold text-slate-800">Admin Dashboard</span>
+                        </div>
                     </div>
                 </header>
 
