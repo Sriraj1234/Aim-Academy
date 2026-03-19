@@ -819,6 +819,42 @@ const UploadPage = () => {
                     </div>
                 </div>
 
+                {/* ── Taxonomy Rebuild Card (prominent, not buried in Danger Zone) ── */}
+                <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border border-pw-indigo/20 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm">
+                    <div className="flex-1">
+                        <h3 className="text-base font-bold text-pw-violet flex items-center gap-2">
+                            <FaUpload className="text-pw-indigo" /> Rebuild App Taxonomy (Menu)
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                            Scans all questions and rebuilds the subject/chapter menu. Run this after bulk uploads to update the app's navigation.
+                        </p>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            if (!confirm('Rebuild taxonomy from all questions? This updates the app subject menu.')) return;
+                            setLoading(true);
+                            try {
+                                const res = await fetch('/api/admin/rebuild-taxonomy');
+                                const data = await res.json();
+                                if (data.success) {
+                                    alert('✅ Taxonomy rebuilt!\n\n' + data.message);
+                                } else {
+                                    alert('❌ Failed: ' + data.error);
+                                }
+                            } catch (e: any) {
+                                alert('❌ Error: ' + e.message);
+                            } finally {
+                                setLoading(false);
+                            }
+                        }}
+                        disabled={loading}
+                        className="flex-shrink-0 flex items-center gap-2 bg-pw-indigo hover:bg-pw-violet text-white font-bold px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-60 text-sm"
+                    >
+                        {loading ? <FaUpload className="animate-pulse" /> : <FaUpload />}
+                        {loading ? 'Building...' : 'Rebuild Now'}
+                    </button>
+                </div>
+
                 {/* Enhanced Tabs */}
                 <div className="bg-white p-2 rounded-2xl shadow-pw-sm border border-pw-border flex gap-2 mb-6">
                     <button
