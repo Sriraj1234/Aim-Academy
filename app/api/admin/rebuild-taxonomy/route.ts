@@ -8,19 +8,21 @@ export const dynamic = 'force-dynamic';
  */
 const normalizeSubject = (sub: string): string => {
     const s = sub.toLowerCase().trim().replace(/\s+/g, '_');
-    if (s === 'mathematics' || s === 'maths' || s === 'math') return 'math';
     
-    // Consolidated Social Science Grouping
-    const sstKeywords = [
-        'social_science', 'soc_science', 'social_studies',
-        'pol_science', 'political_science', 'civics',
-        'history', 'geography', 'economics', 'disaster_management', 'digaster_management',
-        'itihas', 'bhugol', 'nagrik', 'arthshastra', 'apprit'
-    ];
+    // Normalize math variants
+    if (s === 'mathematics' || s === 'maths' || s === 'math') return 'mathematics';
     
-    if (sstKeywords.includes(s)) {
-        return 'social_science';
-    }
+    // Normalize disaster management spelling variations
+    if (s === 'digaster_management' || s === 'disastermanagement') return 'disaster_management';
+    
+    // Normalize political science variants
+    if (s === 'pol_science' || s === 'civics') return 'political_science';
+    
+    // Normalize social studies to social_science (the general catch-all only)
+    if (s === 'social_studies' || s === 'soc_science' || s === 'social_science') return 'social_science';
+    
+    // Keep all individual SST subjects (history, geography, economics, political_science, disaster_management)
+    // as their OWN separate keys. The UI groups them visually, but taxonomy should store individually.
     
     return s;
 };
@@ -103,13 +105,12 @@ export async function GET() {
                     // Determine final subject
                     let finalSubject = normalizeSubject(subject);
                     
-                    // SST Sectioning Info
-                    let sstSection = 'General';
-                    let origSubject = subject;
-                    if (finalSubject === 'social_science') {
-                        sstSection = subject.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        if (sstSection.toLowerCase() === 'social science') sstSection = 'General';
-                    }
+                    // origSubject: the actual collection name stored in Firestore (used for quiz fetching)
+                    const origSubject = subject.toLowerCase().replace(/\s+/g, '_');
+                    
+                    // Section for grouping chapters within a subject (e.g., Poetry vs Prose in English)
+                    // For SST subjects we just use 'General' since each is its own subject card now
+                    const sectionLabel = 'General';
                     
                     // Science deduplication for Class 10
                     if (finalSubject === 'science' && cls === 'Class 10') {
@@ -136,7 +137,7 @@ export async function GET() {
                         existingChap = { 
                             name: chapter, 
                             count: 0, 
-                            section: sstSection,
+                            section: sectionLabel,
                             origSubject: origSubject,
                             levels: { Easy: 0, Medium: 0, Hard: 0 } 
                         };
