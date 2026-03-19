@@ -249,8 +249,17 @@ export const ModernCarousel = () => {
 
                         {/* Graphic Area - Hidden on small mobile to save space, visible on larger phones/desktop */}
                         <div className="hidden sm:flex relative z-0 md:w-2/5 justify-center items-center">
-                            <div className="relative w-20 h-20 md:w-48 md:h-48 rounded-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-500">
-                                {React.createElement(slides[current].icon, { className: "text-white/20 md:text-white text-6xl md:text-8xl drop-shadow-2xl" })}
+                            <div className="relative w-28 h-28 md:w-56 md:h-56 flex items-center justify-center transform hover:scale-105 transition-transform duration-500">
+                                {slides[current].type === 'personal' ? (
+                                    <div className="w-full h-full relative z-10 drop-shadow-2xl filter hover:brightness-110 transition-all">
+                                        <div className="absolute inset-0 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
+                                        <img src="/ai-avatar/teacher-idle.png" alt="3D Avatar" className="w-full h-full object-contain relative z-20" />
+                                    </div>
+                                ) : (
+                                    <div className="w-20 h-20 md:w-48 md:h-48 rounded-2xl flex items-center justify-center">
+                                       {React.createElement(slides[current].icon, { className: "text-white/20 md:text-white text-6xl md:text-8xl drop-shadow-2xl" })}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </motion.div>
