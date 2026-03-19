@@ -116,7 +116,7 @@ export const ModernModeGrid = () => {
                             whileHover={{
                                 y: -8,
                                 scale: 1.02,
-                                transition: { duration: 0.2 }
+                                transition: { type: "spring", stiffness: 300, damping: 20 }
                             }}
                             whileTap={{ scale: 0.96 }}
                             className={`group relative h-full bg-white rounded-2xl p-5 hover:shadow-pw-lg transition-all overflow-hidden cursor-pointer border ${mode.id === 'group' ? 'border-pw-indigo shadow-pw-md bg-pw-surface/50' : 'border-pw-border hover:border-pw-indigo/30'}`}
@@ -216,7 +216,7 @@ export const ModernModeGrid = () => {
                         whileHover={{
                             y: -8,
                             scale: 1.02,
-                            transition: { duration: 0.2 }
+                            transition: { type: "spring", stiffness: 300, damping: 20 }
                         }}
                         whileTap={{ scale: 0.96 }}
                         className="group relative h-full bg-white rounded-2xl p-5 hover:shadow-pw-lg transition-all overflow-hidden cursor-pointer border border-pw-border hover:border-pw-indigo/30"
@@ -260,7 +260,7 @@ export const ModernModeGrid = () => {
                         whileHover={{
                             y: -8,
                             scale: 1.02,
-                            transition: { duration: 0.2 }
+                            transition: { type: "spring", stiffness: 300, damping: 20 }
                         }}
                         whileTap={{ scale: 0.96 }}
                         className="group relative h-full bg-white rounded-2xl p-5 hover:shadow-pw-lg transition-all overflow-hidden cursor-pointer border border-pw-border hover:border-pw-indigo/30"
