@@ -66,9 +66,15 @@ export default function SignupPage() {
         <div className="min-h-screen bg-pw-surface text-gray-900 flex flex-col p-6">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-                <Link href="/" className="flex items-center gap-2">
-                    {/* Brand Logo or Text could go here, for now using simple back */}
-                    <span className="font-display font-bold text-2xl text-pw-violet">AIM <span className="text-pw-indigo">Academy</span></span>
+                <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform">
+                    <Image 
+                        src="/padhaku-192.png" 
+                        alt="Padhaku" 
+                        width={32} 
+                        height={32} 
+                        className="rounded-xl shadow-pw-sm"
+                    />
+                    <span className="font-display font-black text-xl text-pw-violet tracking-tight">Padhaku</span>
                 </Link>
                 <button
                     onClick={toggleLanguage}
