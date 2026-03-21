@@ -1,0 +1,8 @@
+commit 15ad8f5cc47a32af0f9c0aa8510041d4b60edbcc
+Author: International <jayant.kgp81@gmail.com>
+Date:   Sat Mar 21 18:28:49 2026 +0530
+
+    Update page.tsx
+
+ app/home/page.tsx | 135 ++++++++++++------------------------------------------
+ 1 file changed, 30 insertions(+), 105 deletions(-)
