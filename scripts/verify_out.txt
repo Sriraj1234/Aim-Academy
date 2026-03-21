@@ -1,0 +1,28 @@
+﻿[dotenv@17.2.3] injecting env (29) from .env.local -- tip: ≡ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+--- Checking BSEB 10 Taxonomy ---
+
+Subjects in bseb_10:
+  SUBJECT: "economics"
+  SUBJECT: "history"
+  SUBJECT: "sanskrit"
+  SUBJECT: "hindi"
+  SUBJECT: "chemistry"
+  SUBJECT: "physics"
+  SUBJECT: "biology"
+  SUBJECT: "geography"
+  SUBJECT: "mathematics"
+  SUBJECT: "Political Science"
+  SUBJECT: "Disaster Management"
+
+Chapter keys in bseb_10:
+  KEY: "economics" => 7 chapters, sections: [General]
+  KEY: "history" => 9 chapters, sections: [General]
+  KEY: "sanskrit" => 14 chapters, sections: [General]
+  KEY: "hindi" => 28 chapters, sections: [General]
+  KEY: "chemistry" => 5 chapters, sections: [General]
+  KEY: "physics" => 5 chapters, sections: [General]
+  KEY: "biology" => 6 chapters, sections: [General]
+  KEY: "geography" => 11 chapters, sections: [General]
+  KEY: "mathematics" => 16 chapters, sections: [General]
+  KEY: "Political Science" => 5 chapters, sections: [General]
+  KEY: "Disaster Management" => 6 chapters, sections: [General]
