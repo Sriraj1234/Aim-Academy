@@ -1,0 +1,15 @@
+﻿[dotenv@17.2.3] injecting env (29) from .env.local -- tip: ≡ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+--- Patching Taxonomy: Adding Political Science & Disaster Management ---
+
+≡ƒôÜ Fetching from: questions/BSEB/Class 10/general/political science
+   Γ£à Found 501 questions
+   ≡ƒôû Chapters found: "αñ▓αÑïαñòαññαñéαññαÑìαñ░ αñòαÑÇ αñÜαÑüαñ¿αÑîαññαñ┐αñ»αñ╛αñü" (72 Qs), "αñ╕αññαÑìαññαñ╛ αñ«αÑçαñé αñ╕αñ╛αñ¥αÑçαñªαñ╛αñ░αÑÇ αñòαÑÇ αñòαñ╛αñ░αÑìαñ»αñ¬αÑìαñ░αñúαñ╛αñ▓αÑÇ" (204 Qs), "αñ▓αÑïαñòαññαñéαññαÑìαñ░ αñ«αÑçαñé αñ╕αññαÑìαññαñ╛ αñòαÑÇ αñ╕αñ╛αñ¥αÑçαñªαñ╛αñ░αÑÇ" (55 Qs), "αñ▓αÑïαñòαññαñéαññαÑìαñ░ αñòαÑÇ αñëαñ¬αñ▓αñ¼αÑìαñºαñ┐αñ»αñ╛αñü" (64 Qs), "αñ▓αÑïαñòαññαñéαññαÑìαñ░ αñ«αÑçαñé αñ¬αÑìαñ░αññαñ┐αñ╕αÑìαñ¬αñ░αÑìαñºαñ╛ αñÅαñ╡αñé αñ╕αñéαñÿαñ░αÑìαñ╖" (106 Qs)
+
+≡ƒôÜ Fetching from: questions/BSEB/Class 10/general/disaster management
+   Γ£à Found 416 questions
+   ≡ƒôû Chapters found: "αñ¬αÑìαñ░αñ╛αñòαÑâαññαñ┐αñò αñåαñ¬αñªαñ╛: αñÅαñò αñ¬αñ░αñ┐αñÜαñ»" (154 Qs), "αñåαñ¬αñªαñ╛ αñòαñ╛αñ▓ αñ«αÑçαñé αñ╡αÑêαñòαñ▓αÑìαñ¬αñ┐αñò αñ╕αñéαñÜαñ╛αñ░ αñ╡αÑìαñ»αñ╡αñ╕αÑìαñÑαñ╛" (50 Qs), "αñ¬αÑìαñ░αñ╛αñòαÑâαññαñ┐αñò αñåαñ¬αñªαñ╛: αñ¡αÑéαñòαñéαñ¬ αñÅαñ╡αñé αñ╕αÑüαñ¿αñ╛αñ«αÑÇ" (82 Qs), "αñ¬αÑìαñ░αñ╛αñòαÑâαññαñ┐αñò αñåαñ¬αñªαñ╛ αñÅαñ╡αñé αñ¬αÑìαñ░αñ¼αñéαñºαñ¿: αñ¡αÑéαñòαñéαñ¬ αñÅαñ╡αñé αñ╕αÑüαñ¿αñ╛αñ«αÑÇ" (33 Qs), "αñ¬αÑìαñ░αñ╛αñòαÑâαññαñ┐αñò αñåαñ¬αñªαñ╛ αñÅαñ╡αñé αñ¬αÑìαñ░αñ¼αñéαñºαñ¿: αñ¼αñ╛αñóαñ╝ αñöαñ░ αñ╕αÑüαñûαñ╛αñíαñ╝" (52 Qs), "αñåαñ¬αñªαñ╛ αñöαñ░ αñ╕αñ╣-αñàαñ╕αÑìαññαñ┐αññαÑìαñ╡" (45 Qs)
+
+≡ƒÆ╛ Saving patched taxonomy...
+
+Γ£¿ Final bseb_10 subjects: economics, history, sanskrit, hindi, chemistry, physics, biology, geography, mathematics, Political Science, Disaster Management
+Γ£à Patch complete!
