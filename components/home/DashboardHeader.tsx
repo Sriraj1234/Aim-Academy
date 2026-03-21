@@ -6,7 +6,7 @@ export function DashboardHeader() {
     const { user, userProfile } = useAuth();
     
     // Fallback names
-    const firstName = userProfile?.name?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Scholar';
+    const firstName = userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Scholar';
 
     return (
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-end">
