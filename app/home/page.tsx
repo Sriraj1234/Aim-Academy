@@ -3,8 +3,6 @@
 import { Header } from '@/components/shared/Header'
 import { ModernModeGrid } from '@/components/home/ModernModeGrid'
 import { ModernCarousel } from '@/components/home/ModernCarousel'
-import { AIChatWidget } from '@/components/shared/AIChatWidget'
-import { Footer } from '@/components/shared/Footer'
 import { QuickActionStrip } from '@/components/home/QuickActionStrip'
 import dynamic from 'next/dynamic'
 import { useAuth } from '@/context/AuthContext'
@@ -12,12 +10,14 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import { InteractiveLoading } from '@/components/shared/InteractiveLoading'
 
-// Components with user/auth data - disable SSR to prevent hydration mismatches
-const DashboardHeader = dynamic(() => import('@/components/home/DashboardHeader').then(m => m.DashboardHeader), { ssr: false })
-const StatsOverview = dynamic(() => import('@/components/home/StatsOverview').then(m => m.StatsOverview), { ssr: false, loading: () => <div className="h-20 bg-gray-100 rounded-xl animate-pulse" /> })
-const LiveQuizBanner = dynamic(() => import('@/components/home/LiveQuizBanner').then(m => m.LiveQuizBanner), { ssr: false })
-const GamificationCard = dynamic(() => import('@/components/home/GamificationCard').then(m => m.GamificationCard), { ssr: false })
-const ExamCountdown = dynamic(() => import('@/components/home/ExamCountdown').then(m => m.ExamCountdown), { loading: () => <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />, ssr: false })
+import { DashboardHeader } from '@/components/home/DashboardHeader'
+import { StatsOverview } from '@/components/home/StatsOverview'
+import { LiveQuizBanner } from '@/components/home/LiveQuizBanner'
+import { GamificationCard } from '@/components/home/GamificationCard'
+import { ExamCountdown } from '@/components/home/ExamCountdown'
+
+const Footer = dynamic(() => import('@/components/shared/Footer').then(m => m.Footer))
+const AIChatWidget = dynamic(() => import('@/components/shared/AIChatWidget').then(m => m.AIChatWidget), { ssr: false })
 
 // Below-fold — lazy loaded
 const AIPerformanceCard = dynamic(() => import('@/components/home/AIPerformanceCard').then(m => m.AIPerformanceCard), { ssr: false })
