@@ -197,6 +197,13 @@ const QuizCard = ({ quiz, index }: { quiz: LiveQuiz, index: number }) => {
                         {quiz.description || 'Join now to test your knowledge!'}
                     </p>
 
+                    {quiz.syllabus && (
+                        <div className={`text-xs mt-1 mb-4 p-2.5 rounded-xl font-medium flex items-start gap-2 ${isLive ? 'bg-white/10 text-white' : 'bg-indigo-50/50 text-indigo-900 border border-indigo-100/50'}`}>
+                            <span className="font-bold opacity-80 shrink-0 select-none">Syllabus:</span>
+                            <span className="whitespace-pre-wrap">{quiz.syllabus}</span>
+                        </div>
+                    )}
+
                     {/* Rewards Text Enhancement */}
                     <div className={`flex items-start gap-2 text-xs font-semibold p-2.5 rounded-xl mb-4 max-w-md ${isLive ? 'bg-white/10 text-white' : 'bg-amber-50 text-amber-900 border border-amber-100'}`}>
                         <FaGift className={`text-base shrink-0 ${isLive ? 'text-yellow-300' : 'text-amber-500'}`} />
