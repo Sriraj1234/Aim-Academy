@@ -286,6 +286,7 @@ export interface LiveQuiz {
     allowedClasses?: string[]; // e.g. ['9', '10', '11']
     allowedStreams?: string[]; // e.g. ['science', 'commerce', 'arts'] - Only for 11/12
     subject?: string; // Main subject or 'Mixed'
+    syllabus?: string; // Syllabus description
     targetBoard?: string; // e.g. 'cbse', 'bseb', 'all'
 
     // Scheduling
