@@ -12,16 +12,16 @@ const normalizeSubject = (sub: string): string => {
     // Normalize math variants
     if (s === 'mathematics' || s === 'maths' || s === 'math') return 'mathematics';
     
-    // Normalize disaster management spelling variations
-    if (s === 'digaster_management' || s === 'disastermanagement') return 'disaster_management';
+    // Normalize disaster management spelling variations (space OR underscore in Firebase)
+    if (s === 'disaster_management' || s === 'digaster_management' || s === 'disastermanagement') return 'Disaster Management';
     
-    // Normalize political science variants
-    if (s === 'pol_science' || s === 'civics') return 'political_science';
+    // Normalize political science variants (space OR underscore in Firebase)
+    if (s === 'political_science' || s === 'pol_science' || s === 'civics') return 'Political Science';
     
     // Normalize social studies to social_science (the general catch-all only)
     if (s === 'social_studies' || s === 'soc_science' || s === 'social_science') return 'social_science';
     
-    // Keep all individual SST subjects (history, geography, economics, political_science, disaster_management)
+    // Keep all individual SST subjects (history, geography, economics, Political Science, Disaster Management)
     // as their OWN separate keys. The UI groups them visually, but taxonomy should store individually.
     
     return s;
@@ -61,9 +61,12 @@ export async function GET() {
         const subjectsToScan = [
             'physics', 'chemistry', 'biology', 'science',
             'mathematics', 'maths', 'math',
-            'history', 'geography', 'political_science', 'pol_science', 'civics',
+            'history', 'geography', 
+            // Political Science: stored with SPACES in Firebase (exact collection name matters for collectionGroup)
+            'political science', 'political_science', 'pol_science', 'civics',
             'economics', 'social_science', 'soc_science', 'social_studies', 
-            'disaster_management', 'digaster_management', 'disastermanagement',
+            // Disaster Management: stored with SPACES in Firebase
+            'disaster management', 'disaster_management', 'digaster_management', 'disastermanagement',
             'hindi', 'english', 'sanskrit', 'urdu',
             'accountancy', 'business_studies', 'commerce',
             'computer_science', 'information_technology', 'general_knowledge',
