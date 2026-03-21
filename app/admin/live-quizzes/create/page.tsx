@@ -17,6 +17,7 @@ export default function CreateLiveQuizPage() {
     // Form State
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [syllabus, setSyllabus] = useState('');
     const [type, setType] = useState<'global' | 'batch'>('global');
     const [startTime, setStartTime] = useState<Date>(new Date());
     const [duration, setDuration] = useState(30);
@@ -150,6 +151,7 @@ export default function CreateLiveQuizPage() {
             const quizData: Omit<LiveQuiz, 'id'> = {
                 title,
                 description,
+                syllabus,
                 type,
                 targetBatches: type === 'batch' ? selectedBatches : [],
                 allowedClasses: selectedClasses,
@@ -213,6 +215,16 @@ export default function CreateLiveQuizPage() {
                                 onChange={(e) => setDescription(e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pw-indigo/20 outline-none font-medium h-24"
                                 placeholder="Optional description..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Syllabus</label>
+                            <textarea
+                                value={syllabus}
+                                onChange={(e) => setSyllabus(e.target.value)}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pw-indigo/20 outline-none font-medium h-24"
+                                placeholder="e.g. Chapter 1, 2 and 3 of Physics..."
                             />
                         </div>
 
