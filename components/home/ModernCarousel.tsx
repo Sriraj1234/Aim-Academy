@@ -135,12 +135,12 @@ export const ModernCarousel = () => {
                         <span className="text-white text-[10px] md:text-xs font-bold tracking-wider uppercase">{streak} Day Streak</span>
                     </div>
 
-                    <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-2 md:mb-3 drop-shadow-xl" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                    <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-1 md:mb-2 drop-shadow-xl" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                         Welcome Back,<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-200 drop-shadow-sm">{name}!</span>
                     </h1>
 
-                    <p className="text-indigo-100 text-sm sm:text-base lg:text-lg font-medium mb-4 sm:mb-5 md:mb-8 max-w-[280px] sm:max-w-sm md:max-w-lg leading-snug md:leading-relaxed drop-shadow-md px-2 md:px-0">
+                    <p className="text-indigo-100 text-xs sm:text-sm lg:text-base font-medium mb-3 sm:mb-4 md:mb-6 max-w-[280px] sm:max-w-sm md:max-w-lg leading-snug md:leading-relaxed drop-shadow-md px-2 md:px-0">
                         Continue your preparation with today's challenge!
                     </p>
 
@@ -157,15 +157,15 @@ export const ModernCarousel = () => {
         // Standard Ad Slide Content
         return (
             <div className="flex flex-col items-center md:items-start text-center md:text-left h-full justify-center relative z-20 w-full px-2 sm:px-4 md:px-0">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full mb-2 sm:mb-3 md:mb-4 border border-white/20 shadow-lg">
+                <div className="inline-flex items-center gap-2 px-3 py-0.5 sm:py-1 bg-white/15 backdrop-blur-md rounded-full mb-1 sm:mb-2 md:mb-3 border border-white/20 shadow-lg">
                     <span className="text-amber-300 text-[10px] sm:text-xs font-bold tracking-wider uppercase drop-shadow-md">{slide.subtitle}</span>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-2 sm:mb-3 md:mb-4 drop-shadow-2xl max-w-2xl px-2 md:px-0" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+                <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-1 sm:mb-2 md:mb-3 drop-shadow-2xl max-w-2xl px-2 md:px-0" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
                     {slide.title}
                 </h1>
 
-                <p className="text-white/95 font-medium mb-4 sm:mb-5 md:mb-8 max-w-[280px] sm:max-w-sm md:max-w-xl leading-snug md:leading-relaxed text-xs sm:text-sm md:text-lg drop-shadow-lg px-2 md:px-0">
+                <p className="text-white/95 font-medium mb-3 sm:mb-4 md:mb-6 max-w-[280px] sm:max-w-sm md:max-w-xl leading-snug md:leading-relaxed text-[11px] sm:text-sm md:text-base drop-shadow-lg px-2 md:px-0">
                     {slide.description}
                 </p>
 
@@ -182,7 +182,7 @@ export const ModernCarousel = () => {
     if (!mounted) {
         return (
             <section className="w-full max-w-7xl mx-auto mb-8 font-sans relative px-4">
-                <div className="relative w-full h-[280px] sm:h-[320px] md:h-[360px] lg:h-[400px] rounded-2xl overflow-hidden bg-gray-900/10 animate-pulse border border-pw-border">
+                <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-gray-900/10 animate-pulse">
                 </div>
             </section>
         )
@@ -194,8 +194,8 @@ export const ModernCarousel = () => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Fixed Height Container for Stability on all screen sizes */}
-            <div className="relative w-full h-[280px] sm:h-[320px] md:h-[360px] lg:h-[400px] rounded-2xl overflow-hidden border border-black/5 md:border-pw-border shadow-lg md:shadow-pw-md bg-gray-900 group">
+            {/* 16:9 Ratio Container */}
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg md:shadow-pw-md bg-transparent group border-none">
                 <AnimatePresence initial={false} custom={direction} mode="popLayout">
                     <motion.div
                         key={current}
@@ -214,7 +214,7 @@ export const ModernCarousel = () => {
                             if (swipe < -50) nextSlide();
                             else if (swipe > 50) prevSlide();
                         }}
-                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full px-4 py-6 sm:p-8 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing overflow-hidden`}
+                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-4 sm:p-6 md:p-12 flex flex-col md:flex-row items-center justify-center md:justify-between cursor-grab active:cursor-grabbing overflow-hidden`}
                     >
                         {/* Render Background Image if present */}
                         {slides[current].image && (
