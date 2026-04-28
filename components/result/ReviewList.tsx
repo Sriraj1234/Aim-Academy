@@ -62,14 +62,14 @@ export const ReviewList: React.FC<ReviewListProps> = ({ questions, answers }) =>
     return (
         <div className="w-full space-y-4 pb-20">
             {/* Visual Summary Bar */}
-            <div className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-pw-border shadow-pw-sm">
                 <div className="flex justify-between items-center mb-3">
                     <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Performance Breakdown</span>
                     <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">{total} Questions</span>
                 </div>
 
                 {/* Segmented bar */}
-                <div className="h-3 w-full rounded-full overflow-hidden flex gap-[2px] bg-gray-100">
+                <div className="h-3 w-full rounded-full overflow-hidden flex gap-[2px] bg-gray-100 dark:bg-slate-700">
                     <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${correctPct}%` }}
@@ -91,17 +91,17 @@ export const ReviewList: React.FC<ReviewListProps> = ({ questions, answers }) =>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mt-4">
-                    <div className="flex flex-col items-center bg-green-50 border border-green-100 rounded-xl py-2.5">
-                        <span className="text-lg font-black text-green-600">{correctCount}</span>
-                        <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">Correct</span>
+                    <div className="flex flex-col items-center bg-green-50 dark:bg-green-900/25 border border-green-100 dark:border-green-800/50 rounded-xl py-2.5">
+                        <span className="text-lg font-black text-green-600 dark:text-green-400">{correctCount}</span>
+                        <span className="text-[10px] font-bold text-green-500 dark:text-green-500 uppercase tracking-wider">Correct</span>
                     </div>
-                    <div className="flex flex-col items-center bg-red-50 border border-red-100 rounded-xl py-2.5">
-                        <span className="text-lg font-black text-red-500">{incorrectCount}</span>
-                        <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Wrong</span>
+                    <div className="flex flex-col items-center bg-red-50 dark:bg-red-900/25 border border-red-100 dark:border-red-800/50 rounded-xl py-2.5">
+                        <span className="text-lg font-black text-red-500 dark:text-red-400">{incorrectCount}</span>
+                        <span className="text-[10px] font-bold text-red-400 dark:text-red-500 uppercase tracking-wider">Wrong</span>
                     </div>
-                    <div className="flex flex-col items-center bg-gray-50 border border-gray-100 rounded-xl py-2.5">
-                        <span className="text-lg font-black text-gray-500">{skippedCount}</span>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Skipped</span>
+                    <div className="flex flex-col items-center bg-gray-50 dark:bg-slate-700/50 border border-gray-100 dark:border-slate-700 rounded-xl py-2.5">
+                        <span className="text-lg font-black text-gray-500 dark:text-slate-400">{skippedCount}</span>
+                        <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">Skipped</span>
                     </div>
                 </div>
             </div>
@@ -148,69 +148,64 @@ export const ReviewList: React.FC<ReviewListProps> = ({ questions, answers }) =>
                             className={`
                                 rounded-3xl p-5 border shadow-pw-sm relative overflow-hidden group
                                 ${isCorrect
-                                    ? 'bg-gradient-to-br from-white to-green-50 border-green-200'
+                                    ? 'bg-gradient-to-br from-white dark:from-slate-800 to-green-50 dark:to-green-900/20 border-green-200 dark:border-green-800/50'
                                     : isWrong
-                                        ? 'bg-gradient-to-br from-white to-red-50 border-red-200'
-                                        : 'bg-white border-pw-border'}
+                                        ? 'bg-gradient-to-br from-white dark:from-slate-800 to-red-50 dark:to-red-900/20 border-red-200 dark:border-red-800/50'
+                                        : 'bg-white dark:bg-slate-800 border-pw-border'}
                             `}
                         >
                             {/* Difficulty Tag */}
-                            <div className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-pw-surface border border-pw-border text-gray-500">
+                            <div className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-pw-surface border border-pw-border text-gray-500 dark:text-slate-400">
                                 {q.difficulty || 'Medium'}
                             </div>
 
-                            <div className="flex gap-4">
+                            <div className="flex gap-3 sm:gap-4">
                                 <div className={`
                                     w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-sm font-bold border
-                                    ${isCorrect ? 'border-green-500 text-green-600 bg-green-100' :
-                                        isWrong ? 'border-red-500 text-red-600 bg-red-100' :
-                                            'border-gray-300 text-gray-500 bg-gray-100'}
+                                    ${isCorrect
+                                        ? 'border-green-500 text-green-600 bg-green-100 dark:bg-green-900/40 dark:border-green-700'
+                                        : isWrong
+                                            ? 'border-red-500 text-red-600 bg-red-100 dark:bg-red-900/40 dark:border-red-700'
+                                            : 'border-gray-300 dark:border-slate-600 text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-700'}
                                 `}>
                                     {isCorrect ? <FaCheck size={12} /> : isWrong ? <FaTimes size={12} /> : <FaMinusCircle size={12} />}
                                 </div>
-                                <div className="flex-1">
-                                    <span className="text-[10px] font-mono text-gray-400 block mb-1">Question {q.index + 1}</span>
-                                    <h3 className="text-base font-semibold text-pw-violet leading-snug mb-4 pr-12">
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-[10px] font-mono text-gray-400 dark:text-slate-500 block mb-1">Question {q.index + 1}</span>
+                                    <h3 className="text-sm sm:text-base font-semibold text-pw-violet leading-snug mb-3 pr-10">
                                         {q.question}
                                     </h3>
 
-                                    <div className="flex flex-col gap-2 mt-4">
+                                    <div className="flex flex-col gap-2 mt-3">
                                         {q.options.map((option, optIdx) => {
                                             const isSelected = q.userAnswer === optIdx;
                                             const isCorrectOption = q.correctAnswer === optIdx;
 
-                                            // Determine styling
-                                            let styles = "bg-pw-surface border-pw-border text-gray-600 hover:bg-gray-50";
+                                            let styles = "bg-pw-surface border-pw-border text-gray-600 dark:text-slate-300";
                                             let icon = null;
 
                                             if (isCorrectOption) {
-                                                styles = "bg-green-50 border-green-300 text-green-800 font-bold shadow-sm";
-                                                icon = <FaCheckCircle className="text-green-500 text-lg" />;
+                                                styles = "bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-800 dark:text-green-300 font-bold shadow-sm";
+                                                icon = <FaCheckCircle className="text-green-500 dark:text-green-400 text-base shrink-0" />;
                                             } else if (isSelected) {
-                                                // If selected but not correct
-                                                styles = "bg-red-50 border-red-300 text-red-800 line-through decoration-red-400/50";
-                                                icon = <FaTimesCircle className="text-red-500 text-lg" />;
+                                                styles = "bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 line-through decoration-red-400/50";
+                                                icon = <FaTimesCircle className="text-red-500 dark:text-red-400 text-base shrink-0" />;
                                             }
 
                                             return (
                                                 <div
                                                     key={optIdx}
-                                                    className={`
-                                                        relative p-3 rounded-xl border text-sm flex justify-between items-center transition-all
-                                                        ${styles}
-                                                    `}
+                                                    className={`relative p-3 rounded-xl border text-sm flex items-center gap-2 transition-all ${styles}`}
                                                 >
-                                                    <div className="flex items-center gap-3">
-                                                        <span className={`
-                                                            w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold
-                                                            ${isCorrectOption ? 'bg-green-500 text-white' :
-                                                                isSelected ? 'bg-red-500 text-white' :
-                                                                    'bg-gray-200 text-gray-500'}
-                                                        `}>
-                                                            {String.fromCharCode(65 + optIdx)}
-                                                        </span>
-                                                        <span>{option}</span>
-                                                    </div>
+                                                    <span className={`
+                                                        w-6 h-6 shrink-0 rounded-lg flex items-center justify-center text-xs font-bold
+                                                        ${isCorrectOption ? 'bg-green-500 dark:bg-green-600 text-white' :
+                                                            isSelected ? 'bg-red-500 dark:bg-red-600 text-white' :
+                                                                'bg-gray-200 dark:bg-slate-600 text-gray-500 dark:text-slate-300'}
+                                                    `}>
+                                                        {String.fromCharCode(65 + optIdx)}
+                                                    </span>
+                                                    <span className="flex-1 min-w-0 break-words">{option}</span>
                                                     {icon}
                                                 </div>
                                             )
