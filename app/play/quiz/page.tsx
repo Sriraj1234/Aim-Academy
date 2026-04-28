@@ -497,21 +497,22 @@ export default function QuizPage() {
 
                             {/* Lock Answer (Center) - Calls for action */}
                             <div className="flex-grow">
-                                <Button
-                                    fullWidth
-                                    size="xl"
+                                <motion.button
+                                    whileTap={!isLocked && selectedOption !== null ? { scale: 0.97 } : {}}
                                     disabled={selectedOption === null && !isLocked}
                                     onClick={handleLockAnswer}
                                     className={`
-                                        rounded-2xl text-base shadow-md transition-all h-12 font-bold uppercase tracking-wide
+                                        w-full h-12 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-200
                                         ${isLocked
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200'
-                                            : 'bg-[#110c1d] hover:bg-black text-white shadow-purple-200'
+                                            : selectedOption !== null
+                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-lg shadow-indigo-200 active:scale-95'
+                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
                                         }
                                     `}
                                 >
-                                    {isLocked ? 'Next' : 'Lock Answer'}
-                                </Button>
+                                    {isLocked ? '✓  Next Question' : 'Lock Answer'}
+                                </motion.button>
                             </div>
 
                             {/* Skip Button - Smaller on mobile */}
