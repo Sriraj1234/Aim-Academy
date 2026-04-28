@@ -222,13 +222,12 @@ function HostGameContent() {
         try {
             // ── Build hierarchical path matching upload format ───────────────────
             // Path: questions/{BOARD}/{Class N}/{stream}/{subject}
-            // e.g.  questions/BSEB/Class 10/general/maths
+            // e.g.  questions/BSEB/Class 10/general/math
             const boardRaw = userProfile?.board || 'bseb';
             const clsRaw = userProfile?.class || '10';
             const streamRaw = userProfile?.stream || '';
             const classNum = parseInt(clsRaw.toString().replace(/[^0-9]/g, '') || '0', 10);
 
-            // ── FIXED: Match exact format used during upload ─────────────────────
             const boardKey = (() => {
                 const b = boardRaw.toLowerCase();
                 if (b === 'bihar board' || b === 'bseb') return 'BSEB';
@@ -243,40 +242,48 @@ function HostGameContent() {
             })();
             const streamKey = classNum >= 11 ? ((streamRaw || 'Science').trim() || 'Science') : 'general';
 
-            // Subject: lowercase, spaces → underscores  ("Social Science" → "social_science")
-            const subjectKey = selectedSubject.toLowerCase().trim().replace(/\s+/g, '_');
+            // Subject: lowercase, spaces → underscores, with aliases to match upload format
+            let subjectKey = selectedSubject.toLowerCase().trim().replace(/\s+/g, '_');
+            if (subjectKey === 'mathematics' || subjectKey === 'maths') subjectKey = 'math';
+            else if (subjectKey === 'social_science' || subjectKey === 'sst') subjectKey = 'sst';
+
+            const chapterConstraint = (selectedChapter && selectedChapter !== 'All Mixed')
+                ? [where('chapter', '==', selectedChapter)]
+                : [];
+
+            // Fetch pool larger than needed, then shuffle + slice client-side
+            // This avoids the unreliable random-cursor approach that returned 0 when random ID > all doc IDs
+            const fetchLimit = Math.min(selectedCount * 4, 300);
+
+            let questions: any[] = [];
+
+            // ── 1. Try hierarchical path ─────────────────────────────────────────
             const subjectPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
+            console.log(`[HostGame] Querying hierarchical: ${subjectPath}`);
+            const hierSnap = await getDocs(query(collection(db, subjectPath), ...chapterConstraint, limit(fetchLimit)));
+            hierSnap.forEach(d => questions.push({ id: d.id, ...(d.data() as object) }));
+            console.log(`[HostGame] Hierarchical found: ${questions.length}`);
 
+            // ── 2. Flat collection fallback ──────────────────────────────────────
+            if (questions.length === 0) {
+                console.warn('[HostGame] Hierarchical empty, falling back to flat collection');
+                const boardVariants = Array.from(new Set([boardRaw, boardRaw.toLowerCase(), boardRaw.toUpperCase(), 'Bihar Board', 'bseb', 'BSEB'])).slice(0, 10);
+                const subjectVariants = Array.from(new Set([
+                    subjectKey,
+                    selectedSubject,
+                    selectedSubject.toLowerCase(),
+                    'mathematics', 'maths', 'math'
+                ])).slice(0, 10);
 
-            const qRef = collection(db, subjectPath);
-            let q: any;
-
-            // Build constraints for this subcollection (chapter filter only — board/class already in path)
-            const constraints: any[] = [];
-
-            if (selectedChapter && selectedChapter !== 'All Mixed') {
-                constraints.push(where('chapter', '==', selectedChapter));
-            }
-
-            // Random cursor approach: get a random ID and query >= it
-            const randomId = doc(qRef).id;
-            const randomConstraints = [...constraints, where(documentId(), '>=', randomId), orderBy(documentId()), limit(selectedCount)];
-            q = query(qRef, ...randomConstraints);
-            const snap = await getDocs(q);
-            let questions = snap.docs.map(d => ({ id: d.id, ...(d.data() as object) }));
-
-            // Wrap around if not enough
-            if (questions.length < selectedCount) {
-                const remaining = selectedCount - questions.length;
-                const wrapConstraints = [...constraints, where(documentId(), '>=', ' '), orderBy(documentId()), limit(remaining)];
-                const wrapQuery = query(qRef, ...wrapConstraints);
-                const wrapSnap = await getDocs(wrapQuery);
-
-                wrapSnap.forEach(d => {
-                    if (!questions.some(exist => exist.id === d.id)) {
-                        questions.push({ id: d.id, ...(d.data() as object) });
-                    }
-                });
+                const flatConstraints: any[] = [
+                    where('board', 'in', boardVariants),
+                    where('subject', 'in', subjectVariants),
+                    ...chapterConstraint,
+                    limit(fetchLimit)
+                ];
+                const flatSnap = await getDocs(query(collection(db, 'questions'), ...flatConstraints));
+                flatSnap.forEach(d => questions.push({ id: d.id, ...(d.data() as object) }));
+                console.log(`[HostGame] Flat fallback found: ${questions.length}`);
             }
 
             if (questions.length === 0) {
@@ -285,8 +292,8 @@ function HostGameContent() {
                 return;
             }
 
-            // Shuffle client side
-            questions = questions.sort(() => 0.5 - Math.random());
+            // Shuffle and take the requested count
+            questions = questions.sort(() => 0.5 - Math.random()).slice(0, selectedCount);
 
             if (existingRoomId) {
                 // UPDATE Existing Room
