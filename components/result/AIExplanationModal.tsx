@@ -90,7 +90,7 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 60, opacity: 0 }}
                         transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                        className="w-full sm:max-w-lg bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden"
+                        className="w-full sm:max-w-lg bg-white dark:bg-slate-900 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -124,7 +124,7 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
                         </div>
 
                         {/* Content */}
-                        <div className="p-4 max-h-[55vh] overflow-y-auto space-y-3">
+                        <div className="p-4 max-h-[55vh] overflow-y-auto space-y-3 bg-white dark:bg-slate-900">
                             {loading && (
                                 <div className="flex flex-col items-center justify-center py-10 gap-4">
                                     <div className="relative">
@@ -163,55 +163,55 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
                                         <>
                                             {sections.concept && (
                                                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                                                    className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3.5">
+                                                    className="bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900 rounded-2xl p-3.5">
                                                     <div className="flex items-center gap-2 mb-1.5">
                                                         <FaBrain className="text-indigo-500 text-sm" />
                                                         <span className="text-[10px] font-black text-indigo-500 uppercase tracking-wider">Concept</span>
                                                     </div>
-                                                    <p className="text-gray-700 text-sm leading-relaxed">{sections.concept}</p>
+                                                    <p className="text-gray-700 dark:text-slate-300 text-sm leading-relaxed">{sections.concept}</p>
                                                 </motion.div>
                                             )}
 
                                             {sections.whyWrong && (
                                                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                                                    className="bg-red-50 border border-red-100 rounded-2xl p-3.5">
+                                                    className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/50 rounded-2xl p-3.5">
                                                     <div className="flex items-center gap-2 mb-1.5">
                                                         <FaTimesCircle className="text-red-500 text-sm" />
                                                         <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">Galti Kahan Hui</span>
                                                     </div>
-                                                    <p className="text-gray-700 text-sm leading-relaxed">{sections.whyWrong}</p>
+                                                    <p className="text-gray-700 dark:text-slate-300 text-sm leading-relaxed">{sections.whyWrong}</p>
                                                 </motion.div>
                                             )}
 
                                             {sections.whyCorrect && (
                                                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                                                    className="bg-green-50 border border-green-100 rounded-2xl p-3.5">
+                                                    className="bg-green-50 dark:bg-green-950/40 border border-green-100 dark:border-green-900/50 rounded-2xl p-3.5">
                                                     <div className="flex items-center gap-2 mb-1.5">
                                                         <FaCheckCircle className="text-green-500 text-sm" />
                                                         <span className="text-[10px] font-black text-green-600 uppercase tracking-wider">Sahi Jawab Kyu</span>
                                                     </div>
-                                                    <p className="text-gray-700 text-sm leading-relaxed">{sections.whyCorrect}</p>
+                                                    <p className="text-gray-700 dark:text-slate-300 text-sm leading-relaxed">{sections.whyCorrect}</p>
                                                 </motion.div>
                                             )}
 
                                             {sections.trick && (
                                                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                                                    className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5">
+                                                    className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-3.5">
                                                     <div className="flex items-center gap-2 mb-1.5">
                                                         <FaLightbulb className="text-amber-500 text-sm" />
                                                         <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Exam Trick</span>
                                                     </div>
-                                                    <p className="text-gray-700 text-sm leading-relaxed font-medium">{sections.trick}</p>
+                                                    <p className="text-gray-700 dark:text-slate-300 text-sm leading-relaxed font-medium">{sections.trick}</p>
                                                 </motion.div>
                                             )}
                                         </>
                                     ) : (
-                                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+                                        <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-4">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <HiSparkles className="text-indigo-500" />
                                                 <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Explanation</span>
                                             </div>
-                                            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{plainText}</p>
+                                            <p className="text-gray-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{plainText}</p>
                                         </div>
                                     )}
                                 </motion.div>
@@ -220,7 +220,7 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
 
                         {/* Footer */}
                         {explanation && (
-                            <div className="px-4 pb-5 pt-2">
+                            <div className="px-4 pb-5 pt-2 bg-white dark:bg-slate-900 border-t border-pw-border">
                                 <button
                                     onClick={handleClose}
                                     className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200 active:scale-95 text-sm"
