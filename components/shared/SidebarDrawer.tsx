@@ -75,32 +75,32 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
         items: group.items.filter(Boolean)
     })).filter(group => group.items.length > 0);
 
-    // Fast Tween Animation
+    // Buttery Smooth Spring Animation
     const sidebarVariants: Variants = {
         hidden: {
             x: '-100%',
             opacity: 0,
-            transition: { type: "tween", duration: 0.15, ease: "easeInOut" }
+            transition: { type: "spring", stiffness: 400, damping: 40 }
         },
         show: {
             x: 0,
             opacity: 1,
             transition: {
-                type: "tween",
-                duration: 0.25,
-                ease: [0.25, 1, 0.5, 1], // Deceleration easing
-                staggerChildren: 0.03,
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                staggerChildren: 0.04,
                 delayChildren: 0.05
             }
         }
     };
 
     const itemVariants: Variants = {
-        hidden: { x: -10, opacity: 0 },
+        hidden: { x: -20, opacity: 0 },
         show: {
             x: 0,
             opacity: 1,
-            transition: { type: "tween", duration: 0.2, ease: "easeOut" }
+            transition: { type: "spring", stiffness: 350, damping: 25 }
         }
     };
 
@@ -123,14 +123,15 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                         initial="hidden"
                         animate="show"
                         exit="hidden"
-                        className={`fixed top-0 left-0 bottom-0 w-[85vw] sm:w-[320px] backdrop-blur-3xl z-[70] shadow-[10px_0_40px_-5px_rgba(0,0,0,0.3)] border-r flex flex-col ${resolvedTheme === 'dark' ? 'bg-[#0a0a0f]/95 border-white/5' : 'bg-white/95 border-gray-100'}`}
+                        style={{ willChange: "transform, opacity" }}
+                        className={`fixed top-0 left-0 bottom-0 w-[85vw] sm:w-[320px] backdrop-blur-xl z-[70] shadow-[10px_0_40px_-5px_rgba(0,0,0,0.3)] border-r flex flex-col ${resolvedTheme === 'dark' ? 'bg-[#0a0a0f]/95 border-white/5' : 'bg-white/95 border-gray-100'}`}
                     >
                         {/* Vibrant Header with Gradient */}
                         <div className="relative p-6 pt-12 pb-8 overflow-hidden rounded-br-[32px] shadow-lg z-10 shrink-0">
-                            {/* Decorative Background Mesh */}
+                            {/* Decorative Background Mesh - Optimized for 60fps */}
                             <div className="absolute inset-0 bg-gradient-to-br from-[#4F46E5] via-[#7C3AED] to-[#DB2777] z-0" />
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10" />
-                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl -ml-5 -mb-5" />
+                            <div className="absolute top-[-20%] right-[-20%] w-64 h-64 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.15)_0%,_transparent_60%)] rounded-full pointer-events-none" style={{ transform: "translateZ(0)" }} />
+                            <div className="absolute bottom-[-10%] left-[-10%] w-48 h-48 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,0.15)_0%,_transparent_60%)] rounded-full pointer-events-none" style={{ transform: "translateZ(0)" }} />
 
                             <div className="relative z-10 flex items-center gap-4">
                                 <Link href="/profile" onClick={onClose} className="group relative">
@@ -253,9 +254,15 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                                     </div>
                                     <h4 className="font-bold text-white text-[15px] mb-1">Padhaku Pro 🚀</h4>
                                     <p className="text-xs text-gray-400 mb-4 leading-relaxed font-medium">Unlock unlimited AI doubts, ad-free experience & exclusive notes.</p>
-                                    <button className="w-full py-2.5 bg-white hover:bg-gray-50 text-black rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95">
-                                        View Premium Plans
-                                    </button>
+                                    <Link href="/pro" onClick={onClose} className="block w-full">
+                                        <motion.button 
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="w-full py-2.5 bg-white hover:bg-gray-50 text-black rounded-xl text-xs font-bold transition-all shadow-lg"
+                                        >
+                                            View Premium Plans
+                                        </motion.button>
+                                    </Link>
                                 </div>
                             </motion.div>
 
