@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -20,11 +20,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Load theme from localStorage
     useEffect(() => {
-        const savedTheme = localStorage.getItem('theme') as Theme | null;
-        if (savedTheme) {
-            setThemeState(savedTheme);
-        }
-        setMounted(true);
+        const frame = requestAnimationFrame(() => {
+            const savedTheme = localStorage.getItem('theme') as Theme | null;
+            if (savedTheme) {
+                setThemeState(savedTheme);
+            }
+            setMounted(true);
+        });
+        return () => cancelAnimationFrame(frame);
     }, []);
 
     // Resolve and apply theme
@@ -53,20 +56,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
     }, [theme, mounted]);
 
-    const setTheme = (newTheme: Theme) => {
+    const setTheme = useCallback((newTheme: Theme) => {
         setThemeState(newTheme);
         localStorage.setItem('theme', newTheme);
-    };
+    }, []);
 
-    const toggleTheme = () => {
+    const toggleTheme = useCallback(() => {
         const nextTheme = resolvedTheme === 'light' ? 'dark' : 'light';
         setTheme(nextTheme);
-    };
+    }, [resolvedTheme, setTheme]);
 
+    const value = useMemo(() => ({ theme, resolvedTheme, setTheme, toggleTheme }), [theme, resolvedTheme, setTheme, toggleTheme]);
 
 
     return (
-        <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme }}>
+        <ThemeContext.Provider value={value}>
             {children}
         </ThemeContext.Provider>
     );
