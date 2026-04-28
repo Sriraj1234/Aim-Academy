@@ -110,7 +110,7 @@ export const ModernCarousel = () => {
         enter: (direction: number) => ({
             x: direction > 0 ? '100%' : '-100%',
             opacity: 0,
-            scale: 0.98
+            scale: 0.95
         }),
         center: {
             zIndex: 1,
@@ -122,7 +122,7 @@ export const ModernCarousel = () => {
             zIndex: 0,
             x: direction < 0 ? '100%' : '-100%',
             opacity: 0,
-            scale: 0.98
+            scale: 0.95
         })
     };
 
@@ -205,8 +205,9 @@ export const ModernCarousel = () => {
                         animate="center"
                         exit="exit"
                         transition={{
-                            x: { type: "spring", stiffness: 360, damping: 36, mass: 0.8 },
-                            opacity: { duration: 0.14 }
+                            x: { type: "spring", stiffness: 300, damping: 30, mass: 1 },
+                            opacity: { duration: 0.2 },
+                            scale: { duration: 0.2 }
                         }}
                         drag="x"
                         dragDirectionLock
@@ -217,7 +218,8 @@ export const ModernCarousel = () => {
                             if (swipe < -50) nextSlide();
                             else if (swipe > 50) prevSlide();
                         }}
-                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-5 sm:p-6 md:p-8 lg:p-10 flex flex-row items-center justify-between cursor-grab active:cursor-grabbing overflow-hidden will-change-transform`}
+                        className={`absolute inset-0 ${slides[current].bgClass} w-full h-full p-5 sm:p-6 md:p-8 lg:p-10 flex flex-row items-center justify-between cursor-grab active:cursor-grabbing overflow-hidden`}
+                        style={{ willChange: "transform, opacity" }}
                     >
                         {/* Render Background Image if present */}
                         {slides[current].image && (
@@ -240,8 +242,8 @@ export const ModernCarousel = () => {
                         {/* Background Decor - Only show if NO image, or show simplified decor */}
                         {!slides[current].image && (
                             <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
-                                <div className="absolute -top-20 -right-20 w-40 h-40 md:w-60 md:h-60 bg-white opacity-5 rounded-full blur-[50px]" />
-                                <div className="absolute bottom-0 left-0 w-32 h-32 md:w-40 md:h-40 bg-black opacity-10 rounded-full blur-[40px]" />
+                                <div className="absolute -top-20 -right-20 w-40 h-40 md:w-60 md:h-60 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.1)_0%,_transparent_60%)] rounded-full" />
+                                <div className="absolute bottom-0 left-0 w-32 h-32 md:w-40 md:h-40 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,0.15)_0%,_transparent_60%)] rounded-full" />
                             </div>
                         )}
 
@@ -251,11 +253,16 @@ export const ModernCarousel = () => {
                         </div>
 
                         <div className="relative z-0 flex w-[28%] sm:w-2/5 justify-center items-center">
-                            <div className="relative flex h-24 w-24 sm:h-32 sm:w-32 md:h-44 md:w-44 items-center justify-center rounded-[2rem] bg-white/10 backdrop-blur-sm ring-1 ring-white/10">
-                                <div className="flex h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36 rounded-[1.5rem] items-center justify-center">
-                                    {React.createElement(slides[current].icon, { className: "text-white/80 text-5xl sm:text-6xl md:text-7xl drop-shadow-2xl" })}
+                            <motion.div 
+                                animate={{ y: [0, -6, 0] }}
+                                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                                style={{ willChange: "transform" }}
+                                className="relative flex h-24 w-24 sm:h-32 sm:w-32 md:h-44 md:w-44 items-center justify-center rounded-[2rem] bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-2xl"
+                            >
+                                <div className="flex h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36 rounded-[1.5rem] items-center justify-center bg-gradient-to-br from-white/10 to-transparent">
+                                    {React.createElement(slides[current].icon, { className: "text-white/90 text-5xl sm:text-6xl md:text-7xl drop-shadow-xl" })}
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
                     </motion.div>
                 </AnimatePresence>
