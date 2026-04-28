@@ -395,15 +395,14 @@ input[type='number'] {
 /* PERFORMANCE: Remove blanket transitions - they cause jank */
 /* Only apply transitions to specific interactive elements */
 
-/* Hardware acceleration for smoother animations */
-.transform,
-[class*="animate-"],
-.glass,
-.glass-dark,
-.pw-card,
-.glass-card {
-  will-change: transform;
-  transform: translateZ(0);
+/* Keep compositing hints scoped to elements that are actively moving. */
+.animate-fade-in-up,
+.animate-fade-in-scale,
+.animate-bounce-gentle,
+.animate-shake,
+.animate-confetti,
+.animate-pulse-glow {
+  will-change: transform, opacity;
   backface-visibility: hidden;
 }
 
