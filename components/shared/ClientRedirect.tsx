@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
 
 /**
  * Thin client-only component that handles auth redirect.
@@ -19,10 +18,6 @@ export function ClientRedirect() {
             router.push('/home');
         }
     }, [user, loading, router]);
-
-    if (loading || user) {
-        return <InteractiveLoading message="Opening Padhaku..." fullScreen />;
-    }
 
     return null;
 }
