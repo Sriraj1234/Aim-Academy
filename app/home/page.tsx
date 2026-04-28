@@ -57,6 +57,28 @@ export default function DashboardPage() {
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => {
             window.removeEventListener('scroll', handleScroll);
+    const scrollSaverRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // ── Last Visited Section: save & restore scroll ──────────────────────────
+    useEffect(() => {
+        const saved = sessionStorage.getItem(SCROLL_CACHE_KEY);
+        if (saved) {
+            const y = parseInt(saved, 10);
+            const t = setTimeout(() => window.scrollTo({ top: y, behavior: 'instant' }), 100);
+            return () => clearTimeout(t);
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (scrollSaverRef.current) clearTimeout(scrollSaverRef.current);
+            scrollSaverRef.current = setTimeout(() => {
+                sessionStorage.setItem(SCROLL_CACHE_KEY, String(window.scrollY));
+            }, 300);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
             if (scrollSaverRef.current) clearTimeout(scrollSaverRef.current);
         };
     }, []);
@@ -64,8 +86,16 @@ export default function DashboardPage() {
     if (loading) return <InteractiveLoading message="Loading Dashboard..." fullScreen />
 
     return (
-        <div className="min-h-screen bg-pw-surface pb-20 font-sans selection:bg-pw-indigo selection:text-white">
-            <Header />
+        <div className="relative min-h-screen bg-[#f8f9fa] pb-20 font-sans selection:bg-indigo-500 selection:text-white overflow-hidden">
+            {/* Buttery Smooth Ambient Background - Hardware Accelerated */}
+            <div className="fixed inset-0 pointer-events-none z-0" style={{ transform: "translateZ(0)" }}>
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[radial-gradient(circle_at_center,_rgba(99,102,241,0.06)_0%,_transparent_60%)] rounded-full" />
+                <div className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,_rgba(139,92,246,0.05)_0%,_transparent_50%)] rounded-full" />
+                <div className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-[radial-gradient(circle_at_center,_rgba(236,72,153,0.03)_0%,_transparent_60%)] rounded-full" />
+            </div>
+
+            <div className="relative z-10">
+                <Header />
 
             <main className="pt-20 pb-16 md:pt-24 md:pb-20">
                 <div className="px-5 max-w-7xl mx-auto space-y-6 md:space-y-8 w-full overflow-x-hidden">
@@ -178,6 +208,7 @@ export default function DashboardPage() {
                 <TrialReminderModal />
             </RenderAfterIdle>
             <Footer />
+            </div>
         </div>
     )
 }
