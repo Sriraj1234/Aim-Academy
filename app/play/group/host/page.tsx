@@ -242,46 +242,54 @@ function HostGameContent() {
             })();
             const streamKey = classNum >= 11 ? ((streamRaw || 'Science').trim() || 'Science') : 'general';
 
-            // Subject: lowercase, spaces → underscores, with aliases to match upload format
+            // Subject key — lowercase + underscore, with math alias
             let subjectKey = selectedSubject.toLowerCase().trim().replace(/\s+/g, '_');
             if (subjectKey === 'mathematics' || subjectKey === 'maths') subjectKey = 'math';
-            else if (subjectKey === 'social_science' || subjectKey === 'sst') subjectKey = 'sst';
+
+            // Also keep the raw lowercase subject name (spaces intact) for DB paths like "social science"
+            const subjectRaw = selectedSubject.toLowerCase().trim();
 
             const chapterConstraint = (selectedChapter && selectedChapter !== 'All Mixed')
                 ? [where('chapter', '==', selectedChapter)]
                 : [];
 
-            // Fetch pool larger than needed, then shuffle + slice client-side
-            // This avoids the unreliable random-cursor approach that returned 0 when random ID > all doc IDs
             const fetchLimit = Math.min(selectedCount * 4, 300);
-
             let questions: any[] = [];
 
-            // ── 1. Try hierarchical path ─────────────────────────────────────────
-            const subjectPath = `questions/${boardKey}/${classKey}/${streamKey}/${subjectKey}`;
-            console.log(`[HostGame] Querying hierarchical: ${subjectPath}`);
-            const hierSnap = await getDocs(query(collection(db, subjectPath), ...chapterConstraint, limit(fetchLimit)));
-            hierSnap.forEach(d => questions.push({ id: d.id, ...(d.data() as object) }));
-            console.log(`[HostGame] Hierarchical found: ${questions.length}`);
+            const tryHierarchical = async (subj: string) => {
+                const path = `questions/${boardKey}/${classKey}/${streamKey}/${subj}`;
+                console.log(`[HostGame] Trying: ${path}`);
+                const snap = await getDocs(query(collection(db, path), ...chapterConstraint, limit(fetchLimit)));
+                snap.forEach(d => questions.push({ id: d.id, ...(d.data() as object) }));
+            };
 
-            // ── 2. Flat collection fallback ──────────────────────────────────────
+            // ── 1. Try exact subjectKey (e.g. "math", "chemistry") ───────────────
+            await tryHierarchical(subjectKey);
+
+            // ── 2. Try raw subject name with spaces (e.g. "social science") ───────
+            if (questions.length === 0 && subjectRaw !== subjectKey) {
+                await tryHierarchical(subjectRaw);
+            }
+
+            // ── 3. Physics/Chemistry/Biology → fall back to "science" collection ──
+            // DB stores all three under questions/.../general/science with chapter filter
+            if (questions.length === 0 && ['physics', 'chemistry', 'biology'].includes(subjectKey)) {
+                console.log('[HostGame] Falling back to science collection');
+                await tryHierarchical('science');
+            }
+
+            // ── 4. Flat collection fallback (legacy uploads) ─────────────────────
             if (questions.length === 0) {
                 console.warn('[HostGame] Hierarchical empty, falling back to flat collection');
                 const boardVariants = Array.from(new Set([boardRaw, boardRaw.toLowerCase(), boardRaw.toUpperCase(), 'Bihar Board', 'bseb', 'BSEB'])).slice(0, 10);
-                const subjectVariants = Array.from(new Set([
-                    subjectKey,
-                    selectedSubject,
-                    selectedSubject.toLowerCase(),
-                    'mathematics', 'maths', 'math'
-                ])).slice(0, 10);
-
-                const flatConstraints: any[] = [
+                const subjectVariants = Array.from(new Set([subjectKey, subjectRaw, selectedSubject, selectedSubject.toLowerCase()])).slice(0, 10);
+                const flatSnap = await getDocs(query(
+                    collection(db, 'questions'),
                     where('board', 'in', boardVariants),
                     where('subject', 'in', subjectVariants),
                     ...chapterConstraint,
                     limit(fetchLimit)
-                ];
-                const flatSnap = await getDocs(query(collection(db, 'questions'), ...flatConstraints));
+                ));
                 flatSnap.forEach(d => questions.push({ id: d.id, ...(d.data() as object) }));
                 console.log(`[HostGame] Flat fallback found: ${questions.length}`);
             }
