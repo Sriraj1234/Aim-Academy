@@ -11,7 +11,7 @@ const firebaseConfig = {
     databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 }
 
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache } from 'firebase/firestore'
 import { getDatabase } from 'firebase/database'
 import { getStorage } from 'firebase/storage'
 
@@ -23,12 +23,21 @@ const app = isNewApp ? initializeApp(firebaseConfig) : getApps()[0];
 // Note: We use getAuth() here and set persistence in AuthContext to avoid initialization errors
 const auth = getAuth(app);
 
-// Enable Offline Persistence (Critical for Rural Areas)
-// We use persistentLocalCache which allows data to be read even when offline.
-// 'persistentMultipleTabManager' allows this to work even if multiple tabs are open.
-const db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-});
+// Enable Offline Persistence with fallback for restricted environments
+// (private browsing, some Android WebViews, or iOS Safari restrictions block IndexedDB)
+const isIndexedDBAvailable = (): boolean => {
+    try {
+        return typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined' && window.indexedDB !== null;
+    } catch {
+        return false;
+    }
+};
+
+const db = initializeFirestore(app,
+    isIndexedDBAvailable()
+        ? { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }
+        : { localCache: memoryLocalCache() }
+);
 
 const rtdb = getDatabase(app)
 const storage = getStorage(app)
