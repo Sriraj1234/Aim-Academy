@@ -153,9 +153,11 @@ export const StatsOverview = () => {
                     key={index}
                     initial={{ opacity: 0, y: 10, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: index * 0.05, duration: 0.3 }}
-                    whileHover={{ scale: 1.02 }}
-                    className={`relative overflow-hidden bg-white/50 backdrop-blur-sm p-2.5 rounded-xl border border-white/50 shadow-sm hover:shadow-md transition-all group`}
+                    transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 25 }}
+                    whileHover={{ y: -2, scale: 1.02, transition: { delay: 0, type: 'spring', stiffness: 400, damping: 25 } }}
+                    whileTap={{ scale: 0.98, transition: { delay: 0 } }}
+                    style={{ willChange: "transform, opacity" }}
+                    className={`relative overflow-hidden bg-white/70 backdrop-blur-md p-2.5 rounded-xl border border-white/60 shadow-sm hover:shadow-lg transition-all group`}
                 >
                     {/* Background Gradient Blend */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`} />
