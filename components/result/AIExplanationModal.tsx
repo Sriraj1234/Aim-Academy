@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaRobot, FaTimes, FaLightbulb, FaSpinner } from 'react-icons/fa';
+import { FaRobot, FaTimes, FaLightbulb, FaSpinner, FaBrain, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { HiSparkles } from 'react-icons/hi';
 
 interface AIExplanationModalProps {
     isOpen: boolean;
@@ -15,69 +16,64 @@ interface AIExplanationModalProps {
     chapter?: string;
 }
 
+interface ExplanationSections {
+    concept?: string;
+    whyWrong?: string;
+    whyCorrect?: string;
+    trick?: string;
+}
+
+function parseExplanation(raw: string): { sections: ExplanationSections | null; plainText: string } {
+    try {
+        const cleaned = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+        const parsed = JSON.parse(cleaned);
+        if (parsed.concept || parsed.whyWrong || parsed.whyCorrect || parsed.trick) {
+            return { sections: parsed, plainText: '' };
+        }
+    } catch { }
+    return { sections: null, plainText: raw };
+}
+
 export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
-    isOpen,
-    onClose,
-    question,
-    options,
-    correctAnswer,
-    userAnswer,
-    subject,
-    chapter
+    isOpen, onClose, question, options, correctAnswer, userAnswer, subject, chapter
 }) => {
     const [loading, setLoading] = useState(false);
     const [explanation, setExplanation] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (isOpen && !explanation && !loading) {
-            fetchExplanation();
-        }
+        if (isOpen && !explanation && !loading) fetchExplanation();
     }, [isOpen]);
 
     const fetchExplanation = async () => {
         setLoading(true);
         setError(null);
-
         try {
-            // Auto-detect language preference
-            // If question or options contain Devanagari characters, prefer Hindi
-            const hasHindiChars = /[\u0900-\u097F]/.test(question) || options.some(opt => /[\u0900-\u097F]/.test(opt));
+            const hasHindiChars = /[ऀ-ॿ]/.test(question) || options.some(opt => /[ऀ-ॿ]/.test(opt));
             const preferredLanguage = hasHindiChars ? 'hindi' : 'hinglish';
 
             const response = await fetch('/api/ai/explain', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    question,
-                    options,
-                    correctAnswer,
-                    userAnswer,
-                    subject,
-                    chapter,
-                    preferredLanguage
-                })
+                body: JSON.stringify({ question, options, correctAnswer, userAnswer, subject, chapter, preferredLanguage })
             });
-
             const data = await response.json();
-
             if (data.success) {
                 setExplanation(data.explanation);
             } else {
                 setError(data.error || 'Failed to get explanation');
             }
-        } catch (err) {
+        } catch {
             setError('Network error. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleClose = () => {
-        setExplanation(null);
-        setError(null);
-        onClose();
-    };
+    const handleClose = () => { setExplanation(null); setError(null); onClose(); };
+
+    const { sections, plainText } = explanation ? parseExplanation(explanation) : { sections: null, plainText: '' };
+    const optionLabels = ['A', 'B', 'C', 'D'];
 
     return (
         <AnimatePresence>
@@ -86,111 +82,150 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-pw-violet/20 backdrop-blur-sm"
+                    className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm"
                     onClick={handleClose}
                 >
                     <motion.div
-                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="w-full max-w-md bg-white rounded-3xl border border-pw-border shadow-2xl overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
+                        initial={{ y: 60, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 60, opacity: 0 }}
+                        transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+                        className="w-full sm:max-w-lg bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden"
+                        onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="relative bg-gradient-to-r from-pw-violet to-pw-indigo p-4 border-b border-white/10">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shadow-lg backdrop-blur-md">
-                                    <FaRobot className="text-white text-lg" />
+                        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center">
+                                        <FaRobot className="text-white text-base" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-base leading-tight">AI Tutor</h3>
+                                        <p className="text-[11px] text-white/60">Groq · {subject || 'General'}{chapter ? ` · ${chapter}` : ''}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-white text-lg">AI Explanation</h3>
-                                    <p className="text-xs text-white/70">Powered by Groq AI</p>
+                                <button onClick={handleClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                                    <FaTimes className="text-white text-sm" />
+                                </button>
+                            </div>
+
+                            {/* Answer comparison inline in header */}
+                            <div className="flex gap-2 mt-3">
+                                <div className="flex-1 bg-red-500/20 border border-red-400/30 rounded-xl px-3 py-2">
+                                    <p className="text-[10px] text-red-200 uppercase tracking-wider mb-0.5">Tumhara Jawab</p>
+                                    <p className="text-white text-sm font-bold truncate">{optionLabels[userAnswer]}) {options[userAnswer]}</p>
+                                </div>
+                                <div className="flex-1 bg-green-500/20 border border-green-400/30 rounded-xl px-3 py-2">
+                                    <p className="text-[10px] text-green-200 uppercase tracking-wider mb-0.5">Sahi Jawab</p>
+                                    <p className="text-white text-sm font-bold truncate">{optionLabels[correctAnswer]}) {options[correctAnswer]}</p>
                                 </div>
                             </div>
-                            <button
-                                onClick={handleClose}
-                                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                            >
-                                <FaTimes className="text-white" />
-                            </button>
                         </div>
 
                         {/* Content */}
-                        <div className="p-5 max-h-[60vh] overflow-y-auto">
+                        <div className="p-4 max-h-[55vh] overflow-y-auto space-y-3">
                             {loading && (
-                                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                                <div className="flex flex-col items-center justify-center py-10 gap-4">
                                     <div className="relative">
-                                        <div className="w-16 h-16 rounded-full bg-pw-indigo/10 flex items-center justify-center">
-                                            <FaSpinner className="text-2xl text-pw-indigo animate-spin" />
+                                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                                            <FaSpinner className="text-2xl text-indigo-500 animate-spin" />
                                         </div>
-                                        <div className="absolute inset-0 rounded-full bg-pw-indigo/10 animate-ping" />
+                                        <motion.div
+                                            className="absolute inset-0 rounded-2xl border-2 border-indigo-300"
+                                            animate={{ opacity: [1, 0], scale: [1, 1.4] }}
+                                            transition={{ repeat: Infinity, duration: 1.2 }}
+                                        />
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-pw-violet font-medium">Analyzing your answer...</p>
-                                        <p className="text-xs text-pw-indigo/60 mt-1">AI is thinking 🤔</p>
+                                        <p className="font-bold text-gray-700">AI soch raha hai...</p>
+                                        <p className="text-xs text-gray-400 mt-1">Explanation generate ho rahi hai 🤔</p>
                                     </div>
                                 </div>
                             )}
 
                             {error && (
                                 <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
-                                    <p className="text-red-500 font-medium">{error}</p>
-                                    <button
-                                        onClick={fetchExplanation}
-                                        className="mt-3 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-600 text-sm rounded-lg transition-colors"
-                                    >
-                                        Try Again
+                                    <p className="text-red-500 font-medium text-sm">{error}</p>
+                                    <button onClick={fetchExplanation} className="mt-2 px-4 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 text-sm rounded-lg transition-colors font-medium">
+                                        Dobara Try Karo
                                     </button>
                                 </div>
                             )}
 
                             {explanation && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="space-y-4"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="space-y-3"
                                 >
-                                    {/* Question Summary */}
-                                    <div className="bg-pw-surface rounded-2xl p-4 border border-pw-border">
-                                        <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Question</p>
-                                        <p className="text-pw-violet text-sm leading-relaxed line-clamp-3 font-medium">{question}</p>
-                                    </div>
+                                    {sections ? (
+                                        <>
+                                            {sections.concept && (
+                                                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                                                    className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3.5">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <FaBrain className="text-indigo-500 text-sm" />
+                                                        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-wider">Concept</span>
+                                                    </div>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">{sections.concept}</p>
+                                                </motion.div>
+                                            )}
 
-                                    {/* Answer Comparison */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                                            <p className="text-[10px] text-red-500/70 uppercase tracking-wider mb-1">Your Answer</p>
-                                            <p className="text-red-600 text-sm font-bold line-clamp-2">{options[userAnswer]}</p>
-                                        </div>
-                                        <div className="bg-green-50 border border-green-200 rounded-xl p-3">
-                                            <p className="text-[10px] text-green-500/70 uppercase tracking-wider mb-1">Correct Answer</p>
-                                            <p className="text-green-600 text-sm font-bold line-clamp-2">{options[correctAnswer]}</p>
-                                        </div>
-                                    </div>
+                                            {sections.whyWrong && (
+                                                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                                                    className="bg-red-50 border border-red-100 rounded-2xl p-3.5">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <FaTimesCircle className="text-red-500 text-sm" />
+                                                        <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">Galti Kahan Hui</span>
+                                                    </div>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">{sections.whyWrong}</p>
+                                                </motion.div>
+                                            )}
 
-                                    {/* AI Explanation */}
-                                    <div className="bg-gradient-to-br from-pw-indigo/5 to-pw-violet/5 rounded-2xl p-4 border border-pw-indigo/10">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <FaLightbulb className="text-yellow-500" />
-                                            <span className="text-xs text-pw-indigo uppercase tracking-wider font-bold">Explanation</span>
+                                            {sections.whyCorrect && (
+                                                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+                                                    className="bg-green-50 border border-green-100 rounded-2xl p-3.5">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <FaCheckCircle className="text-green-500 text-sm" />
+                                                        <span className="text-[10px] font-black text-green-600 uppercase tracking-wider">Sahi Jawab Kyu</span>
+                                                    </div>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">{sections.whyCorrect}</p>
+                                                </motion.div>
+                                            )}
+
+                                            {sections.trick && (
+                                                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                                                    className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <FaLightbulb className="text-amber-500 text-sm" />
+                                                        <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Exam Trick</span>
+                                                    </div>
+                                                    <p className="text-gray-700 text-sm leading-relaxed font-medium">{sections.trick}</p>
+                                                </motion.div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <HiSparkles className="text-indigo-500" />
+                                                <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Explanation</span>
+                                            </div>
+                                            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{plainText}</p>
                                         </div>
-                                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-                                            {explanation}
-                                        </p>
-                                    </div>
+                                    )}
                                 </motion.div>
                             )}
                         </div>
 
                         {/* Footer */}
                         {explanation && (
-                            <div className="p-4 border-t border-pw-border bg-gray-50/50">
+                            <div className="px-4 pb-5 pt-2">
                                 <button
                                     onClick={handleClose}
-                                    className="w-full py-3 bg-pw-indigo hover:bg-pw-violet text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
+                                    className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200 active:scale-95 text-sm"
                                 >
-                                    Got it! 👍
+                                    Samajh Gaya! 👍
                                 </button>
                             </div>
                         )}
