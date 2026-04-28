@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState, ReactNode } from 'react';
 import { translations, Language } from '@/data/translations';
 
 interface LanguageContextType {
@@ -15,32 +15,34 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     const [language, setLanguageState] = useState<Language>('en');
 
-    const toggleLanguage = () => {
+    const toggleLanguage = useCallback(() => {
         setLanguageState((prev) => (prev === 'en' ? 'hi' : 'en'));
-    };
+    }, []);
 
-    const setLanguage = (lang: Language) => {
+    const setLanguage = useCallback((lang: Language) => {
         setLanguageState(lang);
-    };
+    }, []);
 
     // Helper to get nested translation value by string path (e.g., 'welcome.title')
-    const t = (path: string): string => {
+    const t = useCallback((path: string): string => {
         const keys = path.split('.');
-        let current: any = translations[language];
+        let current: unknown = translations[language];
 
         for (const key of keys) {
-            if (current[key] === undefined) {
+            if (typeof current !== 'object' || current === null || !(key in current)) {
                 console.warn(`Translation missing for key: ${path} in language: ${language}`);
                 return path; // Fallback to key if missing
             }
-            current = current[key];
+            current = (current as Record<string, unknown>)[key];
         }
 
         return typeof current === 'string' ? current : path;
-    };
+    }, [language]);
+
+    const value = useMemo(() => ({ language, toggleLanguage, setLanguage, t }), [language, toggleLanguage, setLanguage, t]);
 
     return (
-        <LanguageContext.Provider value={{ language, toggleLanguage, setLanguage, t }}>
+        <LanguageContext.Provider value={value}>
             {children}
         </LanguageContext.Provider>
     );
