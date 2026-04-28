@@ -80,6 +80,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         let unsubscribeSnapshot: () => void;
 
+        // Safety net: if auth + Firestore don't resolve within 10s, unblock the UI
+        const loadingTimeout = setTimeout(() => setLoading(false), 10000);
+
         const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
             setUser(user)
 
@@ -93,14 +96,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 let isRegistered = false;
 
                 try {
-                    // Cache-first fetch — uses Firestore offline cache when available.
-                    // This is much faster than getDocFromServer which always hits the network.
-                    const docSnap = await getDoc(docRef).catch(async () => {
-                        // Fallback: if cache fails (highly unlikely), just getDoc again
-                        return getDoc(docRef);
-                    });
+                    // getDoc with 6s timeout — slow/offline networks won't block the snapshot setup
+                    const docSnap = await Promise.race([
+                        getDoc(docRef).catch(() => getDoc(docRef).catch(() => null)),
+                        new Promise<null>(resolve => setTimeout(() => resolve(null), 6000))
+                    ]);
 
-                    if (docSnap.exists()) {
+                    if (docSnap && docSnap.exists()) {
                         const profileData = docSnap.data() as UserProfile;
                         let activeDevices = profileData.activeDevices || [];
                         const nowTs = Date.now();
@@ -121,12 +123,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             activeDevices.push({ deviceId, deviceName, lastActive: nowTs });
                         }
 
-                        await setDoc(docRef, {
+                        // Fire-and-forget — don't await this write; it was blocking the snapshot setup
+                        setDoc(docRef, {
                             activeDevices,
                             email: user.email || profileData.email,
                             displayName: user.displayName || profileData.displayName,
                             photoURL: user.photoURL || profileData.photoURL
-                        }, { merge: true });
+                        }, { merge: true }).catch(e => console.error("Device reg failed", e));
                         isRegistered = true;
                     } else {
                         isRegistered = true;
@@ -288,19 +291,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             }
                         });
                     }
+                    clearTimeout(loadingTimeout);
                     setLoading(false)
                 }, (error) => {
                     console.error("Snapshot error:", error);
+                    clearTimeout(loadingTimeout);
                     setLoading(false);
                 });
 
             } else {
                 setUserProfile(null)
+                clearTimeout(loadingTimeout);
                 setLoading(false)
             }
         })
 
         return () => {
+            clearTimeout(loadingTimeout);
             unsubscribeAuth();
             if (unsubscribeSnapshot) unsubscribeSnapshot();
         }
