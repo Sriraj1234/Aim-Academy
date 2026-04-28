@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   // TypeScript - ignore build errors for faster builds
@@ -20,18 +21,17 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Enable compression
-  // compress: true,
+  // Enable gzip compression in Next's production server.
+  compress: true,
 
-  // Experimental features - disabled for stability
-  // experimental: {
-  //   optimizeCss: true, // CSS optimization
-  //   optimizePackageImports: [
-  //     'react-icons',
-  //     'framer-motion',
-  //     '@google/generative-ai',
-  //   ],
-  // },
+  experimental: {
+    optimizePackageImports: [
+      'react-icons',
+      'framer-motion',
+      '@google/generative-ai',
+      '@google/genai',
+    ],
+  },
 
   // Headers for caching and performance
   async headers() {
@@ -64,12 +64,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 };
 
-const withPWA = require("@ducanh2912/next-pwa").default({
+const withPWA = withPWAInit({
   dest: "public",
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  swMinify: true,
   disable: process.env.NODE_ENV === "development", // Disable PWA in development
   workboxOptions: {
     disableDevLogs: true,
