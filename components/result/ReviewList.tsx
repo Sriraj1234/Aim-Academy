@@ -55,52 +55,78 @@ export const ReviewList: React.FC<ReviewListProps> = ({ questions, answers }) =>
             return true;
         });
 
+    const correctPct = total > 0 ? (correctCount / total) * 100 : 0;
+    const incorrectPct = total > 0 ? (incorrectCount / total) * 100 : 0;
+    const skippedPct = total > 0 ? (skippedCount / total) * 100 : 0;
+
     return (
-        <div className="w-full space-y-6 pb-20">
+        <div className="w-full space-y-4 pb-20">
             {/* Visual Summary Bar */}
-            <div className="bg-pw-surface rounded-2xl p-4 border border-pw-border">
-                <div className="flex justify-between text-xs text-gray-500 mb-2 uppercase tracking-wider font-bold">
-                    <span>Performance Breakdown</span>
-                    <span>{total} Questions</span>
+            <div className="bg-white rounded-2xl p-5 border border-pw-border shadow-pw-sm">
+                <div className="flex justify-between items-center mb-3">
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Performance Breakdown</span>
+                    <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">{total} Questions</span>
                 </div>
-                <div className="h-4 w-full rounded-full overflow-hidden flex shadow-inner">
-                    <div style={{ width: `${(correctCount / total) * 100}%` }} className="h-full bg-green-500" />
-                    <div style={{ width: `${(incorrectCount / total) * 100}%` }} className="h-full bg-red-500" />
-                    <div style={{ width: `${(skippedCount / total) * 100}%` }} className="h-full bg-gray-300" />
+
+                {/* Segmented bar */}
+                <div className="h-3 w-full rounded-full overflow-hidden flex gap-[2px] bg-gray-100">
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${correctPct}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                        className="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full"
+                    />
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${incorrectPct}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                        className="h-full bg-gradient-to-r from-red-400 to-rose-500 rounded-full"
+                    />
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${skippedPct}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+                        className="h-full bg-gray-300 rounded-full"
+                    />
                 </div>
-                <div className="flex gap-4 mt-3 justify-center">
-                    <div className="flex items-center gap-1.5 text-xs text-green-600 font-bold">
-                        <div className="w-2 h-2 rounded-full bg-green-500" /> Correct ({correctCount})
+
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                    <div className="flex flex-col items-center bg-green-50 border border-green-100 rounded-xl py-2.5">
+                        <span className="text-lg font-black text-green-600">{correctCount}</span>
+                        <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">Correct</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-red-600 font-bold">
-                        <div className="w-2 h-2 rounded-full bg-red-500" /> Incorrect ({incorrectCount})
+                    <div className="flex flex-col items-center bg-red-50 border border-red-100 rounded-xl py-2.5">
+                        <span className="text-lg font-black text-red-500">{incorrectCount}</span>
+                        <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Wrong</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold">
-                        <div className="w-2 h-2 rounded-full bg-gray-400" /> Skipped ({skippedCount})
+                    <div className="flex flex-col items-center bg-gray-50 border border-gray-100 rounded-xl py-2.5">
+                        <span className="text-lg font-black text-gray-500">{skippedCount}</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Skipped</span>
                     </div>
                 </div>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-2 bg-white rounded-xl p-1 overflow-x-auto border border-pw-border no-scrollbar shadow-sm">
+            <div className="flex gap-1.5 bg-gray-100 rounded-2xl p-1.5">
                 {[
-                    { id: 'all', label: 'All', icon: FaListAlt, count: total },
-                    { id: 'incorrect', label: 'Wrong', icon: FaTimesCircle, count: incorrectCount },
-                    { id: 'correct', label: 'Correct', icon: FaCheckCircle, count: correctCount },
-                    { id: 'skipped', label: 'Skipped', icon: FaMinusCircle, count: skippedCount },
+                    { id: 'all', label: 'All', icon: FaListAlt, count: total, color: 'text-pw-indigo' },
+                    { id: 'incorrect', label: 'Wrong', icon: FaTimesCircle, count: incorrectCount, color: 'text-red-500' },
+                    { id: 'correct', label: 'Correct', icon: FaCheckCircle, count: correctCount, color: 'text-green-600' },
+                    { id: 'skipped', label: 'Skipped', icon: FaMinusCircle, count: skippedCount, color: 'text-gray-500' },
                 ].map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setFilter(tab.id as any)}
                         className={`
-                            flex-1 min-w-[80px] px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1
+                            flex-1 px-2 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex flex-col items-center gap-0.5
                             ${filter === tab.id
-                                ? 'bg-pw-indigo text-white shadow-md shadow-pw-indigo/20'
-                                : 'text-gray-500 hover:bg-pw-surface hover:text-pw-indigo'}
+                                ? 'bg-white shadow-sm text-pw-indigo'
+                                : 'text-gray-400 hover:text-gray-600'}
                         `}
                     >
-                        <tab.icon className="text-sm opacity-80" />
-                        <span className="whitespace-nowrap">{tab.label} <span className="opacity-60">({tab.count})</span></span>
+                        <tab.icon className={`text-sm ${filter === tab.id ? tab.color : ''}`} />
+                        <span className="whitespace-nowrap leading-tight">{tab.label}</span>
+                        <span className={`text-[10px] font-black ${filter === tab.id ? tab.color : 'text-gray-300'}`}>({tab.count})</span>
                     </button>
                 ))}
             </div>
@@ -193,14 +219,16 @@ export const ReviewList: React.FC<ReviewListProps> = ({ questions, answers }) =>
 
                                     {/* AI Explain Button - Only for wrong answers */}
                                     {isWrong && q.userAnswer !== null && (
-                                        <button
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.97 }}
                                             onClick={() => handleAIExplain(q, q.userAnswer as number)}
-                                            className="mt-4 w-full py-3 px-4 bg-gradient-to-r from-pw-violet/5 to-pw-indigo/5 hover:from-pw-violet/10 hover:to-pw-indigo/10 border border-pw-indigo/20 rounded-xl flex items-center justify-center gap-2 text-pw-indigo font-bold text-sm transition-all group"
+                                            className="mt-4 w-full py-3 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 rounded-xl flex items-center justify-center gap-2.5 text-white font-bold text-sm transition-all shadow-md shadow-indigo-200 active:scale-95"
                                         >
-                                            <FaRobot className="text-pw-indigo group-hover:scale-110 transition-transform" />
+                                            <FaRobot className="text-white text-base" />
                                             <span>AI se Samjho</span>
-                                            <span className="text-[10px] bg-pw-indigo text-white px-2 py-0.5 rounded-full shadow-sm">FREE</span>
-                                        </button>
+                                            <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full">FREE</span>
+                                        </motion.button>
                                     )}
                                 </div>
                             </div>
