@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaPlay, FaTrophy, FaStar, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight, FaCrown, FaBolt, FaUserGraduate, FaRocket, FaYoutube } from 'react-icons/fa'
+import { FaTrophy, FaStar, FaArrowRight, FaChevronLeft, FaChevronRight, FaCrown, FaUserGraduate, FaYoutube } from 'react-icons/fa'
 import Link from 'next/link'
 import NextImage from 'next/image'
 import { useAuth } from '@/context/AuthContext'
@@ -66,7 +66,8 @@ export const ModernCarousel = () => {
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
-        setMounted(true)
+        const frame = requestAnimationFrame(() => setMounted(true))
+        return () => cancelAnimationFrame(frame)
     }, [])
 
     // Dynamic First Slide Data
@@ -74,7 +75,7 @@ export const ModernCarousel = () => {
     const streak = userProfile?.gamification?.currentStreak || 0
 
     // Combine Personal Slide + Ads
-    const slides: Slide[] = [
+    const slides: Slide[] = useMemo(() => [
         ...adSlides,
         {
             id: 1,
@@ -82,7 +83,7 @@ export const ModernCarousel = () => {
             bgClass: "bg-gradient-to-br from-[#4f46e5] to-[#7c3aed]",
             icon: FaUserGraduate
         }
-    ]
+    ], [])
     const [direction, setDirection] = useState(0);
 
     const nextSlide = useCallback(() => {
@@ -102,7 +103,7 @@ export const ModernCarousel = () => {
             nextSlide()
         }, 5000)
         return () => clearInterval(timer)
-    }, [isHovered, slides.length])
+    }, [isHovered, nextSlide])
 
     // Animation Variants
     const variants = {
@@ -209,7 +210,7 @@ export const ModernCarousel = () => {
                             opacity: { duration: 0.2 }
                         }}
                         drag="x"
-                        onDragEnd={(e, { offset, velocity }) => {
+                        onDragEnd={(_e, { offset }) => {
                             const swipe = offset.x;
                             if (swipe < -50) nextSlide();
                             else if (swipe > 50) prevSlide();
