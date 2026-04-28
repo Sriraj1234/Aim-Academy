@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { db, rtdb } from '@/lib/firebase';
 import {
     collection,
@@ -12,9 +12,8 @@ import {
     where,
     getDocs,
     getDoc,
-    limit
 } from 'firebase/firestore';
-import { ref, onValue, set, serverTimestamp as rtdbTimestamp } from 'firebase/database';
+import { ref, onValue } from 'firebase/database';
 import { useAuth } from '@/context/AuthContext';
 import { Friend, FriendRequest, UserProfile, GameInvite } from '@/data/types';
 
@@ -49,15 +48,17 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
     // Listen for Friends, Requests, and Game Invites
     useEffect(() => {
         if (!user) {
-            setFriends([]);
-            setRequests([]);
-            setActiveInvites([]);
-            setSentInvites([]);
-            setLoading(false);
-            return;
+            const timer = setTimeout(() => {
+                setFriends([]);
+                setRequests([]);
+                setActiveInvites([]);
+                setSentInvites([]);
+                setLoading(false);
+            }, 0);
+            return () => clearTimeout(timer);
         }
 
-        setLoading(true);
+        const loadingTimer = setTimeout(() => setLoading(true), 0);
 
         // 1. Listen to Friends Collection
         const friendsRef = collection(db, 'users', user.uid, 'friends');
@@ -109,7 +110,7 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
                     let userStatus: string | null = null;
                     if (statusVal) {
                         if (statusVal.connections) {
-                            const connections = Object.values(statusVal.connections) as any[];
+                            const connections = Object.values(statusVal.connections) as Array<{ state?: string }>;
                             if (connections.length > 0) {
                                 const states = connections.map(c => c.state);
                                 if (states.includes('playing')) userStatus = 'playing';
@@ -156,6 +157,7 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
         });
 
         return () => {
+            clearTimeout(loadingTimer);
             unsubFriends();
             unsubRequests();
             unsubGameInvites();
@@ -165,7 +167,7 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
     }, [user]);
 
     // Actions
-    const sendFriendRequest = async (email: string, targetUid?: string) => {
+    const sendFriendRequest = useCallback(async (email: string, targetUid?: string) => {
         if (!user || !userProfile) throw new Error("Not authenticated");
         if (email === user.email) throw new Error("You cannot invite yourself");
 
@@ -216,9 +218,9 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
 
         await setDoc(doc(db, 'users', resolvedTargetUid, 'friend_requests', user.uid), requestForTarget);
         await setDoc(doc(db, 'users', user.uid, 'friend_requests', resolvedTargetUid), requestForMe);
-    };
+    }, [friends, user, userProfile]);
 
-    const acceptFriendRequest = async (requestUid: string) => {
+    const acceptFriendRequest = useCallback(async (requestUid: string) => {
         if (!user || !userProfile) return;
 
         const request = requests.find(r => r.uid === requestUid && r.direction === 'received');
@@ -252,9 +254,9 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
             console.error("Error accepting friend request:", error);
             throw error;
         }
-    };
+    }, [requests, user, userProfile]);
 
-    const rejectFriendRequest = async (requestUid: string) => {
+    const rejectFriendRequest = useCallback(async (requestUid: string) => {
         if (!user) return;
         await deleteDoc(doc(db, 'users', user.uid, 'friend_requests', requestUid));
         try {
@@ -262,9 +264,9 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
         } catch (e) {
             console.warn("Could not delete sender's request copy", e);
         }
-    };
+    }, [user]);
 
-    const sendGameInvite = async (friendUid: string, roomId: string) => {
+    const sendGameInvite = useCallback(async (friendUid: string, roomId: string) => {
         if (!user || !userProfile) throw new Error("Not authenticated");
 
         const STORAGE_KEY = `last_invite_${friendUid}`;
@@ -297,9 +299,9 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
         });
 
         localStorage.setItem(STORAGE_KEY, now.toString());
-    };
+    }, [user, userProfile]);
 
-    const respondToGameInvite = async (inviteId: string, response: 'accepted' | 'rejected', fromUid: string) => {
+    const respondToGameInvite = useCallback(async (inviteId: string, response: 'accepted' | 'rejected', fromUid: string) => {
         if (!user) return;
         const myInviteRef = doc(db, 'users', user.uid, 'game_invites', inviteId);
 
@@ -311,19 +313,19 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
         }
 
         await deleteDoc(myInviteRef);
-    };
+    }, [user]);
 
-    const clearSentInvite = async (inviteId: string) => {
+    const clearSentInvite = useCallback(async (inviteId: string) => {
         if (!user) return;
         await deleteDoc(doc(db, 'users', user.uid, 'sent_game_invites', inviteId));
-    };
+    }, [user]);
 
-    const clearGameInvite = async (inviteId: string) => {
+    const clearGameInvite = useCallback(async (inviteId: string) => {
         if (!user) return;
         await deleteDoc(doc(db, 'users', user.uid, 'game_invites', inviteId));
-    };
+    }, [user]);
 
-    const removeFriend = async (friendUid: string) => {
+    const removeFriend = useCallback(async (friendUid: string) => {
         if (!user) return;
         await deleteDoc(doc(db, 'users', user.uid, 'friends', friendUid));
         try {
@@ -331,14 +333,42 @@ export const FriendsProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.error("Error removing friend from their list:", error);
         }
-    };
+    }, [user]);
+
+    const value = useMemo(() => ({
+        friends,
+        requests,
+        activeInvites,
+        sentInvites,
+        loading,
+        onlineUsers,
+        sendFriendRequest,
+        acceptFriendRequest,
+        rejectFriendRequest,
+        sendGameInvite,
+        respondToGameInvite,
+        clearSentInvite,
+        clearGameInvite,
+        removeFriend
+    }), [
+        friends,
+        requests,
+        activeInvites,
+        sentInvites,
+        loading,
+        onlineUsers,
+        sendFriendRequest,
+        acceptFriendRequest,
+        rejectFriendRequest,
+        sendGameInvite,
+        respondToGameInvite,
+        clearSentInvite,
+        clearGameInvite,
+        removeFriend
+    ]);
 
     return (
-        <FriendsContext.Provider value={{
-            friends, requests, activeInvites, sentInvites, loading, onlineUsers,
-            sendFriendRequest, acceptFriendRequest, rejectFriendRequest,
-            sendGameInvite, respondToGameInvite, clearSentInvite, clearGameInvite, removeFriend
-        }}>
+        <FriendsContext.Provider value={value}>
             {children}
         </FriendsContext.Provider>
     );
