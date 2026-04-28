@@ -242,11 +242,9 @@ function HostGameContent() {
             })();
             const streamKey = classNum >= 11 ? ((streamRaw || 'Science').trim() || 'Science') : 'general';
 
-            // Subject key — lowercase + underscore, with math alias
-            let subjectKey = selectedSubject.toLowerCase().trim().replace(/\s+/g, '_');
-            if (subjectKey === 'mathematics' || subjectKey === 'maths') subjectKey = 'math';
-
-            // Also keep the raw lowercase subject name (spaces intact) for DB paths like "social science"
+            // Subject key — lowercase, spaces → underscores
+            const subjectKey = selectedSubject.toLowerCase().trim().replace(/\s+/g, '_');
+            // Raw name with spaces intact (e.g. "social science" for DB paths that have spaces)
             const subjectRaw = selectedSubject.toLowerCase().trim();
 
             const chapterConstraint = (selectedChapter && selectedChapter !== 'All Mixed')
@@ -263,16 +261,22 @@ function HostGameContent() {
                 snap.forEach(d => questions.push({ id: d.id, ...(d.data() as object) }));
             };
 
-            // ── 1. Try exact subjectKey (e.g. "math", "chemistry") ───────────────
-            await tryHierarchical(subjectKey);
+            // Build a list of subject name variants to try in order
+            const subjectVariantsToTry = Array.from(new Set([
+                subjectKey,           // "math", "social_science", "chemistry"
+                subjectRaw,           // "math", "social science", "chemistry"
+                // math/maths — DB uses "maths", taxonomy may show "math" or vice versa
+                ...(subjectKey === 'math' || subjectRaw === 'math' ? ['maths', 'mathematics'] : []),
+                ...(subjectKey === 'maths' || subjectRaw === 'maths' ? ['math', 'mathematics'] : []),
+            ]));
 
-            // ── 2. Try raw subject name with spaces (e.g. "social science") ───────
-            if (questions.length === 0 && subjectRaw !== subjectKey) {
-                await tryHierarchical(subjectRaw);
+            for (const variant of subjectVariantsToTry) {
+                if (questions.length > 0) break;
+                await tryHierarchical(variant);
             }
 
-            // ── 3. Physics/Chemistry/Biology → fall back to "science" collection ──
-            // DB stores all three under questions/.../general/science with chapter filter
+            // ── Physics/Chemistry/Biology → fall back to "science" collection ────
+            // DB stores all three under questions/.../general/science, differentiated by chapter
             if (questions.length === 0 && ['physics', 'chemistry', 'biology'].includes(subjectKey)) {
                 console.log('[HostGame] Falling back to science collection');
                 await tryHierarchical('science');
