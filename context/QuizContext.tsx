@@ -7,7 +7,7 @@ import { Question, CategoryData } from '@/data/types'
 import { mockQuestions } from '@/data/mock'
 import { db } from '@/lib/firebase'
 import { mistakesLocalStore } from '@/utils/mistakesLocalStore'
-import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy, documentId, setDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, where, limit, doc, getDoc, getCountFromServer, deleteDoc, orderBy } from 'firebase/firestore'
 import { useAuth } from '@/hooks/useAuth'
 
 interface QuizContextType {
@@ -58,11 +58,11 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
                 startTime: st,
                 savedAt: Date.now()
             }))
-        } catch (_) { /* sessionStorage might be unavailable in some browsers */ }
+        } catch { /* sessionStorage might be unavailable in some browsers */ }
     }
 
     const clearSession = () => {
-        try { sessionStorage.removeItem(SESSION_KEY) } catch (_) { }
+        try { sessionStorage.removeItem(SESSION_KEY) } catch { }
     }
 
     // Restore session on mount (only once, before any quiz is started)
@@ -80,7 +80,10 @@ export const QuizProvider = ({ children }: { children: React.ReactNode }) => {
             setCurrentQuestionIndex(session.currentQuestionIndex ?? 0)
             setAnswers(session.answers ?? new Array(session.questions.length).fill(null))
             setStartTime(session.startTime ?? Date.now())
-            toast('Quiz resume ho gayi wahan se jahan tune chhodi thi! 📚', { icon: '🔄', duration: 3000 })
+            // Only show toast if user reloads while on the quiz page — not on every page navigation
+            if (typeof window !== 'undefined' && window.location.pathname.includes('/play/quiz')) {
+                toast('Quiz resume ho gayi wahan se jahan tune chhodi thi! 📚', { icon: '🔄', duration: 3000 })
+            }
         } catch (_) { /* corrupt session — ignore */ }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
