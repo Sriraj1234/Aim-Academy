@@ -23,6 +23,22 @@ const app = isNewApp ? initializeApp(firebaseConfig) : getApps()[0];
 // Note: We use getAuth() here and set persistence in AuthContext to avoid initialization errors
 const auth = getAuth(app);
 
+// Initialize App Check
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+
+let appCheck;
+// Only initialize on the client side
+if (typeof window !== 'undefined') {
+    // Note: To use this in development, you can set self.FIREBASE_APPCHECK_DEBUG_TOKEN = true in your browser console
+    if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+        appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+            // Automatically refresh app check tokens as needed.
+            isTokenAutoRefreshEnabled: true
+        });
+    }
+}
+
 // Enable Offline Persistence with fallback for restricted environments
 // (private browsing, some Android WebViews, or iOS Safari restrictions block IndexedDB)
 const isIndexedDBAvailable = (): boolean => {
