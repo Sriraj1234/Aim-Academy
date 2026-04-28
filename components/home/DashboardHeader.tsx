@@ -1,9 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
-import { useLanguage } from '@/context/LanguageContext'
 import { motion } from 'framer-motion'
-import { FaStar, FaRocket, FaUserFriends, FaBell, FaShareAlt, FaBookReader, FaShieldAlt, FaGraduationCap } from 'react-icons/fa'
+import { FaUserFriends, FaBell, FaBookReader } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { FriendsDrawer } from './FriendsDrawer'
 import { NotificationsDrawer } from './NotificationsDrawer'
@@ -13,8 +13,9 @@ import { useFriends } from '@/hooks/useFriends'
 import { createEmptyRoom } from '@/utils/roomService'
 import { db } from '@/lib/firebase'
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore'
+import type { Friend } from '@/data/types'
 
-const motivationalQuotes = [
+const _motivationalQuotes = [
     "Aaj ka goal: Apne aap se kal behtar bano! 🎯",
     "Har sawaal jiska tu jawab deta hai, success ke ek kadam aur paas! 💪",
     "Champions kabhi practice nahi chodte! 🏆",
@@ -24,7 +25,6 @@ const motivationalQuotes = [
 
 export const DashboardHeader = () => {
     const { user, userProfile, loading } = useAuth()
-    const { t } = useLanguage()
     const [isFriendsOpen, setIsFriendsOpen] = useState(false)
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
     const [unreadCount, setUnreadCount] = useState(0)
@@ -32,10 +32,13 @@ export const DashboardHeader = () => {
     const [greeting, setGreeting] = useState({ text: 'Good Morning', emoji: '🌅' })
 
     useEffect(() => {
-        const hour = new Date().getHours()
-        if (hour < 12) setGreeting({ text: 'Good Morning', emoji: '🌅' })
-        else if (hour < 18) setGreeting({ text: 'Good Afternoon', emoji: '☀️' })
-        else setGreeting({ text: 'Good Evening', emoji: '🌙' })
+        const frame = requestAnimationFrame(() => {
+            const hour = new Date().getHours()
+            if (hour < 12) setGreeting({ text: 'Good Morning', emoji: '🌅' })
+            else if (hour < 18) setGreeting({ text: 'Good Afternoon', emoji: '☀️' })
+            else setGreeting({ text: 'Good Evening', emoji: '🌙' })
+        })
+        return () => cancelAnimationFrame(frame)
     }, [])
 
     // Hooks for instant play
@@ -72,7 +75,7 @@ export const DashboardHeader = () => {
         return () => unsubscribe();
     }, [user?.uid]);
 
-    const handlePlayWithFriend = async (friend: any) => {
+    const handlePlayWithFriend = async (friend: Friend) => {
         if (!user) return;
         setInviteLoading(true);
         try {
@@ -125,13 +128,13 @@ export const DashboardHeader = () => {
                                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-[2px] md:p-[3px] bg-gradient-to-tr from-pw-lavender via-pw-indigo to-pw-violet shadow-pw-md relative">
                                     <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-pw-surface cursor-pointer flex items-center justify-center" onClick={() => !user && router.push('/login')}>
                                         {user?.photoURL ? (
-                                            <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                            <Image src={user.photoURL} alt="Avatar" width={64} height={64} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-pw-lavender/30 text-pw-violet">
                                                 {user?.displayName ? (
                                                     <span className="font-bold text-lg md:text-xl">{user.displayName[0]}</span>
                                                 ) : (
-                                                    <img src="/ai-avatar/teacher-idle.png" alt="Guest" className="w-full h-full object-cover transform scale-110" />
+                                                    <Image src="/ai-avatar/teacher-idle.png" alt="Guest" width={64} height={64} className="w-full h-full object-cover transform scale-110" />
                                                 )}
                                             </div>
                                         )}
