@@ -120,13 +120,14 @@ export const ModernModeGrid = () => {
                             }}
                             whileTap={{ scale: 0.96 }}
                             className={`group relative h-full bg-white rounded-2xl p-5 hover:shadow-pw-lg transition-all overflow-hidden cursor-pointer border ${mode.id === 'group' ? 'border-pw-indigo shadow-pw-md bg-pw-surface/50' : 'border-pw-border hover:border-pw-indigo/30'}`}
+                            style={{ willChange: "transform" }}
                         >
                             {/* Special Ring for Group Mode */}
                             {mode.id === 'group' && (
                                 <div className="absolute inset-0 rounded-2xl border-2 border-pw-indigo/10 group-hover:border-pw-indigo/30 transition-colors pointer-events-none" />
                             )}
-                            {/* Animated background glow on hover */}
-                            <div className={`absolute -right-10 -top-10 w-32 h-32 ${mode.bgGlow} opacity-0 group-hover:opacity-5 rounded-full blur-3xl transition-opacity duration-500`} />
+                            {/* Animated background glow on hover - Optimized without blur */}
+                            <div className={`absolute -right-10 -top-10 w-48 h-48 ${mode.bgGlow} opacity-0 group-hover:opacity-5 rounded-full transition-opacity duration-500`} style={{ background: 'radial-gradient(circle, currentColor 0%, transparent 70%)' }} />
 
                             {/* Badge */}
                             {mode.badge && (
@@ -174,8 +175,9 @@ export const ModernModeGrid = () => {
                         }}
                         whileTap={{ scale: 0.96 }}
                         className="group relative h-full bg-white rounded-2xl p-5 hover:shadow-pw-lg transition-all overflow-hidden cursor-pointer border border-pw-border hover:border-pw-indigo/30"
+                        style={{ willChange: "transform" }}
                     >
-                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-purple-500 opacity-0 group-hover:opacity-5 rounded-full blur-3xl transition-opacity duration-500" />
+                        <div className="absolute -right-10 -top-10 w-48 h-48 bg-purple-500 opacity-0 group-hover:opacity-5 rounded-full transition-opacity duration-500" style={{ background: 'radial-gradient(circle, currentColor 0%, transparent 70%)', color: '#a855f7' }} />
 
                         <div className="absolute top-3 right-3 px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full z-20 shadow-sm">
                             <span className="text-[10px] font-black text-white tracking-wider">GAME</span>
