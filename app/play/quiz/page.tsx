@@ -435,7 +435,7 @@ export default function QuizPage() {
                             )}
                         </div>
 
-                        <h2 className="text-xl md:text-3xl font-display font-bold text-gray-800 dark:text-slate-100 leading-snug mb-4 text-left">
+                        <h2 className="text-xl md:text-2xl lg:text-3xl font-display font-bold text-gray-800 dark:text-slate-100 leading-snug mb-4 text-left">
                             {displayQuestion}
                             {isTranslating && <span className="inline-block ml-2 text-xs text-pw-indigo animate-pulse">(Translating...)</span>}
                         </h2>
