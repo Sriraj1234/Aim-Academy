@@ -173,10 +173,10 @@ export default function QuizPage() {
     if (!question || !Array.isArray(question.options)) {
         return (
             <div className="min-h-screen bg-pw-surface flex items-center justify-center">
-                <div className="text-center p-8 bg-white rounded-3xl shadow-pw-lg border border-pw-border">
+                <div className="text-center p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-pw-lg border border-pw-border">
                     <FaInfoCircle className="text-4xl text-pw-indigo mx-auto mb-4" />
-                    <h3 className="font-bold text-lg text-gray-700">Question Unavailable</h3>
-                    <p className="text-gray-500 mb-6">This question seems to be invalid or missing options.</p>
+                    <h3 className="font-bold text-lg text-gray-700 dark:text-slate-200">Question Unavailable</h3>
+                    <p className="text-gray-500 dark:text-slate-400 mb-6">This question seems to be invalid or missing options.</p>
                     <Button onClick={() => skipQuestion()}>Skip to Next</Button>
                 </div>
             </div>
@@ -315,13 +315,13 @@ export default function QuizPage() {
             </AnimatePresence>
 
             {/* Header - PW Style */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-pw-border shadow-pw-sm font-sans transition-all">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-b border-pw-border shadow-pw-sm font-sans transition-all">
                 <div className="max-w-5xl mx-auto px-3 h-16 flex items-center justify-between relative gap-2">
                     {/* LEFT: Back & Subject */}
                     <div className="flex items-center gap-2 relative z-10 shrink-1 min-w-0">
                         <button
                             onClick={() => router.back()}
-                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors shrink-0 active:scale-95"
+                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 transition-colors shrink-0 active:scale-95"
                         >
                             <FaChevronLeft className="text-sm" />
                         </button>
@@ -346,13 +346,13 @@ export default function QuizPage() {
                     <div className="flex items-center gap-1.5 relative z-10 shrink-0">
                         <button
                             onClick={() => toggleBookmark(question.id)}
-                            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors active:scale-95 ${bookmarks.includes(question.id) ? 'bg-pw-red/10 text-pw-red' : 'bg-gray-50 text-gray-400 hover:text-pw-indigo'}`}
+                            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors active:scale-95 ${bookmarks.includes(question.id) ? 'bg-pw-red/10 text-pw-red' : 'bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-slate-400 hover:text-pw-indigo'}`}
                         >
                             {bookmarks.includes(question.id) ? <FaBookmark size={14} /> : <FaRegBookmark size={14} />}
                         </button>
 
                         <button
-                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200 active:scale-95"
+                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors border border-gray-200 dark:border-slate-700 active:scale-95"
                             onClick={isRunning ? pauseTimer : resumeTimer}
                         >
                             {isRunning ? <FaPause className="text-[10px]" /> : <FaPlay className="text-[10px]" />}
@@ -360,7 +360,7 @@ export default function QuizPage() {
 
                         <button
                             onClick={() => setShowEnglish(!showEnglish)}
-                            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors active:scale-95 border ${showEnglish ? 'bg-pw-indigo text-white border-pw-indigo' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border-gray-200'}`}
+                            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors active:scale-95 border ${showEnglish ? 'bg-pw-indigo text-white border-pw-indigo' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 border-gray-200 dark:border-slate-700'}`}
                             title="Translate to English"
                         >
                             <FaLanguage size={18} />
@@ -382,7 +382,7 @@ export default function QuizPage() {
             <main className="pt-20 px-3 md:px-4 max-w-3xl mx-auto relative z-10 pb-44 md:pb-32">
                 {/* Stats Row */}
                 <div className="flex items-center justify-between mb-4 md:mb-6 px-1">
-                    <span className="text-[10px] font-bold text-pw-indigo uppercase tracking-widest bg-white border border-pw-indigo/10 px-3 py-1.5 rounded-full shadow-sm">
+                    <span className="text-[10px] font-bold text-pw-indigo uppercase tracking-widest bg-white dark:bg-slate-800 border border-pw-indigo/10 dark:border-indigo-500/20 px-3 py-1.5 rounded-full shadow-sm">
                         Question {currentQuestionIndex + 1} <span className="text-gray-400">/ {questions.length}</span>
                     </span>
                     <div className="flex items-center gap-2">
@@ -395,7 +395,7 @@ export default function QuizPage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-[1.5rem] p-5 md:p-8 shadow-sm border border-pw-border mb-8 relative overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-[1.5rem] p-5 md:p-8 shadow-sm border border-pw-border mb-8 relative overflow-hidden">
                     {/* Decorative Top Accent */}
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pw-indigo via-pw-violet to-pw-indigo opacity-50" />
 
@@ -429,13 +429,13 @@ export default function QuizPage() {
                                 </span>
                             )}
                             {question.topic && (
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-tight bg-gray-50 dark:bg-slate-700/50 px-2 py-1 rounded-lg border border-gray-100 dark:border-slate-700">
                                     {question.topic}
                                 </span>
                             )}
                         </div>
 
-                        <h2 className="text-xl md:text-3xl font-display font-bold text-gray-800 leading-snug mb-4 text-left">
+                        <h2 className="text-xl md:text-3xl font-display font-bold text-gray-800 dark:text-slate-100 leading-snug mb-4 text-left">
                             {displayQuestion}
                             {isTranslating && <span className="inline-block ml-2 text-xs text-pw-indigo animate-pulse">(Translating...)</span>}
                         </h2>
@@ -481,14 +481,14 @@ export default function QuizPage() {
                 {/* Floating Bottom Bar - Optimized for Mobile */}
                 <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-[#F8F9FC] via-[#F8F9FC]/95 dark:from-[#0f172a] dark:via-[#0f172a]/95 to-transparent pointer-events-none pb-6">
                     <div className="max-w-3xl mx-auto pointer-events-auto">
-                        <div className="bg-white p-3 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-pw-border flex items-center justify-between gap-3">
+                        <div className="bg-white dark:bg-slate-900 p-3 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] border border-pw-border flex items-center justify-between gap-3">
 
                             {/* Previous Button - Smaller on mobile */}
                             <Button
                                 variant="ghost"
                                 onClick={prevQuestion}
                                 disabled={currentQuestionIndex === 0}
-                                className="w-12 h-12 md:w-auto md:px-6 rounded-2xl shrink-0 flex items-center justify-center hover:bg-gray-100 text-gray-500"
+                                className="w-12 h-12 md:w-auto md:px-6 rounded-2xl shrink-0 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400"
                                 title="Previous"
                             >
                                 <FaStepBackward />
@@ -504,10 +504,10 @@ export default function QuizPage() {
                                     className={`
                                         w-full h-12 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-200
                                         ${isLocked
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200'
+                                            ? 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-600 cursor-not-allowed shadow-none border border-gray-200 dark:border-slate-700'
                                             : selectedOption !== null
                                                 ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-lg shadow-indigo-200 active:scale-95'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                                                : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-600 cursor-not-allowed border border-gray-200 dark:border-slate-700'
                                         }
                                     `}
                                 >
@@ -523,7 +523,7 @@ export default function QuizPage() {
                                     setSelectedOption(null)
                                     skipQuestion()
                                 }}
-                                className="w-12 h-12 md:w-auto md:px-6 rounded-2xl shrink-0 flex items-center justify-center text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-100"
+                                className="w-12 h-12 md:w-auto md:px-6 rounded-2xl shrink-0 flex items-center justify-center text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-100 dark:border-slate-700"
                                 title="Skip"
                             >
                                 <span className="hidden md:inline mr-2">Skip</span>
