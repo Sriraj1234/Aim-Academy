@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from './Button'
 
 import { motion } from 'framer-motion'
@@ -17,10 +18,30 @@ export const Header = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [nowTs, setNowTs] = useState<number | null>(null);
 
     useEffect(() => {
-        setMounted(true);
+        const frame = requestAnimationFrame(() => {
+            setMounted(true);
+            setNowTs(Date.now());
+        });
+        return () => cancelAnimationFrame(frame);
     }, []);
+
+    const parseTime = (value: unknown) => {
+        if (typeof value === 'number') return value;
+        if (value instanceof Date) return value.getTime();
+        if (typeof value === 'string') return new Date(value).getTime();
+        if (
+            typeof value === 'object' &&
+            value !== null &&
+            'toMillis' in value &&
+            typeof (value as { toMillis: () => number }).toMillis === 'function'
+        ) {
+            return (value as { toMillis: () => number }).toMillis();
+        }
+        return 0;
+    };
 
     return (
         <>
@@ -41,9 +62,11 @@ export const Header = () => {
                         {/* Logo */}
                         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                             <div className="w-8 h-8 sm:w-9 sm:h-9 relative rounded-xl overflow-hidden shadow-pw-md">
-                                <img
+                                <Image
                                     src="/padhaku-192.png"
                                     alt="Padhaku Logo"
+                                    width={36}
+                                    height={36}
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -62,7 +85,7 @@ export const Header = () => {
                             <>
                                 {user && (() => {
                                     const sub = userProfile?.subscription;
-                                    const now = Date.now();
+                                    const now = nowTs ?? 0;
                                     const isAutoPay = sub?.autoRenew && sub?.subscriptionId;
                                     const isExpired = sub?.expiryDate ? sub.expiryDate <= now : false;
                                     const remainingDays = sub?.expiryDate
@@ -97,9 +120,8 @@ export const Header = () => {
 
                                     // Non-pro users
                                     if (isInTrial) {
-                                        const c = userProfile?.createdAt as any;
-                                        const createdMs = typeof c === 'number' ? c : (c?.toMillis ? c.toMillis() : new Date(c || 0).getTime());
-                                        const daysLeft = Math.ceil(7 - ((Date.now() - createdMs) / (24 * 60 * 60 * 1000)));
+                                        const createdMs = parseTime(userProfile?.createdAt);
+                                        const daysLeft = now ? Math.ceil(7 - ((now - createdMs) / (24 * 60 * 60 * 1000))) : 7;
                                         return (
                                             <Link href="/pro">
                                                 <motion.button
