@@ -39,53 +39,36 @@ export async function getAIExplanation(request: ExplanationRequest): Promise<Exp
     const correctLabel = optionLabels[correctAnswer];
     const userLabel = optionLabels[userAnswer];
 
-    // Dynamic System Prompts based on Language
-    let systemPrompt = '';
-    let langInstruction = '';
+    const isHindi = preferredLanguage === 'hindi';
 
-    switch (preferredLanguage) {
-        case 'hindi':
-            systemPrompt = `You are a friendly teacher explaining in pure Hindi (Devanagari script) for Indian students.
-Your goal is to explain the concept clearly in simple Hindi.
-Keep explanations brief (3-4 sentences).
-Always be positive and encouraging.`;
-            langInstruction = `Please explain the following in pure Hindi (Devanagari):`;
-            break;
-        case 'english':
-            systemPrompt = `You are a friendly teacher for students preparing for exams.
-Explain why the student got the question wrong using simple, clear English.
-Keep explanations brief (3-4 sentences).
-Always be positive and encouraging.`;
-            langInstruction = `Please explain in simple English:`;
-            break;
-        case 'hinglish':
-        default:
-            systemPrompt = `You are a friendly, encouraging teacher for Indian students preparing for board exams. 
-Your job is to explain why a student got a question wrong in a simple, memorable way.
-Use simple language. You can use Hindi-English mix (Hinglish) naturally if it helps explain better.
-Keep explanations brief but helpful - aim for 3-4 sentences.
-Always be positive and encouraging.`;
-            langInstruction = `Please explain (you can use Hinglish):`;
-            break;
+    const systemPrompt = `You are an expert tutor for Indian students preparing for BSEB Bihar Board Class 10 & 12 exams.
+A student answered a question incorrectly. Your job is to explain clearly why they were wrong and what the correct reasoning is.
+
+Respond ONLY with a valid JSON object — no markdown fences, no extra text. Use this exact structure:
+{
+  "concept": "1-2 sentence explanation of the core concept tested in this question",
+  "whyWrong": "Exactly why option ${userLabel} (the student's answer) is incorrect — be specific to the values/logic",
+  "whyCorrect": "Step-by-step reason why option ${correctLabel} is the right answer — show the logic or formula",
+  "trick": "A short, exam-ready memory trick or shortcut to never forget this again"
+}
+
+${isHindi
+        ? 'Write ALL values in clear Hindi (Devanagari script). Use simple language suitable for a 15-year-old.'
+        : 'Write in natural Hinglish (Hindi + English mix). Use Hindi for explanation, English for math/science terms.'
     }
+Be encouraging, not critical. Assume the student is smart but made a small mistake.`;
 
-    const userPrompt = `A student got this ${subject || 'quiz'} question wrong:
+    const userPrompt = `Subject: ${subject || 'General'}${chapter ? ` | Chapter: ${chapter}` : ''}
 
-**Question:** ${question}
+Question: ${question}
 
-**Options:**
+Options:
 ${formattedOptions}
 
-**Correct Answer:** ${correctLabel}) ${options[correctAnswer]}
-**Student Selected:** ${userLabel}) ${options[userAnswer]}
-${chapter ? `\n**Chapter:** ${chapter}` : ''}
+Student selected: ${userLabel}) ${options[userAnswer]}
+Correct answer: ${correctLabel}) ${options[correctAnswer]}
 
-${langInstruction}
-1. Why option ${userLabel} is incorrect
-2. Why option ${correctLabel} is the right answer
-3. Give a quick tip or trick to remember this
-
-Be brief, friendly, and encouraging!`;
+Explain why the student is wrong and the correct reasoning. Return ONLY the JSON object.`;
 
     try {
         const response = await fetch(GROQ_API_URL, {
@@ -116,10 +99,23 @@ Be brief, friendly, and encouraging!`;
         }
 
         const data = await response.json();
-        const explanation = data.choices?.[0]?.message?.content || '';
+        const raw = (data.choices?.[0]?.message?.content || '').trim();
+
+        // Try to parse structured JSON from AI response
+        let sections: { concept?: string; whyWrong?: string; whyCorrect?: string; trick?: string } = {};
+        try {
+            // Strip markdown fences if present
+            const cleaned = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+            sections = JSON.parse(cleaned);
+        } catch {
+            // AI didn't return valid JSON — fall back to plain text
+        }
+
+        const hasStructure = !!(sections.concept || sections.whyWrong || sections.whyCorrect || sections.trick);
 
         return {
-            explanation: explanation.trim(),
+            explanation: hasStructure ? JSON.stringify(sections) : raw,
+            tip: sections.trick,
             success: true
         };
     } catch (error) {
