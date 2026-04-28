@@ -6,9 +6,9 @@ import { ModernCarousel } from '@/components/home/ModernCarousel'
 import { QuickActionStrip } from '@/components/home/QuickActionStrip'
 import dynamic from 'next/dynamic'
 import { useAuth } from '@/context/AuthContext'
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import { InteractiveLoading } from '@/components/shared/InteractiveLoading'
+import { RenderAfterIdle, RenderOnVisible } from '@/components/shared/RenderOnVisible'
 
 import { DashboardHeader } from '@/components/home/DashboardHeader'
 import { StatsOverview } from '@/components/home/StatsOverview'
@@ -34,8 +34,7 @@ const DiscussionSection = dynamic(() => import('@/components/home/DiscussionSect
 const SCROLL_CACHE_KEY = 'home_scroll_position';
 
 export default function DashboardPage() {
-    const { user, loading } = useAuth()
-    const router = useRouter()
+    const { loading } = useAuth()
     const scrollSaverRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // ── Last Visited Section: save & restore scroll ──────────────────────────
@@ -116,17 +115,25 @@ export default function DashboardPage() {
                             <GamificationCard />
 
                             {/* AI Performance Insights */}
-                            <AIPerformanceCard />
+                            <RenderOnVisible fallback={<div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />}>
+                                <AIPerformanceCard />
+                            </RenderOnVisible>
 
                             {/* Bookmarks */}
-                            <BookmarkedQuestionsSection />
+                            <RenderOnVisible fallback={<div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />}>
+                                <BookmarkedQuestionsSection />
+                            </RenderOnVisible>
 
                             {/* Notes */}
-                            <NotesSection />
+                            <RenderOnVisible fallback={<div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />}>
+                                <NotesSection />
+                            </RenderOnVisible>
 
                             {/* Offline Tuition — mobile only (desktop in right col) */}
                             <div className="block lg:hidden">
-                                <OfflineTuitionCard />
+                                <RenderOnVisible fallback={<div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />}>
+                                    <OfflineTuitionCard />
+                                </RenderOnVisible>
                             </div>
                         </div>
 
@@ -140,26 +147,36 @@ export default function DashboardPage() {
                                 </h2>
                                 <div className="space-y-3">
                                     <AIQuestionGenerator />
-                                    <AIFlashcardGenerator />
-                                    <ChapterSummary />
+                                    <RenderOnVisible minHeight={72} fallback={<div className="h-16 bg-gray-100 rounded-2xl animate-pulse" />}>
+                                        <AIFlashcardGenerator />
+                                    </RenderOnVisible>
+                                    <RenderOnVisible minHeight={72} fallback={<div className="h-16 bg-gray-100 rounded-2xl animate-pulse" />}>
+                                        <ChapterSummary />
+                                    </RenderOnVisible>
                                 </div>
                             </div>
 
                             {/* Community Discussions */}
-                            <DiscussionSection />
+                            <RenderOnVisible fallback={<div className="h-52 bg-gray-100 rounded-2xl animate-pulse" />}>
+                                <DiscussionSection />
+                            </RenderOnVisible>
 
                             {/* Offline Tuition — desktop only */}
                             <div className="hidden lg:block">
-                                <OfflineTuitionCard />
+                                <RenderOnVisible fallback={<div className="h-40 bg-gray-100 rounded-2xl animate-pulse" />}>
+                                    <OfflineTuitionCard />
+                                </RenderOnVisible>
                             </div>
                         </div>
                     </div>
                 </div>
             </main>
 
-            <DailyChallengeCard />
-            <AIChatWidget />
-            <TrialReminderModal />
+            <RenderAfterIdle>
+                <DailyChallengeCard />
+                <AIChatWidget />
+                <TrialReminderModal />
+            </RenderAfterIdle>
             <Footer />
         </div>
     )
