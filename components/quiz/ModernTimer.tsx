@@ -49,9 +49,10 @@ export const ModernTimer: React.FC<ModernTimerProps> = ({ duration, current, onT
     return (
         <div className={`relative ${className}`}>
             <div className={`
-                relative overflow-hidden rounded-full shadow-md border 
+                relative overflow-hidden rounded-full shadow-md border
                 ${isCritical ? 'border-red-500 shadow-red-500/20' : 'border-pw-border shadow-pw-indigo/10'}
                 transition-all duration-300 w-28 h-8 flex items-center justify-center
+                bg-white dark:bg-slate-800
             `}>
                 {/* Background Progress */}
                 <motion.div
@@ -60,7 +61,7 @@ export const ModernTimer: React.FC<ModernTimerProps> = ({ duration, current, onT
                     transition={{ duration: isControlled ? 0.5 : 1, ease: "linear" }}
                     className={`
                         absolute left-0 top-0 bottom-0
-                        ${isCritical ? 'bg-red-100' : isWarning ? 'bg-amber-100' : 'bg-pw-indigo/10'}
+                        ${isCritical ? 'bg-red-100 dark:bg-red-900/40' : isWarning ? 'bg-amber-100 dark:bg-amber-900/40' : 'bg-pw-indigo/10 dark:bg-indigo-500/20'}
                         transition-colors duration-500 origin-left
                     `}
                 />
