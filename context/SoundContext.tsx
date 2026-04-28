@@ -1,5 +1,5 @@
 'use client'
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState, useEffect, ReactNode } from 'react';
 
 type SoundType = 'click' | 'correct' | 'wrong' | 'tick' | 'win' | 'lose';
 
@@ -13,15 +13,28 @@ const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
 export const SoundProvider = ({ children }: { children: ReactNode }) => {
     const [isMuted, setIsMuted] = useState(false);
-    const [audioElements, setAudioElements] = useState<Record<string, HTMLAudioElement>>({});
+    const audioElementsRef = useRef<Partial<Record<SoundType, HTMLAudioElement>>>({});
 
     useEffect(() => {
-        // Load preference
-        const stored = localStorage.getItem('sound_muted');
-        if (stored) setIsMuted(stored === 'true');
+        const timer = setTimeout(() => {
+            const stored = localStorage.getItem('sound_muted');
+            if (stored) setIsMuted(stored === 'true');
+        }, 0);
+        return () => clearTimeout(timer);
+    }, []);
 
-        // Preload sounds
-        const sounds: Record<string, string> = {
+    const toggleMute = useCallback(() => {
+        setIsMuted(prev => {
+            const newState = !prev;
+            localStorage.setItem('sound_muted', String(newState));
+            return newState;
+        });
+    }, []);
+
+    const playSound = useCallback((type: SoundType) => {
+        if (isMuted || typeof window === 'undefined') return;
+
+        const sounds: Record<SoundType, string> = {
             click: '/sounds/click.mp3',
             correct: '/sounds/correct.mp3',
             wrong: '/sounds/wrong.mp3',
@@ -30,36 +43,23 @@ export const SoundProvider = ({ children }: { children: ReactNode }) => {
             lose: '/sounds/lose.mp3',
         };
 
-        const loaded: Record<string, HTMLAudioElement> = {};
-        Object.keys(sounds).forEach(key => {
-            const audio = new Audio(sounds[key]);
-            loaded[key] = audio;
-        });
-        setAudioElements(loaded);
+        if (!audioElementsRef.current[type]) {
+            audioElementsRef.current[type] = new Audio(sounds[type]);
+        }
 
-    }, []);
-
-    const toggleMute = () => {
-        setIsMuted(prev => {
-            const newState = !prev;
-            localStorage.setItem('sound_muted', String(newState));
-            return newState;
-        });
-    };
-
-    const playSound = (type: SoundType) => {
-        if (isMuted || !audioElements[type]) return;
-
-        const audio = audioElements[type];
+        const audio = audioElementsRef.current[type];
+        if (!audio) return;
         audio.currentTime = 0;
-        audio.play().catch(e => {
+        audio.play().catch(() => {
             // Provide a very quiet console log or ignore, as browsers block autoplay often
             // console.warn("Audio play blocked", e);
         });
-    };
+    }, [isMuted]);
+
+    const value = useMemo(() => ({ isMuted, toggleMute, playSound }), [isMuted, toggleMute, playSound]);
 
     return (
-        <SoundContext.Provider value={{ isMuted, toggleMute, playSound }}>
+        <SoundContext.Provider value={value}>
             {children}
         </SoundContext.Provider>
     );
