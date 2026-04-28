@@ -107,7 +107,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({ questions, answers }) =>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-1.5 bg-gray-100 rounded-2xl p-1.5">
+            <div className="flex gap-1.5 bg-gray-100 dark:bg-slate-800 rounded-2xl p-1.5">
                 {[
                     { id: 'all', label: 'All', icon: FaListAlt, count: total, color: 'text-pw-indigo' },
                     { id: 'incorrect', label: 'Wrong', icon: FaTimesCircle, count: incorrectCount, color: 'text-red-500' },
@@ -120,8 +120,8 @@ export const ReviewList: React.FC<ReviewListProps> = ({ questions, answers }) =>
                         className={`
                             flex-1 px-2 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex flex-col items-center gap-0.5
                             ${filter === tab.id
-                                ? 'bg-white shadow-sm text-pw-indigo'
-                                : 'text-gray-400 hover:text-gray-600'}
+                                ? 'bg-white dark:bg-slate-700 shadow-sm text-pw-indigo'
+                                : 'text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300'}
                         `}
                     >
                         <tab.icon className={`text-sm ${filter === tab.id ? tab.color : ''}`} />
