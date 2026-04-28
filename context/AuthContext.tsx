@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
 import {
     User,
@@ -16,10 +16,9 @@ import {
     signOut,
     onAuthStateChanged
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, increment } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, onSnapshot, increment } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
-import { InteractiveLoading } from '@/components/shared/InteractiveLoading';
-import { UserProfile, GamificationStats } from '@/data/types'
+import { UserProfile } from '@/data/types'
 
 interface AuthContextType {
     user: User | null
@@ -50,6 +49,32 @@ const AuthContext = createContext<AuthContextType>({
     incrementUsage: async () => { },
     isInTrial: false
 } as unknown as AuthContextType)
+
+type TimestampLike = { toMillis: () => number }
+
+const hasToMillis = (value: unknown): value is TimestampLike => {
+    return typeof value === 'object' &&
+        value !== null &&
+        'toMillis' in value &&
+        typeof (value as TimestampLike).toMillis === 'function'
+}
+
+// Helper: Parse any date format to milliseconds
+const parseDate = (date: unknown): number | null => {
+    if (!date) return null
+    if (typeof date === 'number') return date
+    if (hasToMillis(date)) return date.toMillis()
+    if (date instanceof Date) return date.getTime()
+    if (typeof date === 'string') return new Date(date).getTime()
+    return null
+}
+
+// Helper: Get start of day timestamp (local time)
+const getStartOfDay = (timestamp: number) => {
+    const d = new Date(timestamp)
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+}
 
 // Helper: Get or Create Device ID
 const getDeviceId = () => {
@@ -334,7 +359,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [])
 
-    const signInWithGoogle = async () => {
+    const signInWithGoogle = useCallback(async () => {
         const provider = new GoogleAuthProvider()
         try {
             // CAPACITOR FIX: Use redirect for native apps, popup for web
@@ -349,36 +374,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.error("Error signing in with Google", error)
             throw error
         }
-    }
+    }, [])
 
-    const loginWithEmail = async (email: string, pass: string) => {
+    const loginWithEmail = useCallback(async (email: string, pass: string) => {
         try {
             await signInWithEmailAndPassword(auth, email, pass)
         } catch (error) {
             console.error("Error logging in", error)
             throw error
         }
-    }
+    }, [])
 
-    const signupWithEmail = async (email: string, pass: string) => {
+    const signupWithEmail = useCallback(async (email: string, pass: string) => {
         try {
             await createUserWithEmailAndPassword(auth, email, pass)
         } catch (error) {
             console.error("Error signing up", error)
             throw error
         }
-    }
+    }, [])
 
-    const loginAnonymously = async () => {
+    const loginAnonymously = useCallback(async () => {
         try {
             await signInAnonymously(auth);
         } catch (error) {
             console.error("Error signing in anonymously", error);
             throw error;
         }
-    }
+    }, [])
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         setLoading(true)
         try {
             await signOut(auth)
@@ -388,9 +413,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
-    const updateProfile = async (data: Partial<UserProfile>) => {
+    const updateProfile = useCallback(async (data: Partial<UserProfile>) => {
         if (!user) return
         const docRef = doc(db, 'users', user.uid)
         try {
@@ -401,26 +426,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.error("Error updating profile", error)
             throw error
         }
-    }
+    }, [user])
 
-    // Helper: Parse any date format to milliseconds
-    const parseDate = (date: any): number | null => {
-        if (!date) return null
-        if (typeof date === 'number') return date
-        if (date.toMillis && typeof date.toMillis === 'function') return date.toMillis() // Firestore Timestamp
-        if (date instanceof Date) return date.getTime()
-        if (typeof date === 'string') return new Date(date).getTime()
-        return null
-    }
-
-    // Helper: Get start of day timestamp (local time)
-    const getStartOfDay = (timestamp: number) => {
-        const d = new Date(timestamp)
-        d.setHours(0, 0, 0, 0)
-        return d.getTime()
-    }
-
-    const addXP = async (amount: number) => {
+    const addXP = useCallback(async (amount: number) => {
         if (!user || !userProfile?.gamification) return
 
         const currentGamification = { ...userProfile.gamification }
@@ -471,12 +479,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
             console.error("Error adding XP/Streak", error)
         }
-    }
+    }, [updateProfile, user, userProfile?.gamification])
 
     // Safe Trial Logic: Robustly parse createdAt to handle potential Strings/Timestamps
     const isInTrial = userProfile ? (Date.now() - (parseDate(userProfile.createdAt) || 0) < 7 * 24 * 60 * 60 * 1000) && userProfile.subscription?.plan !== 'pro' : false;
 
-    const checkAccess = (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve'): boolean => {
+    const checkAccess = useCallback((feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve'): boolean => {
         if (!userProfile) return false;
 
         const sub = userProfile.subscription;
@@ -508,9 +516,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (feature === 'snap_solve') return (limits.snapSolveCount || 0) < 2; // Free Limit: 2
 
         return false;
-    }
+    }, [isInTrial, userProfile])
 
-    const incrementUsage = async (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve') => {
+    const incrementUsage = useCallback(async (feature: 'ai_chat' | 'flashcards' | 'group_play' | 'note_gen' | 'snap_solve') => {
         if (!user) return;
 
         const docRef = doc(db, 'users', user.uid);
@@ -533,10 +541,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (e) {
             console.error("Failed to update usage", e);
         }
-    }
+    }, [user])
+
+    const value = useMemo(() => ({
+        user,
+        userProfile,
+        loading,
+        signInWithGoogle,
+        loginWithEmail,
+        signupWithEmail,
+        loginAnonymously,
+        logout,
+        updateProfile,
+        addXP,
+        checkAccess,
+        incrementUsage,
+        isInTrial
+    }), [
+        user,
+        userProfile,
+        loading,
+        signInWithGoogle,
+        loginWithEmail,
+        signupWithEmail,
+        loginAnonymously,
+        logout,
+        updateProfile,
+        addXP,
+        checkAccess,
+        incrementUsage,
+        isInTrial
+    ])
 
     return (
-        <AuthContext.Provider value={{ user, userProfile, loading, signInWithGoogle, loginWithEmail, signupWithEmail, loginAnonymously, logout, updateProfile, addXP, checkAccess, incrementUsage, isInTrial }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     )
