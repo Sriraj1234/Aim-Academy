@@ -253,16 +253,11 @@ export const ModernCarousel = () => {
                         </div>
 
                         <div className="relative z-0 flex w-[28%] sm:w-2/5 justify-center items-center">
-                            <motion.div 
-                                animate={{ y: [0, -6, 0] }}
-                                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                                style={{ willChange: "transform" }}
-                                className="relative flex h-24 w-24 sm:h-32 sm:w-32 md:h-44 md:w-44 items-center justify-center rounded-[2rem] bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-2xl"
-                            >
+                            <div className="relative flex h-24 w-24 sm:h-32 sm:w-32 md:h-44 md:w-44 items-center justify-center rounded-[2rem] bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-2xl">
                                 <div className="flex h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36 rounded-[1.5rem] items-center justify-center bg-gradient-to-br from-white/10 to-transparent">
                                     {React.createElement(slides[current].icon, { className: "text-white/90 text-5xl sm:text-6xl md:text-7xl drop-shadow-xl" })}
                                 </div>
-                            </motion.div>
+                            </div>
                         </div>
                     </motion.div>
                 </AnimatePresence>
@@ -277,7 +272,7 @@ export const ModernCarousel = () => {
                     </button>
                 </div>
 
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-20">
                     {slides.map((_, idx) => (
                         <button
                             key={idx}
@@ -286,7 +281,7 @@ export const ModernCarousel = () => {
                                 setDirection(idx > current ? 1 : -1);
                                 setCurrent(idx);
                             }}
-                            className={`h-2 rounded-full transition-all duration-300 ${current === idx ? 'w-5 bg-white shadow-lg' : 'w-2 bg-white/35'}`}
+                            className={`rounded-full transition-all duration-300 p-0 border-0 outline-none cursor-pointer ${current === idx ? 'h-1.5 w-4 bg-white shadow-md' : 'h-1.5 w-1.5 bg-white/40'}`}
                         />
                     ))}
                 </div>
