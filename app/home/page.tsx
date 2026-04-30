@@ -57,28 +57,6 @@ export default function DashboardPage() {
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => {
             window.removeEventListener('scroll', handleScroll);
-    const scrollSaverRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    // ── Last Visited Section: save & restore scroll ──────────────────────────
-    useEffect(() => {
-        const saved = sessionStorage.getItem(SCROLL_CACHE_KEY);
-        if (saved) {
-            const y = parseInt(saved, 10);
-            const t = setTimeout(() => window.scrollTo({ top: y, behavior: 'instant' }), 100);
-            return () => clearTimeout(t);
-        }
-    }, []);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            if (scrollSaverRef.current) clearTimeout(scrollSaverRef.current);
-            scrollSaverRef.current = setTimeout(() => {
-                sessionStorage.setItem(SCROLL_CACHE_KEY, String(window.scrollY));
-            }, 300);
-        };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
             if (scrollSaverRef.current) clearTimeout(scrollSaverRef.current);
         };
     }, []);
