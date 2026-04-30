@@ -272,16 +272,20 @@ export const ModernCarousel = () => {
                     </button>
                 </div>
 
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-20">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 z-20">
                     {slides.map((_, idx) => (
-                        <button
+                        <div
                             key={idx}
+                            role="button"
+                            tabIndex={0}
                             aria-label={`Go to slide ${idx + 1}`}
                             onClick={() => {
                                 setDirection(idx > current ? 1 : -1);
                                 setCurrent(idx);
                             }}
-                            className={`rounded-full transition-all duration-300 p-0 border-0 outline-none cursor-pointer ${current === idx ? 'h-1.5 w-4 bg-white shadow-md' : 'h-1.5 w-1.5 bg-white/40'}`}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { setDirection(idx > current ? 1 : -1); setCurrent(idx); } }}
+                            style={{ width: current === idx ? 16 : 6, height: 6 }}
+                            className={`rounded-full transition-all duration-300 cursor-pointer flex-shrink-0 ${current === idx ? 'bg-white shadow-md' : 'bg-white/40'}`}
                         />
                     ))}
                 </div>
