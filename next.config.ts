@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
       'framer-motion',
       '@google/generative-ai',
       '@google/genai',
+      'firebase',
+      'react-hot-toast',
+      'react-markdown',
+      'canvas-confetti',
+      'katex',
     ],
   },
 
