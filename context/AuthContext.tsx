@@ -6,8 +6,7 @@ import {
     User,
     GoogleAuthProvider,
     signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
+    signInWithCredential,
     setPersistence,
     indexedDBLocalPersistence,
     signInWithEmailAndPassword,
@@ -338,37 +337,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [])
 
-    // CAPACITOR FIX: Set persistence and handle OAuth redirect for native apps
+    // Set indexedDB persistence for native apps
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
-            // Set persistence to indexedDB for native apps
             setPersistence(auth, indexedDBLocalPersistence)
-                .then(() => {
-                    console.log('✅ Auth persistence set to indexedDB');
-                    // Now handle any redirect results
-                    return getRedirectResult(auth);
-                })
-                .then((result) => {
-                    if (result) {
-                        console.log('✅ OAuth redirect successful:', result.user.email);
-                    }
-                })
-                .catch((error) => {
-                    console.error('❌ Auth setup error:', error);
-                });
+                .catch((error) => console.error('❌ Auth persistence error:', error));
         }
     }, [])
 
     const signInWithGoogle = useCallback(async () => {
-        const provider = new GoogleAuthProvider()
         try {
-            // CAPACITOR FIX: Use redirect for native apps, popup for web
             if (Capacitor.isNativePlatform()) {
-                console.log('📱 Using signInWithRedirect for mobile app');
-                await signInWithRedirect(auth, provider);
+                // Native Google Sign-In — no browser redirect, works in WebView
+                const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication')
+                const result = await FirebaseAuthentication.signInWithGoogle()
+                const credential = GoogleAuthProvider.credential(result.credential?.idToken ?? null)
+                await signInWithCredential(auth, credential)
             } else {
-                console.log('🌐 Using signInWithPopup for web');
-                await signInWithPopup(auth, provider);
+                await signInWithPopup(auth, new GoogleAuthProvider())
             }
         } catch (error) {
             console.error("Error signing in with Google", error)
